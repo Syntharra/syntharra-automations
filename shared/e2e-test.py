@@ -100,6 +100,10 @@ payload = {
     "q31_leadContact":            "Both",
     "q32_leadNotification":       "+16316330713",
     "q33_leadNotification33":     TEST_EMAIL,
+    "q59_notifEmail2":            "dispatcher@polarpeak.com",
+    "q60_notifEmail3":            "salesmanager@polarpeak.com",
+    "q61_notifSms2":              "+16316330714",
+    "q62_notifSms3":              "+16316330715",
     "q48_transferPhone":          TEST_PHONE,
     "q49_transferTriggers":       ["Customer is angry","Legal threat","Complex billing dispute","Customer requests manager"],
     "q50_transferBehavior":       "Try once - take message if no answer",
@@ -169,6 +173,10 @@ check("membership_program",              row.get('membership_program') == 'Peak 
 check("lead_contact_method",             row.get('lead_contact_method') == 'Both',            row.get('lead_contact_method'))
 check("lead_phone",                      bool(row.get('lead_phone')),                         row.get('lead_phone'))
 check("lead_email",                      row.get('lead_email') == TEST_EMAIL,                 row.get('lead_email'))
+check("notification_email_2 populated",  row.get('notification_email_2') == 'dispatcher@polarpeak.com', row.get('notification_email_2'))
+check("notification_email_3 populated",  row.get('notification_email_3') == 'salesmanager@polarpeak.com', row.get('notification_email_3'))
+check("notification_sms_2 populated",    row.get('notification_sms_2') == '+16316330714',               row.get('notification_sms_2'))
+check("notification_sms_3 populated",    row.get('notification_sms_3') == '+16316330715',               row.get('notification_sms_3'))
 check("transfer_phone",                  bool(row.get('transfer_phone')),                     row.get('transfer_phone'))
 check("transfer_triggers populated",     bool(row.get('transfer_triggers')),                  (row.get('transfer_triggers') or '')[:40])
 check("google_review_rating",            row.get('google_review_rating') == '4.8',            row.get('google_review_rating'))
