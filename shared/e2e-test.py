@@ -111,6 +111,8 @@ payload = {
     "q52_currentPromotion":       "$75 off any repair over $400 this month",
     "q53_seasonalServices":       "Spring AC tune-ups, Fall heating inspections, Winter emergency heating",
     "q37_additionalInfo":         "Proudly serving NYC since 2016. All technicians are NATE certified and background checked. We offer 24/7 emergency service with a live dispatcher.",
+    # Test phone number — bypasses Stripe gate check for welcome email
+    "agent_phone_number":          "+12292672271",
 }
 
 status, _ = http("https://syntharra.app.n8n.cloud/webhook/jotform-hvac-onboarding",
