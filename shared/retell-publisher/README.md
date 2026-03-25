@@ -1,24 +1,28 @@
 # Retell Publisher Service
 
-Headless browser service (Puppeteer) that logs into Retell and publishes agents via the dashboard UI.
+Headless browser service that logs into Retell and publishes agents via the UI.
 
-## Deploy to Railway
+## Deploy on Railway
 
-1. Connect this repo to Railway
-2. Set root directory to `shared/retell-publisher`
-3. Add environment variables:
-   - `RETELL_EMAIL` — Retell login email
-   - `RETELL_PASSWORD` — Retell password  
-   - `PUBLISHER_SECRET` — Secret token for auth
-4. Deploy
+1. Connect this folder to a new Railway service
+2. Set environment variables:
+   - `RETELL_EMAIL` — your Retell login email
+   - `RETELL_PASSWORD` — your Retell password  
+   - `PUBLISHER_SECRET` — random secret for API auth
+3. Railway will build via Dockerfile automatically
 
-## API
+## Usage
 
-### POST /publish-retell-agent
-```json
+```bash
+POST /publish-retell-agent
+Authorization: Bearer {PUBLISHER_SECRET}
+Content-Type: application/json
+
 { "agent_id": "agent_xxx" }
 ```
-Headers: `Authorization: Bearer {PUBLISHER_SECRET}`
 
-### GET /health
-Returns `{ "status": "ok" }`
+Returns `{ "success": true, "agent_id": "agent_xxx" }`
+
+## Note
+This service is used by n8n workflow "Publish Retell Agent" automatically
+after every agent update. You should not need to call it manually.
