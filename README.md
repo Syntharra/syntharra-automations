@@ -1,26 +1,24 @@
 # Syntharra Automations
 
-Operational code for all Syntharra AI Receptionist products.
+Operational automation code for the Syntharra AI Receptionist platform.
 
 ## Structure
 
 ```
 syntharra-automations/
-  hvac-standard/          HVAC Standard AI Receptionist
-    prompt-builder.js     n8n prompt builder node code
-    conversation-flow.json  Retell conversation flow definition
-    call-processor.js     n8n call processor node code
-  hvac-premium/           HVAC Premium (coming soon)
-  plumbing-standard/      Plumbing Standard (coming soon)
   shared/
-    retell-publisher/     Headless browser service to publish Retell agents
-    supabase/             Database migrations
-    n8n-workflows/        Exported n8n workflow JSONs
-    prompt-templates/     Master prompt templates per product
+    retell-publisher/     # Headless browser service to publish Retell agents
+    supabase-migrations/  # All Supabase schema migrations
+    n8n-workflows/        # Exported n8n workflow JSON files
+  hvac-standard/
+    prompt-builder.js     # n8n Build Retell Prompt node code
+    conversation-flow.json # Master conversation flow structure
+    call-processor.js     # n8n call processor node code
+  hvac-premium/           # Coming soon
+  plumbing-standard/      # Coming soon
 ```
 
-## Separate Repositories
-
-- `syntharra-checkout` — Pricing page + Stripe checkout (Railway)
-- `syntharra-website` — Marketing website
-- `syntharra-automations` — This repo, all operational automation code
+## Repos
+- `syntharra-checkout` — Pricing page + Stripe checkout only (Railway)
+- `syntharra-automations` — All operational automation code (this repo)
+- `syntharra-website` — Public website
