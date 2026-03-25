@@ -321,12 +321,12 @@ else:
 print("\n[8] CLEANUP")
 # ══════════════════════════════════════════════════════════════
 http(f"{SUPABASE}/rest/v1/hvac_standard_agent?company_name=eq.{urllib.parse.quote(TEST_COMPANY)}",
-    "DELETE", headers={"apikey": SB_SVC, "Authorization": f"Bearer {SB_SVC}"})
+    "DELETE", None, {"apikey": SB_SVC, "Authorization": f"Bearer {SB_SVC}"})
 check("Supabase hvac_standard_agent deleted", True)
 
 for cid in cleanup['call_ids']:
     http(f"{SUPABASE}/rest/v1/hvac_call_log?call_id=eq.{cid}",
-        "DELETE", headers={"apikey": SB_SVC, "Authorization": f"Bearer {SB_SVC}"})
+        "DELETE", None, {"apikey": SB_SVC, "Authorization": f"Bearer {SB_SVC}"})
 check("Supabase hvac_call_log deleted", True)
 
 for aid in cleanup['agent_ids']:
