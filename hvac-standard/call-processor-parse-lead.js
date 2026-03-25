@@ -18,4 +18,6 @@ return {
   ...leadData,
   lead_score: leadData.lead_score || 0,
   is_lead: (leadData.lead_score || 0) >= 6
+  // notification_email_2, notification_email_3, notification_sms_2, notification_sms_3
+  // are carried forward from clientData via spread above
 };
