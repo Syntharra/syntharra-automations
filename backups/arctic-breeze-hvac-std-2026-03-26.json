@@ -1,0 +1,548 @@
+{
+  "backup_info": {
+    "date": "2026-03-26",
+    "description": "Full agent backup - Arctic Breeze HVAC [HVAC-STD] - includes transfer whisper",
+    "agent_id": "agent_3887f4de3b8f8189fe849728d6",
+    "conversation_flow_id": "conversation_flow_bce099a0a2c2",
+    "voice": "retell-Sloane",
+    "agent_name": "Arctic Breeze HVAC [HVAC-STD]"
+  },
+  "agent_config": {
+    "agent_id": "agent_3887f4de3b8f8189fe849728d6",
+    "channel": "voice",
+    "last_modification_timestamp": 1774546591619,
+    "agent_name": "Arctic Breeze HVAC [HVAC-STD]",
+    "response_engine": {
+      "type": "conversation-flow",
+      "version": 7,
+      "conversation_flow_id": "conversation_flow_bce099a0a2c2"
+    },
+    "webhook_url": "https://syntharra.app.n8n.cloud/webhook/retell-hvac-webhook",
+    "language": "multi",
+    "data_storage_setting": "everything",
+    "opt_in_signed_url": false,
+    "version": 7,
+    "is_published": false,
+    "post_call_analysis_model": "gpt-4.1-mini",
+    "pii_config": {
+      "mode": "post_call",
+      "categories": []
+    },
+    "analysis_successful_prompt": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail.",
+    "analysis_summary_prompt": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call.",
+    "analysis_user_sentiment_prompt": "Evaluate user's sentiment, mood and satisfaction level.",
+    "post_call_analysis_data": [
+      {
+        "type": "system-presets",
+        "name": "call_summary",
+        "description": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call."
+      },
+      {
+        "type": "system-presets",
+        "name": "call_successful",
+        "description": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail."
+      },
+      {
+        "type": "system-presets",
+        "name": "user_sentiment",
+        "description": "Evaluate user's sentiment, mood and satisfaction level."
+      }
+    ],
+    "voice_id": "retell-Sloane",
+    "voice_temperature": 1,
+    "voice_speed": 1,
+    "enable_dynamic_voice_speed": true,
+    "volume": 1,
+    "max_call_duration_ms": 600000,
+    "interruption_sensitivity": 0.9,
+    "ambient_sound": "call-center",
+    "ambient_sound_volume": 0.8,
+    "responsiveness": 0.9,
+    "enable_dynamic_responsiveness": true,
+    "allow_user_dtmf": true,
+    "user_dtmf_options": {},
+    "webhook_events": [
+      "call_analyzed"
+    ]
+  },
+  "conversation_flow": {
+    "conversation_flow_id": "conversation_flow_bce099a0a2c2",
+    "version": 7,
+    "global_prompt": "## IDENTITY & TONE\n\nYou are {{agent_name}}, a virtual AI receptionist for {{company_name}}.\nYou are warm, friendly and professional. Speak naturally, like a\nhelpful team member, not a robot. Always address callers by their\nfirst name.\n\nIf asked whether you are a real person, be honest:\n\"I'm a virtual assistant, but I'm here to make sure you get\nexactly the help you need.\"\n\n---\n\n## STYLE GUIDELINES\n\n- Keep responses concise, one topic at a time\n- Use simple, everyday language, no technical jargon\n- Ask only one question at a time, always wait for the caller\n  to respond before asking another\n- Match the caller's energy, calm if they're calm,\n  reassuring if they're stressed\n- Be empathetic, especially with frustrated or worried callers\n- Be patient with elderly callers or anyone who needs more time\n- Vary your language naturally, avoid repeating the same phrases\n- Never talk over the caller or rush them\n- Adapt to the caller's pace and communication style\n- Your goal is to make every caller feel heard, helped, and\n  confident that someone will follow up with them\n\n---\n\n## CONTACT CONFIRMATION\n\nAlways confirm contact details back to the caller:\n\n- Names: spell out letter by letter for any name that is uncommon\n  or could be misheard\n  \"Your name is J-O-H-N, is that right?\"\n- Addresses: spell out street names that are uncommon or could be\n  misheard. Skip spelling for generic street types such as Street,\n  Drive, Avenue, Road, Lane, Boulevard\n- Emails: \"Your email is B-O-B dot S-M-I-T-H at gmail dot com?\"\n  Use \"at\", \"dot\", \"dash\", \"underscore\", do not spell these out.\n  Skip spelling for common domains such as gmail, yahoo, hotmail,\n  outlook\n- Phone numbers: read back in groups\n  \"Your number is 404, 555, 1234, is that right?\"\n- Zip codes: always read back digit by digit\n  \"And the zip code is 3-0-3-0-1?\"\n\n---\n\n## COMPANY INFORMATION\n\n{{COMPANY_INFO_BLOCK}}\n\nUse the information above to answer any company-specific questions\nsuch as service areas, hours of operation, services offered, and\ncontact details. If a question about the company is NOT covered\nabove, do NOT guess or make up information. Say:\n\"That's a great question, one of our team members will be able\nto answer that when they call you back.\"\n\n---\n\n## CRITICAL RULES, NEVER BREAK THESE\n\n- NEVER ask more than one question at a time\n- NEVER make up prices, estimates, or timeframes\n- NEVER diagnose HVAC problems or recommend specific repairs\n- NEVER promise availability or same-day service unless explicitly\n  stated in the company information\n- NEVER guess answers to company-specific questions not found in\n  the company information\n- NEVER continue a conversation with obvious spam or robocalls,\n  end politely\n- NEVER transfer a call unless the caller explicitly requests a\n  live person, it is a clear emergency, or it falls under the\n  call transfer protocol\n- ALWAYS collect lead information before ending any legitimate call\n- ALWAYS confirm information back to the caller before ending\n  the call\n- ALWAYS be warm, calm, and professional regardless of caller\n  frustration\n- ALWAYS try to understand what the caller means even if their\n  words are unclear, never mention transcription errors, simply\n  work with context to interpret their intent\n\n---\n\n## IF CALLER IS RELUCTANT TO SHARE INFORMATION\n\n\"I completely understand, this information simply helps our team\nfollow up with you accurately. We never share your details\nwith third parties.\"\n\n---\n\n## ERROR HANDLING\n\n### Didn't hear or understand:\n\"I apologise, I didn't quite catch that, could you repeat\nthat for me?\"\n\n### Don't know the answer:\n\"That's a great question. I want to make sure you get the\nright answer, can I grab your details so someone from our\nteam can call you back?\"\n\n### Caller can't hear you:\n\"I'm sorry about that, is this any better?\"\nSpeak slightly louder and more clearly.\n\n---\n\n## SPECIAL SCENARIOS\n\n### Angry or Upset Callers\n1. Stay calm and lower your tone slightly\n2. Acknowledge: \"I can hear how frustrated you are and\n   I sincerely apologise for that.\"\n3. Redirect: \"Let me see how I can help sort this out\n   for you right now.\"\n4. If abuse continues: \"I do want to help you, but I need\n   us to work together respectfully. How can I best\n   assist you today?\"\n\n### Silent Callers\n- After 3 seconds: \"Hello, are you there?\"\n- After 5 more seconds: \"I'm having trouble hearing you,\n  can you hear me okay?\"\n- If no response after a further 5 seconds: end the call politely\n\n### Threats or Safety Concerns\nStay calm, do not engage or argue. Note any relevant details\nand flag the call immediately for human review after it ends.\n",
+    "nodes": [
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "Identify the reason for the call"
+        },
+        "edges": [
+          {
+            "condition": "User needs to reschedule an appointment",
+            "id": "edge-1",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Repair/Service/Mainteanance"
+            },
+            "destination_node_id": "node-1773538541546"
+          },
+          {
+            "condition": "user asks to be transferred to an agent",
+            "id": "edge-1735698160303",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Quote/Estimate/Price/Installation"
+            },
+            "destination_node_id": "node-1773538541546"
+          },
+          {
+            "condition": "User is having a medical condition",
+            "id": "edge-1735699592443",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Emergency"
+            },
+            "destination_node_id": "node-1735699636733"
+          },
+          {
+            "destination_node_id": "node-1773537726269",
+            "id": "edge-1773533755201-5u693t3hj",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Existing Customer"
+            }
+          },
+          {
+            "destination_node_id": "node-1773537066512",
+            "id": "edge-1773533876580-8yrf62ge2",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "General Questions"
+            }
+          },
+          {
+            "destination_node_id": "node-1735697098325",
+            "id": "edge-1773717112995-dxodg6a5m",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Live Person/Owner/Specific Person"
+            }
+          }
+        ],
+        "name": "identify_call_node",
+        "start_speaker": "agent",
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1773537726269",
+            "transcript": [
+              {
+                "content": "calling about my appointment\nchecking appointment time\ntechnician arrival\nwhere is the technician\nwhen will the technician arrive\nfollowing up on a quote\ncalling about my quote\nquestion about my quote\ndid you receive my quote request\nchecking on my job\ncalling about the job scheduled\ncalling about service appointment\nchecking appointment status\ncalling about previous work\nquestion about invoice\nquestion about billing\ninvoice question\npayment question\ncalling about a job already booked\ncalling back about earlier service",
+                "role": "user"
+              },
+              {
+                "content": "Sure",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1773539448783"
+          },
+          {
+            "destination_node_id": "node-1735699636733",
+            "transcript": [
+              {
+                "content": "no cooling\nno heating\nsystem not working\nAC not working\nheater not working\nleaking unit\nwater leaking\nburning smell\nloud noise\nbroken system\nurgent repair\nemergency repair",
+                "role": "user"
+              },
+              {
+                "content": "Sounds like you have an emergency",
+                "role": "agent"
+              }
+            ],
+            "id": "fe-1773538463985"
+          },
+          {
+            "destination_node_id": "node-1735697098325",
+            "transcript": [
+              {
+                "content": "Let me speak to someone\nI want to talk to a real person\nCan I speak to a human\nTransfer me\nPut me through to someone\nI don't want to talk to a bot\nI don't want to talk to a robot\nI don't want to talk to a machine\nI don't want to talk to AI\nI don't want to talk to a computer\nIs there a real person I can talk to\nI need to speak to someone directly\nCan you connect me to your team\nI'd rather speak to a person\nI want to talk to a live agent\nGive me a real person\nStop the automated message\nJust connect me\nLet me speak to the owner\nI want to talk to the manager\nCan I speak to whoever is in charge\nGet me your supervisor\nIs the boss available\nWho's running this company\nI need to speak to someone in charge\nCan I talk to a decision maker\nPut me through to the owner\nI only deal with owners\nI only deal with management\nIs the owner there\nI need to escalate this\nThis needs to go to a manager\nI want to make a complaint to the owner\nCan I speak to\nIs available\nCan you put me through to\nI'm looking for\nI need to speak to specifically\nTell them I'm calling\nI have an appointment with\nI was told to ask for\nI've been dealing with\nThey told me to call\nI'm calling back for\nCan you get them for me\nJust forget it\nThis is useless\nNever mind\nI'll call back\nI give up",
+                "role": "user"
+              }
+            ],
+            "id": "fe-1774134513325"
+          },
+          {
+            "destination_node_id": "node-1773538541546",
+            "transcript": [
+              {
+                "content": "I want a quote\nI need a quote\nCan I get a quote\nI'm looking for a quote\nI want an estimate\nI need an estimate\nCan I get an estimate\nI'm looking for an estimate\nI want a price\nI need a price\nCan I get a price\nWhat's the price\nWhat's the cost\nHow much does it cost\nHow much would it cost\nHow much do you charge\nWhat do you charge\nWhat are your prices\nWhat are your rates\nI want to install\nI need to install\nI'm looking to install\nI want a new system\nI need a new system\nI'm looking for a new system\nI want to replace my system\nI need to replace my syste",
+                "role": "user"
+              }
+            ],
+            "id": "fe-1774138653255"
+          },
+          {
+            "destination_node_id": "node-1773538541546",
+            "transcript": [
+              {
+                "content": "My system is not working\nMy system is broken\nMy system stopped working\nMy system has stopped\nMy system is not turning on\nMy system won't turn on\nMy system won't start\nMy system keeps turning off\nMy system keeps shutting off\nMy system is not cooling\nMy system is not heating\nMy system is blowing warm air\nMy system is blowing cold air\nMy system is not blowing air\nMy system has no airflow\nMy system is running but not working\nMy system is running but not cooling\nMy system is running but not heating\nM",
+                "role": "user"
+              }
+            ],
+            "id": "fe-1774138744710"
+          }
+        ],
+        "id": "start-node-1735258608795",
+        "type": "conversation",
+        "display_position": {
+          "x": 1110,
+          "y": 366
+        }
+      },
+      {
+        "edge": {
+          "condition": "Transfer failed",
+          "id": "edge-1735697098325",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Transfer failed"
+          },
+          "destination_node_id": "node-1774134607402"
+        },
+        "transfer_destination": {
+          "type": "predefined",
+          "number": "+18563630633"
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Transferring your call now."
+        },
+        "global_node_setting": {
+          "condition": "When user is a doctor or is returning a call"
+        },
+        "name": "Transfer Call",
+        "id": "node-1735697098325",
+        "transfer_option": {
+          "cold_transfer_mode": "sip_invite",
+          "enable_bridge_audio_cue": true,
+          "type": "cold_transfer",
+          "agent_detection_timeout_ms": 30000,
+          "show_transferee_as_caller": false,
+          "transferee_greeting_text": "Heads up, you have an incoming call via Syntharra. The caller may need urgent assistance or has requested to speak with someone directly."
+        },
+        "type": "transfer_call",
+        "display_position": {
+          "x": 3294,
+          "y": 2238
+        }
+      },
+      {
+        "edges": [
+          {
+            "condition": "If this is an emergency",
+            "id": "edge-1735699636733",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "If this is an emergency"
+            },
+            "destination_node_id": "node-1735697098325"
+          },
+          {
+            "condition": "If this is not an emergency",
+            "id": "edge-1735699684327",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "If this is not an emergency"
+            },
+            "destination_node_id": "node-1773538541546"
+          }
+        ],
+        "name": "verify_emergency_node",
+        "id": "node-1735699636733",
+        "type": "conversation",
+        "display_position": {
+          "x": 2742,
+          "y": 1470
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Ask user if this is an emergency."
+        }
+      },
+      {
+        "edges": [
+          {
+            "condition": "Describe the transition condition",
+            "id": "edge-1735711562449",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "If not, say:\n\"Hope you have a great day, take care!\""
+            },
+            "destination_node_id": "node-1735711605640"
+          },
+          {
+            "destination_node_id": "start-node-1735258608795",
+            "id": "edge-1774134710616-tu75lgv18",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "If yes, return to "
+            }
+          }
+        ],
+        "name": "Ending",
+        "id": "node-1735711562449",
+        "type": "conversation",
+        "display_position": {
+          "x": 4398,
+          "y": 2190
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "Is there anything else I can help you with today?"
+        }
+      },
+      {
+        "name": "End Call",
+        "id": "node-1735711605640",
+        "type": "end",
+        "display_position": {
+          "x": 4950,
+          "y": 2238
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Politely end the call"
+        }
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "## GENERAL FAQ HANDLING\n\nUse the {{company_info}} to answer general questions. Examples include:\n\n- Service area questions\n- Hours of operation\n- Services offered\n- General HVAC questions\n- Warranty and maintenance plan questions\n\n### Priority Order\n1. Always use company-specific knowledge first\n2. If not available, use general HVAC industry knowledge\n3. If neither applies, offer a call-back\n\n### Response Rules\n- Keep answers short, clear and conversational\n- Never provide overly technical explanations unless the\n  caller specifically asks for them\n- Never guess or assume information that is not in the\n  knowledge base\n- Never provide pricing, legal advice, or specific\n  scheduling commitments\n\n### If the Question Cannot Be Answered\n\"That's a great question, I want to make sure you get\nthe right answer. Can I grab your name and number so\nsomeone from our team can follow up with you directly?\"\nProceed to lead capture.\n\n### After Answering a Question\nIf the caller has additional needs, identify whether they require a service, quote, or transfer and route accordingly.\n\n### If the Caller Asks a Follow Up Question Answer using the same priority order above. If the follow\nup cannot be answered, proceed to the call-back offer above."
+        },
+        "name": "general_questions_node",
+        "edges": [
+          {
+            "destination_node_id": "node-1735711562449",
+            "id": "edge-1773537066512-mdndylx2w",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Question Answered Correctly"
+            }
+          },
+          {
+            "destination_node_id": "node-1735697098325",
+            "id": "edge-1773537469042-9j0uyv3tt",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Further Assistance/Help"
+            }
+          },
+          {
+            "destination_node_id": "node-1773538541546",
+            "id": "edge-1774138086161-bqwqqq7h7",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Lead Generated"
+            }
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1735697098325",
+            "transcript": [
+              {
+                "content": "I need more help\nI need further assistance\nThis doesn't answer my question\nThat's not what I'm looking for\nI still don't understand\nCan you explain that better\nI need someone to explain this to me\nI'm confused\nThat doesn't make sense\nI need more information\nCan I get more details\nI have more questions\nThat didn't help\nI need help with something else\nThis isn't what I needed\nI'm not getting the answer I need\nCan someone help me properly\nI need a more detailed answer\nCan I speak to someone who knows more\nI need expert advice\nI need technical help\nCan someone call me back about this\nI need a specialist\nCan I get a second opinion\nI want to speak to someone who can help\nThis is more complicated than I thought\nI need someone to walk me through this\nCan you get someone on the line\nI have a specific question\nI need to ask something important\nThis requires more information than you have\nI need to discuss this further\nCan I talk this through with someone\nI need a real answer\nCan someone with more knowledge help me\nI need to speak to a technician\nI need to speak to an expert\nI need to speak to someone in your team\nCan your team help me with this\nI need more clarity\nI need someone to clarify this for me\nCan you transfer me to someone who can help\nI'd like to speak to someone directly about this\nI think I need to talk to a person about this\nThis is above your pay grade\nYou're not answering my question\nI keep going in circles\nI've already asked this\nI've asked this before\nCan we just get someone on the phone\nI'd rather discuss this with a person\nI need a human opinion on this",
+                "role": "user"
+              }
+            ],
+            "id": "fe-1774135510320"
+          },
+          {
+            "destination_node_id": "node-1773538541546",
+            "transcript": [
+              {
+                "content": "I want to book\nI want to schedule\nI want to make an appointment\nI want to get someone out\nCan someone come out\nCan you send a technician\nI want to get this fixed\nI want to get this looked at\nI want to get this checked out\nI want to get a quote\nI want to get an estimate\nI want to get a price\nHow much would it cost\nHow much do you charge\nWhat would it cost to fix\nWhat would it cost to install\nCan I get a price on that\nCan I get a quote on that\nCan I get an estimate on that\nI think I need a repair\nI think I need a service\nI think I need a technician\nI need someone to take a look\nI'd like to get this sorted\nI'd like to book someone in\nI'd like to arrange a visit\nI'd like to get a technician out\nCan I arrange a callout\nCan I book a callout\nCan I arrange a service\nCan I book a service\nCan I arrange a repair\nCan I book a repair\nCan I get someone to come out\nI want to go ahead\nI'm ready to book\nI'd like to proceed\nLet's get that organised\nCan we get that sorted\nI want to get started\nWhen can someone come out\nWhen is the earliest available\nHow soon can someone come\nHow quickly can you get someone out\nI want to move forward with that\nThat's what I need\nThat sounds like what I need\nYes I'd like that\nYes please go ahead\nYes let's do that\nCan you help me with a booking\nI need to arrange something\nI need to sort something out",
+                "role": "user"
+              }
+            ],
+            "id": "fe-1774138527865"
+          }
+        ],
+        "id": "node-1773537066512",
+        "type": "conversation",
+        "display_position": {
+          "x": 1662,
+          "y": 2190
+        }
+      },
+      {
+        "name": "existing_customer_node",
+        "edges": [
+          {
+            "destination_node_id": "node-1735711562449",
+            "id": "edge-1773537726269-otopfjjl5",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Enquiry Resolved"
+            }
+          },
+          {
+            "destination_node_id": "node-1735697098325",
+            "id": "edge-1773537958490-qeu0z0ox8",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Enquiry Not Resolved\n"
+            }
+          }
+        ],
+        "id": "node-1773537726269",
+        "type": "conversation",
+        "display_position": {
+          "x": 2742,
+          "y": 6
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "## EXISTING CUSTOMER ENQUIRY\n\nThe caller is an existing customer calling about a current\nor past job. Examples include:\n\n- Asking where the technician is\n- Checking the status of a job\n- Asking about an existing quote\n- Asking about a scheduled appointment\n- Asking about an invoice or payment\n- Following up on previous work\n- Querying a charge or invoice amount\n- Asking about warranty on previous work\n\n---\n\n## YOUR GOAL\n\nDo not attempt to resolve the issue directly. Your job is to\ncollect the necessary details so the team at {{company_name}}\ncan follow up with the customer as quickly as possible.\n\n---\n\n## DATA CAPTURE\n\nAsk naturally, one question at a time:\n\n1. A short description of their enquiry\n2. The caller's full name\n3. The best phone number to reach them\n\nIf the caller mentions a job, technician, or appointment,\nask for any of the following that may be relevant:\n\n- The service address for the job\n- The approximate date of the job or appointment\n- The technician's name if they know it\n- A job number or invoice number if they have it\n\nDo not pressure the caller for details they do not have.\nAny information provided is helpful.\n\n---\n\n## IF THE CALLER IS FRUSTRATED OR HAS BEEN WAITING\n\nAcknowledge their frustration immediately:\n\"I completely understand, and I apologise for the delay.\nLet me make sure this gets flagged as a priority for our\nteam right away.\"\nProceed to data capture and flag the message as urgent.\n\n---\n\n## IF THE CALLER SAYS IT IS URGENT\n\n\"Understood, I will make sure this is marked as urgent for\nour team. Can I grab your details so someone can get back\nto you as quickly as possible?\"\nProceed to data capture and flag as priority follow up.\n\n---\n\n## CLOSING\n\nOnce details are collected, confirm back to the caller:\n\"Just to confirm, I have your name as {{caller_name}},\nbest phone number as {{phone_number}}, and your enquiry is regarding {{enquiry_description}}. Is that all correct?\"\n\nThen close with:\n\"Perfect, I have passed all of that through to the team\nat {{company_name}} and someone will be in touch with you\nshortly. \n\n---\n\n## RULES\n\n- Never provide scheduling updates or job status information\n  unless it is explicitly available in the company knowledge\n- Never provide technical answers or pricing information\n- Never make promises about response times or availability\n- Always keep the tone warm, professional and efficient\n- If the caller becomes abusive, follow the angry caller\n  protocol in the base prompt"
+        }
+      },
+      {
+        "instruction": {
+          "type": "prompt",
+          "text": "## CALL TYPE IDENTIFICATION\n\nAt the start of the call, listen carefully to identify whether the caller is:\n\nA. Requesting a SERVICE, REPAIR, or MAINTENANCE visit\nB. Requesting a QUOTE, INSTALLATION, ESTIMATE, or PRICE\n\nBoth call types follow the same data capture flow below. The only\ndifference is the opening context and how you frame your questions.\n\n---\n\n## OPENING CONTEXT\n\n### If Service / Repair / Maintenance (Type A):\nThe caller is requesting service or repair for their system but the\nissue does not appear to be an emergency. Examples include:\n- The system is not working properly\n- The system is making noise\n- The system needs servicing\n- The system is not cooling or heating efficiently\n- The caller wants to schedule a repair or inspection\n- The caller wants to book a technician\n\nFrame your questions around scheduling a service visit and collecting enough detail for the technician to be prepared.\n\n### If Quote / Installation / Estimate / Price (Type B):\nThe caller is requesting a quotation, installation, estimate, or price.\nBriefly explain that gathering a few details will help the team prepare\na more accurate quote and follow up promptly.\n\nFrame your questions around helping the team understand the scope of\nthe job so they can provide the best possible estimate.\n\n---\n\n## DATA CAPTURE FLOW\nCollect the following information for ALL call types:\n\n1. A short description of the issue, service, or installation needed\n2. The caller's full name\n3. The best phone number to reach them\n4. The service address\n\n- If the caller refuses to provide a full address, say:\n \"No problem at all, could I just get the zip code and city or suburb? That will work just fine for our team.\"\n- Accept zip code and suburb/city as sufficient\n\n5. Any additional notes or details that may help the team (for Type B, specifically encourage the caller to share anything they think will help get a more accurate estimate, but never pressure them for technical information)\n\n---\n\n## ADDRESS HANDLING\n\nAlways attempt the full address first:\n\"And what's the service address for the job?\"\n\nIf caller declines or hesitates:\n\"No problem, could I grab the zip code and suburb or city instead?\nThat's all we need for now.\"\n\nIf caller provides zip code and suburb/city, accept and move on.\nThis is sufficient for a lead.\n\n---\n\n## EMERGENCY DETECTION\n\nAt all times during the call, listen for any of the following signals:\n\n- The system has completely stopped working\n- There is significant leaking or water damage\n- There is a burning smell or smoke\n- The caller says it is an emergency\n- No heat in freezing conditions\n- Gas smell or carbon monoxide concern\n\nIF any of the above are detected at any point:\nIMMEDIATELY stop the data capture flow and say:\n- Route immediately to verify_emergency_node\n- Do not continue data capture\n- Do not delay the transfer\n\n---\n\n## CONFIRMATION\n\nOnce all details are collected, confirm back to the caller:\n\n\"Just to confirm, you're looking for {{service_requested}}\nin {{location}}, is that right?\"\n\nAdjust {{service_requested}} and {{location}} naturally based on\nwhat the caller has told you during the conversation.\n\n---\n\n## CLOSING\n\n\"Okay, I have recorded all of that information and someone from\nour team will be in touch with you soon.\n\n---\n\n## GENERAL RULES\n\n- Always ask one question at a time\n- Never ask for technical specifications or complicated details\n- Never provide pricing, estimates, or timeframes yourself\n- Never promise availability or scheduling windows\n- Keep the tone warm, friendly and efficient\n- If the caller seems unsure or nervous, reassure them: \"Don't worry, our team will take care of all the details, I just need a few basics to get the ball rolling for you.\""
+        },
+        "name": "nonemergency_leadcapture_node",
+        "edges": [
+          {
+            "destination_node_id": "node-1735699636733",
+            "id": "edge-1773538541546-hut5n02n6",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "If Emergency, go to"
+            }
+          },
+          {
+            "destination_node_id": "node-1735711562449",
+            "id": "edge-1773538883782-qp30cdm2t",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Confirm the details with the caller, then proceed"
+            }
+          }
+        ],
+        "finetune_transition_examples": [
+          {
+            "destination_node_id": "node-1735699636733",
+            "transcript": [
+              {
+                "content": "no cooling\nno heating\nsystem not working\nAC not working\nheater not working\nleaking unit\nwater leaking\nburning smell\nloud noise\nbroken system\nurgent repair\nemergency repair",
+                "role": "user"
+              }
+            ],
+            "id": "fe-1774135919803"
+          }
+        ],
+        "id": "node-1773538541546",
+        "type": "conversation",
+        "display_position": {
+          "x": 2190,
+          "y": 726
+        }
+      },
+      {
+        "name": "transfer_failed_node",
+        "edges": [
+          {
+            "destination_node_id": "node-1735711562449",
+            "id": "edge-1774134607402-j12yugd4u",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Proceed to End"
+            }
+          }
+        ],
+        "id": "node-1774134607402",
+        "type": "conversation",
+        "display_position": {
+          "x": 3846,
+          "y": 2166
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "Say:\n\"I'm sorry, it looks like that call didn't go through. All of our agents must be  on the phone at the moment, let me take down your Full name and Phone number so I can have someone get back to you right away\""
+        }
+      },
+      {
+        "name": "greeting_node",
+        "edges": [
+          {
+            "destination_node_id": "start-node-1735258608795",
+            "id": "edge-1774134752913-hr99j1haa",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "All"
+            }
+          }
+        ],
+        "id": "node-1774134752913",
+        "type": "conversation",
+        "display_position": {
+          "x": 558,
+          "y": 462
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "Hello this is {{agent_name}} from {{company_name}}"
+        }
+      }
+    ],
+    "start_node_id": "node-1774134752913",
+    "start_speaker": "agent",
+    "tools": [
+      {
+        "name": "check_appt_detail",
+        "description": "Check the detail of the appointment based on user's name and DOB.",
+        "tool_id": "tool-1735708026985",
+        "type": "custom",
+        "url": "https://api.retellai.com/var_test",
+        "timeout_ms": 4000
+      },
+      {
+        "tool_id": "tool-1735710605973",
+        "timeout_ms": 4000,
+        "name": "update_appt_detail",
+        "description": "Update the appointment",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "appointment_new_time": {
+              "type": "string",
+              "description": "The timestamp of the new appointment."
+            }
+          },
+          "required": [
+            "appointment_new_time"
+          ]
+        },
+        "url": "https://api.retellai.com/random_status"
+      }
+    ],
+    "model_choice": {
+      "type": "cascading",
+      "model": "gpt-4.1",
+      "high_priority": false
+    },
+    "tool_call_strict_mode": true,
+    "knowledge_base_ids": [],
+    "kb_config": {
+      "top_k": 3,
+      "filter_score": 0.6
+    },
+    "begin_tag_display_position": {
+      "x": 6,
+      "y": 510
+    },
+    "is_published": false,
+    "flex_mode": false,
+    "is_transfer_cf": false
+  }
+}
