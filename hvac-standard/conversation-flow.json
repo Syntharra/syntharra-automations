@@ -360,7 +360,8 @@
         "enable_bridge_audio_cue": true,
         "type": "cold_transfer",
         "agent_detection_timeout_ms": 30000,
-        "show_transferee_as_caller": false
+        "show_transferee_as_caller": false,
+        "transferee_greeting_text": "Heads up, you have an incoming call via Syntharra. The caller may need urgent assistance or has requested to speak with someone directly."
       },
       "is_start": false,
       "type": "transfer_call",
