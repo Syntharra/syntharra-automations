@@ -192,7 +192,7 @@
         512
       ],
       "parameters": {
-        "jsCode": "const data = $('Extract Agent ID').first().json;\nconst stripeCustomerId = data.extractedData?.stripe_customer_id || '';\n\nif (!stripeCustomerId) {\n  console.log('WARNING: No stripe_customer_id \u2014 cannot update Supabase');\n  return { ...data, _supabase_updated: false };\n}\n\nconst response = await this.helpers.httpRequest({\n  method: 'PATCH',\n  url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?stripe_customer_id=eq.' + stripeCustomerId,\n  headers: {\n    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Content-Type': 'application/json',\n    'Prefer': 'return=representation'\n  },\n  body: {\n    agent_id: data.agent_id,\n    conversation_flow_id: data.llm_id\n  },\n  json: true\n});\n\nreturn { ...data, _supabase_updated: true };"
+        "jsCode": "const data = $('Extract Agent ID').first().json;\nconst stripeCustomerId = data.extractedData?.stripe_customer_id || '';\nconst clientEmail = data.extractedData?.client_email || '';\nconst companyName = data.companyName || data.extractedData?.company_name || '';\n\n// Build the match filter \u2014 prefer stripe_customer_id, fall back to client_email, then company_name\nlet matchParam = '';\nif (stripeCustomerId) {\n  matchParam = 'stripe_customer_id=eq.' + encodeURIComponent(stripeCustomerId);\n} else if (clientEmail) {\n  matchParam = 'client_email=eq.' + encodeURIComponent(clientEmail);\n} else if (companyName) {\n  matchParam = 'company_name=eq.' + encodeURIComponent(companyName);\n} else {\n  console.log('WARNING: No identifier available to match Supabase record');\n  return { ...data, _supabase_updated: false, _reason: 'No match identifier' };\n}\n\nconst response = await this.helpers.httpRequest({\n  method: 'PATCH',\n  url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?' + matchParam,\n  headers: {\n    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Content-Type': 'application/json',\n    'Prefer': 'return=representation'\n  },\n  body: {\n    agent_id: data.agent_id,\n    conversation_flow_id: data.llm_id\n  },\n  json: true\n});\n\nconst updated = Array.isArray(response) && response.length > 0;\nconsole.log(updated ? 'Supabase updated with agent_id' : 'WARNING: Supabase update returned empty');\n\nreturn { ...data, _supabase_updated: updated };"
       }
     },
     {
@@ -222,6 +222,19 @@
         720
       ],
       "notes": "Update 'to' address to support@syntharra.com at go-live."
+    },
+    {
+      "id": "5827d86d-7bf5-4b8c-afa9-e6fb9e973593",
+      "name": "Send Setup Emails",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        512
+      ],
+      "parameters": {
+        "jsCode": "// ============================================================\n// Send Setup Emails \u2014 routes based on CRM/calendar platform\n// ============================================================\n// Logs emails until SES is configured. When SES is ready,\n// replace console.log with actual this.helpers.httpRequest to SES.\n// ============================================================\n\nconst data = $('Extract Agent ID').first().json;\nconst companyName = data.companyName || data.extractedData?.company_name || '';\nconst clientEmail = data.extractedData?.client_email || '';\nconst clientName = data.extractedData?.owner_name || '';\nconst crmPlatform = data.extractedData?.crm_platform || '';\nconst calendarPlatform = data.extractedData?.calendar_platform || '';\nconst agentId = data.agent_id || '';\n\nconst emails = [];\n\n// OAuth platforms get a \"Connect Now\" button email\nconst oauthPlatforms = [\n  'Google Calendar', 'Microsoft Outlook', 'Calendly', 'Cal.com',\n  'Acuity Scheduling', 'Square Appointments', 'Jobber', 'Jobber Calendar',\n  'Housecall Pro', 'Housecall Pro Calendar', 'GoHighLevel', 'HubSpot',\n  'Zoho CRM', 'Pipedrive', 'Salesforce', 'ServiceM8'\n];\n\n// API key platforms get step-by-step instructions\nconst apiKeyPlatforms = [\n  'ServiceTitan', 'ServiceTitan Calendar', 'FieldEdge', 'Kickserv', 'Workiz'\n];\n\n// Calendar setup email\nif (calendarPlatform && calendarPlatform !== 'None' && calendarPlatform !== 'Custom / Other') {\n  const isOAuth = oauthPlatforms.includes(calendarPlatform);\n  emails.push({\n    to: clientEmail,\n    subject: isOAuth \n      ? `Connect Your ${calendarPlatform} \u2014 1 Click Setup`\n      : `Connect Your ${calendarPlatform} \u2014 Quick Setup`,\n    platform: calendarPlatform,\n    type: isOAuth ? 'oauth' : 'apikey',\n    category: 'calendar'\n  });\n}\n\n// CRM setup email (only if different from calendar)\nconst calIsCRM = ['Jobber Calendar', 'ServiceTitan Calendar', 'Housecall Pro Calendar'].includes(calendarPlatform);\nif (crmPlatform && crmPlatform !== 'None' && crmPlatform !== 'Custom / Other' && !calIsCRM) {\n  const isOAuth = oauthPlatforms.includes(crmPlatform);\n  emails.push({\n    to: clientEmail,\n    subject: isOAuth\n      ? `Connect Your ${crmPlatform} \u2014 1 Click Setup`\n      : `Connect Your ${crmPlatform} \u2014 Quick Setup`,\n    platform: crmPlatform,\n    type: isOAuth ? 'oauth' : 'apikey',\n    category: 'crm'\n  });\n}\n\n// Log the emails (replace with SES send when ready)\nfor (const email of emails) {\n  console.log(`[SETUP EMAIL] To: ${email.to} | Subject: ${email.subject} | Type: ${email.type} | Platform: ${email.platform}`);\n}\n\nif (emails.length === 0) {\n  console.log('[SETUP EMAIL] No integration emails needed (no CRM/calendar selected)');\n}\n\nreturn {\n  ...data,\n  _setup_emails_count: emails.length,\n  _setup_emails: emails,\n  _reason: 'SES not yet configured \u2014 emails logged only'\n};"
+      }
     }
   ],
   "connections": {
@@ -334,6 +347,17 @@
           },
           {
             "node": "Send Internal Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Send Setup Emails",
             "type": "main",
             "index": 0
           }
