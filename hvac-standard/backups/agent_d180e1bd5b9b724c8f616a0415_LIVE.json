@@ -1,0 +1,56 @@
+{
+  "agent_id": "agent_d180e1bd5b9b724c8f616a0415",
+  "channel": "voice",
+  "last_modification_timestamp": 1774573093891,
+  "agent_name": "Arctic Breeze HVAC [HVAC-STD]",
+  "response_engine": {
+    "type": "conversation-flow",
+    "version": 3,
+    "conversation_flow_id": "conversation_flow_ed1ff4a600af"
+  },
+  "webhook_url": "https://syntharra.app.n8n.cloud/webhook/retell-hvac-webhook",
+  "language": "multi",
+  "data_storage_setting": "everything",
+  "opt_in_signed_url": false,
+  "version": 3,
+  "is_published": false,
+  "post_call_analysis_model": "gpt-4o-mini",
+  "pii_config": {
+    "mode": "post_call",
+    "categories": []
+  },
+  "analysis_successful_prompt": "Was the call successfully handled? Did the AI collect the necessary information or transfer the call?",
+  "analysis_summary_prompt": "Summarize this call in 1-2 sentences, including the caller name, service requested, and outcome.",
+  "analysis_user_sentiment_prompt": "What was the caller sentiment: Positive, Neutral, or Negative?",
+  "post_call_analysis_data": [
+    {
+      "type": "system-presets",
+      "name": "call_summary",
+      "description": "Summarize this call in 1-2 sentences, including the caller name, service requested, and outcome."
+    },
+    {
+      "type": "system-presets",
+      "name": "call_successful",
+      "description": "Was the call successfully handled? Did the AI collect the necessary information or transfer the call?"
+    },
+    {
+      "type": "system-presets",
+      "name": "user_sentiment",
+      "description": "What was the caller sentiment: Positive, Neutral, or Negative?"
+    }
+  ],
+  "voice_id": "retell-Sloane",
+  "voice_temperature": 0.7,
+  "voice_speed": 1,
+  "enable_dynamic_voice_speed": true,
+  "volume": 1,
+  "max_call_duration_ms": 3600000,
+  "interruption_sensitivity": 0.8,
+  "responsiveness": 0.9,
+  "enable_dynamic_responsiveness": true,
+  "allow_user_dtmf": true,
+  "user_dtmf_options": {},
+  "webhook_events": [
+    "call_analyzed"
+  ]
+}
