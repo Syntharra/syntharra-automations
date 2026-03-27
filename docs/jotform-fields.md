@@ -92,3 +92,35 @@ Jotform conditional visibility needs to be configured in the Jotform UI (Form Bu
 - q26 = "Yes" → Show q27
 - q25 = "Yes" → Show q44
 - q46 contains "Yes" → Show q58
+
+### NEW Toggle Questions (q69-q71)
+These simplify the form by hiding optional sections behind Yes/No toggles:
+
+| QID | Name | Type | Purpose |
+|-----|------|------|---------|
+| q69 | Separate Emergency Phone? | dropdown | "No - use same transfer number" / "Yes - dedicated emergency line" → Shows q21 |
+| q70 | Add Marketing Details? | dropdown | "No - skip" / "Yes - add reviews, promos, USPs" → Shows q55, q56, q51, q52, q53 |
+| q71 | Additional Notification Contacts? | dropdown | "No - one is enough" / "Yes - notify more people" → Shows q64, q65, q66, q67 |
+
+### Conditional Logic — MUST SET IN JOTFORM UI
+Card-style forms require manual conditional setup in the Jotform builder.
+Go to: Form Builder → Settings → Conditions → Add Condition
+
+**Rules to create:**
+1. If q20 (Emergency Service) contains "Yes" → Show q69, q22, q68
+2. If q69 (Separate Emergency Phone) = "Yes - I have a dedicated emergency line" → Show q21
+3. If q26 (Warranties) = "Yes" → Show q27
+4. If q25 (Financing) = "Yes" → Show q44
+5. If q46 (Maintenance Plans) = "Yes - we offer..." → Show q58
+6. If q70 (Marketing Details) = "Yes - add..." → Show q55, q56, q51, q52, q53
+7. If q71 (Additional Notifications) = "Yes - notify more" → Show q64, q65, q66, q67
+
+**Result:** A basic client answering "No" to optional sections sees ~25-28 questions instead of 55+.
+
+### Field ID Mapping (n8n Parse JotForm Data)
+The n8n workflow supports both old and new field IDs for backward compatibility:
+- notification_email_2: q66 (primary) / q59 (fallback)
+- notification_email_3: q67 (primary) / q60 (fallback)
+- notification_sms_2: q64 (primary) / q61 (fallback)
+- notification_sms_3: q65 (primary) / q62 (fallback)
+- after_hours_transfer: q68 (maps dropdown text → 'all' / 'emergency_only' / 'never')
