@@ -1,0 +1,381 @@
+{
+  "updatedAt": "2026-03-27T21:23:57.380Z",
+  "createdAt": "2026-03-27T21:23:57.380Z",
+  "id": "8WYFy093XA6UKB7L",
+  "name": "HVAC Premium Integration Hub",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "f255e7de-bfb3-49b3-8286-f7add438984e",
+      "name": "Integration Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "webhookId": "99288a1d-12d9-4d16-b1ad-fca522e3d84d",
+      "position": [
+        -800,
+        400
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "premium-integration",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      }
+    },
+    {
+      "id": "28f636f6-acc1-44ed-9d22-55b404968ca0",
+      "name": "Extract Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        400
+      ],
+      "parameters": {
+        "jsCode": "// Extract the integration request from the webhook body\nconst body = $input.first().json.body || $input.first().json;\n\nconst action = body.action || 'unknown';\nconst agentId = body.agent_id || '';\nconst data = body.data || {};\n\nreturn {\n  action,\n  agent_id: agentId,\n  // Booking data\n  caller_name: data.caller_name || '',\n  caller_phone: data.caller_phone || '',\n  caller_email: data.caller_email || '',\n  caller_address: data.caller_address || '',\n  service_requested: data.service_requested || '',\n  job_type: data.job_type || '',\n  preferred_date: data.preferred_date || '',\n  preferred_time_window: data.preferred_time_window || '',\n  duration_minutes: data.duration_minutes || 60,\n  // For reschedule\n  original_date: data.original_date || '',\n  new_date: data.new_date || '',\n  new_time_window: data.new_time_window || '',\n  // For cancel\n  appointment_id: data.appointment_id || '',\n  // Raw data passthrough\n  _raw: body\n};"
+      }
+    },
+    {
+      "id": "d7e39418-fc69-4037-aa88-f3c61c709312",
+      "name": "Look Up Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -160,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.{{ $json.agent_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5eddc97f-85a1-4b41-ab4c-90b00b1b473a",
+      "name": "Parse Client Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const request = $('Extract Request').first().json;\nconst clients = $input.first().json;\n\n// Supabase returns array\nconst client = Array.isArray(clients) ? clients[0] : clients;\n\nif (!client || !client.agent_id) {\n  return {\n    ...request,\n    _error: true,\n    _message: 'Client not found for agent_id: ' + request.agent_id,\n    calendar_platform: 'none',\n    crm_platform: 'none'\n  };\n}\n\nreturn {\n  ...request,\n  _error: false,\n  company_name: client.company_name || '',\n  calendar_platform: client.calendar_platform || 'none',\n  calendar_status: client.calendar_status || 'pending',\n  calendar_access_token: client.calendar_access_token || '',\n  calendar_refresh_token: client.calendar_refresh_token || '',\n  calendar_api_key: client.calendar_api_key || '',\n  crm_platform: client.crm_platform || 'none',\n  crm_status: client.crm_status || 'pending',\n  crm_access_token: client.crm_access_token || '',\n  crm_refresh_token: client.crm_refresh_token || '',\n  crm_api_key: client.crm_api_key || '',\n  booking_buffer_minutes: client.booking_buffer_minutes || 30,\n  default_appointment_duration: client.default_appointment_duration || 60,\n  booking_confirmation_method: client.booking_confirmation_method || 'email',\n  timezone: client.timezone || 'America/Chicago',\n  lead_email: client.lead_email || '',\n  lead_phone: client.lead_phone || ''\n};"
+      }
+    },
+    {
+      "id": "474fbcae-629f-43b7-88bc-ce73ce8e6478",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        480,
+        400
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "check_availability",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "check_availability",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "create_booking",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "create_booking",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "reschedule",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "reschedule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "cancel",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "crm_push",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "crm_push",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      }
+    },
+    {
+      "id": "709317f2-f483-4263-845a-b2aa5dda942a",
+      "name": "Check Availability",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// ============================================================\n// CHECK AVAILABILITY \u2014 Routes to platform-specific calendar API\n// ============================================================\nconst d = $input.first().json;\nconst platform = d.calendar_platform || 'none';\nconst status = d.calendar_status || 'pending';\n\n// If calendar not connected yet, return fallback response\nif (status !== 'connected' || platform === 'none') {\n  return {\n    available: false,\n    reason: 'calendar_not_connected',\n    message: 'Calendar integration is not yet connected. Please collect caller details for manual follow-up.',\n    alternatives: []\n  };\n}\n\n// Route by platform\nconst date = d.preferred_date;\nconst timeWindow = d.preferred_time_window;\nconst duration = d.duration_minutes || d.default_appointment_duration || 60;\nconst timezone = d.timezone || 'America/Chicago';\n\n// GOOGLE CALENDAR\nif (platform === 'Google Calendar') {\n  try {\n    // Build time range for the requested window\n    const dateObj = new Date(date + 'T00:00:00');\n    let startHour, endHour;\n    if (timeWindow === 'morning') { startHour = 8; endHour = 12; }\n    else if (timeWindow === 'afternoon') { startHour = 12; endHour = 17; }\n    else { startHour = 8; endHour = 17; }\n    \n    const timeMin = date + `T${String(startHour).padStart(2,'0')}:00:00`;\n    const timeMax = date + `T${String(endHour).padStart(2,'0')}:00:00`;\n    \n    // Call Google Calendar FreeBusy API\n    const response = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://www.googleapis.com/calendar/v3/freeBusy',\n      headers: {\n        'Authorization': 'Bearer ' + d.calendar_access_token,\n        'Content-Type': 'application/json'\n      },\n      body: {\n        timeMin: timeMin + 'Z',\n        timeMax: timeMax + 'Z',\n        timeZone: timezone,\n        items: [{ id: 'primary' }]\n      },\n      json: true\n    });\n    \n    const busySlots = response.calendars?.primary?.busy || [];\n    const isAvailable = busySlots.length === 0;\n    \n    return {\n      available: isAvailable,\n      reason: isAvailable ? 'slot_available' : 'slot_busy',\n      message: isAvailable \n        ? `The ${timeWindow} slot on ${date} is available.`\n        : `The ${timeWindow} slot on ${date} is not available.`,\n      busy_slots: busySlots,\n      alternatives: isAvailable ? [] : [\n        { date: date, time_window: timeWindow === 'morning' ? 'afternoon' : 'morning' }\n      ]\n    };\n  } catch (err) {\n    // Token might be expired, try refresh\n    return {\n      available: false,\n      reason: 'calendar_error',\n      message: 'Unable to check calendar availability right now. Please collect caller details for manual follow-up.',\n      error: err.message\n    };\n  }\n}\n\n// CALENDLY \u2014 uses Calendly API\nif (platform === 'Calendly') {\n  // Calendly doesn't have a direct free/busy check \u2014 availability is managed by event types\n  // Return available and let the create_booking handle the actual scheduling\n  return {\n    available: true,\n    reason: 'calendly_assumed_available',\n    message: `Calendly slot on ${date} (${timeWindow}) is available.`,\n    alternatives: []\n  };\n}\n\n// JOBBER CALENDAR / HOUSECALL PRO CALENDAR\nif (platform === 'Jobber Calendar' || platform === 'Housecall Pro Calendar') {\n  // These platforms manage availability through their job scheduling\n  // For now, return available and create the job/visit in create_booking\n  return {\n    available: true,\n    reason: 'field_service_assumed_available',\n    message: `${timeWindow.charAt(0).toUpperCase() + timeWindow.slice(1)} slot on ${date} is available.`,\n    alternatives: []\n  };\n}\n\n// DEFAULT / UNSUPPORTED\nreturn {\n  available: true,\n  reason: 'platform_not_integrated',\n  message: `Slot on ${date} (${timeWindow}) is tentatively available.`,\n  alternatives: []\n};"
+      }
+    },
+    {
+      "id": "61b615bd-7867-4e46-be8a-10760e17e1c1",
+      "name": "Create Booking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// ============================================================\n// CREATE BOOKING \u2014 Routes to platform-specific calendar API\n// ============================================================\nconst d = $input.first().json;\nconst platform = d.calendar_platform || 'none';\nconst status = d.calendar_status || 'pending';\n\nif (status !== 'connected' || platform === 'none') {\n  return {\n    success: false,\n    reason: 'calendar_not_connected',\n    message: 'Calendar not connected. Details captured for manual booking.',\n    booking_id: null\n  };\n}\n\nconst date = d.preferred_date;\nconst timeWindow = d.preferred_time_window;\nconst duration = d.duration_minutes || d.default_appointment_duration || 60;\nconst timezone = d.timezone || 'America/Chicago';\n\n// Build start/end times\nlet startHour = timeWindow === 'morning' ? 8 : 12;\nconst startTime = date + `T${String(startHour).padStart(2,'0')}:00:00`;\nconst endMinutes = startHour * 60 + duration;\nconst endHour = Math.floor(endMinutes / 60);\nconst endMin = endMinutes % 60;\nconst endTime = date + `T${String(endHour).padStart(2,'0')}:${String(endMin).padStart(2,'0')}:00`;\n\n// GOOGLE CALENDAR\nif (platform === 'Google Calendar') {\n  try {\n    const event = {\n      summary: `${d.service_requested || 'Service Call'} \u2014 ${d.caller_name || 'Customer'}`,\n      description: [\n        `Customer: ${d.caller_name}`,\n        `Phone: ${d.caller_phone}`,\n        d.caller_email ? `Email: ${d.caller_email}` : '',\n        `Address: ${d.caller_address}`,\n        `Service: ${d.service_requested}`,\n        `Booked by: Syntharra AI Receptionist`\n      ].filter(Boolean).join('\\n'),\n      start: { dateTime: startTime, timeZone: timezone },\n      end: { dateTime: endTime, timeZone: timezone },\n      location: d.caller_address || ''\n    };\n    \n    if (d.caller_email) {\n      event.attendees = [{ email: d.caller_email }];\n    }\n    \n    const response = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://www.googleapis.com/calendar/v3/calendars/primary/events',\n      headers: {\n        'Authorization': 'Bearer ' + d.calendar_access_token,\n        'Content-Type': 'application/json'\n      },\n      body: event,\n      json: true\n    });\n    \n    return {\n      success: true,\n      reason: 'booked',\n      message: `Appointment booked for ${date} (${timeWindow}).`,\n      booking_id: response.id,\n      calendar_link: response.htmlLink,\n      platform: 'Google Calendar'\n    };\n  } catch (err) {\n    return {\n      success: false,\n      reason: 'calendar_error',\n      message: 'Failed to create calendar event. Details captured for manual booking.',\n      error: err.message\n    };\n  }\n}\n\n// CALENDLY \u2014 would use Calendly API to create an invitee\nif (platform === 'Calendly') {\n  return {\n    success: true,\n    reason: 'calendly_placeholder',\n    message: 'Booking request logged for Calendly. Integration pending.',\n    booking_id: null,\n    platform: 'Calendly'\n  };\n}\n\n// JOBBER\nif (platform === 'Jobber Calendar' || platform === 'Jobber') {\n  if (!d.crm_api_key && !d.calendar_api_key) {\n    return {\n      success: false,\n      reason: 'no_api_key',\n      message: 'Jobber API key not configured. Details captured for manual booking.'\n    };\n  }\n  \n  // Jobber API: Create a Job with a Visit\n  // This would use the Jobber GraphQL API\n  return {\n    success: true,\n    reason: 'jobber_placeholder',\n    message: `Booking logged for Jobber \u2014 ${date} (${timeWindow}).`,\n    booking_id: null,\n    platform: 'Jobber'\n  };\n}\n\n// DEFAULT\nreturn {\n  success: true,\n  reason: 'manual_follow_up',\n  message: `Booking details captured for ${date} (${timeWindow}). Team will confirm.`,\n  booking_id: null,\n  platform: platform\n};"
+      }
+    },
+    {
+      "id": "e4587c02-9c37-4a3a-a369-a4746627767c",
+      "name": "Reschedule Booking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        600
+      ],
+      "parameters": {
+        "jsCode": "// RESCHEDULE \u2014 placeholder for platform-specific reschedule logic\nconst d = $input.first().json;\nconst platform = d.calendar_platform || 'none';\n\n// Google Calendar: PATCH event with new times\n// Jobber: Update visit schedule\n// Calendly: Cancel + rebook\n\nreturn {\n  success: true,\n  reason: 'reschedule_logged',\n  message: `Reschedule request captured: ${d.original_date} \u2192 ${d.new_date} (${d.new_time_window}).`,\n  platform: platform\n};"
+      }
+    },
+    {
+      "id": "7c8fa4f2-a235-4aa1-bc34-28fc98a1abca",
+      "name": "Cancel Booking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        900
+      ],
+      "parameters": {
+        "jsCode": "// CANCEL \u2014 placeholder for platform-specific cancellation\nconst d = $input.first().json;\nconst platform = d.calendar_platform || 'none';\n\n// Google Calendar: DELETE event\n// Jobber: Cancel job/visit\n// Calendly: Cancel invitee\n\nreturn {\n  success: true,\n  reason: 'cancellation_logged',\n  message: 'Cancellation request captured.',\n  platform: platform\n};"
+      }
+    },
+    {
+      "id": "653412c6-2a72-447a-a4a5-1f795711613d",
+      "name": "CRM Push",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        1200
+      ],
+      "parameters": {
+        "jsCode": "// ============================================================\n// CRM PUSH \u2014 Creates/updates contact + job in CRM\n// Called by the call processor after each call\n// ============================================================\nconst d = $input.first().json;\nconst platform = d.crm_platform || 'none';\nconst status = d.crm_status || 'pending';\n\nif (status !== 'connected' || platform === 'none') {\n  return {\n    success: false,\n    reason: 'crm_not_connected',\n    message: 'CRM not connected. Lead data captured in Supabase only.'\n  };\n}\n\n// JOBBER \u2014 GraphQL API\nif (platform === 'Jobber') {\n  // Would create Client + Job via Jobber GraphQL\n  // mutation { clientCreate(input: { ... }) { client { id } } }\n  return {\n    success: true,\n    reason: 'jobber_placeholder',\n    message: 'Contact and job data logged for Jobber sync.',\n    platform: 'Jobber'\n  };\n}\n\n// HOUSECALL PRO\nif (platform === 'Housecall Pro') {\n  // Would use HCP API to create customer + job\n  return {\n    success: true,\n    reason: 'hcp_placeholder',\n    message: 'Contact and job data logged for HCP sync.',\n    platform: 'Housecall Pro'\n  };\n}\n\n// SERVICETITAN\nif (platform === 'ServiceTitan') {\n  // Would use ServiceTitan API to create customer + booking\n  return {\n    success: true,\n    reason: 'servicetitan_placeholder',\n    message: 'Contact and job data logged for ServiceTitan sync.',\n    platform: 'ServiceTitan'\n  };\n}\n\n// GOHIGHLEVEL\nif (platform === 'GoHighLevel') {\n  // Would use GHL API to create contact + opportunity\n  return {\n    success: true,\n    reason: 'ghl_placeholder',\n    message: 'Contact logged for GoHighLevel sync.',\n    platform: 'GoHighLevel'\n  };\n}\n\n// DEFAULT\nreturn {\n  success: true,\n  reason: 'crm_logged',\n  message: 'Lead data captured. CRM sync pending platform implementation.',\n  platform: platform\n};"
+      }
+    },
+    {
+      "id": "878f12e9-636d-46a5-8deb-3fb1589bde47",
+      "name": "Unknown Action",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        1500
+      ],
+      "parameters": {
+        "jsCode": "return {\n  success: false,\n  reason: 'unknown_action',\n  message: 'Unknown integration action: ' + ($input.first().json.action || 'none')\n};"
+      }
+    }
+  ],
+  "connections": {
+    "Integration Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Request": {
+      "main": [
+        [
+          {
+            "node": "Look Up Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look Up Client": {
+      "main": [
+        [
+          {
+            "node": "Parse Client Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Client Config": {
+      "main": [
+        [
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "Check Availability",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Booking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reschedule Booking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancel Booking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRM Push",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unknown Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "cf521691-de3b-4cc2-836f-67f116d8cec6",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-27T21:23:57.382Z",
+      "createdAt": "2026-03-27T21:23:57.382Z",
+      "role": "workflow:owner",
+      "workflowId": "8WYFy093XA6UKB7L",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

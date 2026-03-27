@@ -1,0 +1,253 @@
+{
+  "updatedAt": "2026-03-27T02:04:11.213Z",
+  "createdAt": "2026-03-27T00:37:48.034Z",
+  "id": "EAHgqAfQoCDumvPU",
+  "name": "Nightly GitHub Backup",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-001",
+      "name": "Every Night 2am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 2,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "backup-001",
+      "name": "Backup All to GitHub",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst RETELL_KEY = 'key_0157d9401f66cfa1b51fadc66445';\nconst N8N_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWJjM2MzMi1mYzNkLTRlNjYtYTJhOC01NDM5ZjA1NjA2YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiN2JjZTU4ZDAtYzgwYy00YTRjLWE2MzAtNTU0OTJjM2Q4MWZhIiwiaWF0IjoxNzc0NDAwNzY1fQ.NGQA3HMCAgYVbwYreM5GbQKjNTn9FsdgzsjHltvnxdI';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0';\nconst GH_TOKEN = 'ghp_REDACTED_SEE_N8N_CREDENTIALS';\nconst REPO = 'Syntharra/syntharra-automations';\nconst GH_BASE = 'https://api.github.com';\nconst ghH = { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };\nconst retellH = { 'Authorization': 'Bearer ' + RETELL_KEY };\nconst n8nH = { 'X-N8N-API-KEY': N8N_KEY };\nconst sbH = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };\nconst date = new Date().toISOString().split('T')[0];\nconst results = [];\n\nasync function ghPush(path, str, msg) {\n  const encoded = Buffer.from(str).toString('base64');\n  const url = GH_BASE + '/repos/' + REPO + '/contents/' + path;\n  let sha = null;\n  try { const r = await $http.request({ method: 'GET', url, headers: ghH }); sha = r.data.sha; } catch(e) {}\n  const body = { message: msg, content: encoded };\n  if (sha) body.sha = sha;\n  const r = await $http.request({ method: 'PUT', url, headers: ghH, body: JSON.stringify(body) });\n  return r.data.commit.sha.slice(0,10);\n}\n\nfunction redact(s) {\n  return s\n    .replace(/KEY[0-9A-Fa-f_]{20,}/g,'[TELNYX_REDACTED]')\n    .replace(/AIzaSy[A-Za-z0-9_-]+/g,'[GOOGLE_REDACTED]')\n    .replace(/whsec_[A-Za-z0-9]+/g,'[STRIPE_REDACTED]')\n    .replace(/ghp_[A-Za-z0-9]+/g,'[GH_TOKEN_REDACTED]');\n}\n\n// \u2500\u2500 1. Retell live 12-node flow \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const r = await $http.request({ method: 'GET', url: 'https://api.retellai.com/get-conversation-flow/conversation_flow_ed1ff4a600af', headers: retellH });\n  const sha = await ghPush('hvac-standard/backups/conversation_flow_ed1ff4a600af_LIVE.json', JSON.stringify(r.data, null, 2), 'nightly: Retell flow - ' + date);\n  results.push({ item: 'retell_flow', status: 'ok', sha });\n} catch(e) { results.push({ item: 'retell_flow', status: 'error', error: e.message }); }\n\n// \u2500\u2500 2. Retell agents \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const r = await $http.request({ method: 'GET', url: 'https://api.retellai.com/list-agents', headers: retellH });\n  const seen = new Set();\n  const unique = r.data.filter(a => { if(seen.has(a.agent_id)) return false; seen.add(a.agent_id); return true; });\n  const sha = await ghPush('hvac-standard/backups/agents_LIVE.json', JSON.stringify(unique, null, 2), 'nightly: Retell agents - ' + date);\n  results.push({ item: 'retell_agents', status: 'ok', sha });\n} catch(e) { results.push({ item: 'retell_agents', status: 'error', error: e.message }); }\n\n// \u2500\u2500 3. Readable prompt export (Markdown) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const r = await $http.request({ method: 'GET', url: 'https://api.retellai.com/get-conversation-flow/conversation_flow_ed1ff4a600af', headers: retellH });\n  const flow = r.data;\n  let md = '# HVAC Standard Agent \u2014 Prompt Export\\n';\n  md += `_Exported: ${date}_\\n\\n`;\n  md += '---\\n\\n## Global Prompt\\n\\n```\\n' + (flow.global_prompt || '') + '\\n```\\n\\n---\\n\\n## Nodes\\n\\n';\n  for (const node of (flow.nodes || [])) {\n    md += `### ${node.name} (${node.type})\\n\\n`;\n    const instr = node.instruction;\n    if (instr) {\n      const text = typeof instr === 'string' ? instr : (instr.text || JSON.stringify(instr));\n      md += '**Instruction:**\\n```\\n' + text + '\\n```\\n\\n';\n    }\n    const edges = node.edges || (node.edge ? [node.edge] : []);\n    if (edges.length) {\n      md += '**Edges:**\\n';\n      for (const e of edges) {\n        const cond = e.transition_condition?.prompt || e.condition || 'default';\n        md += `- \u2192 \\`${e.destination_node_id}\\` (${cond})\\n`;\n      }\n      md += '\\n';\n    }\n  }\n  const sha = await ghPush('hvac-standard/prompts/HVAC_Standard_Prompts.md', md, 'nightly: readable prompt export - ' + date);\n  results.push({ item: 'prompt_export', status: 'ok', sha });\n} catch(e) { results.push({ item: 'prompt_export', status: 'error', error: e.message }); }\n\n// \u2500\u2500 4. Supabase schema \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const tables = ['hvac_standard_agent', 'hvac_call_log', 'stripe_payment_data', 'client_subscriptions', 'billing_cycles', 'overage_charges'];\n  let schema = '# Syntharra Supabase Schema\\n\\n_Exported: ' + date + '_\\n\\n';\n  for (const table of tables) {\n    try {\n      const r = await $http.request({\n        method: 'GET',\n        url: SB_URL + '/rest/v1/' + table + '?limit=0',\n        headers: { ...sbH, 'Accept': 'application/json', 'Prefer': 'count=exact' }\n      });\n      // Get columns via introspection\n      const r2 = await $http.request({\n        method: 'GET',\n        url: SB_URL + '/rest/v1/' + table + '?limit=1',\n        headers: sbH\n      });\n      const cols = r2.data && r2.data.length > 0 ? Object.keys(r2.data[0]) : [];\n      schema += '## ' + table + '\\n\\nColumns: ' + (cols.length ? cols.join(', ') : 'empty table') + '\\n\\n';\n    } catch(e) {\n      schema += '## ' + table + '\\n\\nError fetching: ' + e.message + '\\n\\n';\n    }\n  }\n  // Also get full schema via Supabase introspection endpoint\n  try {\n    const r3 = await $http.request({\n      method: 'GET',\n      url: SB_URL + '/rest/v1/?apikey=' + SB_KEY,\n      headers: sbH\n    });\n    schema += '\\n## Full OpenAPI Schema\\n\\n```json\\n' + JSON.stringify(r3.data, null, 2).slice(0, 50000) + '\\n```\\n';\n  } catch(e) {}\n\n  const sha = await ghPush('supabase/schema_LIVE.md', schema, 'nightly: Supabase schema - ' + date);\n  results.push({ item: 'supabase_schema', status: 'ok', sha });\n} catch(e) { results.push({ item: 'supabase_schema', status: 'error', error: e.message }); }\n\n// \u2500\u2500 5. n8n workflows \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst wfs = {\n  'call-processor': 'OyDCyiOjG0twguXq',\n  'onboarding': 'k0KeQxWb3j3BbQEk',\n  'stripe': 'ydzfhitWiF5wNzEy',\n  'weekly-lead-report': 'mFuiB4pyXyWSIM5P',\n  'minutes-calculator': '9SuchBjqhFmLbH8o',\n  'usage-alert': 'lQsYJWQeP5YPikam',\n  'publish-retell': 'sBFhshlsz31L6FV8',\n  'welcome-email-manual': 'Rd5HiN7v2SRwNmiY',\n};\nfor (const [name, wfId] of Object.entries(wfs)) {\n  try {\n    const r = await $http.request({ method: 'GET', url: 'https://syntharra.app.n8n.cloud/api/v1/workflows/' + wfId, headers: n8nH });\n    const sha = await ghPush('hvac-standard/n8n-workflows/' + name + '_' + wfId + '.json', redact(JSON.stringify(r.data, null, 2)), 'nightly: n8n ' + name + ' - ' + date);\n    results.push({ item: 'n8n_' + name, status: 'ok', sha });\n  } catch(e) { results.push({ item: 'n8n_' + name, status: 'error', error: e.message }); }\n}\n\nreturn results.map(r => ({ json: r }));\n"
+      }
+    }
+  ],
+  "connections": {
+    "Every Night 2am": {
+      "main": [
+        [
+          {
+            "node": "Backup All to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": {
+    "node:Every Night 2am": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+  "activeVersionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+  "versionCounter": 31,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-27T00:37:48.037Z",
+      "createdAt": "2026-03-27T00:37:48.037Z",
+      "role": "workflow:owner",
+      "workflowId": "EAHgqAfQoCDumvPU",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-27T00:53:38.231Z",
+    "createdAt": "2026-03-27T00:53:38.231Z",
+    "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+    "workflowId": "EAHgqAfQoCDumvPU",
+    "nodes": [
+      {
+        "id": "trigger-001",
+        "name": "Every Night 2am",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "days",
+                "triggerAtHour": 2,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "backup-001",
+        "name": "Backup All to GitHub",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          280,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "\nconst RETELL_KEY = 'key_0157d9401f66cfa1b51fadc66445';\nconst N8N_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWJjM2MzMi1mYzNkLTRlNjYtYTJhOC01NDM5ZjA1NjA2YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiN2JjZTU4ZDAtYzgwYy00YTRjLWE2MzAtNTU0OTJjM2Q4MWZhIiwiaWF0IjoxNzc0NDAwNzY1fQ.NGQA3HMCAgYVbwYreM5GbQKjNTn9FsdgzsjHltvnxdI';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0';\nconst GH_TOKEN = 'ghp_REDACTED_SEE_N8N_CREDENTIALS';\nconst REPO = 'Syntharra/syntharra-automations';\nconst GH_BASE = 'https://api.github.com';\nconst ghH = { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };\nconst retellH = { 'Authorization': 'Bearer ' + RETELL_KEY };\nconst n8nH = { 'X-N8N-API-KEY': N8N_KEY };\nconst sbH = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };\nconst date = new Date().toISOString().split('T')[0];\nconst results = [];\n\nasync function ghPush(path, str, msg) {\n  const encoded = Buffer.from(str).toString('base64');\n  const url = GH_BASE + '/repos/' + REPO + '/contents/' + path;\n  let sha = null;\n  try { const r = await $http.request({ method: 'GET', url, headers: ghH }); sha = r.data.sha; } catch(e) {}\n  const body = { message: msg, content: encoded };\n  if (sha) body.sha = sha;\n  const r = await $http.request({ method: 'PUT', url, headers: ghH, body: JSON.stringify(body) });\n  return r.data.commit.sha.slice(0,10);\n}\n\nfunction redact(s) {\n  return s\n    .replace(/KEY[0-9A-Fa-f_]{20,}/g,'[TELNYX_REDACTED]')\n    .replace(/AIzaSy[A-Za-z0-9_-]+/g,'[GOOGLE_REDACTED]')\n    .replace(/whsec_[A-Za-z0-9]+/g,'[STRIPE_REDACTED]')\n    .replace(/ghp_[A-Za-z0-9]+/g,'[GH_TOKEN_REDACTED]');\n}\n\n// \u2500\u2500 1. Retell live 12-node flow \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const r = await $http.request({ method: 'GET', url: 'https://api.retellai.com/get-conversation-flow/conversation_flow_ed1ff4a600af', headers: retellH });\n  const sha = await ghPush('hvac-standard/backups/conversation_flow_ed1ff4a600af_LIVE.json', JSON.stringify(r.data, null, 2), 'nightly: Retell flow - ' + date);\n  results.push({ item: 'retell_flow', status: 'ok', sha });\n} catch(e) { results.push({ item: 'retell_flow', status: 'error', error: e.message }); }\n\n// \u2500\u2500 2. Retell agents \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const r = await $http.request({ method: 'GET', url: 'https://api.retellai.com/list-agents', headers: retellH });\n  const seen = new Set();\n  const unique = r.data.filter(a => { if(seen.has(a.agent_id)) return false; seen.add(a.agent_id); return true; });\n  const sha = await ghPush('hvac-standard/backups/agents_LIVE.json', JSON.stringify(unique, null, 2), 'nightly: Retell agents - ' + date);\n  results.push({ item: 'retell_agents', status: 'ok', sha });\n} catch(e) { results.push({ item: 'retell_agents', status: 'error', error: e.message }); }\n\n// \u2500\u2500 3. Readable prompt export (Markdown) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const r = await $http.request({ method: 'GET', url: 'https://api.retellai.com/get-conversation-flow/conversation_flow_ed1ff4a600af', headers: retellH });\n  const flow = r.data;\n  let md = '# HVAC Standard Agent \u2014 Prompt Export\\n';\n  md += `_Exported: ${date}_\\n\\n`;\n  md += '---\\n\\n## Global Prompt\\n\\n```\\n' + (flow.global_prompt || '') + '\\n```\\n\\n---\\n\\n## Nodes\\n\\n';\n  for (const node of (flow.nodes || [])) {\n    md += `### ${node.name} (${node.type})\\n\\n`;\n    const instr = node.instruction;\n    if (instr) {\n      const text = typeof instr === 'string' ? instr : (instr.text || JSON.stringify(instr));\n      md += '**Instruction:**\\n```\\n' + text + '\\n```\\n\\n';\n    }\n    const edges = node.edges || (node.edge ? [node.edge] : []);\n    if (edges.length) {\n      md += '**Edges:**\\n';\n      for (const e of edges) {\n        const cond = e.transition_condition?.prompt || e.condition || 'default';\n        md += `- \u2192 \\`${e.destination_node_id}\\` (${cond})\\n`;\n      }\n      md += '\\n';\n    }\n  }\n  const sha = await ghPush('hvac-standard/prompts/HVAC_Standard_Prompts.md', md, 'nightly: readable prompt export - ' + date);\n  results.push({ item: 'prompt_export', status: 'ok', sha });\n} catch(e) { results.push({ item: 'prompt_export', status: 'error', error: e.message }); }\n\n// \u2500\u2500 4. Supabase schema \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry {\n  const tables = ['hvac_standard_agent', 'hvac_call_log', 'stripe_payment_data', 'client_subscriptions', 'billing_cycles', 'overage_charges'];\n  let schema = '# Syntharra Supabase Schema\\n\\n_Exported: ' + date + '_\\n\\n';\n  for (const table of tables) {\n    try {\n      const r = await $http.request({\n        method: 'GET',\n        url: SB_URL + '/rest/v1/' + table + '?limit=0',\n        headers: { ...sbH, 'Accept': 'application/json', 'Prefer': 'count=exact' }\n      });\n      // Get columns via introspection\n      const r2 = await $http.request({\n        method: 'GET',\n        url: SB_URL + '/rest/v1/' + table + '?limit=1',\n        headers: sbH\n      });\n      const cols = r2.data && r2.data.length > 0 ? Object.keys(r2.data[0]) : [];\n      schema += '## ' + table + '\\n\\nColumns: ' + (cols.length ? cols.join(', ') : 'empty table') + '\\n\\n';\n    } catch(e) {\n      schema += '## ' + table + '\\n\\nError fetching: ' + e.message + '\\n\\n';\n    }\n  }\n  // Also get full schema via Supabase introspection endpoint\n  try {\n    const r3 = await $http.request({\n      method: 'GET',\n      url: SB_URL + '/rest/v1/?apikey=' + SB_KEY,\n      headers: sbH\n    });\n    schema += '\\n## Full OpenAPI Schema\\n\\n```json\\n' + JSON.stringify(r3.data, null, 2).slice(0, 50000) + '\\n```\\n';\n  } catch(e) {}\n\n  const sha = await ghPush('supabase/schema_LIVE.md', schema, 'nightly: Supabase schema - ' + date);\n  results.push({ item: 'supabase_schema', status: 'ok', sha });\n} catch(e) { results.push({ item: 'supabase_schema', status: 'error', error: e.message }); }\n\n// \u2500\u2500 5. n8n workflows \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst wfs = {\n  'call-processor': 'OyDCyiOjG0twguXq',\n  'onboarding': 'k0KeQxWb3j3BbQEk',\n  'stripe': 'ydzfhitWiF5wNzEy',\n  'weekly-lead-report': 'mFuiB4pyXyWSIM5P',\n  'minutes-calculator': '9SuchBjqhFmLbH8o',\n  'usage-alert': 'lQsYJWQeP5YPikam',\n  'publish-retell': 'sBFhshlsz31L6FV8',\n  'welcome-email-manual': 'Rd5HiN7v2SRwNmiY',\n};\nfor (const [name, wfId] of Object.entries(wfs)) {\n  try {\n    const r = await $http.request({ method: 'GET', url: 'https://syntharra.app.n8n.cloud/api/v1/workflows/' + wfId, headers: n8nH });\n    const sha = await ghPush('hvac-standard/n8n-workflows/' + name + '_' + wfId + '.json', redact(JSON.stringify(r.data, null, 2)), 'nightly: n8n ' + name + ' - ' + date);\n    results.push({ item: 'n8n_' + name, status: 'ok', sha });\n  } catch(e) { results.push({ item: 'n8n_' + name, status: 'error', error: e.message }); }\n}\n\nreturn results.map(r => ({ json: r }));\n"
+        }
+      }
+    ],
+    "connections": {
+      "Every Night 2am": {
+        "main": [
+          [
+            {
+              "node": "Backup All to GitHub",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-27T00:53:38.425Z",
+        "id": 471,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T00:53:39.067Z",
+        "id": 473,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T00:57:07.971Z",
+        "id": 475,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T01:01:10.937Z",
+        "id": 477,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T01:01:11.360Z",
+        "id": 479,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T02:04:11.379Z",
+        "id": 505,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T00:53:38.335Z",
+        "id": 470,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T00:53:38.975Z",
+        "id": 472,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T00:57:07.895Z",
+        "id": 474,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T01:01:10.719Z",
+        "id": 476,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T01:01:11.261Z",
+        "id": 478,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-27T02:04:11.290Z",
+        "id": 504,
+        "workflowId": "EAHgqAfQoCDumvPU",
+        "versionId": "6ad7580c-db28-4110-9e0e-2e120ac6985c",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}

@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-03-27T23:28:10.877Z",
+  "createdAt": "2026-03-23T02:21:51.548Z",
+  "id": "ydzfhitWiF5wNzEy",
   "name": "Stripe Workflow",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -201,5 +207,250 @@
     "binaryMode": "separate",
     "availableInMCP": false,
     "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e4eda784-ce90-4297-9a1f-31d0fd6d370d",
+  "activeVersionId": "e4eda784-ce90-4297-9a1f-31d0fd6d370d",
+  "versionCounter": 73,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-23T02:21:51.550Z",
+      "createdAt": "2026-03-23T02:21:51.550Z",
+      "role": "workflow:owner",
+      "workflowId": "ydzfhitWiF5wNzEy",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-27T23:28:10.878Z",
+    "createdAt": "2026-03-27T23:28:10.878Z",
+    "versionId": "e4eda784-ce90-4297-9a1f-31d0fd6d370d",
+    "workflowId": "ydzfhitWiF5wNzEy",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "syntharra-stripe-webhook",
+          "options": {}
+        },
+        "id": "5bcc17f1-9d8c-41d3-8a77-613ac2b28b8b",
+        "name": "Stripe Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          64,
+          208
+        ],
+        "webhookId": "syntharra-stripe-webhook",
+        "notes": "In Stripe Dashboard, set event to: checkout.session.completed"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "check_event",
+                "leftValue": "={{ $json.body.type }}",
+                "rightValue": "checkout.session.completed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "316b20a9-de59-478d-a536-a91e8b66c8d4",
+        "name": "Is Checkout Completed?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          288,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={ \"received\": true }",
+          "options": {}
+        },
+        "id": "e19728df-383e-4699-b9ae-2dd36c481e00",
+        "name": "Respond to Stripe",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          288,
+          384
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body;\nconst session = body.data.object;\n\nconst customerId = session.customer;\nconst subscriptionId = session.subscription;\nconst sessionId = session.id;\nconst customerEmail = session.customer_details?.email || '';\nconst customerName = session.customer_details?.name || 'Valued Client';\nconst paymentStatus = session.payment_status;\n\nconst plans = {\n  'price_1TDckaECS71NQsk8DdNsWy1o': { name: 'Standard', billing: 'Monthly', amount: '$497/mo', setupFeePrice: 'price_1TEKKrECS71NQsk8Mw3Z8CoC', minutes: '475', jotformUrl: 'https://form.jotform.com/260795139953066' },\n  'price_1TDckiECS71NQsk8fqDio8pw': { name: 'Standard', billing: 'Annual',  amount: '$414/mo', setupFeePrice: 'price_1TEKKrECS71NQsk8Mw3Z8CoC', minutes: '475', jotformUrl: 'https://form.jotform.com/260795139953066' },\n  'price_1TDclGECS71NQsk8OoLoMV0q': { name: 'Premium',  billing: 'Monthly', amount: '$997/mo', setupFeePrice: 'price_1TEKKvECS71NQsk8vWGjHLUP', minutes: '1,000', jotformUrl: 'https://form.jotform.com/260819259556671' },\n  'price_1TDclPECS71NQsk8S9bAPGoJ': { name: 'Premium',  billing: 'Annual',  amount: '$831/mo', setupFeePrice: 'price_1TEKKvECS71NQsk8vWGjHLUP', minutes: '1,000', jotformUrl: 'https://form.jotform.com/260819259556671' }\n};\n\nconst priceId = session.metadata?.price_id || '';\nlet plan = plans[priceId];\n\nif (!plan && session.line_items?.data) {\n  const lineItem = session.line_items.data.find(li => plans[li.price?.id]);\n  if (lineItem) plan = plans[lineItem.price.id];\n}\n\nif (!plan) plan = { name: 'Standard', billing: 'Monthly', amount: '$497/mo', setupFeePrice: 'price_1TEKKrECS71NQsk8Mw3Z8CoC', minutes: '475', jotformUrl: 'https://form.jotform.com/260795139953066' };\n\nconst signupDate = new Date(session.created * 1000).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' });\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset='utf-8'></head><body style=\"font-family:Helvetica,Arial,sans-serif;background:#f5f5f5;margin:0;padding:0;\"><div style=\"max-width:580px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;\"><div style=\"background:#6B63E8;padding:32px 36px;text-align:center;\"><h1 style=\"color:#fff;font-size:22px;margin:0;font-weight:bold;\">Payment Confirmed \u2014 One Last Step!</h1><p style=\"color:#D0CCFF;font-size:13px;margin:6px 0 0;\">Syntharra AI Solutions</p></div><div style=\"padding:32px 36px;\"><p style=\"font-size:16px;color:#1C1C2E;font-weight:bold;margin-bottom:12px;\">Hi ${customerName},</p><p style=\"font-size:14px;color:#5F5E5A;line-height:1.7;margin-bottom:16px;\">Your payment has been received and your Syntharra AI Receptionist subscription is confirmed. To activate your service, please complete your onboarding form \u2014 this is how we build and configure your AI Receptionist to your exact business requirements.</p><div style=\"background:#EEEDFE;border-radius:10px;padding:18px 22px;margin:20px 0;\"><p style=\"margin:4px 0;font-size:13px;color:#3C3489;\"><strong style=\"color:#1C1C2E;\">Plan:</strong> ${plan.name} \u2014 AI Receptionist${plan.name === 'Premium' ? ' Pro' : ''}</p><p style=\"margin:4px 0;font-size:13px;color:#3C3489;\"><strong style=\"color:#1C1C2E;\">Billing:</strong> ${plan.billing} (${plan.amount})</p><p style=\"margin:4px 0;font-size:13px;color:#3C3489;\"><strong style=\"color:#1C1C2E;\">Minutes Included:</strong> ${plan.minutes} minutes/month</p><p style=\"margin:4px 0;font-size:13px;color:#3C3489;\"><strong style=\"color:#1C1C2E;\">Payment Date:</strong> ${signupDate}</p></div><p style=\"font-size:14px;color:#5F5E5A;line-height:1.7;margin-bottom:16px;\">The form takes less than 5 minutes and covers your business details, preferred agent name and voice, call handling preferences, and any custom instructions for your AI Receptionist.</p><div style=\"text-align:center;margin:28px 0;\"><a href=\"${plan.jotformUrl}\" style=\"display:inline-block;background:#6B63E8;color:#ffffff;font-size:15px;font-weight:bold;padding:14px 36px;border-radius:8px;text-decoration:none;\">Complete My Onboarding Form &rarr;</a></div><p style=\"font-size:12px;color:#888;text-align:center;margin-top:8px;\">Your AI Receptionist will be live within 1 business day of form submission.</p><p style=\"font-size:14px;color:#5F5E5A;line-height:1.7;\">Any questions? Simply reply to this email and we will get back to you promptly.</p><p style=\"font-size:14px;color:#5F5E5A;line-height:1.7;\">Welcome aboard,<br><strong>The Syntharra Team</strong></p></div><div style=\"background:#f5f5f5;padding:18px 36px;text-align:center;font-size:11px;color:#888780;\">syntharra.com &nbsp;&bull;&nbsp; AI Receptionist Solutions for the Trade Industry &nbsp;&bull;&nbsp; Available Worldwide</div></div></body></html>`;\n\nreturn [{ json: { customerId, subscriptionId, sessionId, customerEmail, customerName, planName: plan.name, planBilling: plan.billing, planAmount: plan.amount, setupFeePrice: plan.setupFeePrice, minutes: plan.minutes, jotformUrl: plan.jotformUrl, emailHtml, paymentStatus, signupDate } }];"
+        },
+        "id": "8bb60c6e-54bb-48b0-9a86-fdd2e2f2afad",
+        "name": "Extract Session Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          512,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/stripe_payment_data",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"stripe_customer_id\": \"{{ $json.customerId }}\",\n  \"stripe_subscription_id\": \"{{ $json.subscriptionId }}\",\n  \"stripe_session_id\": \"{{ $json.sessionId }}\",\n  \"customer_email\": \"{{ $json.customerEmail }}\",\n  \"customer_name\": \"{{ $json.customerName }}\",\n  \"plan_name\": \"{{ $json.planName }}\",\n  \"plan_billing\": \"{{ $json.planBilling }}\",\n  \"plan_amount\": \"{{ $json.planAmount }}\",\n  \"minutes\": \"{{ $json.minutes }}\",\n  \"setup_fee_price_id\": \"{{ $json.setupFeePrice }}\",\n  \"payment_status\": \"{{ $json.paymentStatus }}\",\n  \"jotform_sent\": true,\n  \"signup_date\": \"{{ $json.signupDate }}\"\n}",
+          "options": {}
+        },
+        "id": "e12acc21-bc4f-4290-9fa1-676bac1e3d31",
+        "name": "Save to Supabase",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          720,
+          -48
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Send Welcome Email via SMTP2GO\nconst data = $('Extract Session Data').first().json;\nconst customerEmail = data.customerEmail || '';\nconst emailHtml = data.emailHtml || '';\nconst subject = 'Welcome to Syntharra \u2014 One Last Step to Activate Your AI Receptionist';\n\nif (!customerEmail || !emailHtml) {\n  console.log('[WELCOME] Missing email or HTML');\n  return { sent: false };\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E',\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: [customerEmail],\n      subject: subject,\n      html_body: emailHtml\n    },\n    json: true\n  });\n  console.log('[WELCOME] Sent to ' + customerEmail);\n  return { sent: true, email: customerEmail };\n} catch (e) {\n  console.log('[WELCOME] Failed:', e.message);\n  return { sent: false, error: e.message };\n}"
+        },
+        "id": "fedb07c3-3199-43db-9097-63da964d2699",
+        "name": "Send Welcome Email with Jotform Link",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          192
+        ],
+        "webhookId": "a0045c82-98d8-4a27-8562-3713fe180825"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Internal Notification via SMTP2GO\nconst data = $('Extract Session Data').first().json;\nconst planName = data.planName || 'Unknown';\nconst planBilling = data.planBilling || '';\nconst customerName = data.customerName || '';\nconst customerEmail = data.customerEmail || '';\nconst planAmount = data.planAmount || '';\n\nconst subject = `New Subscriber \u2014 ${planName} Plan (${planBilling}) | ${customerName}`;\nconst html = `<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h3 style=\"color:#6C63FF\">\ud83c\udf89 New Stripe Subscriber</h3>\n<table style=\"border-collapse:collapse;width:100%\">\n<tr><td style=\"padding:8px;border:1px solid #eee;font-weight:600\">Customer</td><td style=\"padding:8px;border:1px solid #eee\">${customerName}</td></tr>\n<tr><td style=\"padding:8px;border:1px solid #eee;font-weight:600\">Email</td><td style=\"padding:8px;border:1px solid #eee\">${customerEmail}</td></tr>\n<tr><td style=\"padding:8px;border:1px solid #eee;font-weight:600\">Plan</td><td style=\"padding:8px;border:1px solid #eee\">${planName} (${planBilling})</td></tr>\n<tr><td style=\"padding:8px;border:1px solid #eee;font-weight:600\">Amount</td><td style=\"padding:8px;border:1px solid #eee\">${planAmount}</td></tr>\n</table>\n<p style=\"color:#999;font-size:12px;margin-top:16px\">Syntharra AI \u2014 Internal Notification</p>\n</div>`;\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E',\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: ['daniel@syntharra.com'],\n      subject: subject,\n      html_body: html\n    },\n    json: true\n  });\n  console.log('[INTERNAL] Sent: ' + subject);\n  return { sent: true };\n} catch (e) {\n  console.log('[INTERNAL] Failed:', e.message);\n  return { sent: false };\n}"
+        },
+        "id": "06b249b3-2d72-42ca-bc37-f5e54f8cb8d3",
+        "name": "Send Internal Notification",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          400
+        ],
+        "webhookId": "abdd1474-0ddc-4174-86ae-3204de809567"
+      }
+    ],
+    "connections": {
+      "Stripe Webhook": {
+        "main": [
+          [
+            {
+              "node": "Is Checkout Completed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Checkout Completed?": {
+        "main": [
+          [
+            {
+              "node": "Extract Session Data",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Respond to Stripe",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Session Data": {
+        "main": [
+          [
+            {
+              "node": "Save to Supabase",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send Welcome Email with Jotform Link",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send Internal Notification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-27T23:28:12.343Z",
+        "id": 702,
+        "workflowId": "ydzfhitWiF5wNzEy",
+        "versionId": "e4eda784-ce90-4297-9a1f-31d0fd6d370d",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
   }
 }
