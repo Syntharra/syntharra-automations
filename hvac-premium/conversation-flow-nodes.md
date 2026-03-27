@@ -1,59 +1,43 @@
-# HVAC Premium Conversation Flow v1
+# HVAC Premium Conversation Flow v1.0
 
 ## Nodes (18)
 
-1. **greeting_node** — Custom greeting from Jotform
-2. **identify_call_node** — Routes to correct node based on call reason (10 edges, 8 finetune sets)
-   - → booking_capture (service/repair/maintenance/quote/estimate/installation)
-   - → check_appointment (check existing appointment)
-   - → reschedule (change appointment)
-   - → cancel_appointment (cancel booking)
-   - → verify_emergency (emergency/urgent)
-   - → callback (returning missed call)
-   - → existing_customer (invoice/technician/job status)
-   - → general_questions (services/hours/pricing)
-   - → transfer_call (wants real person)
-   - → spam_robocall (automated/silence)
-3. **booking_capture_node** — PRIMARY PATH. Collects: service needed, full name, callback number, service address, preferred date, preferred time window. Routes to check_availability or fallback.
-4. **confirm_booking_node** — Reads back ALL booking details, confirms with caller, creates booking via tool call
-5. **check_appointment_node** — Caller checking existing appointment. Collects name, looks up, provides status or routes to reschedule/cancel
-6. **reschedule_node** — Reschedule flow: verify name + original date, collect new date/time, check availability, confirm
-7. **cancel_appointment_node** — Cancel flow: verify name + date, confirm cancellation, offer to rebook
-8. **lead_fallback_node** — FALLBACK when booking not possible. Collects: service, name, phone, address, notes. Standard lead capture.
-9. **verify_emergency_node** — Confirms emergency. True emergency → Emergency Transfer. Urgent but not emergency → priority booking.
-10. **callback_node** — Returning missed call. Collects name, confirms number. If new need → booking_capture.
-11. **existing_customer_node** — Existing customer enquiry. No lookup. Offer callback or transfer.
-12. **general_questions_node** — FAQ from global prompt. After answering, offers booking.
-13. **spam_robocall_node** — Ends spam calls immediately.
-14. **Transfer Call** — WARM transfer with agent whisper summarising the call.
-15. **Emergency Transfer** — WARM transfer with urgent whisper brief.
-16. **transfer_failed_node** — Captures details if transfer fails. Routes to booking or ending.
-17. **Ending** — "Is there anything else I can help you with?" Routes to end or back to identify.
-18. **End Call** — Ends call warmly.
+1. greeting_node — static greeting, routes to identify
+2. identify_call_node — routes based on caller intent (10 edges, finetune examples)
+3. booking_capture_node — PRIMARY PATH: collects service, name, address, phone, date, time window. Emergency detection active. Pricing rules inline. Fallback to lead capture.
+4. confirm_booking_node — reads back all details, confirms, offers further help
+5. check_appointment_node — handles "when is my appointment" — cannot look up, takes details for callback
+6. reschedule_node — gets name, old date, new date/time, confirms change
+7. cancel_appointment_node — confirms cancellation, offers rebook
+8. lead_fallback_node — collects standard lead details when booking not possible
+9. verify_emergency_node — confirms true emergency vs urgent-but-can-wait (finetune examples)
+10. callback_node — returning missed calls, routes to booking if service need
+11. existing_customer_node — cannot look up accounts, offers callback or transfer
+12. general_questions_node — FAQ from global prompt, routes to booking or transfer
+13. spam_robocall_node — ends spam calls
+14. Transfer Call — WARM transfer to transfer_phone, whisper summary to human
+15. Emergency Transfer — WARM transfer to emergency_phone, whisper emergency brief
+16. transfer_failed_node — captures details if transfer fails, offers booking
+17. Ending — "anything else?" loops back or closes
+18. End Call — ends warmly
 
 ## Key Differences from Standard
-- Booking is the PRIMARY path (Standard only does lead capture)
-- 5 extra nodes: booking_capture, confirm_booking, check_appointment, reschedule, cancel_appointment
-- Lead capture is a FALLBACK (calendar error, caller declines booking, no slots)
-- Identify node has 10 edges (Standard has 7)
-- Post-call analysis includes booking fields
-- Call processor has 10 notification types (Standard has 2: lead/non-lead)
+- Booking is the PRIMARY path (not lead capture)
+- Check appointment node for existing booking queries
+- Reschedule and cancel appointment nodes
+- Lead capture is FALLBACK only (when booking fails)
+- 17 post-call analysis fields (vs 3 in standard)
+- Notification types: booking_confirmed, reschedule, cancellation, emergency, booking_failed_lead, hot_lead, general_lead, follow_up_required, info_only, spam
 
-## Transfer Number Logic
+## Transfer Numbers
 - Transfer Call → transfer_phone (from Jotform), fallback to lead_phone
 - Emergency Transfer → emergency_phone (from Jotform), fallback to transfer_phone
+- NOTE: Currently using placeholder +18563630633 — gets overwritten by prompt-builder at onboarding
 
-## Data Collection Order (Booking)
-1. Service needed
+## Data Collection (Booking Capture)
+1. Service description
 2. Full name (first and last)
-3. Callback number (read back)
-4. Service address (confirm back)
+3. Service address (with city/suburb)
+4. Callback number (read back in groups)
 5. Preferred date
 6. Preferred time window (morning/afternoon)
-
-## Data Collection Order (Lead Fallback)
-1. Service needed
-2. Full name
-3. Callback number
-4. Service address
-5. Additional notes

@@ -1,0 +1,732 @@
+{
+  "name": "HVAC Premium Call Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-hvac-premium-webhook",
+        "options": {}
+      },
+      "id": "prem-webhook",
+      "name": "Retell Premium Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1920,
+        300
+      ],
+      "webhookId": "prem-webhook-id"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-analyzed",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "call_analyzed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-filter",
+      "name": "Filter: call_analyzed Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nreturn {\n  call_id: call.call_id || '',\n  agent_id: call.agent_id || '',\n  from_number: call.from_number || '',\n  to_number: call.to_number || '',\n  transcript: call.transcript || '',\n  duration_seconds: Math.round((call.end_timestamp - call.start_timestamp) / 1000) || 0,\n  disconnection_reason: call.disconnection_reason || '',\n  call_analysis: call.call_analysis || {},\n  call_timestamp: new Date().toISOString()\n};"
+      },
+      "id": "prem-extract",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-lookup",
+      "name": "Supabase: Lookup Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1200,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const clients = $input.first().json;\nconst callData = $('Extract Call Data').first().json;\n\nconst client = Array.isArray(clients) ? clients[0] : clients;\n\nif (!client || !client.company_name) {\n  return {\n    ...callData,\n    client_found: false,\n    company_name: 'Unknown',\n    agent_name: 'Unknown',\n    lead_phone: '',\n    lead_email: '',\n    notification_email_2: '',\n    notification_email_3: '',\n    notification_sms_2: '',\n    notification_sms_3: '',\n    twilio_from: '',\n    timezone: 'America/Chicago',\n    lead_contact_method: 'Both',\n    crm_platform: '',\n    calendar_platform: '',\n    booking_confirm_method: 'email'\n  };\n}\n\nreturn {\n  ...callData,\n  client_found: true,\n  company_name: client.company_name || '',\n  agent_name: client.agent_name || '',\n  lead_phone: client.lead_phone || '',\n  lead_email: client.lead_email || '',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  twilio_from: client.twilio_from || client.twilio_number || '',\n  timezone: client.timezone || 'America/Chicago',\n  lead_contact_method: client.lead_contact_method || 'Both',\n  crm_platform: client.crm_platform || '',\n  calendar_platform: client.calendar_platform || '',\n  booking_confirm_method: client.booking_confirm_method || 'email'\n};"
+      },
+      "id": "prem-parse-client",
+      "name": "Parse Client Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an AI call analyst for a premium HVAC receptionist service. Analyze the call transcript and Retell post-call analysis data to extract structured information.\n\nThis is a PREMIUM agent, meaning the primary goal of every service call is to BOOK AN APPOINTMENT. Lead capture is only a fallback when booking was not possible.\n\nReturn ONLY valid JSON with these fields:\n\n{\n  \"call_type\": \"new_booking | reschedule | cancellation | emergency | callback | existing_customer | general_question | spam | transfer_request\",\n  \"caller_name\": \"Full name or empty string\",\n  \"caller_phone\": \"Phone number or empty string\",\n  \"caller_address\": \"Service address or empty string\",\n  \"service_requested\": \"Short description of what they need\",\n  \"urgency\": \"low | medium | high | emergency\",\n  \"booking_attempted\": true/false,\n  \"booking_success\": true/false,\n  \"appointment_date\": \"YYYY-MM-DD or empty string\",\n  \"appointment_time_window\": \"morning | afternoon | empty string\",\n  \"job_type_booked\": \"Service type booked or empty string\",\n  \"reschedule_or_cancel\": \"reschedule | cancel | neither\",\n  \"lead_score\": 0-10,\n  \"is_hot_lead\": true/false,\n  \"caller_sentiment\": \"positive | neutral | frustrated | angry | anxious | grateful\",\n  \"summary\": \"1-3 sentence summary of the call outcome\",\n  \"follow_up_notes\": \"Any action items the business needs to take, or empty string\"\n}\n\nSCORING GUIDE:\n- 0-1: Spam, wrong number, or no engagement\n- 2-3: General question answered, no further action needed\n- 4-5: Some interest but vague timeline or needs\n- 6-7: Definite need, wants to schedule but timing uncertain\n- 8-9: Ready to book, specific need and timeline\n- 10: Booking confirmed during the call\n\nCALL TYPE CLASSIFICATION:\n- new_booking: Caller wants to schedule a new service (repair, maintenance, installation, estimate, inspection)\n- reschedule: Caller wants to change an existing appointment\n- cancellation: Caller wants to cancel an existing appointment\n- emergency: System failure, gas leak, flooding, safety concern\n- callback: Returning a missed call\n- existing_customer: Question about an existing job, invoice, or technician\n- general_question: FAQ about services, pricing, hours, area\n- spam: Robocall, telemarketer, no real human engagement\n- transfer_request: Caller insisted on speaking to a human\n\nFOLLOW-UP NOTES \u2014 include if:\n- Booking failed and caller needs a callback to confirm\n- Caller asked about pricing/estimate that agent couldn't provide\n- Caller mentioned a specific issue that needs expert assessment\n- Existing customer needs account lookup\n- Caller requested something outside normal scope\n\nReturn ONLY the JSON object. No markdown, no explanation, no backticks.\n",
+              "role": "system"
+            },
+            {
+              "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}\n\nRetell post-call analysis:\n{{ JSON.stringify($json.call_analysis || {}) }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.15
+        }
+      },
+      "id": "prem-gpt",
+      "name": "GPT: Analyze Transcript",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "ubVD6nIZ6FkIStS8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// HVAC Premium \u2014 Parse Call Data node (v2)\n// ============================================================\n// Runs AFTER GPT: Analyze Transcript\n// Extracts all booking + lead + notification data\n// Builds notification HTML for each call type\n// ============================================================\n\nconst gptResponse = $input.first().json;\nconst clientData = $('Parse Client Data').first().json;\nconst callAnalysis = $('Extract Call Data').first().json.call_analysis || {};\n\n// \u2500\u2500 Parse GPT response \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet callData = {};\ntry {\n  const text = gptResponse.message?.content || gptResponse.text || JSON.stringify(gptResponse);\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  callData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};\n} catch (e) {\n  callData = {\n    lead_score: 0,\n    summary: 'Failed to parse GPT response',\n    is_hot_lead: false,\n    booking_attempted: false,\n    booking_success: false,\n    call_type: 'unknown',\n    urgency: 'low'\n  };\n}\n\n// \u2500\u2500 Merge Retell post-call analysis (higher priority than GPT) \u2500\u2500\nconst pca = callAnalysis;\nconst callerName = pca.caller_name || callData.caller_name || '';\nconst callerPhone = pca.caller_phone || callData.caller_phone || clientData.from_number || '';\nconst callerAddress = pca.caller_address || callData.caller_address || '';\nconst serviceRequested = pca.service_requested || callData.service_requested || '';\nconst bookingAttempted = pca.booking_attempted ?? callData.booking_attempted ?? false;\nconst bookingSuccess = pca.booking_success ?? callData.booking_success ?? false;\nconst appointmentDate = pca.appointment_date || callData.appointment_date || '';\nconst appointmentTimeWindow = pca.appointment_time_window || callData.appointment_time_window || '';\nconst jobTypeBooked = pca.job_type_booked || callData.job_type_booked || '';\nconst rescheduleOrCancel = pca.reschedule_or_cancel || callData.reschedule_or_cancel || 'neither';\nconst callType = pca.call_type || callData.call_type || 'unknown';\nconst urgency = pca.urgency || callData.urgency || 'low';\nconst isHotLead = pca.is_hot_lead ?? callData.is_hot_lead ?? false;\nconst leadScore = pca.lead_score ?? callData.lead_score ?? 0;\nconst summary = pca.call_summary || callData.summary || '';\nconst callerSentiment = pca.user_sentiment || callData.caller_sentiment || '';\n\n// \u2500\u2500 Determine notification type \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Priority: booking_confirmed > reschedule > cancellation > emergency > hot_lead > general_lead > info_only\nlet notificationType = 'info_only';\nlet notifyClient = false;\n\nif (bookingSuccess) {\n  notificationType = 'booking_confirmed';\n  notifyClient = true;\n} else if (rescheduleOrCancel === 'reschedule') {\n  notificationType = 'reschedule';\n  notifyClient = true;\n} else if (rescheduleOrCancel === 'cancel') {\n  notificationType = 'cancellation';\n  notifyClient = true;\n} else if (callType === 'emergency' || urgency === 'emergency') {\n  notificationType = 'emergency';\n  notifyClient = true;\n} else if (bookingAttempted && !bookingSuccess) {\n  // Booking was attempted but failed (calendar unavailable, caller declined, etc.)\n  // This is a hot lead that needs follow-up\n  notificationType = 'booking_failed_lead';\n  notifyClient = true;\n} else if (isHotLead || leadScore >= 7) {\n  notificationType = 'hot_lead';\n  notifyClient = true;\n} else if (leadScore >= 4) {\n  notificationType = 'general_lead';\n  notifyClient = true;\n} else if (callType === 'existing_customer' || callType === 'callback') {\n  notificationType = 'follow_up_required';\n  notifyClient = true;\n} else if (callType === 'general_question') {\n  notificationType = 'info_only';\n  notifyClient = false; // Only log, don't notify for simple FAQ\n} else if (callType === 'spam') {\n  notificationType = 'spam';\n  notifyClient = false;\n}\n\n// \u2500\u2500 Build email HTML \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst companyName = clientData.company_name || 'Your Company';\nconst timestamp = new Date().toLocaleString('en-US', { timeZone: clientData.timezone || 'America/Chicago' });\nconst duration = clientData.duration_seconds || 0;\n\n// Color theming per notification type\nconst typeColors = {\n  booking_confirmed: { accent: '#10B981', emoji: '\ud83d\udcc5', label: 'Booking Confirmed' },\n  reschedule: { accent: '#F59E0B', emoji: '\ud83d\udd04', label: 'Appointment Rescheduled' },\n  cancellation: { accent: '#EF4444', emoji: '\u274c', label: 'Appointment Cancelled' },\n  emergency: { accent: '#DC2626', emoji: '\ud83d\udea8', label: 'EMERGENCY CALL' },\n  booking_failed_lead: { accent: '#F97316', emoji: '\ud83d\udccb', label: 'Booking Failed \u2014 Follow Up Required' },\n  hot_lead: { accent: '#EF4444', emoji: '\ud83d\udd25', label: 'Hot Lead Alert' },\n  general_lead: { accent: '#6C63FF', emoji: '\ud83d\udcde', label: 'New Lead' },\n  follow_up_required: { accent: '#8B5CF6', emoji: '\u21a9\ufe0f', label: 'Follow-Up Required' },\n  info_only: { accent: '#9CA3AF', emoji: '\u2139\ufe0f', label: 'Info Call Logged' },\n  spam: { accent: '#6B7280', emoji: '\ud83e\udd16', label: 'Spam / Robocall' }\n};\n\nconst tc = typeColors[notificationType] || typeColors.info_only;\n\n// Build rows dynamically based on what data exists\nlet rows = '';\n\nconst addRow = (label, value) => {\n  if (value && value.trim && value.trim() !== '' && value !== 'null' && value !== 'undefined') {\n    rows += `<tr><td style=\"padding:8px 12px;border:1px solid #e2e8f0;font-weight:600;width:160px;background:#f8fafc\">${label}</td><td style=\"padding:8px 12px;border:1px solid #e2e8f0\">${value}</td></tr>`;\n  }\n};\n\naddRow('Caller', callerName || 'Unknown');\naddRow('Phone', callerPhone);\naddRow('Address', callerAddress);\naddRow('Service', serviceRequested || jobTypeBooked);\n\nif (bookingSuccess || bookingAttempted) {\n  addRow('Booking Status', bookingSuccess ? '\u2705 Confirmed' : '\u26a0\ufe0f Attempted but not completed');\n  addRow('Appointment', appointmentDate ? `${appointmentDate} \u2014 ${appointmentTimeWindow || 'TBD'}` : 'Pending');\n  addRow('Job Type', jobTypeBooked);\n}\n\nif (rescheduleOrCancel !== 'neither') {\n  addRow('Action', rescheduleOrCancel === 'reschedule' ? '\ud83d\udd04 Rescheduled' : '\u274c Cancelled');\n  if (appointmentDate) addRow('New Date', `${appointmentDate} \u2014 ${appointmentTimeWindow || 'TBD'}`);\n}\n\naddRow('Urgency', urgency.charAt(0).toUpperCase() + urgency.slice(1));\naddRow('Lead Score', `${leadScore}/10`);\naddRow('Sentiment', callerSentiment);\n\nconst emailHtml = `\n<div style=\"font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto\">\n  <div style=\"background:${tc.accent};padding:16px 20px;border-radius:8px 8px 0 0\">\n    <h2 style=\"color:#fff;margin:0;font-size:18px\">${tc.emoji} ${tc.label} \u2014 ${companyName}</h2>\n  </div>\n  <div style=\"border:1px solid #e2e8f0;border-top:0;padding:20px;border-radius:0 0 8px 8px\">\n    <table style=\"border-collapse:collapse;width:100%\">\n      ${rows}\n    </table>\n    <div style=\"margin-top:16px;padding:12px;background:#f8fafc;border-radius:6px;border-left:4px solid ${tc.accent}\">\n      <strong>Summary:</strong> ${summary || 'No summary available.'}\n    </div>\n    ${callData.follow_up_notes ? `<div style=\"margin-top:12px;padding:12px;background:#FFFBEB;border-radius:6px;border-left:4px solid #F59E0B\"><strong>Follow-up Notes:</strong> ${callData.follow_up_notes}</div>` : ''}\n    <p style=\"color:#9CA3AF;font-size:11px;margin-top:16px\">${timestamp} | Duration: ${duration}s | Call ID: ${clientData.call_id || ''}</p>\n  </div>\n</div>`;\n\n// \u2500\u2500 Build SMS text \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet smsText = '';\nif (notificationType === 'booking_confirmed') {\n  smsText = `\ud83d\udcc5 Booking Confirmed \u2014 ${callerName || 'Caller'} booked for ${jobTypeBooked || serviceRequested || 'service'} on ${appointmentDate || 'TBD'} (${appointmentTimeWindow || 'TBD'}). Phone: ${callerPhone}`;\n} else if (notificationType === 'emergency') {\n  smsText = `\ud83d\udea8 EMERGENCY \u2014 ${callerName || 'Caller'} at ${callerAddress || 'address not given'}. ${serviceRequested || summary}. Call: ${callerPhone}`;\n} else if (notificationType === 'reschedule') {\n  smsText = `\ud83d\udd04 Rescheduled \u2014 ${callerName || 'Caller'} moved to ${appointmentDate || 'TBD'} (${appointmentTimeWindow || 'TBD'}). Phone: ${callerPhone}`;\n} else if (notificationType === 'cancellation') {\n  smsText = `\u274c Cancelled \u2014 ${callerName || 'Caller'} cancelled their appointment. Phone: ${callerPhone}. ${summary}`;\n} else if (notificationType === 'booking_failed_lead') {\n  smsText = `\ud83d\udccb Follow Up \u2014 ${callerName || 'Caller'} wanted to book ${serviceRequested || 'service'} but booking wasn't completed. Call them: ${callerPhone}`;\n} else if (notificationType === 'hot_lead') {\n  smsText = `\ud83d\udd25 Hot Lead \u2014 ${callerName || 'Caller'} needs ${serviceRequested || 'service'}. Score: ${leadScore}/10. Call: ${callerPhone}`;\n} else if (notificationType === 'general_lead') {\n  smsText = `\ud83d\udcde New Lead \u2014 ${callerName || 'Caller'} called about ${serviceRequested || 'service'}. Score: ${leadScore}/10. Phone: ${callerPhone}`;\n} else if (notificationType === 'follow_up_required') {\n  smsText = `\u21a9\ufe0f Follow Up \u2014 ${callerName || 'Caller'} (${callType === 'callback' ? 'returning call' : 'existing customer'}). Phone: ${callerPhone}. ${summary}`;\n}\n\n// \u2500\u2500 Build email subject line \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst subjectMap = {\n  booking_confirmed: `\ud83d\udcc5 Booking Confirmed \u2014 ${callerName || 'New Customer'} | ${companyName}`,\n  reschedule: `\ud83d\udd04 Appointment Rescheduled \u2014 ${callerName || 'Customer'} | ${companyName}`,\n  cancellation: `\u274c Appointment Cancelled \u2014 ${callerName || 'Customer'} | ${companyName}`,\n  emergency: `\ud83d\udea8 EMERGENCY \u2014 ${callerName || 'Caller'} | ${companyName}`,\n  booking_failed_lead: `\ud83d\udccb Booking Failed \u2014 Follow Up ${callerName || 'Caller'} | ${companyName}`,\n  hot_lead: `\ud83d\udd25 Hot Lead \u2014 ${callerName || 'Unknown'} \u2014 ${serviceRequested || 'Service'} | ${companyName}`,\n  general_lead: `\ud83d\udcde New Lead \u2014 ${callerName || 'Unknown'} \u2014 ${serviceRequested || 'Service'} | ${companyName}`,\n  follow_up_required: `\u21a9\ufe0f Follow Up Required \u2014 ${callerName || 'Caller'} | ${companyName}`,\n  info_only: `\u2139\ufe0f Call Logged \u2014 ${companyName}`,\n  spam: `\ud83e\udd16 Spam Call \u2014 ${companyName}`\n};\nconst emailSubject = subjectMap[notificationType] || `Call Alert \u2014 ${companyName}`;\n\n// \u2500\u2500 Return everything \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nreturn {\n  // Identifiers\n  call_id: clientData.call_id || '',\n  agent_id: clientData.agent_id || '',\n  company_name: companyName,\n  call_tier: 'premium',\n  \n  // Caller info\n  caller_name: callerName,\n  caller_phone: callerPhone,\n  caller_address: callerAddress,\n  caller_sentiment: callerSentiment,\n  \n  // Call classification\n  call_type: callType,\n  urgency: urgency,\n  service_requested: serviceRequested,\n  summary: summary,\n  follow_up_notes: callData.follow_up_notes || '',\n  \n  // Booking fields\n  booking_attempted: bookingAttempted,\n  booking_success: bookingSuccess,\n  appointment_date: appointmentDate || null,\n  appointment_time_window: appointmentTimeWindow || null,\n  job_type_booked: jobTypeBooked || null,\n  reschedule_or_cancel: rescheduleOrCancel,\n  \n  // Lead fields\n  lead_score: leadScore,\n  is_lead: !bookingSuccess && leadScore >= 4,\n  is_hot_lead: isHotLead,\n  \n  // Notification\n  notification_type: notificationType,\n  notify_client: notifyClient,\n  email_html: emailHtml,\n  email_subject: emailSubject,\n  sms_text: smsText,\n  \n  // Carry forward from client data\n  lead_email: clientData.lead_email || '',\n  lead_phone: clientData.lead_phone || '',\n  notification_email_2: clientData.notification_email_2 || '',\n  notification_email_3: clientData.notification_email_3 || '',\n  notification_sms_2: clientData.notification_sms_2 || '',\n  notification_sms_3: clientData.notification_sms_3 || '',\n  lead_contact_method: clientData.lead_contact_method || 'Both',\n  twilio_from: clientData.twilio_from || '',\n  from_number: clientData.from_number || '',\n  duration_seconds: clientData.duration_seconds || 0,\n  call_timestamp: clientData.call_timestamp || new Date().toISOString(),\n  timezone: clientData.timezone || 'America/Chicago'\n};\n"
+      },
+      "id": "prem-parse-call",
+      "name": "Parse Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "notify-check",
+              "leftValue": "={{ $json.notify_client }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-notify-check",
+      "name": "Should Notify?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation,resolution=ignore-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \n  call_id: $json.call_id, \n  agent_id: $json.agent_id, \n  company_name: $json.company_name, \n  call_tier: 'premium',\n  caller_name: $json.caller_name || '', \n  caller_phone: $json.caller_phone || $json.from_number || '', \n  caller_address: $json.caller_address || '',\n  caller_sentiment: $json.caller_sentiment || '',\n  service_requested: $json.service_requested || '', \n  call_summary: $json.summary || '',\n  lead_score: $json.lead_score || 0, \n  is_lead: $json.is_lead || false,\n  is_hot_lead: $json.is_hot_lead || false,\n  urgency: $json.urgency || '', \n  job_type: $json.job_type_booked || $json.service_requested || '',\n  call_duration_seconds: $json.duration_seconds || 0,\n  booking_attempted: $json.booking_attempted || false,\n  booking_success: $json.booking_success || false,\n  appointment_date: $json.appointment_date || null,\n  appointment_time_window: $json.appointment_time_window || null,\n  job_type_booked: $json.job_type_booked || null,\n  reschedule_or_cancel: $json.reschedule_or_cancel || 'neither'\n} }}",
+        "options": {}
+      },
+      "id": "prem-log-call",
+      "name": "Supabase: Log Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        0,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "id": "prem-email-1",
+      "name": "Gmail: Send Email 1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-email-2",
+              "leftValue": "={{ $json.notification_email_2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-has-email-2",
+      "name": "Has Email 2?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        240,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.notification_email_2 }}",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "id": "prem-email-2",
+      "name": "Gmail: Send Email 2",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        480,
+        160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-email-3",
+              "leftValue": "={{ $json.notification_email_3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-has-email-3",
+      "name": "Has Email 3?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        240,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.notification_email_3 }}",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "id": "prem-email-3",
+      "name": "Gmail: Send Email 3",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        480,
+        320
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "from": "={{ $json.twilio_from }}",
+        "to": "={{ $json.lead_phone }}",
+        "message": "={{ $json.sms_text }}"
+      },
+      "id": "prem-sms-1",
+      "name": "Twilio: Send SMS 1",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        240,
+        500
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "2Q7GQ2PNZcIlSRqS",
+          "name": "Twilio account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-sms-2",
+              "leftValue": "={{ $json.notification_sms_2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-has-sms-2",
+      "name": "Has SMS 2?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        240,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "from": "={{ $json.twilio_from }}",
+        "to": "={{ $json.notification_sms_2 }}",
+        "message": "={{ $json.sms_text }}"
+      },
+      "id": "prem-sms-2",
+      "name": "Twilio: Send SMS 2",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        480,
+        660
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "2Q7GQ2PNZcIlSRqS",
+          "name": "Twilio account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-sms-3",
+              "leftValue": "={{ $json.notification_sms_3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prem-has-sms-3",
+      "name": "Has SMS 3?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        240,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "from": "={{ $json.twilio_from }}",
+        "to": "={{ $json.notification_sms_3 }}",
+        "message": "={{ $json.sms_text }}"
+      },
+      "id": "prem-sms-3",
+      "name": "Twilio: Send SMS 3",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        480,
+        820
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "2Q7GQ2PNZcIlSRqS",
+          "name": "Twilio account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Non-notifiable call logged silently\nconst d = $input.first().json;\nconsole.log(`Premium call logged (no notification): ${d.call_type} \u2014 ${d.notification_type} \u2014 ${d.company_name}`);\nreturn d;"
+      },
+      "id": "prem-log-silent",
+      "name": "Log Non-Notify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "daniel@syntharra.com",
+        "subject": "=[Internal] {{ $json.notification_type }} \u2014 {{ $json.company_name }} | {{ $json.caller_name || 'Unknown' }}",
+        "message": "={{ $json.email_html }}<br><hr><p style='color:#9CA3AF;font-size:11px'>Internal copy \u2014 notification_type: {{ $json.notification_type }} | notify_client: {{ $json.notify_client }} | lead_score: {{ $json.lead_score }}</p>",
+        "options": {}
+      },
+      "id": "prem-internal-email",
+      "name": "Internal Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Retell Premium Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter: call_analyzed Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: call_analyzed Only": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Lookup Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Lookup Client": {
+      "main": [
+        [
+          {
+            "node": "Parse Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Client Data": {
+      "main": [
+        [
+          {
+            "node": "GPT: Analyze Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT: Analyze Transcript": {
+      "main": [
+        [
+          {
+            "node": "Parse Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Call Data": {
+      "main": [
+        [
+          {
+            "node": "Should Notify?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Notify?": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Call",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail: Send Email 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Email 2?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Email 3?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Twilio: Send SMS 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has SMS 2?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has SMS 3?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Internal Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase: Log Call",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Non-Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Email 2?": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Email 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Has Email 3?": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Email 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Has SMS 2?": {
+      "main": [
+        [
+          {
+            "node": "Twilio: Send SMS 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Has SMS 3?": {
+      "main": [
+        [
+          {
+            "node": "Twilio: Send SMS 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    "premium",
+    "call-processor",
+    "hvac"
+  ]
+}

@@ -1,29 +1,16 @@
 // ============================================================
-// HVAC Premium — Parse Call Data + Build Notifications
+// HVAC Premium — Parse Call Data node (v2)
 // ============================================================
-// This runs AFTER the GPT analysis node.
-// It parses the GPT response, determines the notification type,
-// builds the appropriate email HTML, and outputs everything
-// for the downstream notification nodes.
-//
-// NOTIFICATION TYPES:
-//   1. booking_confirmed  — appointment booked successfully
-//   2. booking_failed     — booking attempted but failed (calendar error, no slots)
-//   3. reschedule         — appointment rescheduled
-//   4. cancellation       — appointment cancelled
-//   5. hot_lead           — no booking made but high-value lead (score >= 7)
-//   6. warm_lead          — no booking made, moderate lead (score 4-6)
-//   7. emergency          — emergency call, transferred or details taken
-//   8. existing_customer  — existing customer enquiry
-//   9. general_info       — general question answered, no lead
-//  10. spam               — spam/robocall, no notification needed
+// Runs AFTER GPT: Analyze Transcript
+// Extracts all booking + lead + notification data
+// Builds notification HTML for each call type
 // ============================================================
 
 const gptResponse = $input.first().json;
 const clientData = $('Parse Client Data').first().json;
-const callData_raw = $('Extract Call Data').first().json;
+const callAnalysis = $('Extract Call Data').first().json.call_analysis || {};
 
-// ── Parse GPT Response ────────────────────────────────────────
+// ── Parse GPT response ──────────────────────────────────────
 let callData = {};
 try {
   const text = gptResponse.message?.content || gptResponse.text || JSON.stringify(gptResponse);
@@ -41,289 +28,218 @@ try {
   };
 }
 
-// ── Also pull from post_call_analysis if available ────────────
-const pca = callData_raw.call_analysis || {};
+// ── Merge Retell post-call analysis (higher priority than GPT) ──
+const pca = callAnalysis;
+const callerName = pca.caller_name || callData.caller_name || '';
+const callerPhone = pca.caller_phone || callData.caller_phone || clientData.from_number || '';
+const callerAddress = pca.caller_address || callData.caller_address || '';
+const serviceRequested = pca.service_requested || callData.service_requested || '';
+const bookingAttempted = pca.booking_attempted ?? callData.booking_attempted ?? false;
+const bookingSuccess = pca.booking_success ?? callData.booking_success ?? false;
+const appointmentDate = pca.appointment_date || callData.appointment_date || '';
+const appointmentTimeWindow = pca.appointment_time_window || callData.appointment_time_window || '';
+const jobTypeBooked = pca.job_type_booked || callData.job_type_booked || '';
+const rescheduleOrCancel = pca.reschedule_or_cancel || callData.reschedule_or_cancel || 'neither';
+const callType = pca.call_type || callData.call_type || 'unknown';
+const urgency = pca.urgency || callData.urgency || 'low';
+const isHotLead = pca.is_hot_lead ?? callData.is_hot_lead ?? false;
+const leadScore = pca.lead_score ?? callData.lead_score ?? 0;
+const summary = pca.call_summary || callData.summary || '';
+const callerSentiment = pca.user_sentiment || callData.caller_sentiment || '';
 
-// ── Extract Fields (GPT first, then post_call_analysis fallback) ──
-const callerName = callData.caller_name || pca.caller_name || '';
-const callerPhone = callData.caller_phone || pca.caller_phone || callData_raw.from_number || '';
-const callerAddress = callData.caller_address || pca.caller_address || '';
-const serviceRequested = callData.service_requested || pca.service_requested || '';
-const summary = callData.summary || pca.call_summary || '';
-const urgency = callData.urgency || pca.urgency || 'low';
-const notes = callData.notes || '';
-const leadScore = parseInt(callData.lead_score || pca.lead_score || 0);
-const isHotLead = callData.is_hot_lead || pca.is_hot_lead || leadScore >= 7;
-const callType = callData.call_type || pca.call_type || 'unknown';
+// ── Determine notification type ─────────────────────────────
+// Priority: booking_confirmed > reschedule > cancellation > emergency > hot_lead > general_lead > info_only
+let notificationType = 'info_only';
+let notifyClient = false;
 
-// Booking fields
-const bookingAttempted = callData.booking_attempted || pca.booking_attempted || false;
-const bookingSuccess = callData.booking_success || pca.booking_success || false;
-const appointmentDate = callData.appointment_date || pca.appointment_date || '';
-const appointmentTimeWindow = callData.appointment_time_window || pca.appointment_time_window || '';
-const jobTypeBooked = callData.job_type_booked || pca.job_type_booked || '';
-const rescheduleOrCancel = callData.reschedule_or_cancel || pca.reschedule_or_cancel || 'neither';
-
-// Additional fields
-const jobType = callData.job_type || serviceRequested || '';
-const vulnerableOccupant = callData.vulnerable_occupant || false;
-const callerSentiment = callData.caller_sentiment || pca.user_sentiment || '';
-const transferAttempted = callData.transfer_attempted || false;
-const transferSuccess = callData.transfer_success || null;
-
-// Client config
-const companyName = clientData.company_name || '';
-const leadEmail = clientData.lead_email || '';
-const leadPhone_client = clientData.lead_phone || '';
-const notificationEmail2 = clientData.notification_email_2 || '';
-const notificationEmail3 = clientData.notification_email_3 || '';
-const notificationSms2 = clientData.notification_sms_2 || '';
-const notificationSms3 = clientData.notification_sms_3 || '';
-
-// ── Determine Notification Type ───────────────────────────────
-let notificationType = 'general_info';
-let shouldNotify = true;
-let notificationPriority = 'normal'; // normal, high, urgent
-
-if (callType === 'spam' || leadScore === 0) {
-  notificationType = 'spam';
-  shouldNotify = false;
-} else if (callType === 'emergency' || urgency === 'emergency') {
-  notificationType = 'emergency';
-  notificationPriority = 'urgent';
-} else if (bookingSuccess && rescheduleOrCancel === 'reschedule') {
+if (bookingSuccess) {
+  notificationType = 'booking_confirmed';
+  notifyClient = true;
+} else if (rescheduleOrCancel === 'reschedule') {
   notificationType = 'reschedule';
-  notificationPriority = 'high';
+  notifyClient = true;
 } else if (rescheduleOrCancel === 'cancel') {
   notificationType = 'cancellation';
-  notificationPriority = 'high';
-} else if (bookingSuccess) {
-  notificationType = 'booking_confirmed';
-  notificationPriority = 'normal';
+  notifyClient = true;
+} else if (callType === 'emergency' || urgency === 'emergency') {
+  notificationType = 'emergency';
+  notifyClient = true;
 } else if (bookingAttempted && !bookingSuccess) {
-  notificationType = 'booking_failed';
-  notificationPriority = 'high';
-} else if (callType === 'existing_customer') {
-  notificationType = 'existing_customer';
-  notificationPriority = 'normal';
+  // Booking was attempted but failed (calendar unavailable, caller declined, etc.)
+  // This is a hot lead that needs follow-up
+  notificationType = 'booking_failed_lead';
+  notifyClient = true;
 } else if (isHotLead || leadScore >= 7) {
   notificationType = 'hot_lead';
-  notificationPriority = 'high';
+  notifyClient = true;
 } else if (leadScore >= 4) {
-  notificationType = 'warm_lead';
-  notificationPriority = 'normal';
+  notificationType = 'general_lead';
+  notifyClient = true;
+} else if (callType === 'existing_customer' || callType === 'callback') {
+  notificationType = 'follow_up_required';
+  notifyClient = true;
 } else if (callType === 'general_question') {
-  notificationType = 'general_info';
-  shouldNotify = leadScore >= 3;
+  notificationType = 'info_only';
+  notifyClient = false; // Only log, don't notify for simple FAQ
+} else if (callType === 'spam') {
+  notificationType = 'spam';
+  notifyClient = false;
 }
 
-// ── Build Email Subject ───────────────────────────────────────
-const subjectMap = {
-  booking_confirmed: `✅ New Booking — ${callerName || 'Customer'} — ${jobTypeBooked || serviceRequested} | ${companyName}`,
-  booking_failed: `⚠️ Booking Failed — ${callerName || 'Customer'} Needs Callback | ${companyName}`,
-  reschedule: `🔄 Appointment Rescheduled — ${callerName || 'Customer'} | ${companyName}`,
-  cancellation: `❌ Appointment Cancelled — ${callerName || 'Customer'} | ${companyName}`,
-  hot_lead: `🔥 Hot Lead — ${callerName || 'Unknown'} — ${serviceRequested || 'Service'} | ${companyName}`,
-  warm_lead: `📋 New Lead — ${callerName || 'Unknown'} — ${serviceRequested || 'Service'} | ${companyName}`,
-  emergency: `🚨 EMERGENCY — ${callerName || 'Unknown'} | ${companyName}`,
-  existing_customer: `📞 Existing Customer — ${callerName || 'Customer'} | ${companyName}`,
-  general_info: `ℹ️ Call Summary — ${callerName || 'Caller'} | ${companyName}`
+// ── Build email HTML ────────────────────────────────────────
+const companyName = clientData.company_name || 'Your Company';
+const timestamp = new Date().toLocaleString('en-US', { timeZone: clientData.timezone || 'America/Chicago' });
+const duration = clientData.duration_seconds || 0;
+
+// Color theming per notification type
+const typeColors = {
+  booking_confirmed: { accent: '#10B981', emoji: '📅', label: 'Booking Confirmed' },
+  reschedule: { accent: '#F59E0B', emoji: '🔄', label: 'Appointment Rescheduled' },
+  cancellation: { accent: '#EF4444', emoji: '❌', label: 'Appointment Cancelled' },
+  emergency: { accent: '#DC2626', emoji: '🚨', label: 'EMERGENCY CALL' },
+  booking_failed_lead: { accent: '#F97316', emoji: '📋', label: 'Booking Failed — Follow Up Required' },
+  hot_lead: { accent: '#EF4444', emoji: '🔥', label: 'Hot Lead Alert' },
+  general_lead: { accent: '#6C63FF', emoji: '📞', label: 'New Lead' },
+  follow_up_required: { accent: '#8B5CF6', emoji: '↩️', label: 'Follow-Up Required' },
+  info_only: { accent: '#9CA3AF', emoji: 'ℹ️', label: 'Info Call Logged' },
+  spam: { accent: '#6B7280', emoji: '🤖', label: 'Spam / Robocall' }
 };
-const emailSubject = subjectMap[notificationType] || `📞 Call Summary | ${companyName}`;
 
-// ── Build Email HTML ──────────────────────────────────────────
-const brandColor = '#6C63FF';
+const tc = typeColors[notificationType] || typeColors.info_only;
 
-function urgencyColor(urg) {
-  const map = { emergency: '#e53e3e', high: '#dd6b20', medium: '#d69e2e', low: '#38a169' };
-  return map[urg] || '#718096';
-}
+// Build rows dynamically based on what data exists
+let rows = '';
 
-function leadScoreColor(score) {
-  if (score >= 8) return '#e53e3e';
-  if (score >= 6) return '#dd6b20';
-  if (score >= 4) return '#d69e2e';
-  return '#718096';
-}
-
-function headerIcon(type) {
-  const map = {
-    booking_confirmed: '✅', booking_failed: '⚠️', reschedule: '🔄',
-    cancellation: '❌', hot_lead: '🔥', warm_lead: '📋',
-    emergency: '🚨', existing_customer: '📞', general_info: 'ℹ️'
-  };
-  return map[type] || '📞';
-}
-
-function headerTitle(type) {
-  const map = {
-    booking_confirmed: 'New Booking Confirmed',
-    booking_failed: 'Booking Failed — Callback Required',
-    reschedule: 'Appointment Rescheduled',
-    cancellation: 'Appointment Cancelled',
-    hot_lead: 'Hot Lead Alert',
-    warm_lead: 'New Lead',
-    emergency: 'EMERGENCY CALL',
-    existing_customer: 'Existing Customer Enquiry',
-    general_info: 'Call Summary'
-  };
-  return map[type] || 'Call Summary';
-}
-
-// Common table row builder
-function row(label, value, highlight) {
-  if (!value) return '';
-  const style = highlight
-    ? `padding:8px;border:1px solid #ddd;font-weight:bold;color:${highlight}`
-    : 'padding:8px;border:1px solid #ddd';
-  return `<tr><td style='padding:8px;border:1px solid #ddd;font-weight:bold'>${label}</td><td style='${style}'>${value}</td></tr>`;
-}
-
-// Build the table rows based on notification type
-let tableRows = '';
-
-// Always include caller info
-tableRows += row('Company', companyName);
-tableRows += row('Caller', callerName || 'Unknown');
-tableRows += row('Phone', callerPhone || 'Not provided');
-tableRows += row('Address', callerAddress || 'Not provided');
-
-// Booking-specific rows
-if (['booking_confirmed', 'reschedule'].includes(notificationType)) {
-  tableRows += row('Service', jobTypeBooked || serviceRequested || 'Not specified');
-  tableRows += row('Date', appointmentDate || 'Not confirmed');
-  tableRows += row('Time Window', appointmentTimeWindow ? (appointmentTimeWindow.charAt(0).toUpperCase() + appointmentTimeWindow.slice(1)) : 'Not specified');
-}
-
-if (notificationType === 'cancellation') {
-  tableRows += row('Cancelled Service', jobTypeBooked || serviceRequested || 'Not specified');
-  tableRows += row('Original Date', appointmentDate || 'Unknown');
-}
-
-if (notificationType === 'booking_failed') {
-  tableRows += row('Service Requested', serviceRequested || 'Not specified');
-  tableRows += row('Preferred Date', appointmentDate || 'Not specified');
-  tableRows += row('Preferred Time', appointmentTimeWindow || 'Not specified');
-  tableRows += row('Reason', 'Calendar unavailable or no suitable slot found');
-}
-
-// Lead-specific rows
-if (['hot_lead', 'warm_lead'].includes(notificationType)) {
-  tableRows += row('Service', serviceRequested || 'General');
-  tableRows += row('Lead Score', `${leadScore}/10`, leadScoreColor(leadScore));
-  tableRows += row('Urgency', urgency.charAt(0).toUpperCase() + urgency.slice(1), urgencyColor(urgency));
-  if (bookingAttempted) {
-    tableRows += row('Booking Attempted', 'Yes — but not completed');
+const addRow = (label, value) => {
+  if (value && value.trim && value.trim() !== '' && value !== 'null' && value !== 'undefined') {
+    rows += `<tr><td style="padding:8px 12px;border:1px solid #e2e8f0;font-weight:600;width:160px;background:#f8fafc">${label}</td><td style="padding:8px 12px;border:1px solid #e2e8f0">${value}</td></tr>`;
   }
+};
+
+addRow('Caller', callerName || 'Unknown');
+addRow('Phone', callerPhone);
+addRow('Address', callerAddress);
+addRow('Service', serviceRequested || jobTypeBooked);
+
+if (bookingSuccess || bookingAttempted) {
+  addRow('Booking Status', bookingSuccess ? '✅ Confirmed' : '⚠️ Attempted but not completed');
+  addRow('Appointment', appointmentDate ? `${appointmentDate} — ${appointmentTimeWindow || 'TBD'}` : 'Pending');
+  addRow('Job Type', jobTypeBooked);
 }
 
-// Emergency rows
-if (notificationType === 'emergency') {
-  tableRows += row('Issue', serviceRequested || 'Emergency');
-  tableRows += row('Urgency', 'EMERGENCY', '#e53e3e');
-  tableRows += row('Transfer Attempted', transferAttempted ? 'Yes' : 'No');
-  if (transferAttempted) {
-    tableRows += row('Transfer Connected', transferSuccess === true ? 'Yes' : transferSuccess === false ? 'No — details taken' : 'Unknown');
-  }
+if (rescheduleOrCancel !== 'neither') {
+  addRow('Action', rescheduleOrCancel === 'reschedule' ? '🔄 Rescheduled' : '❌ Cancelled');
+  if (appointmentDate) addRow('New Date', `${appointmentDate} — ${appointmentTimeWindow || 'TBD'}`);
 }
 
-// Existing customer rows
-if (notificationType === 'existing_customer') {
-  tableRows += row('Enquiry', serviceRequested || notes || 'Not specified');
-  tableRows += row('Action Needed', transferAttempted ? (transferSuccess ? 'Transferred successfully' : 'Transfer failed — callback required') : 'Callback requested');
-}
+addRow('Urgency', urgency.charAt(0).toUpperCase() + urgency.slice(1));
+addRow('Lead Score', `${leadScore}/10`);
+addRow('Sentiment', callerSentiment);
 
-// General info
-if (notificationType === 'general_info') {
-  tableRows += row('Topic', serviceRequested || 'General question');
-  if (leadScore >= 3) tableRows += row('Lead Score', `${leadScore}/10`, leadScoreColor(leadScore));
-}
-
-// Vulnerable occupant flag
-if (vulnerableOccupant) {
-  tableRows += row('⚠️ Vulnerable Occupant', 'Yes — elderly, disabled, or young children present', '#e53e3e');
-}
-
-const emailHtml = `<div style='font-family:Arial,sans-serif;max-width:600px'>
-<h2 style='color:${notificationType === 'emergency' ? '#e53e3e' : brandColor}'>${headerIcon(notificationType)} ${headerTitle(notificationType)}</h2>
-<table style='border-collapse:collapse;width:100%'>
-${tableRows}
-</table>
-<h3>Call Summary</h3>
-<p>${summary || 'No summary available.'}</p>
-${notes ? `<h3>Notes</h3><p>${notes}</p>` : ''}
-<p style='color:#718096;font-size:12px'>${callData_raw.call_timestamp || new Date().toISOString()} | Duration: ${callData_raw.duration_seconds || 0}s | Call ID: ${callData_raw.call_id || 'N/A'}</p>
+const emailHtml = `
+<div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto">
+  <div style="background:${tc.accent};padding:16px 20px;border-radius:8px 8px 0 0">
+    <h2 style="color:#fff;margin:0;font-size:18px">${tc.emoji} ${tc.label} — ${companyName}</h2>
+  </div>
+  <div style="border:1px solid #e2e8f0;border-top:0;padding:20px;border-radius:0 0 8px 8px">
+    <table style="border-collapse:collapse;width:100%">
+      ${rows}
+    </table>
+    <div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:6px;border-left:4px solid ${tc.accent}">
+      <strong>Summary:</strong> ${summary || 'No summary available.'}
+    </div>
+    ${callData.follow_up_notes ? `<div style="margin-top:12px;padding:12px;background:#FFFBEB;border-radius:6px;border-left:4px solid #F59E0B"><strong>Follow-up Notes:</strong> ${callData.follow_up_notes}</div>` : ''}
+    <p style="color:#9CA3AF;font-size:11px;margin-top:16px">${timestamp} | Duration: ${duration}s | Call ID: ${clientData.call_id || ''}</p>
+  </div>
 </div>`;
 
-// ── Build SMS Message ─────────────────────────────────────────
-const smsMap = {
-  booking_confirmed: `✅ NEW BOOKING: ${callerName || 'Customer'} booked ${jobTypeBooked || serviceRequested || 'service'} for ${appointmentDate || 'TBC'} ${appointmentTimeWindow || ''}. Ph: ${callerPhone || 'N/A'}`,
-  booking_failed: `⚠️ BOOKING FAILED: ${callerName || 'Customer'} tried to book ${serviceRequested || 'service'} but could not complete. CALLBACK NEEDED. Ph: ${callerPhone || 'N/A'}`,
-  reschedule: `🔄 RESCHEDULED: ${callerName || 'Customer'} moved to ${appointmentDate || 'TBC'} ${appointmentTimeWindow || ''}. Ph: ${callerPhone || 'N/A'}`,
-  cancellation: `❌ CANCELLED: ${callerName || 'Customer'} cancelled ${appointmentDate || ''} appointment. Ph: ${callerPhone || 'N/A'}`,
-  hot_lead: `🔥 HOT LEAD (${leadScore}/10): ${callerName || 'Unknown'} needs ${serviceRequested || 'service'}. Ph: ${callerPhone || 'N/A'}. ${urgency === 'high' ? 'URGENT.' : ''}`,
-  warm_lead: `📋 NEW LEAD (${leadScore}/10): ${callerName || 'Unknown'} — ${serviceRequested || 'service'}. Ph: ${callerPhone || 'N/A'}`,
-  emergency: `🚨 EMERGENCY: ${callerName || 'Unknown'} — ${serviceRequested || 'emergency issue'}. Ph: ${callerPhone || 'N/A'}. ${transferSuccess ? 'Transferred.' : 'CALLBACK NEEDED.'}`,
-  existing_customer: `📞 EXISTING CUSTOMER: ${callerName || 'Customer'} re: ${serviceRequested || notes || 'enquiry'}. Ph: ${callerPhone || 'N/A'}`,
-  general_info: `ℹ️ CALL: ${callerName || 'Caller'} asked about ${serviceRequested || 'general info'}. Ph: ${callerPhone || 'N/A'}`
-};
-const smsMessage = smsMap[notificationType] || `📞 Call from ${callerName || 'Unknown'}: ${summary || 'No details'}. Ph: ${callerPhone || 'N/A'}`;
+// ── Build SMS text ──────────────────────────────────────────
+let smsText = '';
+if (notificationType === 'booking_confirmed') {
+  smsText = `📅 Booking Confirmed — ${callerName || 'Caller'} booked for ${jobTypeBooked || serviceRequested || 'service'} on ${appointmentDate || 'TBD'} (${appointmentTimeWindow || 'TBD'}). Phone: ${callerPhone}`;
+} else if (notificationType === 'emergency') {
+  smsText = `🚨 EMERGENCY — ${callerName || 'Caller'} at ${callerAddress || 'address not given'}. ${serviceRequested || summary}. Call: ${callerPhone}`;
+} else if (notificationType === 'reschedule') {
+  smsText = `🔄 Rescheduled — ${callerName || 'Caller'} moved to ${appointmentDate || 'TBD'} (${appointmentTimeWindow || 'TBD'}). Phone: ${callerPhone}`;
+} else if (notificationType === 'cancellation') {
+  smsText = `❌ Cancelled — ${callerName || 'Caller'} cancelled their appointment. Phone: ${callerPhone}. ${summary}`;
+} else if (notificationType === 'booking_failed_lead') {
+  smsText = `📋 Follow Up — ${callerName || 'Caller'} wanted to book ${serviceRequested || 'service'} but booking wasn't completed. Call them: ${callerPhone}`;
+} else if (notificationType === 'hot_lead') {
+  smsText = `🔥 Hot Lead — ${callerName || 'Caller'} needs ${serviceRequested || 'service'}. Score: ${leadScore}/10. Call: ${callerPhone}`;
+} else if (notificationType === 'general_lead') {
+  smsText = `📞 New Lead — ${callerName || 'Caller'} called about ${serviceRequested || 'service'}. Score: ${leadScore}/10. Phone: ${callerPhone}`;
+} else if (notificationType === 'follow_up_required') {
+  smsText = `↩️ Follow Up — ${callerName || 'Caller'} (${callType === 'callback' ? 'returning call' : 'existing customer'}). Phone: ${callerPhone}. ${summary}`;
+}
 
-// ── Output ────────────────────────────────────────────────────
+// ── Build email subject line ────────────────────────────────
+const subjectMap = {
+  booking_confirmed: `📅 Booking Confirmed — ${callerName || 'New Customer'} | ${companyName}`,
+  reschedule: `🔄 Appointment Rescheduled — ${callerName || 'Customer'} | ${companyName}`,
+  cancellation: `❌ Appointment Cancelled — ${callerName || 'Customer'} | ${companyName}`,
+  emergency: `🚨 EMERGENCY — ${callerName || 'Caller'} | ${companyName}`,
+  booking_failed_lead: `📋 Booking Failed — Follow Up ${callerName || 'Caller'} | ${companyName}`,
+  hot_lead: `🔥 Hot Lead — ${callerName || 'Unknown'} — ${serviceRequested || 'Service'} | ${companyName}`,
+  general_lead: `📞 New Lead — ${callerName || 'Unknown'} — ${serviceRequested || 'Service'} | ${companyName}`,
+  follow_up_required: `↩️ Follow Up Required — ${callerName || 'Caller'} | ${companyName}`,
+  info_only: `ℹ️ Call Logged — ${companyName}`,
+  spam: `🤖 Spam Call — ${companyName}`
+};
+const emailSubject = subjectMap[notificationType] || `Call Alert — ${companyName}`;
+
+// ── Return everything ───────────────────────────────────────
 return {
-  // Caller data
+  // Identifiers
+  call_id: clientData.call_id || '',
+  agent_id: clientData.agent_id || '',
+  company_name: companyName,
+  call_tier: 'premium',
+  
+  // Caller info
   caller_name: callerName,
   caller_phone: callerPhone,
   caller_address: callerAddress,
+  caller_sentiment: callerSentiment,
+  
+  // Call classification
+  call_type: callType,
+  urgency: urgency,
   service_requested: serviceRequested,
   summary: summary,
-  notes: notes,
-  urgency: urgency,
-  caller_sentiment: callerSentiment,
-  vulnerable_occupant: vulnerableOccupant,
-
-  // Lead data
-  lead_score: leadScore,
-  is_lead: leadScore >= 4,
-  is_hot_lead: isHotLead,
-
-  // Booking data
+  follow_up_notes: callData.follow_up_notes || '',
+  
+  // Booking fields
   booking_attempted: bookingAttempted,
   booking_success: bookingSuccess,
-  appointment_date: appointmentDate,
-  appointment_time_window: appointmentTimeWindow,
-  job_type_booked: jobTypeBooked,
+  appointment_date: appointmentDate || null,
+  appointment_time_window: appointmentTimeWindow || null,
+  job_type_booked: jobTypeBooked || null,
   reschedule_or_cancel: rescheduleOrCancel,
-
-  // Call metadata
-  call_type: callType,
-  call_tier: 'premium',
-  job_type: jobType,
-  transfer_attempted: transferAttempted,
-  transfer_success: transferSuccess,
-
-  // Notification config
+  
+  // Lead fields
+  lead_score: leadScore,
+  is_lead: !bookingSuccess && leadScore >= 4,
+  is_hot_lead: isHotLead,
+  
+  // Notification
   notification_type: notificationType,
-  notification_priority: notificationPriority,
-  should_notify: shouldNotify,
-  email_subject: emailSubject,
+  notify_client: notifyClient,
   email_html: emailHtml,
-  sms_message: smsMessage,
-
-  // Client notification recipients
-  lead_email: leadEmail,
-  lead_phone: leadPhone_client,
-  notification_email_2: notificationEmail2,
-  notification_email_3: notificationEmail3,
-  notification_sms_2: notificationSms2,
-  notification_sms_3: notificationSms3,
-  company_name: companyName,
-
-  // Raw data passthrough
-  call_id: callData_raw.call_id,
-  agent_id: callData_raw.agent_id,
-  from_number: callData_raw.from_number,
-  duration_seconds: callData_raw.duration_seconds,
-  call_timestamp: callData_raw.call_timestamp,
-  disconnection_reason: callData_raw.disconnection_reason
+  email_subject: emailSubject,
+  sms_text: smsText,
+  
+  // Carry forward from client data
+  lead_email: clientData.lead_email || '',
+  lead_phone: clientData.lead_phone || '',
+  notification_email_2: clientData.notification_email_2 || '',
+  notification_email_3: clientData.notification_email_3 || '',
+  notification_sms_2: clientData.notification_sms_2 || '',
+  notification_sms_3: clientData.notification_sms_3 || '',
+  lead_contact_method: clientData.lead_contact_method || 'Both',
+  twilio_from: clientData.twilio_from || '',
+  from_number: clientData.from_number || '',
+  duration_seconds: clientData.duration_seconds || 0,
+  call_timestamp: clientData.call_timestamp || new Date().toISOString(),
+  timezone: clientData.timezone || 'America/Chicago'
 };
