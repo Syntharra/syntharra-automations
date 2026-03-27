@@ -32,3 +32,22 @@
 ### 5. Retell cleanup
 - 60 orphaned conversation flows deleted from Retell
 - Only 2 flows remain (both linked to active agents)
+
+## Additional Deliverables
+
+### 6. Client-Facing Call Dashboard (shared/client-dashboard.jsx)
+- React component pulling from Supabase via anon key
+- Filtered by agent_id in URL query param
+- Shows: total calls, leads, avg score, emergencies, missed transfers
+- Expandable call cards with full details, summaries, notes
+- Clickable phone numbers, Google Maps links
+- Date range toggles (7d/14d/30d)
+- Syntharra branded header with client company name
+
+### 7. Sales Pitch Document (sales/generate-sales-pitch.js)
+- Professional DOCX with 6 pages
+- Cover page, problem statement, feature list, how it works, pricing, ROI
+- 13 features documented with icons and descriptions
+- Pricing table with Standard and Premium tiers
+- ROI comparison table
+- Georgia/Calibri typography, Syntharra violet accent
