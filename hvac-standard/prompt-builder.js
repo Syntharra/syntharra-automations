@@ -287,7 +287,7 @@ const conversationFlow = {
       id: "node-transfer-call", name: "Transfer Call", type: "transfer_call",
       instruction: { type: "prompt", text: "Say: \"Let me get someone on the line for you right now, just one moment.\" Then transfer." },
       transfer_destination: { type: "predefined", number: transferNumber },
-      transfer_option: { type: "cold_transfer", cold_transfer_mode: "sip_invite", enable_bridge_audio_cue: true, agent_detection_timeout_ms: 30000, show_transferee_as_caller: false },
+      transfer_option: { type: "warm_transfer", warm_transfer_option: { type: "prompt", prompt: "You are now speaking to the business owner or team member, NOT the caller. Give a brief 1-2 sentence summary of the call. Include: the caller's name (if collected), what they are calling about, and their urgency level. Example: \"Hi, I have [name] on the line calling about [issue]. They seem [calm/frustrated/urgent].\" Keep it concise and professional. Once you have briefed them, the caller will be connected." }, enable_bridge_audio_cue: true },
       edge: { id: "edge-transfer-failed", destination_node_id: "node-transfer-failed", transition_condition: { type: "prompt", prompt: "Transfer failed" } },
       display_position: { x: 3294, y: 2238 }
     },
@@ -295,7 +295,7 @@ const conversationFlow = {
       id: "node-emergency-transfer", name: "Emergency Transfer", type: "transfer_call",
       instruction: { type: "prompt", text: `Say: "I am transferring you to our emergency line right now. The number is ${emergencyDisplayNumber} in case we get disconnected. Stay on the line." Then transfer immediately.` },
       transfer_destination: { type: "predefined", number: emergencyTransferNumber },
-      transfer_option: { type: "cold_transfer", cold_transfer_mode: "sip_invite", enable_bridge_audio_cue: true, agent_detection_timeout_ms: 30000, show_transferee_as_caller: false },
+      transfer_option: { type: "warm_transfer", warm_transfer_option: { type: "prompt", prompt: "You are now speaking to the emergency team, NOT the caller. This is an EMERGENCY call. Give a brief summary: the caller's name, what the emergency is (no heat, gas smell, water leak, etc.), and their address if collected. Example: \"Emergency call from [name] at [address]. They have [no heat/gas leak/flooding]. Connecting them now.\" Be urgent and concise." }, enable_bridge_audio_cue: true },
       edge: { id: "edge-emergency-transfer-failed", destination_node_id: "node-transfer-failed", transition_condition: { type: "prompt", prompt: "Transfer failed" } },
       display_position: { x: 3294, y: 1470 }
     },
