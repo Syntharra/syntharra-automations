@@ -59,8 +59,11 @@ const testMode           = false;
 const voiceMap = { female: 'retell-Sloane', male: 'retell-Nico' };
 const voiceId = voiceMap[voiceGender] || 'retell-Sloane';
 
-// === Transfer number: use lead_phone by default, emergency_phone as override ===
-const rawTransferPhone = emergencyPhone || leadPhone;
+// === Transfer number for the Transfer Call node ===
+// Priority: transfer_phone (q48) from Jotform is the default destination.
+// emergency_phone (q21) is spoken to the caller in the prompt but the actual
+// SIP transfer always goes to transfer_phone. Fallback to lead_phone if neither set.
+const rawTransferPhone = transferPhone || leadPhone;
 const transferNumber = rawTransferPhone
   ? (rawTransferPhone.startsWith('+') ? rawTransferPhone : `+1${rawTransferPhone.replace(/\D/g, '')}`)
   : '+10000000000';
