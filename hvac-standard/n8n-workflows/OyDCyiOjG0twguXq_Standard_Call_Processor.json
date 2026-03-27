@@ -334,6 +334,19 @@
       "parameters": {
         "jsCode": "const d = $input.first().json;\nconst subject = `[${(d.notification_type || 'unknown').toUpperCase()}] ${d.caller_name || 'Unknown'} \u2014 ${d.company_name} | ${d.call_id}`;\nconst html = `<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h3 style=\"color:#6C63FF\">${(d.notification_type || '').replace(/_/g,' ').toUpperCase()} \u2014 ${d.company_name}</h3>\n<p><strong>Caller:</strong> ${d.caller_name || '\u2014'}</p>\n<p><strong>Type:</strong> ${d.notification_type || '\u2014'}</p>\n<p><strong>Summary:</strong> ${d.summary || '\u2014'}</p>\n<p><strong>Call ID:</strong> ${d.call_id || '\u2014'}</p>\n<p style=\"color:#999;font-size:12px\">Syntharra AI \u2014 Internal Notification</p></div>`;\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E',\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: ['daniel@syntharra.com'],\n      subject: subject,\n      html_body: html\n    },\n    json: true\n  });\n  return { ...d, _internal_sent: true };\n} catch (e) {\n  console.log('[INTERNAL] Failed:', e.message);\n  return { ...d, _internal_sent: false };\n}"
       }
+    },
+    {
+      "id": "7556df43-8c52-4dc7-8de8-1bf11cde2b6a",
+      "name": "Check Repeat Caller",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        380
+      ],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst fromNumber = d.from_number || '';\nconst agentId = d.agent_id || '';\n\nif (!fromNumber || !agentId) {\n  return { ...d, _repeat_caller: false, _call_history: [] };\n}\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?from_number=eq.' + encodeURIComponent(fromNumber) + '&agent_id=eq.' + agentId + '&order=created_at.desc&limit=5&select=call_id,caller_name,service_requested,call_type,booking_success,appointment_date,created_at,summary',\n    headers: {\n      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg'\n    },\n    json: true\n  });\n\n  if (Array.isArray(response) && response.length > 0) {\n    const lastCall = response[0];\n    const callCount = response.length;\n    let historyContext = `REPEAT CALLER \u2014 ${callCount} previous call(s).\\n`;\n    historyContext += `Last call: ${lastCall.created_at ? new Date(lastCall.created_at).toLocaleDateString() : 'unknown'}\\n`;\n    if (lastCall.caller_name) historyContext += `Known name: ${lastCall.caller_name}\\n`;\n    if (lastCall.service_requested) historyContext += `Last service: ${lastCall.service_requested}\\n`;\n    if (lastCall.summary) historyContext += `Last summary: ${lastCall.summary}\\n`;\n    \n    return {\n      ...d,\n      _repeat_caller: true,\n      _call_count: callCount,\n      _last_caller_name: lastCall.caller_name || '',\n      _history_context: historyContext\n    };\n  }\n} catch (e) {\n  console.log('Repeat caller check failed:', e.message);\n}\n\nreturn { ...d, _repeat_caller: false, _call_history: [] };"
+      }
     }
   ],
   "connections": {
@@ -385,7 +398,7 @@
       "main": [
         [
           {
-            "node": "GPT: Analyze Transcript",
+            "node": "Check Repeat Caller",
             "type": "main",
             "index": 0
           }
@@ -514,6 +527,17 @@
           }
         ],
         []
+      ]
+    },
+    "Check Repeat Caller": {
+      "main": [
+        [
+          {
+            "node": "GPT: Analyze Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
