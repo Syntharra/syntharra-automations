@@ -1,1 +1,418 @@
-{"updatedAt":"2026-03-27T15:32:44.606Z","createdAt":"2026-03-27T15:13:01.651Z","id":"UhxfrDaEeYUk4jAD","name":"HVAC Premium Call Processor","description":null,"active":true,"isArchived":false,"nodes":[{"parameters":{"httpMethod":"POST","path":"retell-hvac-premium-webhook","options":{}},"id":"node-retell-webhook","name":"Retell Premium Webhook","type":"n8n-nodes-base.webhook","typeVersion":1,"position":[-1440,512]},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict"},"conditions":[{"leftValue":"={{ $json.event }}","rightValue":"call_analyzed","operator":{"type":"string","operation":"equals"}}],"combinator":"and"}},"id":"node-filter-analyzed","name":"Filter: call_analyzed Only","type":"n8n-nodes-base.filter","typeVersion":2,"position":[-1120,512]},{"parameters":{"jsCode":"const body = $input.first().json;\nconst call = body.call || body;\n\nconst agentId = call.agent_id || '';\nconst callId = call.call_id || '';\nconst transcript = call.transcript || '';\nconst durationMs = call.duration_ms || 0;\nconst callStatus = call.call_status || '';\n\n// Post-call analysis fields\nconst analysis = call.call_analysis || {};\nconst callSummary = analysis.call_summary || '';\nconst callSuccessful = analysis.call_successful || false;\nconst userSentiment = analysis.user_sentiment || '';\n\n// Premium custom analysis fields\nconst bookingAttempted = analysis.booking_attempted || false;\nconst bookingSuccess = analysis.booking_success || false;\nconst appointmentDate = analysis.appointment_date || null;\nconst appointmentTimeWindow = analysis.appointment_time_window || null;\nconst jobTypeBooked = analysis.job_type_booked || null;\nconst rescheduleOrCancel = analysis.reschedule_or_cancel || 'neither';\n\nreturn {\n  agent_id: agentId,\n  call_id: callId,\n  transcript: transcript,\n  duration_seconds: Math.round(durationMs / 1000),\n  call_status: callStatus,\n  call_summary: callSummary,\n  call_successful: callSuccessful,\n  caller_sentiment: userSentiment,\n  booking_attempted: bookingAttempted,\n  booking_success: bookingSuccess,\n  appointment_date: appointmentDate,\n  appointment_time_window: appointmentTimeWindow,\n  job_type_booked: jobTypeBooked,\n  reschedule_or_cancel: rescheduleOrCancel\n};"},"id":"node-extract-call-data","name":"Extract Call Data","type":"n8n-nodes-base.code","typeVersion":2,"position":[-800,512]},{"id":"node-lookup-client","name":"Look Up Client","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[-480,512],"parameters":{"method":"GET","url":"https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.={{ $json.agent_id }}&limit=1","sendHeaders":true,"headerParameters":{"parameters":[{"name":"apikey","value":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Authorization","value":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Content-Type","value":"application/json"},{"name":"Prefer","value":"return=representation"}]},"options":{}}},{"parameters":{"jsCode":"const callData = $('Extract Call Data').first().json;\nconst supabaseRows = $input.first().json;\n\n// Supabase returns array via httpRequest\nconst rows = Array.isArray(supabaseRows) ? supabaseRows : [supabaseRows];\nif (!rows || rows.length === 0) {\n  throw new Error('No client found for agent_id: ' + callData.agent_id);\n}\nconst client = rows[0];\n\nreturn {\n  ...callData,\n  company_name: client.company_name || '',\n  client_email: client.client_email || '',\n  lead_email: client.lead_email || '',\n  lead_phone: client.lead_phone || '',\n  lead_contact_method: client.lead_contact_method || 'Both',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  timezone: client.timezone || 'America/Chicago',\n  calendar_platform: client.calendar_platform || '',\n  crm_platform: client.crm_platform || ''\n};"},"id":"node-parse-client-data","name":"Parse Client Data","type":"n8n-nodes-base.code","typeVersion":2,"position":[-160,512]},{"id":"node-gpt-analyze","name":"GPT: Analyze Call","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[160,512],"parameters":{"method":"POST","url":"https://api.openai.com/v1/chat/completions","sendHeaders":true,"headerParameters":{"parameters":[{"name":"Authorization","value":"=Bearer {{ $vars.OPENAI_API_KEY }}"},{"name":"Content-Type","value":"application/json"}]},"sendBody":true,"specifyBody":"json","jsonBody":"{\"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"system\", \"content\": \"You are analyzing a call transcript for an HVAC Premium AI Receptionist. The premium agent has booking capability.\\n\\nReturn ONLY valid JSON:\\n{\\n  \\\"lead_score\\\": <1-10>,\\n  \\\"is_hot_lead\\\": <true/false>,\\n  \\\"caller_name\\\": \\\"<string or null>\\\",\\n  \\\"caller_phone\\\": \\\"<string or null>\\\",\\n  \\\"caller_address\\\": \\\"<string or null>\\\",\\n  \\\"service_requested\\\": \\\"<string>\\\",\\n  \\\"job_type\\\": \\\"<short label>\\\",\\n  \\\"summary\\\": \\\"<2-3 sentences>\\\",\\n  \\\"urgency\\\": \\\"<low/medium/high>\\\",\\n  \\\"vulnerable_occupant\\\": <true/false>,\\n  \\\"notes\\\": \\\"<any important details>\\\",\\n  \\\"booking_attempted\\\": <true/false>,\\n  \\\"booking_success\\\": <true/false>,\\n  \\\"appointment_date\\\": \\\"<YYYY-MM-DD or null>\\\",\\n  \\\"appointment_time_window\\\": \\\"<morning/afternoon/null>\\\",\\n  \\\"job_type_booked\\\": \\\"<string or null>\\\",\\n  \\\"reschedule_or_cancel\\\": \\\"<reschedule/cancel/neither>\\\"\\n}\"}, {\"role\": \"user\", \"content\": \"=Transcript:\\n---\\n{{ $json.transcript }}\\n---\"}]}","options":{}}},{"parameters":{"jsCode":"const gptResponse = $input.first().json;\nconst clientData = $('Parse Client Data').first().json;\n\nlet callData = {};\ntry {\n  // Handle both native OpenAI node response and httpRequest response\n  const choices = gptResponse.choices || gptResponse.message?.content;\n  let text;\n  if (gptResponse.choices) {\n    text = gptResponse.choices[0]?.message?.content || '';\n  } else {\n    text = gptResponse.message?.content || gptResponse.text || JSON.stringify(gptResponse);\n  }\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  callData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};\n} catch (e) {\n  callData = { lead_score: 0, summary: 'Parse error', is_hot_lead: false, booking_attempted: false, booking_success: false };\n}\n\nconst bookingAttempted = callData.booking_attempted || clientData.booking_attempted || false;\nconst bookingSuccess = callData.booking_success || clientData.booking_success || false;\nconst appointmentDate = callData.appointment_date || clientData.appointment_date || null;\nconst appointmentTimeWindow = callData.appointment_time_window || clientData.appointment_time_window || null;\nconst jobTypeBooked = callData.job_type_booked || clientData.job_type_booked || null;\nconst rescheduleOrCancel = callData.reschedule_or_cancel || clientData.reschedule_or_cancel || 'neither';\nconst leadScore = callData.lead_score || 0;\nconst isLead = bookingSuccess ? false : (leadScore >= 6);\n\nreturn {\n  ...clientData,\n  ...callData,\n  call_tier: 'premium',\n  lead_score: leadScore,\n  is_lead: isLead,\n  booking_attempted: bookingAttempted,\n  booking_success: bookingSuccess,\n  appointment_date: appointmentDate,\n  appointment_time_window: appointmentTimeWindow,\n  job_type_booked: jobTypeBooked,\n  reschedule_or_cancel: rescheduleOrCancel\n};"},"id":"node-parse-call-data","name":"Parse Call Data","type":"n8n-nodes-base.code","typeVersion":2,"position":[480,512]},{"id":"node-log-to-supabase","name":"Log Call to Supabase","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[800,512],"parameters":{"method":"POST","url":"https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log","sendHeaders":true,"headerParameters":{"parameters":[{"name":"apikey","value":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Authorization","value":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Content-Type","value":"application/json"},{"name":"Prefer","value":"return=representation,resolution=merge-duplicates"},{"name":"on_conflict","value":"call_id"}]},"sendBody":true,"specifyBody":"json","jsonBody":"{\"agent_id\": \"={{ $json.agent_id }}\", \"call_id\": \"={{ $json.call_id }}\", \"company_name\": \"={{ $json.company_name }}\", \"call_tier\": \"premium\", \"call_duration_seconds\": \"={{ $json.duration_seconds }}\", \"call_status\": \"={{ $json.call_status }}\", \"call_successful\": \"={{ $json.call_successful }}\", \"call_summary\": \"={{ $json.call_summary }}\", \"caller_name\": \"={{ $json.caller_name }}\", \"caller_phone\": \"={{ $json.caller_phone }}\", \"caller_address\": \"={{ $json.caller_address }}\", \"caller_sentiment\": \"={{ $json.caller_sentiment }}\", \"lead_score\": \"={{ $json.lead_score }}\", \"is_lead\": \"={{ $json.is_lead }}\", \"is_hot_lead\": \"={{ $json.is_hot_lead }}\", \"job_type\": \"={{ $json.job_type }}\", \"urgency\": \"={{ $json.urgency }}\", \"vulnerable_occupant\": \"={{ $json.vulnerable_occupant }}\", \"notes\": \"={{ $json.notes }}\", \"service_requested\": \"={{ $json.service_requested }}\", \"booking_attempted\": \"={{ $json.booking_attempted }}\", \"booking_success\": \"={{ $json.booking_success }}\", \"appointment_date\": \"={{ $json.appointment_date }}\", \"appointment_time_window\": \"={{ $json.appointment_time_window }}\", \"job_type_booked\": \"={{ $json.job_type_booked }}\", \"reschedule_or_cancel\": \"={{ $json.reschedule_or_cancel }}\"}","options":{}}},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict"},"conditions":[{"leftValue":"={{ $('Parse Call Data').first().json.booking_success }}","rightValue":true,"operator":{"type":"boolean","operation":"true"}}],"combinator":"or"}},"id":"node-is-booking","name":"Booking Made?","type":"n8n-nodes-base.if","typeVersion":2,"position":[1120,512]},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict"},"conditions":[{"leftValue":"={{ $('Parse Call Data').first().json.is_lead }}","rightValue":true,"operator":{"type":"boolean","operation":"true"}}],"combinator":"or"}},"id":"node-is-lead","name":"Hot Lead? (no booking)","type":"n8n-nodes-base.if","typeVersion":2,"position":[1120,760]},{"parameters":{"jsCode":"// Build booking confirmation notification\nconst d = $('Parse Call Data').first().json;\n\nconst emailHtml = `\n<h3>📅 New Booking — ${d.company_name}</h3>\n<table style=\"border-collapse:collapse;font-family:sans-serif;font-size:14px;\">\n  <tr><td style=\"padding:6px 12px;\"><strong>Caller</strong></td><td style=\"padding:6px 12px;\">${d.caller_name || 'Unknown'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Phone</strong></td><td style=\"padding:6px 12px;\">${d.caller_phone || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Address</strong></td><td style=\"padding:6px 12px;\">${d.caller_address || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Service</strong></td><td style=\"padding:6px 12px;\">${d.job_type_booked || d.service_requested || 'Not specified'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Date</strong></td><td style=\"padding:6px 12px;\">${d.appointment_date || 'TBC'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Time</strong></td><td style=\"padding:6px 12px;\">${d.appointment_time_window || 'TBC'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Summary</strong></td><td style=\"padding:6px 12px;\">${d.call_summary || ''}</td></tr>\n</table>\n`;\n\nreturn { ...d, emailHtml, notificationType: 'booking' };"},"id":"node-build-booking-notification","name":"Build Booking Notification","type":"n8n-nodes-base.code","typeVersion":2,"position":[1440,400]},{"parameters":{"jsCode":"// Build lead notification (fallback — booking not made)\nconst d = $('Parse Call Data').first().json;\n\nconst emailHtml = `\n<h3>🔥 New Lead — ${d.company_name}</h3>\n<table style=\"border-collapse:collapse;font-family:sans-serif;font-size:14px;\">\n  <tr><td style=\"padding:6px 12px;\"><strong>Caller</strong></td><td style=\"padding:6px 12px;\">${d.caller_name || 'Unknown'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Phone</strong></td><td style=\"padding:6px 12px;\">${d.caller_phone || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Address</strong></td><td style=\"padding:6px 12px;\">${d.caller_address || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Service</strong></td><td style=\"padding:6px 12px;\">${d.service_requested || 'Not specified'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Lead Score</strong></td><td style=\"padding:6px 12px;\">${d.lead_score}/10</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Urgency</strong></td><td style=\"padding:6px 12px;\">${d.urgency || 'Unknown'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Booking Attempted</strong></td><td style=\"padding:6px 12px;\">${d.booking_attempted ? 'Yes — calendar unavailable' : 'No'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Summary</strong></td><td style=\"padding:6px 12px;\">${d.call_summary || ''}</td></tr>\n</table>\n`;\n\nreturn { ...d, emailHtml, notificationType: 'lead' };"},"id":"node-build-lead-notification","name":"Build Lead Notification","type":"n8n-nodes-base.code","typeVersion":2,"position":[1440,760]}],"connections":{"Retell Premium Webhook":{"main":[[{"node":"Filter: call_analyzed Only","type":"main","index":0}]]},"Filter: call_analyzed Only":{"main":[[{"node":"Extract Call Data","type":"main","index":0}]]},"Extract Call Data":{"main":[[{"node":"Look Up Client","type":"main","index":0}]]},"Look Up Client":{"main":[[{"node":"Parse Client Data","type":"main","index":0}]]},"Parse Client Data":{"main":[[{"node":"GPT: Analyze Call","type":"main","index":0}]]},"GPT: Analyze Call":{"main":[[{"node":"Parse Call Data","type":"main","index":0}]]},"Parse Call Data":{"main":[[{"node":"Log Call to Supabase","type":"main","index":0}]]},"Log Call to Supabase":{"main":[[{"node":"Booking Made?","type":"main","index":0},{"node":"Hot Lead? (no booking)","type":"main","index":0}]]},"Booking Made?":{"main":[[{"node":"Build Booking Notification","type":"main","index":0}]]},"Hot Lead? (no booking)":{"main":[[{"node":"Build Lead Notification","type":"main","index":0}]]}},"settings":{"executionOrder":"v1","saveManualExecutions":true,"callerPolicy":"workflowsFromSameOwner","availableInMCP":true},"staticData":null,"meta":null,"pinData":null,"versionId":"e74d5248-6211-4b2c-b57d-0e9ac83179df","activeVersionId":"e74d5248-6211-4b2c-b57d-0e9ac83179df","versionCounter":6,"triggerCount":1,"shared":[{"updatedAt":"2026-03-27T15:13:01.653Z","createdAt":"2026-03-27T15:13:01.653Z","role":"workflow:owner","workflowId":"UhxfrDaEeYUk4jAD","projectId":"fHNxQE9IeGCcfUfO","project":{"updatedAt":"2026-03-17T23:00:52.768Z","createdAt":"2026-03-17T23:00:46.569Z","id":"fHNxQE9IeGCcfUfO","name":"Daniel Blackmore <daniel@syntharra.com>","type":"personal","icon":null,"description":null,"creatorId":"59bc3c32-fc3d-4e66-a2a8-5439f05606b7"}}],"tags":[],"activeVersion":{"updatedAt":"2026-03-27T15:32:44.607Z","createdAt":"2026-03-27T15:32:44.607Z","versionId":"e74d5248-6211-4b2c-b57d-0e9ac83179df","workflowId":"UhxfrDaEeYUk4jAD","nodes":[{"parameters":{"httpMethod":"POST","path":"retell-hvac-premium-webhook","options":{}},"id":"node-retell-webhook","name":"Retell Premium Webhook","type":"n8n-nodes-base.webhook","typeVersion":1,"position":[-1440,512]},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict"},"conditions":[{"leftValue":"={{ $json.event }}","rightValue":"call_analyzed","operator":{"type":"string","operation":"equals"}}],"combinator":"and"}},"id":"node-filter-analyzed","name":"Filter: call_analyzed Only","type":"n8n-nodes-base.filter","typeVersion":2,"position":[-1120,512]},{"parameters":{"jsCode":"const body = $input.first().json;\nconst call = body.call || body;\n\nconst agentId = call.agent_id || '';\nconst callId = call.call_id || '';\nconst transcript = call.transcript || '';\nconst durationMs = call.duration_ms || 0;\nconst callStatus = call.call_status || '';\n\n// Post-call analysis fields\nconst analysis = call.call_analysis || {};\nconst callSummary = analysis.call_summary || '';\nconst callSuccessful = analysis.call_successful || false;\nconst userSentiment = analysis.user_sentiment || '';\n\n// Premium custom analysis fields\nconst bookingAttempted = analysis.booking_attempted || false;\nconst bookingSuccess = analysis.booking_success || false;\nconst appointmentDate = analysis.appointment_date || null;\nconst appointmentTimeWindow = analysis.appointment_time_window || null;\nconst jobTypeBooked = analysis.job_type_booked || null;\nconst rescheduleOrCancel = analysis.reschedule_or_cancel || 'neither';\n\nreturn {\n  agent_id: agentId,\n  call_id: callId,\n  transcript: transcript,\n  duration_seconds: Math.round(durationMs / 1000),\n  call_status: callStatus,\n  call_summary: callSummary,\n  call_successful: callSuccessful,\n  caller_sentiment: userSentiment,\n  booking_attempted: bookingAttempted,\n  booking_success: bookingSuccess,\n  appointment_date: appointmentDate,\n  appointment_time_window: appointmentTimeWindow,\n  job_type_booked: jobTypeBooked,\n  reschedule_or_cancel: rescheduleOrCancel\n};"},"id":"node-extract-call-data","name":"Extract Call Data","type":"n8n-nodes-base.code","typeVersion":2,"position":[-800,512]},{"id":"node-lookup-client","name":"Look Up Client","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[-480,512],"parameters":{"method":"GET","url":"https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.={{ $json.agent_id }}&limit=1","sendHeaders":true,"headerParameters":{"parameters":[{"name":"apikey","value":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Authorization","value":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Content-Type","value":"application/json"},{"name":"Prefer","value":"return=representation"}]},"options":{}}},{"parameters":{"jsCode":"const callData = $('Extract Call Data').first().json;\nconst supabaseRows = $input.first().json;\n\n// Supabase returns array via httpRequest\nconst rows = Array.isArray(supabaseRows) ? supabaseRows : [supabaseRows];\nif (!rows || rows.length === 0) {\n  throw new Error('No client found for agent_id: ' + callData.agent_id);\n}\nconst client = rows[0];\n\nreturn {\n  ...callData,\n  company_name: client.company_name || '',\n  client_email: client.client_email || '',\n  lead_email: client.lead_email || '',\n  lead_phone: client.lead_phone || '',\n  lead_contact_method: client.lead_contact_method || 'Both',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  timezone: client.timezone || 'America/Chicago',\n  calendar_platform: client.calendar_platform || '',\n  crm_platform: client.crm_platform || ''\n};"},"id":"node-parse-client-data","name":"Parse Client Data","type":"n8n-nodes-base.code","typeVersion":2,"position":[-160,512]},{"id":"node-gpt-analyze","name":"GPT: Analyze Call","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[160,512],"parameters":{"method":"POST","url":"https://api.openai.com/v1/chat/completions","sendHeaders":true,"headerParameters":{"parameters":[{"name":"Authorization","value":"=Bearer {{ $vars.OPENAI_API_KEY }}"},{"name":"Content-Type","value":"application/json"}]},"sendBody":true,"specifyBody":"json","jsonBody":"{\"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"system\", \"content\": \"You are analyzing a call transcript for an HVAC Premium AI Receptionist. The premium agent has booking capability.\\n\\nReturn ONLY valid JSON:\\n{\\n  \\\"lead_score\\\": <1-10>,\\n  \\\"is_hot_lead\\\": <true/false>,\\n  \\\"caller_name\\\": \\\"<string or null>\\\",\\n  \\\"caller_phone\\\": \\\"<string or null>\\\",\\n  \\\"caller_address\\\": \\\"<string or null>\\\",\\n  \\\"service_requested\\\": \\\"<string>\\\",\\n  \\\"job_type\\\": \\\"<short label>\\\",\\n  \\\"summary\\\": \\\"<2-3 sentences>\\\",\\n  \\\"urgency\\\": \\\"<low/medium/high>\\\",\\n  \\\"vulnerable_occupant\\\": <true/false>,\\n  \\\"notes\\\": \\\"<any important details>\\\",\\n  \\\"booking_attempted\\\": <true/false>,\\n  \\\"booking_success\\\": <true/false>,\\n  \\\"appointment_date\\\": \\\"<YYYY-MM-DD or null>\\\",\\n  \\\"appointment_time_window\\\": \\\"<morning/afternoon/null>\\\",\\n  \\\"job_type_booked\\\": \\\"<string or null>\\\",\\n  \\\"reschedule_or_cancel\\\": \\\"<reschedule/cancel/neither>\\\"\\n}\"}, {\"role\": \"user\", \"content\": \"=Transcript:\\n---\\n{{ $json.transcript }}\\n---\"}]}","options":{}}},{"parameters":{"jsCode":"const gptResponse = $input.first().json;\nconst clientData = $('Parse Client Data').first().json;\n\nlet callData = {};\ntry {\n  // Handle both native OpenAI node response and httpRequest response\n  const choices = gptResponse.choices || gptResponse.message?.content;\n  let text;\n  if (gptResponse.choices) {\n    text = gptResponse.choices[0]?.message?.content || '';\n  } else {\n    text = gptResponse.message?.content || gptResponse.text || JSON.stringify(gptResponse);\n  }\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  callData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};\n} catch (e) {\n  callData = { lead_score: 0, summary: 'Parse error', is_hot_lead: false, booking_attempted: false, booking_success: false };\n}\n\nconst bookingAttempted = callData.booking_attempted || clientData.booking_attempted || false;\nconst bookingSuccess = callData.booking_success || clientData.booking_success || false;\nconst appointmentDate = callData.appointment_date || clientData.appointment_date || null;\nconst appointmentTimeWindow = callData.appointment_time_window || clientData.appointment_time_window || null;\nconst jobTypeBooked = callData.job_type_booked || clientData.job_type_booked || null;\nconst rescheduleOrCancel = callData.reschedule_or_cancel || clientData.reschedule_or_cancel || 'neither';\nconst leadScore = callData.lead_score || 0;\nconst isLead = bookingSuccess ? false : (leadScore >= 6);\n\nreturn {\n  ...clientData,\n  ...callData,\n  call_tier: 'premium',\n  lead_score: leadScore,\n  is_lead: isLead,\n  booking_attempted: bookingAttempted,\n  booking_success: bookingSuccess,\n  appointment_date: appointmentDate,\n  appointment_time_window: appointmentTimeWindow,\n  job_type_booked: jobTypeBooked,\n  reschedule_or_cancel: rescheduleOrCancel\n};"},"id":"node-parse-call-data","name":"Parse Call Data","type":"n8n-nodes-base.code","typeVersion":2,"position":[480,512]},{"id":"node-log-to-supabase","name":"Log Call to Supabase","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[800,512],"parameters":{"method":"POST","url":"https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log","sendHeaders":true,"headerParameters":{"parameters":[{"name":"apikey","value":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Authorization","value":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"},{"name":"Content-Type","value":"application/json"},{"name":"Prefer","value":"return=representation,resolution=merge-duplicates"},{"name":"on_conflict","value":"call_id"}]},"sendBody":true,"specifyBody":"json","jsonBody":"{\"agent_id\": \"={{ $json.agent_id }}\", \"call_id\": \"={{ $json.call_id }}\", \"company_name\": \"={{ $json.company_name }}\", \"call_tier\": \"premium\", \"call_duration_seconds\": \"={{ $json.duration_seconds }}\", \"call_status\": \"={{ $json.call_status }}\", \"call_successful\": \"={{ $json.call_successful }}\", \"call_summary\": \"={{ $json.call_summary }}\", \"caller_name\": \"={{ $json.caller_name }}\", \"caller_phone\": \"={{ $json.caller_phone }}\", \"caller_address\": \"={{ $json.caller_address }}\", \"caller_sentiment\": \"={{ $json.caller_sentiment }}\", \"lead_score\": \"={{ $json.lead_score }}\", \"is_lead\": \"={{ $json.is_lead }}\", \"is_hot_lead\": \"={{ $json.is_hot_lead }}\", \"job_type\": \"={{ $json.job_type }}\", \"urgency\": \"={{ $json.urgency }}\", \"vulnerable_occupant\": \"={{ $json.vulnerable_occupant }}\", \"notes\": \"={{ $json.notes }}\", \"service_requested\": \"={{ $json.service_requested }}\", \"booking_attempted\": \"={{ $json.booking_attempted }}\", \"booking_success\": \"={{ $json.booking_success }}\", \"appointment_date\": \"={{ $json.appointment_date }}\", \"appointment_time_window\": \"={{ $json.appointment_time_window }}\", \"job_type_booked\": \"={{ $json.job_type_booked }}\", \"reschedule_or_cancel\": \"={{ $json.reschedule_or_cancel }}\"}","options":{}}},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict"},"conditions":[{"leftValue":"={{ $('Parse Call Data').first().json.booking_success }}","rightValue":true,"operator":{"type":"boolean","operation":"true"}}],"combinator":"or"}},"id":"node-is-booking","name":"Booking Made?","type":"n8n-nodes-base.if","typeVersion":2,"position":[1120,512]},{"parameters":{"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict"},"conditions":[{"leftValue":"={{ $('Parse Call Data').first().json.is_lead }}","rightValue":true,"operator":{"type":"boolean","operation":"true"}}],"combinator":"or"}},"id":"node-is-lead","name":"Hot Lead? (no booking)","type":"n8n-nodes-base.if","typeVersion":2,"position":[1120,760]},{"parameters":{"jsCode":"// Build booking confirmation notification\nconst d = $('Parse Call Data').first().json;\n\nconst emailHtml = `\n<h3>📅 New Booking — ${d.company_name}</h3>\n<table style=\"border-collapse:collapse;font-family:sans-serif;font-size:14px;\">\n  <tr><td style=\"padding:6px 12px;\"><strong>Caller</strong></td><td style=\"padding:6px 12px;\">${d.caller_name || 'Unknown'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Phone</strong></td><td style=\"padding:6px 12px;\">${d.caller_phone || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Address</strong></td><td style=\"padding:6px 12px;\">${d.caller_address || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Service</strong></td><td style=\"padding:6px 12px;\">${d.job_type_booked || d.service_requested || 'Not specified'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Date</strong></td><td style=\"padding:6px 12px;\">${d.appointment_date || 'TBC'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Time</strong></td><td style=\"padding:6px 12px;\">${d.appointment_time_window || 'TBC'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Summary</strong></td><td style=\"padding:6px 12px;\">${d.call_summary || ''}</td></tr>\n</table>\n`;\n\nreturn { ...d, emailHtml, notificationType: 'booking' };"},"id":"node-build-booking-notification","name":"Build Booking Notification","type":"n8n-nodes-base.code","typeVersion":2,"position":[1440,400]},{"parameters":{"jsCode":"// Build lead notification (fallback — booking not made)\nconst d = $('Parse Call Data').first().json;\n\nconst emailHtml = `\n<h3>🔥 New Lead — ${d.company_name}</h3>\n<table style=\"border-collapse:collapse;font-family:sans-serif;font-size:14px;\">\n  <tr><td style=\"padding:6px 12px;\"><strong>Caller</strong></td><td style=\"padding:6px 12px;\">${d.caller_name || 'Unknown'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Phone</strong></td><td style=\"padding:6px 12px;\">${d.caller_phone || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Address</strong></td><td style=\"padding:6px 12px;\">${d.caller_address || 'Not captured'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Service</strong></td><td style=\"padding:6px 12px;\">${d.service_requested || 'Not specified'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Lead Score</strong></td><td style=\"padding:6px 12px;\">${d.lead_score}/10</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Urgency</strong></td><td style=\"padding:6px 12px;\">${d.urgency || 'Unknown'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Booking Attempted</strong></td><td style=\"padding:6px 12px;\">${d.booking_attempted ? 'Yes — calendar unavailable' : 'No'}</td></tr>\n  <tr><td style=\"padding:6px 12px;\"><strong>Summary</strong></td><td style=\"padding:6px 12px;\">${d.call_summary || ''}</td></tr>\n</table>\n`;\n\nreturn { ...d, emailHtml, notificationType: 'lead' };"},"id":"node-build-lead-notification","name":"Build Lead Notification","type":"n8n-nodes-base.code","typeVersion":2,"position":[1440,760]}],"connections":{"Retell Premium Webhook":{"main":[[{"node":"Filter: call_analyzed Only","type":"main","index":0}]]},"Filter: call_analyzed Only":{"main":[[{"node":"Extract Call Data","type":"main","index":0}]]},"Extract Call Data":{"main":[[{"node":"Look Up Client","type":"main","index":0}]]},"Look Up Client":{"main":[[{"node":"Parse Client Data","type":"main","index":0}]]},"Parse Client Data":{"main":[[{"node":"GPT: Analyze Call","type":"main","index":0}]]},"GPT: Analyze Call":{"main":[[{"node":"Parse Call Data","type":"main","index":0}]]},"Parse Call Data":{"main":[[{"node":"Log Call to Supabase","type":"main","index":0}]]},"Log Call to Supabase":{"main":[[{"node":"Booking Made?","type":"main","index":0},{"node":"Hot Lead? (no booking)","type":"main","index":0}]]},"Booking Made?":{"main":[[{"node":"Build Booking Notification","type":"main","index":0}]]},"Hot Lead? (no booking)":{"main":[[{"node":"Build Lead Notification","type":"main","index":0}]]}},"authors":"Daniel Blackmore","name":null,"description":null,"autosaved":false,"workflowPublishHistory":[{"createdAt":"2026-03-27T15:32:59.866Z","id":611,"workflowId":"UhxfrDaEeYUk4jAD","versionId":"e74d5248-6211-4b2c-b57d-0e9ac83179df","event":"activated","userId":"59bc3c32-fc3d-4e66-a2a8-5439f05606b7"}]}}
+{
+  "name": "HVAC Premium Call Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-hvac-premium-webhook",
+        "options": {}
+      },
+      "id": "node-retell-webhook",
+      "name": "Retell Premium Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        512
+      ],
+      "webhookId": "6dddc745-704b-479b-8274-ac49b133d5c5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "call_analyzed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-filter-analyzed",
+      "name": "Filter: call_analyzed Only",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nconst agentId = call.agent_id || '';\nconst callId = call.call_id || '';\nconst transcript = call.transcript || '';\nconst durationMs = call.duration_ms || 0;\nconst callStatus = call.call_status || '';\nconst fromNumber = call.from_number || '';\nconst toNumber = call.to_number || '';\nconst disconnectionReason = call.disconnection_reason || '';\nconst analysis = call.call_analysis || {};\n\nreturn {\n  agent_id: agentId,\n  call_id: callId,\n  transcript: transcript,\n  from_number: fromNumber,\n  to_number: toNumber,\n  duration_seconds: Math.round(durationMs / 1000),\n  call_status: callStatus,\n  disconnection_reason: disconnectionReason,\n  call_analysis: analysis,\n  call_timestamp: new Date().toISOString()\n};"
+      },
+      "id": "node-extract-call-data",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        512
+      ]
+    },
+    {
+      "id": "node-lookup-client",
+      "name": "Look Up Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        512
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const callData = $('Extract Call Data').first().json;\nconst rawInput = $input.first().json;\n\n// n8n httpRequest with Supabase REST: when Supabase returns [{...}], \n// n8n passes the single object as the item json directly.\n// When Supabase returns [], n8n passes nothing (0 items) and this node won't run.\n// But with neverError, it may pass the empty array or an error object.\n\nlet client = rawInput;\n\n// Check if this is a Supabase error or empty response\nif (!client || !client.company_name) {\n  // Could be error object from Supabase\n  if (client && client.code) {\n    console.log('Supabase error:', client.code, client.message);\n  }\n  return {\n    ...callData,\n    company_name: 'Unknown Company',\n    client_email: '',\n    lead_email: '',\n    lead_phone: '',\n    lead_contact_method: 'Both',\n    notification_email_2: '',\n    notification_email_3: '',\n    notification_sms_2: '',\n    notification_sms_3: '',\n    timezone: 'America/Chicago',\n    calendar_platform: '',\n    crm_platform: '',\n    _client_found: false\n  };\n}\n\nreturn {\n  ...callData,\n  company_name: client.company_name || '',\n  client_email: client.client_email || '',\n  lead_email: client.lead_email || '',\n  lead_phone: client.lead_phone || '',\n  lead_contact_method: client.lead_contact_method || 'Both',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  timezone: client.timezone || 'America/Chicago',\n  calendar_platform: client.calendar_platform || '',\n  crm_platform: client.crm_platform || '',\n  _client_found: true\n};"
+      },
+      "id": "node-parse-client-data",
+      "name": "Parse Client Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        512
+      ]
+    },
+    {
+      "id": "node-gpt-analyze",
+      "name": "GPT: Analyze Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        512
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"model\": \"gpt-4o-mini\", \"temperature\": 0.2, \"messages\": [{\"role\": \"system\", \"content\": \"You are a call analysis specialist for a premium HVAC AI receptionist service. Analyze the call transcript and extract ALL relevant data.\\n\\nReturn a JSON object with these fields:\\n\\nCALLER INFORMATION:\\n- caller_name (string): Full name if provided, empty string if not\\n- caller_phone (string): Phone number if stated, empty string if not\\n- caller_address (string): Service address if provided, empty string if not\\n- caller_sentiment (string): happy, neutral, frustrated, angry, anxious, grateful\\n\\nCALL CLASSIFICATION:\\n- call_type (string): new_booking, reschedule, cancellation, emergency, callback, existing_customer, general_question, spam, transfer_request\\n- service_requested (string): Specific service discussed\\n- urgency (string): low, medium, high, emergency\\n- job_type (string): Repair, Maintenance, Installation, Estimate, Emergency, Inspection, General, Other\\n\\nBOOKING DATA:\\n- booking_attempted (boolean): Did the agent try to book?\\n- booking_success (boolean): Was an appointment confirmed?\\n- appointment_date (string): YYYY-MM-DD or empty string\\n- appointment_time_window (string): morning or afternoon or empty string\\n- job_type_booked (string): Service booked or empty string\\n- reschedule_or_cancel (string): reschedule, cancel, or neither\\n\\nLEAD QUALIFICATION:\\n- lead_score (integer 0-10): 0=spam, 1-3=low, 4-6=moderate, 7-8=high, 9-10=hot. Booking made=9-10. Booking attempted but failed=7-8.\\n- is_hot_lead (boolean): true if lead_score >= 7\\n\\nADDITIONAL:\\n- vulnerable_occupant (boolean): elderly, disabled, young children mentioned\\n- transfer_attempted (boolean): Was transfer attempted?\\n- transfer_success (boolean or null): true/false/null\\n- summary (string): 1-3 sentence summary with outcome and action needed\\n- notes (string): Important additional details\\n\\nReturn ONLY valid JSON. No markdown, no backticks.\"}, {\"role\": \"user\", \"content\": \"=Transcript:\\n---\\n{{ $json.transcript }}\\n---\\n\\nFrom number: {{ $json.from_number }}\\n\\nPost-call analysis:\\n{{ JSON.stringify($json.call_analysis || {}) }}\"}]}",
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// HVAC Premium \u2014 Parse Call Data node (v2)\n// ============================================================\n// Runs AFTER GPT: Analyze Transcript\n// Extracts all booking + lead + notification data\n// Builds notification HTML for each call type\n// ============================================================\n\nconst gptResponse = $input.first().json;\nconst clientData = $('Parse Client Data').first().json;\nconst callAnalysis = $('Extract Call Data').first().json.call_analysis || {};\n\n// \u2500\u2500 Parse GPT response \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet callData = {};\ntry {\n  const text = gptResponse.message?.content || gptResponse.text || JSON.stringify(gptResponse);\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  callData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};\n} catch (e) {\n  callData = {\n    lead_score: 0,\n    summary: 'Failed to parse GPT response',\n    is_hot_lead: false,\n    booking_attempted: false,\n    booking_success: false,\n    call_type: 'unknown',\n    urgency: 'low'\n  };\n}\n\n// \u2500\u2500 Merge Retell post-call analysis (higher priority than GPT) \u2500\u2500\nconst pca = callAnalysis;\nconst callerName = pca.caller_name || callData.caller_name || '';\nconst callerPhone = pca.caller_phone || callData.caller_phone || clientData.from_number || '';\nconst callerAddress = pca.caller_address || callData.caller_address || '';\nconst serviceRequested = pca.service_requested || callData.service_requested || '';\nconst bookingAttempted = pca.booking_attempted ?? callData.booking_attempted ?? false;\nconst bookingSuccess = pca.booking_success ?? callData.booking_success ?? false;\nconst appointmentDate = pca.appointment_date || callData.appointment_date || '';\nconst appointmentTimeWindow = pca.appointment_time_window || callData.appointment_time_window || '';\nconst jobTypeBooked = pca.job_type_booked || callData.job_type_booked || '';\nconst rescheduleOrCancel = pca.reschedule_or_cancel || callData.reschedule_or_cancel || 'neither';\nconst callType = pca.call_type || callData.call_type || 'unknown';\nconst urgency = pca.urgency || callData.urgency || 'low';\nconst isHotLead = pca.is_hot_lead ?? callData.is_hot_lead ?? false;\nconst leadScore = pca.lead_score ?? callData.lead_score ?? 0;\nconst summary = pca.call_summary || callData.summary || '';\nconst callerSentiment = pca.user_sentiment || callData.caller_sentiment || '';\n\n// \u2500\u2500 Determine notification type \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Priority: booking_confirmed > reschedule > cancellation > emergency > hot_lead > general_lead > info_only\nlet notificationType = 'info_only';\nlet notifyClient = false;\n\nif (bookingSuccess) {\n  notificationType = 'booking_confirmed';\n  notifyClient = true;\n} else if (rescheduleOrCancel === 'reschedule') {\n  notificationType = 'reschedule';\n  notifyClient = true;\n} else if (rescheduleOrCancel === 'cancel') {\n  notificationType = 'cancellation';\n  notifyClient = true;\n} else if (callType === 'emergency' || urgency === 'emergency') {\n  notificationType = 'emergency';\n  notifyClient = true;\n} else if (bookingAttempted && !bookingSuccess) {\n  // Booking was attempted but failed (calendar unavailable, caller declined, etc.)\n  // This is a hot lead that needs follow-up\n  notificationType = 'booking_failed_lead';\n  notifyClient = true;\n} else if (isHotLead || leadScore >= 7) {\n  notificationType = 'hot_lead';\n  notifyClient = true;\n} else if (leadScore >= 4) {\n  notificationType = 'general_lead';\n  notifyClient = true;\n} else if (callType === 'existing_customer' || callType === 'callback') {\n  notificationType = 'follow_up_required';\n  notifyClient = true;\n} else if (callType === 'general_question') {\n  notificationType = 'info_only';\n  notifyClient = false; // Only log, don't notify for simple FAQ\n} else if (callType === 'spam') {\n  notificationType = 'spam';\n  notifyClient = false;\n}\n\n// \u2500\u2500 Build email HTML \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst companyName = clientData.company_name || 'Your Company';\nconst timestamp = new Date().toLocaleString('en-US', { timeZone: clientData.timezone || 'America/Chicago' });\nconst duration = clientData.duration_seconds || 0;\n\n// Color theming per notification type\nconst typeColors = {\n  booking_confirmed: { accent: '#10B981', emoji: '\ud83d\udcc5', label: 'Booking Confirmed' },\n  reschedule: { accent: '#F59E0B', emoji: '\ud83d\udd04', label: 'Appointment Rescheduled' },\n  cancellation: { accent: '#EF4444', emoji: '\u274c', label: 'Appointment Cancelled' },\n  emergency: { accent: '#DC2626', emoji: '\ud83d\udea8', label: 'EMERGENCY CALL' },\n  booking_failed_lead: { accent: '#F97316', emoji: '\ud83d\udccb', label: 'Booking Failed \u2014 Follow Up Required' },\n  hot_lead: { accent: '#EF4444', emoji: '\ud83d\udd25', label: 'Hot Lead Alert' },\n  general_lead: { accent: '#6C63FF', emoji: '\ud83d\udcde', label: 'New Lead' },\n  follow_up_required: { accent: '#8B5CF6', emoji: '\u21a9\ufe0f', label: 'Follow-Up Required' },\n  info_only: { accent: '#9CA3AF', emoji: '\u2139\ufe0f', label: 'Info Call Logged' },\n  spam: { accent: '#6B7280', emoji: '\ud83e\udd16', label: 'Spam / Robocall' }\n};\n\nconst tc = typeColors[notificationType] || typeColors.info_only;\n\n// Build rows dynamically based on what data exists\nlet rows = '';\n\nconst addRow = (label, value) => {\n  if (value && value.trim && value.trim() !== '' && value !== 'null' && value !== 'undefined') {\n    rows += `<tr><td style=\"padding:8px 12px;border:1px solid #e2e8f0;font-weight:600;width:160px;background:#f8fafc\">${label}</td><td style=\"padding:8px 12px;border:1px solid #e2e8f0\">${value}</td></tr>`;\n  }\n};\n\naddRow('Caller', callerName || 'Unknown');\naddRow('Phone', callerPhone);\naddRow('Address', callerAddress);\naddRow('Service', serviceRequested || jobTypeBooked);\n\nif (bookingSuccess || bookingAttempted) {\n  addRow('Booking Status', bookingSuccess ? '\u2705 Confirmed' : '\u26a0\ufe0f Attempted but not completed');\n  addRow('Appointment', appointmentDate ? `${appointmentDate} \u2014 ${appointmentTimeWindow || 'TBD'}` : 'Pending');\n  addRow('Job Type', jobTypeBooked);\n}\n\nif (rescheduleOrCancel !== 'neither') {\n  addRow('Action', rescheduleOrCancel === 'reschedule' ? '\ud83d\udd04 Rescheduled' : '\u274c Cancelled');\n  if (appointmentDate) addRow('New Date', `${appointmentDate} \u2014 ${appointmentTimeWindow || 'TBD'}`);\n}\n\naddRow('Urgency', urgency.charAt(0).toUpperCase() + urgency.slice(1));\naddRow('Lead Score', `${leadScore}/10`);\naddRow('Sentiment', callerSentiment);\n\nconst emailHtml = `\n<div style=\"font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto\">\n  <div style=\"background:${tc.accent};padding:16px 20px;border-radius:8px 8px 0 0\">\n    <h2 style=\"color:#fff;margin:0;font-size:18px\">${tc.emoji} ${tc.label} \u2014 ${companyName}</h2>\n  </div>\n  <div style=\"border:1px solid #e2e8f0;border-top:0;padding:20px;border-radius:0 0 8px 8px\">\n    <table style=\"border-collapse:collapse;width:100%\">\n      ${rows}\n    </table>\n    <div style=\"margin-top:16px;padding:12px;background:#f8fafc;border-radius:6px;border-left:4px solid ${tc.accent}\">\n      <strong>Summary:</strong> ${summary || 'No summary available.'}\n    </div>\n    ${callData.follow_up_notes ? `<div style=\"margin-top:12px;padding:12px;background:#FFFBEB;border-radius:6px;border-left:4px solid #F59E0B\"><strong>Follow-up Notes:</strong> ${callData.follow_up_notes}</div>` : ''}\n    <p style=\"color:#9CA3AF;font-size:11px;margin-top:16px\">${timestamp} | Duration: ${duration}s | Call ID: ${clientData.call_id || ''}</p>\n  </div>\n</div>`;\n\n// \u2500\u2500 Build SMS text \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet smsText = '';\nif (notificationType === 'booking_confirmed') {\n  smsText = `\ud83d\udcc5 Booking Confirmed \u2014 ${callerName || 'Caller'} booked for ${jobTypeBooked || serviceRequested || 'service'} on ${appointmentDate || 'TBD'} (${appointmentTimeWindow || 'TBD'}). Phone: ${callerPhone}`;\n} else if (notificationType === 'emergency') {\n  smsText = `\ud83d\udea8 EMERGENCY \u2014 ${callerName || 'Caller'} at ${callerAddress || 'address not given'}. ${serviceRequested || summary}. Call: ${callerPhone}`;\n} else if (notificationType === 'reschedule') {\n  smsText = `\ud83d\udd04 Rescheduled \u2014 ${callerName || 'Caller'} moved to ${appointmentDate || 'TBD'} (${appointmentTimeWindow || 'TBD'}). Phone: ${callerPhone}`;\n} else if (notificationType === 'cancellation') {\n  smsText = `\u274c Cancelled \u2014 ${callerName || 'Caller'} cancelled their appointment. Phone: ${callerPhone}. ${summary}`;\n} else if (notificationType === 'booking_failed_lead') {\n  smsText = `\ud83d\udccb Follow Up \u2014 ${callerName || 'Caller'} wanted to book ${serviceRequested || 'service'} but booking wasn't completed. Call them: ${callerPhone}`;\n} else if (notificationType === 'hot_lead') {\n  smsText = `\ud83d\udd25 Hot Lead \u2014 ${callerName || 'Caller'} needs ${serviceRequested || 'service'}. Score: ${leadScore}/10. Call: ${callerPhone}`;\n} else if (notificationType === 'general_lead') {\n  smsText = `\ud83d\udcde New Lead \u2014 ${callerName || 'Caller'} called about ${serviceRequested || 'service'}. Score: ${leadScore}/10. Phone: ${callerPhone}`;\n} else if (notificationType === 'follow_up_required') {\n  smsText = `\u21a9\ufe0f Follow Up \u2014 ${callerName || 'Caller'} (${callType === 'callback' ? 'returning call' : 'existing customer'}). Phone: ${callerPhone}. ${summary}`;\n}\n\n// \u2500\u2500 Build email subject line \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst subjectMap = {\n  booking_confirmed: `\ud83d\udcc5 Booking Confirmed \u2014 ${callerName || 'New Customer'} | ${companyName}`,\n  reschedule: `\ud83d\udd04 Appointment Rescheduled \u2014 ${callerName || 'Customer'} | ${companyName}`,\n  cancellation: `\u274c Appointment Cancelled \u2014 ${callerName || 'Customer'} | ${companyName}`,\n  emergency: `\ud83d\udea8 EMERGENCY \u2014 ${callerName || 'Caller'} | ${companyName}`,\n  booking_failed_lead: `\ud83d\udccb Booking Failed \u2014 Follow Up ${callerName || 'Caller'} | ${companyName}`,\n  hot_lead: `\ud83d\udd25 Hot Lead \u2014 ${callerName || 'Unknown'} \u2014 ${serviceRequested || 'Service'} | ${companyName}`,\n  general_lead: `\ud83d\udcde New Lead \u2014 ${callerName || 'Unknown'} \u2014 ${serviceRequested || 'Service'} | ${companyName}`,\n  follow_up_required: `\u21a9\ufe0f Follow Up Required \u2014 ${callerName || 'Caller'} | ${companyName}`,\n  info_only: `\u2139\ufe0f Call Logged \u2014 ${companyName}`,\n  spam: `\ud83e\udd16 Spam Call \u2014 ${companyName}`\n};\nconst emailSubject = subjectMap[notificationType] || `Call Alert \u2014 ${companyName}`;\n\n// \u2500\u2500 Return everything \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nreturn {\n  // Identifiers\n  call_id: clientData.call_id || '',\n  agent_id: clientData.agent_id || '',\n  company_name: companyName,\n  call_tier: 'premium',\n  \n  // Caller info\n  caller_name: callerName,\n  caller_phone: callerPhone,\n  caller_address: callerAddress,\n  caller_sentiment: callerSentiment,\n  \n  // Call classification\n  call_type: callType,\n  urgency: urgency,\n  service_requested: serviceRequested,\n  summary: summary,\n  follow_up_notes: callData.follow_up_notes || '',\n  \n  // Booking fields\n  booking_attempted: bookingAttempted,\n  booking_success: bookingSuccess,\n  appointment_date: appointmentDate || null,\n  appointment_time_window: appointmentTimeWindow || null,\n  job_type_booked: jobTypeBooked || null,\n  reschedule_or_cancel: rescheduleOrCancel,\n  \n  // Lead fields\n  lead_score: leadScore,\n  is_lead: !bookingSuccess && leadScore >= 4,\n  is_hot_lead: isHotLead,\n  \n  // Notification\n  notification_type: notificationType,\n  notify_client: notifyClient,\n  email_html: emailHtml,\n  email_subject: emailSubject,\n  sms_text: smsText,\n  \n  // Carry forward from client data\n  lead_email: clientData.lead_email || '',\n  lead_phone: clientData.lead_phone || '',\n  notification_email_2: clientData.notification_email_2 || '',\n  notification_email_3: clientData.notification_email_3 || '',\n  notification_sms_2: clientData.notification_sms_2 || '',\n  notification_sms_3: clientData.notification_sms_3 || '',\n  lead_contact_method: clientData.lead_contact_method || 'Both',\n  twilio_from: clientData.twilio_from || '',\n  from_number: clientData.from_number || '',\n  duration_seconds: clientData.duration_seconds || 0,\n  call_timestamp: clientData.call_timestamp || new Date().toISOString(),\n  timezone: clientData.timezone || 'America/Chicago'\n};\n"
+      },
+      "id": "node-parse-call-data",
+      "name": "Parse Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        512
+      ]
+    },
+    {
+      "id": "node-log-to-supabase",
+      "name": "Log Call to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        512
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation,resolution=merge-duplicates"
+            },
+            {
+              "name": "on_conflict",
+              "value": "call_id"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"agent_id\": \"={{ $json.agent_id }}\",\n  \"call_id\": \"={{ $json.call_id }}\",\n  \"company_name\": \"={{ $json.company_name }}\",\n  \"call_tier\": \"premium\",\n  \"duration_seconds\": {{ $json.duration_seconds || 0 }},\n  \"call_status\": \"={{ $json.disconnection_reason || 'completed' }}\",\n  \"call_successful\": {{ $json.booking_success || $json.is_lead || false }},\n  \"summary\": {{ JSON.stringify($json.summary || '') }},\n  \"caller_name\": {{ JSON.stringify($json.caller_name || '') }},\n  \"caller_phone\": {{ JSON.stringify($json.caller_phone || '') }},\n  \"caller_address\": {{ JSON.stringify($json.caller_address || '') }},\n  \"caller_sentiment\": {{ JSON.stringify($json.caller_sentiment || '') }},\n  \"lead_score\": {{ $json.lead_score || 0 }},\n  \"is_lead\": {{ $json.is_lead || false }},\n  \"is_hot_lead\": {{ $json.is_hot_lead || false }},\n  \"job_type\": {{ JSON.stringify($json.job_type || '') }},\n  \"urgency\": {{ JSON.stringify($json.urgency || '') }},\n  \"vulnerable_occupant\": {{ $json.vulnerable_occupant || false }},\n  \"notes\": {{ JSON.stringify($json.notes || '') }},\n  \"service_requested\": {{ JSON.stringify($json.service_requested || '') }},\n  \"booking_attempted\": {{ $json.booking_attempted || false }},\n  \"booking_success\": {{ $json.booking_success || false }},\n  \"appointment_date\": {{ $json.appointment_date ? JSON.stringify($json.appointment_date) : 'null' }},\n  \"appointment_time\": {{ JSON.stringify($json.appointment_time_window || '') }},\n  \"job_type_booked\": {{ JSON.stringify($json.job_type_booked || '') }},\n  \"reschedule_requested\": {{ $json.reschedule_or_cancel === 'reschedule' }},\n  \"cancellation_requested\": {{ $json.reschedule_or_cancel === 'cancel' }},\n  \"call_type\": {{ JSON.stringify($json.call_type || '') }},\n  \"transfer_attempted\": {{ $json.transfer_attempted || false }},\n  \"transfer_success\": {{ $json.transfer_success === true ? true : $json.transfer_success === false ? false : null }},\n  \"from_number\": {{ JSON.stringify($json.from_number || '') }},\n  \"notification_type\": {{ JSON.stringify($json.notification_type || '') }},\n  \"notification_priority\": {{ JSON.stringify($json.notification_priority || '') }}\n}",
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Should we send notifications?\nconst data = $('Parse Call Data').first().json;\nconst shouldNotify = data.should_notify || false;\nconst notificationType = data.notification_type || 'unknown';\nconst leadEmail = data.lead_email || '';\n\nreturn {\n  should_notify: shouldNotify && leadEmail,\n  notification_type: notificationType,\n  ...data\n};"
+      },
+      "id": "node-route-notifications",
+      "name": "Route Notifications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "should-notify",
+              "leftValue": "={{ $json.should_notify }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-should-notify",
+      "name": "Should Notify?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Email sending placeholder\n// When SES is ready, this becomes an HTTP Request node to SES\n// For now, log the email that would be sent\nconst data = $('Parse Call Data').first().json;\n\nconsole.log(`[PREMIUM EMAIL] To: ${data.lead_email}`);\nconsole.log(`[PREMIUM EMAIL] Subject: ${data.email_subject}`);\nconsole.log(`[PREMIUM EMAIL] Type: ${data.notification_type}`);\n\nreturn {\n  email_to: data.lead_email,\n  email_subject: data.email_subject,\n  email_html: data.email_html,\n  notification_type: data.notification_type,\n  _sent: false,\n  _reason: 'SES not yet configured \u2014 email logged only'\n};"
+      },
+      "id": "node-placeholder-email",
+      "name": "Send Client Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// SMS sending placeholder\n// When Telnyx is ready, this becomes an HTTP Request node to Telnyx\nconst data = $('Parse Call Data').first().json;\n\nconsole.log(`[PREMIUM SMS] To: ${data.lead_phone}`);\nconsole.log(`[PREMIUM SMS] Message: ${data.sms_message}`);\n\nreturn {\n  sms_to: data.lead_phone,\n  sms_message: data.sms_message,\n  notification_type: data.notification_type,\n  _sent: false,\n  _reason: 'Telnyx not yet configured \u2014 SMS logged only'\n};"
+      },
+      "id": "node-placeholder-sms",
+      "name": "Send Client SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Internal notification to Daniel\nconst data = $('Parse Call Data').first().json;\n\nconsole.log(`[PREMIUM INTERNAL] Type: ${data.notification_type} | Priority: ${data.notification_priority}`);\nconsole.log(`[PREMIUM INTERNAL] Company: ${data.company_name} | Caller: ${data.caller_name}`);\n\nreturn {\n  to: 'daniel@syntharra.com',\n  subject: `[PREMIUM] ${data.email_subject}`,\n  html: data.email_html,\n  notification_type: data.notification_type,\n  notification_priority: data.notification_priority,\n  _sent: false,\n  _reason: 'SES not yet configured \u2014 internal notification logged only'\n};"
+      },
+      "id": "node-internal-notify",
+      "name": "Internal Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log non-notifiable calls\nconst data = $('Parse Call Data').first().json;\nconsole.log(`[PREMIUM] No notification: type=${data.notification_type}, score=${data.lead_score}, call_id=${data.call_id}`);\nreturn { logged: true, notification_type: data.notification_type, call_id: data.call_id };"
+      },
+      "id": "node-log-no-notify",
+      "name": "Log: No Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        900
+      ]
+    }
+  ],
+  "connections": {
+    "Retell Premium Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter: call_analyzed Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: call_analyzed Only": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Look Up Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look Up Client": {
+      "main": [
+        [
+          {
+            "node": "Parse Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Client Data": {
+      "main": [
+        [
+          {
+            "node": "GPT: Analyze Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT: Analyze Call": {
+      "main": [
+        [
+          {
+            "node": "Parse Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Call Data": {
+      "main": [
+        [
+          {
+            "node": "Log Call to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Call to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Route Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Notifications": {
+      "main": [
+        [
+          {
+            "node": "Should Notify?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Notify?": {
+      "main": [
+        [
+          {
+            "node": "Send Client Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Client SMS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Internal Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: No Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  }
+}
