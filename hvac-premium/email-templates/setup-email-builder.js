@@ -1,333 +1,368 @@
 // ============================================================
-// Syntharra Premium — Integration Setup Email Builder
+// Syntharra Premium — Setup Email Builder v2
 // ============================================================
-// Generates branded HTML setup instruction emails based on
-// which CRM and Calendar platform the client selected.
-//
-// Called from the onboarding workflow AFTER agent creation.
-// Input: extractedData from the prompt builder
-// Output: { setupEmails: [...] } — array of emails to send
+// Light theme, Syntharra violet (#6C63FF) accent.
+// Two flows:
+//   OAuth platforms → "Connect Now" one-click button
+//   API key platforms → 2-3 simple steps
 // ============================================================
 
 const data = $input.first().json;
-const companyName = data.company_name || data.companyName || 'Your Company';
+const companyName = data.company_name || data.companyName || '';
 const clientEmail = data.client_email || data.extractedData?.client_email || '';
+const clientName = data.owner_name || data.extractedData?.owner_name || '';
 const crmPlatform = data.crm_platform || data.extractedData?.crm_platform || '';
 const calendarPlatform = data.calendar_platform || data.extractedData?.calendar_platform || '';
-const agentName = data.agent_name || data.extractedData?.agent_name || '';
+const agentId = data.agent_id || '';
 
-// ── Brand Constants ─────────────────────────────────────────
-const brand = {
-  violet: '#6C63FF',
-  cyan: '#00D4FF',
-  dark: '#0D0D1A',
-  darkPanel: '#141428',
-  lightText: '#E8E8F0',
-  mutedText: '#9999B0',
-  white: '#FFFFFF',
-  green: '#10B981',
-  amber: '#F59E0B',
-  logoUrl: 'https://i.postimg.cc/zBSrKLDb/company-logo-link.png',
-  supportEmail: 'support@syntharra.com',
-  website: 'www.syntharra.com'
-};
+// ── Brand ───────────────────────────────────────────────────
+const v = '#6C63FF'; // Syntharra violet
+const bg = '#F7F7FB';
+const card = '#FFFFFF';
+const text = '#1A1A2E';
+const muted = '#6B7280';
+const border = '#E5E7EB';
+const green = '#10B981';
+const amber = '#F59E0B';
+const logo = 'https://i.postimg.cc/zBSrKLDb/company-logo-link.png';
 
-// ── Email Shell ─────────────────────────────────────────────
-function wrapEmail(subject, bodyContent) {
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:${brand.dark};font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:${brand.dark};padding:32px 16px;">
+// OAuth connect URL — client clicks this, authenticates, done.
+// The auth server will handle the rest (exchange code for token, store encrypted, activate)
+const connectBaseUrl = 'https://auth.syntharra.com/connect';
+
+// ── Email Shell (Light Theme) ───────────────────────────────
+function shell(bodyContent) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:${bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${bg};padding:40px 16px;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-
-<!-- Header -->
-<tr><td style="padding:24px 32px;text-align:center;">
-  <img src="${brand.logoUrl}" alt="Syntharra" width="180" style="display:block;margin:0 auto 8px;">
-  <p style="color:${brand.mutedText};font-size:13px;margin:0;">AI Receptionist for the Trades</p>
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
+<tr><td style="padding:0 0 24px;text-align:center;">
+  <img src="${logo}" alt="Syntharra" width="160" style="display:block;margin:0 auto;">
 </td></tr>
-
-<!-- Main Card -->
-<tr><td style="background:${brand.darkPanel};border-radius:16px;border:1px solid rgba(108,99,255,0.2);overflow:hidden;">
-
-<!-- Accent Bar -->
-<div style="height:4px;background:linear-gradient(90deg,${brand.violet},${brand.cyan});"></div>
-
-<!-- Content -->
-<div style="padding:32px;">
-${bodyContent}
-</div>
-
+<tr><td style="background:${card};border-radius:12px;border:1px solid ${border};overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+<div style="height:3px;background:linear-gradient(90deg,${v},#8B7FFF);"></div>
+<div style="padding:32px 36px;">${bodyContent}</div>
 </td></tr>
-
-<!-- Footer -->
-<tr><td style="padding:24px 32px;text-align:center;">
-  <p style="color:${brand.mutedText};font-size:12px;margin:0 0 4px;">Need help? Reply to this email or contact us at ${brand.supportEmail}</p>
-  <p style="color:${brand.mutedText};font-size:12px;margin:0;">${brand.website} | Syntharra AI Solutions</p>
+<tr><td style="padding:20px 0;text-align:center;">
+  <p style="color:${muted};font-size:12px;margin:0;">Questions? Reply to this email or contact support@syntharra.com</p>
+  <p style="color:${muted};font-size:12px;margin:4px 0 0;">www.syntharra.com</p>
 </td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+</table></td></tr></table></body></html>`;
 }
 
-// ── Step Builder ────────────────────────────────────────────
-function step(number, title, description, imageHint) {
-  return `
-<div style="margin-bottom:24px;padding:16px;background:rgba(108,99,255,0.06);border-radius:12px;border-left:3px solid ${brand.violet};">
-  <div style="display:flex;align-items:center;margin-bottom:8px;">
-    <span style="display:inline-block;width:28px;height:28px;background:${brand.violet};color:${brand.white};border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:14px;margin-right:12px;">${number}</span>
-    <strong style="color:${brand.white};font-size:15px;">${title}</strong>
-  </div>
-  <p style="color:${brand.lightText};font-size:14px;line-height:1.6;margin:0 0 0 40px;">${description}</p>
-  ${imageHint ? `<p style="color:${brand.mutedText};font-size:12px;margin:8px 0 0 40px;font-style:italic;">${imageHint}</p>` : ''}
-</div>`;
+// ── Button ──────────────────────────────────────────────────
+function btn(text, url) {
+  return `<table cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr>
+<td style="background:${v};border-radius:8px;padding:14px 36px;">
+<a href="${url}" style="color:#fff;text-decoration:none;font-weight:600;font-size:15px;display:block;">${text}</a>
+</td></tr></table>`;
 }
 
-function infoBox(text, color) {
-  color = color || brand.cyan;
-  return `<div style="margin:20px 0;padding:14px 16px;background:rgba(0,212,255,0.08);border-radius:10px;border:1px solid ${color}30;">
-  <p style="color:${brand.lightText};font-size:13px;line-height:1.6;margin:0;">${text}</p>
-</div>`;
+// ── Heading ─────────────────────────────────────────────────
+function h(t) { return `<h2 style="color:${text};font-size:22px;font-weight:700;margin:0 0 8px;">${t}</h2>`; }
+function sub(t) { return `<p style="color:${muted};font-size:15px;line-height:1.6;margin:0 0 20px;">${t}</p>`; }
+function note(icon, t, bgColor) {
+  bgColor = bgColor || '#F0EFFF';
+  return `<div style="margin:20px 0;padding:14px 16px;background:${bgColor};border-radius:8px;">
+<p style="color:${text};font-size:13px;line-height:1.6;margin:0;">${icon} ${t}</p></div>`;
 }
 
-function heading(text) {
-  return `<h2 style="color:${brand.white};font-size:22px;font-weight:700;margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;">${text}</h2>`;
+// ── Step (for API key platforms) ────────────────────────────
+function step(n, title, desc) {
+  return `<div style="margin-bottom:16px;display:flex;">
+<div style="min-width:28px;height:28px;background:${v};color:#fff;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:13px;margin-right:14px;">${n}</div>
+<div><p style="color:${text};font-size:14px;font-weight:600;margin:0 0 4px;">${title}</p>
+<p style="color:${muted};font-size:14px;line-height:1.5;margin:0;">${desc}</p></div></div>`;
 }
 
-function subtext(text) {
-  return `<p style="color:${brand.mutedText};font-size:14px;line-height:1.5;margin:0 0 24px;">${text}</p>`;
-}
+// ============================================================
+// PLATFORM DEFINITIONS
+// ============================================================
 
-// ── Platform-Specific Instructions ──────────────────────────
+const platforms = {
 
-const calendarGuides = {
+  // ── CALENDARS (OAuth — one click) ─────────────────────────
+
   'Google Calendar': {
-    subject: `Connect Your Google Calendar — ${companyName} AI Receptionist`,
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Google Calendar — 1 Click Setup`,
     body: `
-${heading('Connect Your Google Calendar')}
-${subtext(`Hi there! Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> is almost ready. We just need to connect your Google Calendar so your receptionist can check availability and book appointments in real time.`)}
-
-${step(1, 'Open Google Calendar Settings', 'Go to <strong>calendar.google.com</strong> and click the gear icon (⚙️) in the top right corner, then select <strong>Settings</strong>.', '')}
-
-${step(2, 'Find Your Calendar ID', 'In the left sidebar, click on the calendar you want to use for bookings (e.g., your main business calendar). Scroll down to <strong>Integrate calendar</strong> and copy the <strong>Calendar ID</strong>. It looks like: <code style="background:rgba(108,99,255,0.15);color:${brand.cyan};padding:2px 6px;border-radius:4px;">yourcompany@gmail.com</code> or a long ID ending in <code>@group.calendar.google.com</code>.', '')}
-
-${step(3, 'Share Your Calendar with Syntharra', 'Still in your calendar settings, scroll to <strong>Share with specific people or groups</strong>. Click <strong>Add people and groups</strong> and enter: <code style="background:rgba(108,99,255,0.15);color:${brand.cyan};padding:2px 6px;border-radius:4px;">integrations@syntharra.com</code>. Set permission to <strong>Make changes to events</strong>.', '')}
-
-${step(4, 'Send Us Your Calendar ID', 'Reply to this email with your Calendar ID from Step 2. We will link it to your AI Receptionist and activate real-time booking within 24 hours.', '')}
-
-${infoBox('💡 <strong>Tip:</strong> If you use a shared team calendar for scheduling, use that Calendar ID instead of your personal one. This way all technicians see the bookings.')}
-
-${infoBox('🔒 <strong>Privacy:</strong> Your AI Receptionist can only see and create events on the specific calendar you share. It cannot access your personal email, contacts, or other calendars.', brand.green)}`
+${h('Connect Your Google Calendar')}
+${sub(`${clientName ? clientName + ', your' : 'Your'} AI Receptionist for <strong>${companyName}</strong> needs access to your Google Calendar to book appointments in real time.`)}
+<p style="color:${text};font-size:14px;line-height:1.6;margin:0 0 4px;">Click the button below, sign in with your Google account, and approve access. That's it — your AI will start booking appointments immediately.</p>
+${btn('Connect Google Calendar →', connectBaseUrl + '?platform=google_calendar&agent=' + agentId)}
+${note('🔒', '<strong>Privacy:</strong> We only access your calendar events. We cannot read your email, contacts, or any other data.')}
+${note('💡', '<strong>Tip:</strong> If you use a shared team calendar, sign in with the account that owns that calendar.')}`
   },
 
   'Microsoft Outlook': {
-    subject: `Connect Your Outlook Calendar — ${companyName} AI Receptionist`,
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Outlook Calendar — 1 Click Setup`,
     body: `
-${heading('Connect Your Outlook Calendar')}
-${subtext(`Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> needs access to your Outlook calendar to book appointments. Here is how to connect it.`)}
-
-${step(1, 'Open Outlook Calendar', 'Go to <strong>outlook.office.com/calendar</strong> and sign in with your business Microsoft account.', '')}
-
-${step(2, 'Share Your Calendar', 'Click the <strong>Share</strong> button at the top of the calendar view. Enter: <code style="background:rgba(108,99,255,0.15);color:${brand.cyan};padding:2px 6px;border-radius:4px;">integrations@syntharra.com</code>. Set permission to <strong>Can edit</strong>.', '')}
-
-${step(3, 'Confirm & Reply', 'Reply to this email to confirm you have shared your calendar. Our team will complete the connection within 24 hours.', '')}
-
-${infoBox('🔒 <strong>Privacy:</strong> We only access the calendar you explicitly share. No emails, contacts, or other data.')}`
+${h('Connect Your Outlook Calendar')}
+${sub(`${clientName ? clientName + ', your' : 'Your'} AI Receptionist needs access to your Outlook calendar to book appointments.`)}
+<p style="color:${text};font-size:14px;line-height:1.6;margin:0 0 4px;">Click the button below, sign in with your Microsoft account, and approve access.</p>
+${btn('Connect Outlook Calendar →', connectBaseUrl + '?platform=outlook&agent=' + agentId)}
+${note('🔒', '<strong>Privacy:</strong> We only access your calendar. No emails, files, or contacts.')}`
   },
 
   'Calendly': {
-    subject: `Connect Your Calendly — ${companyName} AI Receptionist`,
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Calendly — 1 Click Setup`,
     body: `
-${heading('Connect Your Calendly')}
-${subtext(`Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> needs to connect with Calendly to book appointments directly during calls.`)}
-
-${step(1, 'Log in to Calendly', 'Go to <strong>calendly.com</strong> and sign in to your account.', '')}
-
-${step(2, 'Get Your API Key', 'Click your profile icon → <strong>Integrations</strong> → scroll down to <strong>API & Webhooks</strong> → click <strong>Generate New Token</strong>. Name it "Syntharra AI" and copy the token.', '')}
-
-${step(3, 'Send Us Your API Token', 'Reply to this email with your Calendly API token. We will configure your AI Receptionist to create bookings directly in Calendly.', '')}
-
-${infoBox('⏱️ <strong>Event Type:</strong> Make sure you have an Event Type set up in Calendly for service appointments (e.g., "HVAC Service Call — 60 minutes"). Let us know the name so we can map it correctly.')}`
+${h('Connect Your Calendly')}
+${sub(`Your AI Receptionist for <strong>${companyName}</strong> will create bookings directly in Calendly.`)}
+<p style="color:${text};font-size:14px;line-height:1.6;margin:0 0 4px;">Click the button below and sign in with your Calendly account.</p>
+${btn('Connect Calendly →', connectBaseUrl + '?platform=calendly&agent=' + agentId)}
+${note('💡', '<strong>Note:</strong> Make sure you have a Calendly event type set up for service appointments (e.g., "Service Call — 60 min"). Let us know the name so we can map it.')}`
   },
 
-  'Jobber Calendar': {
-    subject: `Connect Your Jobber Calendar — ${companyName} AI Receptionist`,
+  'Cal.com': {
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Cal.com — 1 Click Setup`,
     body: `
-${heading('Connect Your Jobber Calendar')}
-${subtext(`Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> will book directly into Jobber. Since Jobber handles both your calendar and CRM, this single connection covers everything.`)}
+${h('Connect Your Cal.com Calendar')}
+${sub(`Your AI Receptionist for <strong>${companyName}</strong> will book appointments through Cal.com.`)}
+${btn('Connect Cal.com →', connectBaseUrl + '?platform=calcom&agent=' + agentId)}
+${note('💡', 'Make sure you have an event type configured for service bookings.')}`
+  },
 
-${step(1, 'Log in to Jobber', 'Go to <strong>getjobber.com</strong> and sign in to your account.', '')}
+  'Acuity Scheduling': {
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Acuity Scheduling — 1 Click Setup`,
+    body: `
+${h('Connect Acuity Scheduling')}
+${sub(`Your AI Receptionist will book directly into Acuity.`)}
+${btn('Connect Acuity →', connectBaseUrl + '?platform=acuity&agent=' + agentId)}
+${note('💡', 'Ensure your appointment types are set up in Acuity before connecting.')}`
+  },
 
-${step(2, 'Find Your API Key', 'Go to <strong>Settings</strong> → <strong>Apps & Integrations</strong> → <strong>API Access</strong>. If you do not see this option, you may need to contact Jobber support to enable API access on your plan.', '')}
+  'Square Appointments': {
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Square Appointments — 1 Click Setup`,
+    body: `
+${h('Connect Square Appointments')}
+${sub(`Your AI Receptionist will schedule directly through Square.`)}
+${btn('Connect Square →', connectBaseUrl + '?platform=square&agent=' + agentId)}`
+  },
 
-${step(3, 'Send Us Your API Key', 'Reply to this email with your Jobber API key. We will configure your AI Receptionist to create jobs and schedule visits directly in Jobber.', '')}
+  // ── CALENDARS (API key — built into CRM) ──────────────────
 
-${infoBox('✅ <strong>Jobber handles everything:</strong> Since Jobber is both your calendar and CRM, this one connection lets your AI book appointments, create new clients, and log jobs automatically.')}`
+  'Jobber Calendar': {
+    type: 'combined',
+    category: 'calendar',
+    subject: `Connect Your Jobber — 1 Click Setup`,
+    body: `
+${h('Connect Your Jobber Account')}
+${sub(`Since Jobber handles both your calendar and customer management, this single connection gives your AI Receptionist full booking and CRM access.`)}
+${btn('Connect Jobber →', connectBaseUrl + '?platform=jobber&agent=' + agentId)}
+${note('✅', '<strong>One connection, everything linked.</strong> Your AI will create jobs, book appointments, and add new customers — all in Jobber.', '#ECFDF5')}`
   },
 
   'ServiceTitan Calendar': {
-    subject: `Connect Your ServiceTitan — ${companyName} AI Receptionist`,
+    type: 'apikey',
+    category: 'calendar',
+    subject: `Connect Your ServiceTitan — Quick Setup`,
     body: `
-${heading('Connect Your ServiceTitan')}
-${subtext(`Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> will integrate directly with ServiceTitan for booking and job management.`)}
-
-${step(1, 'Contact Your ServiceTitan Rep', 'ServiceTitan API access requires approval from your account representative. Reach out and request <strong>API access for third-party integration</strong>. Mention it is for your AI Receptionist booking system.', '')}
-
-${step(2, 'Get Your API Credentials', 'Once approved, ServiceTitan will provide your <strong>Client ID</strong>, <strong>Client Secret</strong>, and <strong>Tenant ID</strong>. Keep these safe.', '')}
-
-${step(3, 'Send Us Your Credentials', 'Reply to this email with your Client ID, Client Secret, and Tenant ID. All credentials are encrypted and stored securely.', '')}
-
-${infoBox('🔒 <strong>Security:</strong> Your API credentials are encrypted with AES-256 and never stored in plain text. Only the automated integration system can access them.', brand.green)}
-
-${infoBox('⏱️ <strong>Timeline:</strong> ServiceTitan API approval typically takes 2-5 business days. We will have everything ready on our end so activation is instant once approved.', brand.amber)}`
+${h('Connect Your ServiceTitan')}
+${sub(`Your AI Receptionist for <strong>${companyName}</strong> needs ServiceTitan access. Since ServiceTitan requires API approval, here is what to do:`)}
+${step(1, 'Contact your ServiceTitan rep', 'Ask them to enable <strong>API access</strong> for your account. Tell them it is for an AI receptionist integration.')}
+${step(2, 'Send us your credentials', 'Once approved, ServiceTitan will give you a Client ID, Client Secret, and Tenant ID. Just reply to this email with all three.')}
+<p style="color:${muted};font-size:13px;margin:20px 0 0;">We will handle everything from there. Your credentials are encrypted and stored securely.</p>
+${note('⏱️', '<strong>Timeline:</strong> ServiceTitan approval typically takes 2–5 business days. We will activate your integration the same day you send us the credentials.', '#FFF7ED')}`
   },
 
   'Housecall Pro Calendar': {
-    subject: `Connect Your Housecall Pro — ${companyName} AI Receptionist`,
+    type: 'oauth',
+    category: 'calendar',
+    subject: `Connect Your Housecall Pro — 1 Click Setup`,
     body: `
-${heading('Connect Your Housecall Pro')}
-${subtext(`Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> will book directly into Housecall Pro.`)}
-
-${step(1, 'Log in to Housecall Pro', 'Go to <strong>housecallpro.com</strong> and sign in.', '')}
-
-${step(2, 'Enable API Access', 'Go to <strong>Settings</strong> → <strong>Integrations</strong>. Look for the API section or contact Housecall Pro support to request API access for your account.', '')}
-
-${step(3, 'Get Your API Key', 'Once enabled, copy your API key from the integrations page.', '')}
-
-${step(4, 'Send Us Your API Key', 'Reply to this email with your Housecall Pro API key. We will connect your AI Receptionist within 24 hours.', '')}
-
-${infoBox('✅ <strong>Housecall Pro handles both:</strong> Since HCP is your calendar and CRM, this single API key lets your AI book jobs, create customers, and schedule dispatches.')}`
-  }
-};
-
-// CRM-only guides (for when CRM is different from calendar)
-const crmGuides = {
-  'Jobber': {
-    subject: `Connect Your Jobber CRM — ${companyName} AI Receptionist`,
-    body: `
-${heading('Connect Your Jobber CRM')}
-${subtext(`Your AI Receptionist for <strong style="color:${brand.white}">${companyName}</strong> needs to connect with Jobber to automatically create contacts and log jobs from phone calls.`)}
-
-${step(1, 'Log in to Jobber', 'Go to <strong>getjobber.com</strong> and sign in.', '')}
-
-${step(2, 'Find Your API Key', 'Go to <strong>Settings</strong> → <strong>Apps & Integrations</strong> → <strong>API Access</strong>. Copy your API key.', '')}
-
-${step(3, 'Send Us Your API Key', 'Reply to this email with your Jobber API key.', '')}
-
-${infoBox('📋 <strong>What happens:</strong> When your AI Receptionist books an appointment or captures a lead, the contact and job details are automatically created in Jobber.')}`
+${h('Connect Housecall Pro')}
+${sub(`Housecall Pro handles both your schedule and customer data, so this one connection covers everything.`)}
+${btn('Connect Housecall Pro →', connectBaseUrl + '?platform=housecallpro&agent=' + agentId)}
+${note('✅', '<strong>Full integration.</strong> Your AI will book jobs, add customers, and update your schedule — all in HCP.', '#ECFDF5')}`
   },
 
-  'ServiceTitan': {
-    subject: `Connect Your ServiceTitan CRM — ${companyName} AI Receptionist`,
+  // ── CRMs (OAuth) ──────────────────────────────────────────
+
+  'Jobber': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your Jobber CRM — 1 Click`,
     body: `
-${heading('Connect Your ServiceTitan CRM')}
-${subtext(`Your AI Receptionist needs ServiceTitan API access to create customers and jobs automatically.`)}
+${h('Connect Your Jobber CRM')}
+${sub(`Your AI Receptionist will automatically create contacts and log jobs in Jobber after every call.`)}
+${btn('Connect Jobber →', connectBaseUrl + '?platform=jobber&agent=' + agentId)}`
+  },
 
-${step(1, 'Contact Your ServiceTitan Rep', 'Request <strong>API access for third-party integration</strong>.', '')}
+  'GoHighLevel': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your GoHighLevel CRM — 1 Click`,
+    body: `
+${h('Connect GoHighLevel')}
+${sub(`Your AI Receptionist will push new contacts and job details into GoHighLevel automatically.`)}
+${btn('Connect GoHighLevel →', connectBaseUrl + '?platform=gohighlevel&agent=' + agentId)}`
+  },
 
-${step(2, 'Get Your Credentials', 'You will receive a <strong>Client ID</strong>, <strong>Client Secret</strong>, and <strong>Tenant ID</strong>.', '')}
+  'HubSpot': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your HubSpot CRM — 1 Click`,
+    body: `
+${h('Connect HubSpot')}
+${sub(`Your AI Receptionist will create contacts and deals in HubSpot after every call.`)}
+${btn('Connect HubSpot →', connectBaseUrl + '?platform=hubspot&agent=' + agentId)}`
+  },
 
-${step(3, 'Send Them To Us', 'Reply to this email with all three credentials. They are encrypted and stored securely.', '')}
+  'Zoho CRM': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your Zoho CRM — 1 Click`,
+    body: `
+${h('Connect Zoho CRM')}
+${sub(`Your AI will automatically push new contacts and job data to Zoho CRM.`)}
+${btn('Connect Zoho →', connectBaseUrl + '?platform=zoho&agent=' + agentId)}`
+  },
 
-${infoBox('🔒 All credentials are AES-256 encrypted.', brand.green)}`
+  'Pipedrive': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your Pipedrive — 1 Click`,
+    body: `
+${h('Connect Pipedrive')}
+${sub(`Leads captured by your AI Receptionist will flow into Pipedrive automatically.`)}
+${btn('Connect Pipedrive →', connectBaseUrl + '?platform=pipedrive&agent=' + agentId)}`
+  },
+
+  'Salesforce': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your Salesforce — 1 Click`,
+    body: `
+${h('Connect Salesforce')}
+${sub(`Your AI Receptionist will create leads and contacts in Salesforce automatically.`)}
+${btn('Connect Salesforce →', connectBaseUrl + '?platform=salesforce&agent=' + agentId)}`
+  },
+
+  // ── CRMs (API key) ────────────────────────────────────────
+
+  'ServiceTitan': {
+    type: 'apikey',
+    category: 'crm',
+    subject: `Connect Your ServiceTitan CRM — Quick Setup`,
+    body: `
+${h('Connect ServiceTitan')}
+${sub(`Your AI Receptionist needs ServiceTitan API access to create customers and jobs.`)}
+${step(1, 'Contact your ServiceTitan rep', 'Request <strong>API access</strong> for third-party integration.')}
+${step(2, 'Send us your credentials', 'Reply to this email with your Client ID, Client Secret, and Tenant ID.')}
+${note('🔒', 'All credentials are AES-256 encrypted. Only the automated system can access them.')}`
   },
 
   'Housecall Pro': {
-    subject: `Connect Your Housecall Pro CRM — ${companyName} AI Receptionist`,
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your Housecall Pro — 1 Click`,
     body: `
-${heading('Connect Your Housecall Pro CRM')}
-${subtext(`Let us connect your Housecall Pro so your AI Receptionist can create customers and jobs automatically.`)}
-
-${step(1, 'Log in to Housecall Pro', 'Go to <strong>housecallpro.com</strong> and sign in.', '')}
-
-${step(2, 'Get Your API Key', 'Go to <strong>Settings</strong> → <strong>Integrations</strong> → copy your API key.', '')}
-
-${step(3, 'Send It To Us', 'Reply to this email with your API key.', '')}
-
-${infoBox('📋 Your AI will automatically push new contacts and job details to Housecall Pro after every call.')}`
+${h('Connect Housecall Pro')}
+${sub(`Your AI Receptionist will push contacts and jobs into Housecall Pro.`)}
+${btn('Connect Housecall Pro →', connectBaseUrl + '?platform=housecallpro&agent=' + agentId)}`
   },
 
   'FieldEdge': {
-    subject: `Connect Your FieldEdge CRM — ${companyName} AI Receptionist`,
+    type: 'apikey',
+    category: 'crm',
+    subject: `Connect Your FieldEdge — Quick Setup`,
     body: `
-${heading('Connect Your FieldEdge CRM')}
-${subtext(`Your AI Receptionist needs FieldEdge API access to push customer and job data automatically.`)}
-
-${step(1, 'Contact FieldEdge Support', 'Request API access for your account. Mention it is for an AI receptionist integration.', '')}
-
-${step(2, 'Get Your API Credentials', 'FieldEdge will provide your API key and any required authentication details.', '')}
-
-${step(3, 'Send Them To Us', 'Reply to this email with your credentials.', '')}
-
-${infoBox('⏱️ FieldEdge API setup typically takes 1-3 business days.', brand.amber)}`
+${h('Connect FieldEdge')}
+${sub(`Your AI needs FieldEdge access to push customer and job data.`)}
+${step(1, 'Contact FieldEdge support', 'Request API access for your account.')}
+${step(2, 'Send us your API key', 'Reply to this email with the key they provide.')}
+${note('⏱️', 'FieldEdge setup typically takes 1–3 business days.', '#FFF7ED')}`
   },
 
   'Kickserv': {
-    subject: `Connect Your Kickserv CRM — ${companyName} AI Receptionist`,
+    type: 'apikey',
+    category: 'crm',
+    subject: `Connect Your Kickserv — Quick Setup`,
     body: `
-${heading('Connect Your Kickserv CRM')}
-${subtext(`Let us connect your Kickserv account so leads and bookings flow automatically.`)}
+${h('Connect Kickserv')}
+${sub(`Let us connect your Kickserv so leads and bookings flow automatically.`)}
+${step(1, 'Log in to Kickserv', 'Go to <strong>kickserv.com</strong> → Settings → API.')}
+${step(2, 'Copy your API token', 'Reply to this email with it.')}
+${note('📋', 'Your AI will automatically create jobs and contacts in Kickserv.')}`
+  },
 
-${step(1, 'Log in to Kickserv', 'Go to <strong>kickserv.com</strong> and sign in.', '')}
+  'ServiceM8': {
+    type: 'oauth',
+    category: 'crm',
+    subject: `Connect Your ServiceM8 — 1 Click`,
+    body: `
+${h('Connect ServiceM8')}
+${sub(`Your AI Receptionist will sync leads and jobs to ServiceM8.`)}
+${btn('Connect ServiceM8 →', connectBaseUrl + '?platform=servicem8&agent=' + agentId)}`
+  },
 
-${step(2, 'Find Your API Key', 'Go to <strong>Settings</strong> → <strong>API</strong> → copy your API token.', '')}
-
-${step(3, 'Send It To Us', 'Reply to this email with your Kickserv API token.', '')}
-
-${infoBox('📋 Your AI Receptionist will automatically create jobs and contacts in Kickserv.')}`
+  'Workiz': {
+    type: 'apikey',
+    category: 'crm',
+    subject: `Connect Your Workiz — Quick Setup`,
+    body: `
+${h('Connect Workiz')}
+${sub(`Your AI needs Workiz API access to create jobs and contacts.`)}
+${step(1, 'Log in to Workiz', 'Go to Settings → Integrations → API.')}
+${step(2, 'Copy your API key', 'Reply to this email with it.')}`
   }
 };
 
-// ── Build Email List ────────────────────────────────────────
+// ============================================================
+// BUILD EMAIL LIST
+// ============================================================
 const emails = [];
 
-// Determine which calendar guide to send
-if (calendarPlatform && calendarPlatform !== 'None') {
-  const calGuide = calendarGuides[calendarPlatform];
-  if (calGuide) {
+// Calendar setup email
+if (calendarPlatform && calendarPlatform !== 'None' && calendarPlatform !== 'Custom / Other') {
+  const p = platforms[calendarPlatform];
+  if (p) {
     emails.push({
       to: clientEmail,
-      subject: calGuide.subject,
-      html: wrapEmail(calGuide.subject, calGuide.body),
-      type: 'calendar_setup',
+      subject: p.subject,
+      html: shell(p.body),
+      type: p.type,
+      category: 'calendar',
       platform: calendarPlatform
     });
   }
 }
 
-// Determine which CRM guide to send (only if CRM is different from calendar platform)
-// e.g., if they use Google Calendar + Jobber CRM, send both guides
-// But if they use Jobber Calendar (which IS Jobber CRM), don't send a separate CRM guide
-const calendarIsCRM = ['Jobber Calendar', 'ServiceTitan Calendar', 'Housecall Pro Calendar'].includes(calendarPlatform);
-const crmBaseName = crmPlatform.replace(' Calendar', '');
-
-if (crmPlatform && crmPlatform !== 'None' && !calendarIsCRM) {
-  const crmGuide = crmGuides[crmPlatform];
-  if (crmGuide) {
+// CRM setup email (only if different from calendar platform)
+const calIsCRM = ['Jobber Calendar', 'ServiceTitan Calendar', 'Housecall Pro Calendar'].includes(calendarPlatform);
+if (crmPlatform && crmPlatform !== 'None' && crmPlatform !== 'Custom / Other' && !calIsCRM) {
+  const p = platforms[crmPlatform];
+  if (p) {
     emails.push({
       to: clientEmail,
-      subject: crmGuide.subject,
-      html: wrapEmail(crmGuide.subject, crmGuide.body),
-      type: 'crm_setup',
+      subject: p.subject,
+      html: shell(p.body),
+      type: p.type,
+      category: 'crm',
       platform: crmPlatform
     });
   }
 }
 
-// If no integrations selected, send a "no setup needed" note
-if (emails.length === 0 && (!crmPlatform || crmPlatform === 'None') && (!calendarPlatform || calendarPlatform === 'None')) {
-  // No integration emails needed — the welcome email covers it
-}
-
 return {
   setupEmails: emails,
   emailCount: emails.length,
-  calendarPlatform: calendarPlatform,
-  crmPlatform: crmPlatform,
-  clientEmail: clientEmail,
-  companyName: companyName
+  calendarPlatform,
+  crmPlatform,
+  clientEmail,
+  companyName
 };
