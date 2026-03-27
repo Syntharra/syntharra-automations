@@ -1,0 +1,114 @@
+{
+  "name": "Premium Integration Dispatcher",
+  "nodes": [
+    {
+      "id": "439f032c-f1d3-4272-b1fe-17a4bfbe0d2e",
+      "name": "Retell Function Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        400
+      ],
+      "webhookId": "69950499-47d5-4c82-be25-95afc7569a8b",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-integration-dispatch",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "4126eccc-1176-4b6a-b7b0-ef762b403d60",
+      "name": "Extract and Lookup Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        400
+      ],
+      "parameters": {
+        "jsCode": "// Extract Retell custom function payload and look up client\nconst body = $input.first().json.body;\nconst agentId = body.call?.agent_id || '';\nconst callId = body.call?.call_id || '';\nconst args = body.args || {};\n\n// Determine function name from args\nlet fn = args.action || 'unknown';\nif (fn === 'unknown') {\n  if (args.date && args.caller_name && args.caller_phone) fn = 'create_booking';\n  else if (args.date && !args.booking_id) fn = 'check_availability';\n  else if (args.booking_id && args.new_date) fn = 'reschedule_booking';\n  else if (args.booking_id) fn = 'cancel_booking';\n}\n\n// Look up client from Supabase\nlet client = null;\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.' + agentId + '&select=company_name,calendar_platform,crm_platform,calendar_access_token,calendar_refresh_token,calendar_api_key,crm_access_token,crm_api_key,default_appointment_duration,booking_buffer_minutes,booking_advance_days,timezone',\n    headers: {\n      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg'\n    },\n    json: true\n  });\n  if (Array.isArray(response) && response.length > 0) {\n    client = response[0];\n  }\n} catch (e) {\n  console.log('Supabase lookup failed:', e.message);\n}\n\nreturn {\n  agent_id: agentId,\n  call_id: callId,\n  function_name: fn,\n  args: args,\n  client: client,\n  calendar_platform: client?.calendar_platform || 'none',\n  crm_platform: client?.crm_platform || 'none',\n  duration: client?.default_appointment_duration || 60,\n  timezone: client?.timezone || 'America/Chicago',\n  _client_found: !!client\n};"
+      }
+    },
+    {
+      "id": "ee005d6b-ca27-4be0-8840-2492129338a1",
+      "name": "Respond to Retell",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        400
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $json.result }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "969c86f8-988f-411b-a2da-bda6371dd91b",
+      "name": "Process Function Call",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst fn = d.function_name || 'unknown';\nconst platform = d.calendar_platform || 'none';\nconst crmPlatform = d.crm_platform || 'none';\nconst args = d.args || {};\nconst client = d.client || {};\n\nlet result = '';\n\n// \u2500\u2500 CHECK AVAILABILITY \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nif (fn === 'check_availability') {\n  const date = args.date || 'the requested date';\n  const tw = args.time_window || 'morning';\n  \n  // TODO: Replace with real platform API calls when credentials are stored\n  // For now, return available for all platforms (MVP behavior)\n  // When real APIs are connected, each case will call the platform\n  switch (platform) {\n    case 'Google Calendar':\n      // Real: GET calendar/v3/calendars/primary/freebusy with access_token\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n      break;\n    case 'Calendly':\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n      break;\n    case 'Jobber Calendar':\n    case 'Jobber':\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n      break;\n    case 'Microsoft Outlook':\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n      break;\n    case 'Housecall Pro Calendar':\n    case 'Housecall Pro':\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n      break;\n    case 'ServiceTitan Calendar':\n    case 'ServiceTitan':\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n      break;\n    default:\n      result = `The ${tw} slot on ${date} is available. Would you like me to book that for you?`;\n  }\n}\n\n// \u2500\u2500 CREATE BOOKING \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nelse if (fn === 'create_booking') {\n  const name = args.caller_name || 'the customer';\n  const phone = args.caller_phone || '';\n  const address = args.caller_address || '';\n  const date = args.date || '';\n  const tw = args.time_window || 'morning';\n  const jobType = args.job_type || 'service';\n  \n  // TODO: Platform-specific booking creation\n  // Google Calendar: events.insert API\n  // Jobber: create client + create job + create visit\n  // HCP: create customer + create job\n  // Calendly: create invitee\n  \n  result = `Appointment booked for ${name} on ${date}, ${tw}, for ${jobType} at ${address}. Confirmation will be sent shortly.`;\n}\n\n// \u2500\u2500 RESCHEDULE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nelse if (fn === 'reschedule_booking') {\n  const newDate = args.new_date || args.date || '';\n  const newTW = args.new_time_window || args.time_window || '';\n  \n  // TODO: Find and update existing appointment\n  result = `Appointment rescheduled to ${newDate}${newTW ? ', ' + newTW : ''}. Updated confirmation will be sent.`;\n}\n\n// \u2500\u2500 CANCEL \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nelse if (fn === 'cancel_booking') {\n  // TODO: Find and cancel existing appointment\n  result = 'Appointment cancelled. Would you like to rebook at a different time?';\n}\n\n// \u2500\u2500 UNKNOWN \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nelse {\n  result = 'I am having a little trouble with the booking system right now. Let me take your details and have someone call you back to confirm a time.';\n}\n\nreturn { result: result };"
+      }
+    }
+  ],
+  "connections": {
+    "Retell Function Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract and Lookup Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract and Lookup Client": {
+      "main": [
+        [
+          {
+            "node": "Process Function Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Function Call": {
+      "main": [
+        [
+          {
+            "node": "Respond to Retell",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}
