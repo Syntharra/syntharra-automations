@@ -1,0 +1,755 @@
+{
+  "updatedAt": "2026-03-26T23:18:00.186Z",
+  "createdAt": "2026-03-24T15:35:05.938Z",
+  "id": "lQsYJWQeP5YPikam",
+  "name": "Usage Alert Monitor (80% & 100% Warnings)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "e119ca4c-93b2-45e5-b81d-9a3377c84384",
+      "name": "Daily Check (9AM UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Runs daily at 9AM UTC to check usage levels for all active subscriptions"
+    },
+    {
+      "parameters": {
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/stripe_payment_data?payment_status=eq.paid&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51ec4823-d158-417b-938b-9f181f11b350",
+      "name": "Supabase: Fetch Active Subscriptions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const payments = $input.first().json;\nif (!Array.isArray(payments) || payments.length === 0) return [];\n\nconst now = new Date();\nconst year = now.getUTCFullYear();\nconst month = now.getUTCMonth(); // 0-indexed\nconst billingMonth = `${year}-${String(month + 1).padStart(2, '0')}`;\nconst periodStart = new Date(Date.UTC(year, month, 1, 0, 0, 0)).toISOString();\n\nreturn payments.map(p => {\n  const planName = (p.plan_name || '').toLowerCase();\n  const isPremium = planName.includes('premium');\n  const includedMinutes = p.minutes ? parseInt(p.minutes) : (isPremium ? 1000 : 475);\n\n  return {\n    json: {\n      subscription_id: p.id,\n      agent_id: p.agent_id,\n      company_name: p.customer_name,\n      client_email: p.customer_email,\n      plan_type: isPremium ? 'premium' : 'standard',\n      included_minutes: includedMinutes,\n      billing_month: billingMonth,\n      period_start: periodStart\n    }\n  };\n});"
+      },
+      "id": "268c30cb-d39a-4b52-81cf-9daa4ac5a13c",
+      "name": "Prepare Subscription Checks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ $json.agent_id }}&call_timestamp=gte.{{ $json.period_start }}&select=duration_seconds",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6976942-1f1c-437d-be01-2b284c19422d",
+      "name": "Supabase: Fetch Current Month Usage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const calls = $input.first().json;\nconst sub = $('Prepare Subscription Checks').item;\n\nconst callList = Array.isArray(calls) ? calls : [];\nconst totalSeconds = callList.reduce((sum, c) => sum + (c.duration_seconds || 0), 0);\nconst totalMinutes = Math.ceil(totalSeconds / 60);\nconst includedMinutes = sub.json.included_minutes;\nconst usagePercent = includedMinutes > 0 ? Math.round((totalMinutes / includedMinutes) * 100) : 0;\nconst remainingMinutes = Math.max(0, includedMinutes - totalMinutes);\n\nreturn [{\n  json: {\n    ...sub.json,\n    total_minutes: totalMinutes,\n    usage_percent: usagePercent,\n    remaining_minutes: remainingMinutes,\n    needs_80_alert: usagePercent >= 80 && usagePercent < 100,\n    needs_100_alert: usagePercent >= 100,\n    overage_minutes: Math.max(0, totalMinutes - includedMinutes)\n  }\n}];"
+      },
+      "id": "d85df1ec-0379-4b23-bd02-9bb00e63757d",
+      "name": "Calculate Usage %",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles?agent_id=eq.{{ $json.agent_id }}&billing_month=eq.{{ $json.billing_month }}&select=alert_80_sent,alert_100_sent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "46067c55-71da-410e-ac33-be56504b98fa",
+      "name": "Supabase: Check If Alerts Already Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const alertData = $input.first().json;\nconst usageData = $('Calculate Usage %').item.json;\n\nconst existing = Array.isArray(alertData) ? alertData[0] : alertData;\nconst alert80Sent = existing?.alert_80_sent || false;\nconst alert100Sent = existing?.alert_100_sent || false;\n\n// Determine which alert to send (if any)\nlet alertType = null;\nif (usageData.needs_100_alert && !alert100Sent) {\n  alertType = '100';\n} else if (usageData.needs_80_alert && !alert80Sent) {\n  alertType = '80';\n}\n\nif (!alertType) return []; // No alert needed\n\nreturn [{\n  json: {\n    ...usageData,\n    alert_type: alertType,\n    alert_80_sent: alert80Sent,\n    alert_100_sent: alert100Sent\n  }\n}];"
+      },
+      "id": "73efe797-4be4-4b2b-a207-9c003efeeb73",
+      "name": "Determine Alert Needed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.client_email }}",
+        "subject": "={{ $json.alert_type === '100' ? '\u26a0\ufe0f Syntharra: You\\'ve exceeded your included minutes \u2014 ' : '\u26a1 Syntharra: 80% of included minutes used \u2014 ' }}{{ $json.company_name }}",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><div style='background:{{ $json.alert_type === '100' ? '#e53e3e' : '#dd6b20' }};padding:24px;border-radius:12px 12px 0 0'><h1 style='color:#fff;margin:0;font-size:20px'>{{ $json.alert_type === '100' ? '\u26a0\ufe0f Minutes Limit Exceeded' : '\u26a1 80% Usage Warning' }}</h1></div><div style='background:#f9f9f9;padding:24px;border:1px solid #e0e0e0'><p style='font-size:15px;color:#333'>Hi {{ $json.company_name }},</p>{{ $json.alert_type === '100' ? \"<p style='font-size:15px;color:#333'>Your AI Receptionist has <strong>exceeded the \" + $json.included_minutes + \" minutes</strong> included in your <strong>\" + $json.plan_type + \" plan</strong> this month.</p><p style='font-size:15px;color:#333'>You've used <strong>\" + $json.total_minutes + \" minutes</strong> so far, which is <strong>\" + $json.overage_minutes + \" minutes over</strong> your limit.</p><p style='font-size:15px;color:#e53e3e;font-weight:600'>Additional minutes are billed at $0.25/minute and will be invoiced at the end of the billing cycle.</p>\" : \"<p style='font-size:15px;color:#333'>Your AI Receptionist has used <strong>\" + $json.total_minutes + \" of \" + $json.included_minutes + \" minutes</strong> (\" + $json.usage_percent + \"%) included in your <strong>\" + $json.plan_type + \" plan</strong> this month.</p><p style='font-size:15px;color:#333'>You have approximately <strong>\" + $json.remaining_minutes + \" minutes remaining</strong>.</p>\" }}<div style='background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-top:16px'><p style='margin:0;font-size:14px;color:#666'><strong>Want more minutes?</strong> Upgrade to our Premium plan (1,000 min/mo) for better value. Contact us at <a href='mailto:daniel@syntharra.com'>daniel@syntharra.com</a>.</p></div></div><div style='padding:12px 24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;text-align:center'><p style='color:#999;font-size:12px;margin:0'>Syntharra AI | <a href='mailto:daniel@syntharra.com'>daniel@syntharra.com</a></p></div></div>",
+        "options": {}
+      },
+      "id": "9f327ba0-eaa8-463d-8a1c-1573b9628713",
+      "name": "Gmail: Send Usage Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        0
+      ],
+      "webhookId": "3b00a905-af40-4167-b6b9-6fdebbe3a7b1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation,resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ agent_id: $json.agent_id, billing_month: $json.billing_month, period_start: $json.period_start, period_end: new Date(new Date($json.period_start).getFullYear(), new Date($json.period_start).getMonth() + 1, 1).toISOString(), included_minutes: $json.included_minutes, total_minutes: $json.total_minutes, [($json.alert_type === '80' ? 'alert_80_sent' : 'alert_100_sent')]: true }) }}",
+        "options": {}
+      },
+      "id": "0158ea78-0dd9-4bbf-8b31-f443f56d5c07",
+      "name": "Supabase: Mark Alert Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1920,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "daniel@syntharra.com",
+        "subject": "=[INTERNAL] Usage Alert \u2014 {{ $json.company_name }} at {{ $json.usage_percent }}%",
+        "message": "=<p><strong>{{ $json.company_name }}</strong> ({{ $json.plan_type }} plan) is at <strong>{{ $json.usage_percent }}%</strong> usage.</p><p>Used: {{ $json.total_minutes }} / {{ $json.included_minutes }} min</p><p>{{ $json.overage_minutes > 0 ? 'Overage: ' + $json.overage_minutes + ' min ($' + (($json.overage_minutes * 25) / 100).toFixed(2) + ')' : 'Remaining: ' + $json.remaining_minutes + ' min' }}</p>",
+        "options": {}
+      },
+      "id": "fbb5c651-dde0-45da-b803-25ea17eefdf6",
+      "name": "Gmail: Notify You (Internal)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        208
+      ],
+      "webhookId": "635097df-869c-483e-9d16-0fb7a2a31c91",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Daily Check (9AM UTC)": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Fetch Active Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Fetch Active Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Prepare Subscription Checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Subscription Checks": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Fetch Current Month Usage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Fetch Current Month Usage": {
+      "main": [
+        [
+          {
+            "node": "Calculate Usage %",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Usage %": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Check If Alerts Already Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Check If Alerts Already Sent": {
+      "main": [
+        [
+          {
+            "node": "Determine Alert Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Alert Needed": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Usage Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail: Notify You (Internal)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Send Usage Alert": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Mark Alert Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": {
+    "node:Daily Check (9AM UTC)": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "004959fc-6c31-4ba4-8b25-6e2b84ac90a8",
+  "activeVersionId": "004959fc-6c31-4ba4-8b25-6e2b84ac90a8",
+  "versionCounter": 16,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-24T15:35:05.940Z",
+      "createdAt": "2026-03-24T15:35:05.940Z",
+      "role": "workflow:owner",
+      "workflowId": "lQsYJWQeP5YPikam",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-24T15:35:33.000Z",
+    "createdAt": "2026-03-24T15:35:30.707Z",
+    "versionId": "004959fc-6c31-4ba4-8b25-6e2b84ac90a8",
+    "workflowId": "lQsYJWQeP5YPikam",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 9
+              }
+            ]
+          }
+        },
+        "id": "e119ca4c-93b2-45e5-b81d-9a3377c84384",
+        "name": "Daily Check (9AM UTC)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ],
+        "notes": "Runs daily at 9AM UTC to check usage levels for all active subscriptions"
+      },
+      {
+        "parameters": {
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/stripe_payment_data?payment_status=eq.paid&select=*",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "51ec4823-d158-417b-938b-9f181f11b350",
+        "name": "Supabase: Fetch Active Subscriptions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          240,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const payments = $input.first().json;\nif (!Array.isArray(payments) || payments.length === 0) return [];\n\nconst now = new Date();\nconst year = now.getUTCFullYear();\nconst month = now.getUTCMonth(); // 0-indexed\nconst billingMonth = `${year}-${String(month + 1).padStart(2, '0')}`;\nconst periodStart = new Date(Date.UTC(year, month, 1, 0, 0, 0)).toISOString();\n\nreturn payments.map(p => {\n  const planName = (p.plan_name || '').toLowerCase();\n  const isPremium = planName.includes('premium');\n  const includedMinutes = p.minutes ? parseInt(p.minutes) : (isPremium ? 1000 : 475);\n\n  return {\n    json: {\n      subscription_id: p.id,\n      agent_id: p.agent_id,\n      company_name: p.customer_name,\n      client_email: p.customer_email,\n      plan_type: isPremium ? 'premium' : 'standard',\n      included_minutes: includedMinutes,\n      billing_month: billingMonth,\n      period_start: periodStart\n    }\n  };\n});"
+        },
+        "id": "268c30cb-d39a-4b52-81cf-9daa4ac5a13c",
+        "name": "Prepare Subscription Checks",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ $json.agent_id }}&call_timestamp=gte.{{ $json.period_start }}&select=duration_seconds",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f6976942-1f1c-437d-be01-2b284c19422d",
+        "name": "Supabase: Fetch Current Month Usage",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const calls = $input.first().json;\nconst sub = $('Prepare Subscription Checks').item;\n\nconst callList = Array.isArray(calls) ? calls : [];\nconst totalSeconds = callList.reduce((sum, c) => sum + (c.duration_seconds || 0), 0);\nconst totalMinutes = Math.ceil(totalSeconds / 60);\nconst includedMinutes = sub.json.included_minutes;\nconst usagePercent = includedMinutes > 0 ? Math.round((totalMinutes / includedMinutes) * 100) : 0;\nconst remainingMinutes = Math.max(0, includedMinutes - totalMinutes);\n\nreturn [{\n  json: {\n    ...sub.json,\n    total_minutes: totalMinutes,\n    usage_percent: usagePercent,\n    remaining_minutes: remainingMinutes,\n    needs_80_alert: usagePercent >= 80 && usagePercent < 100,\n    needs_100_alert: usagePercent >= 100,\n    overage_minutes: Math.max(0, totalMinutes - includedMinutes)\n  }\n}];"
+        },
+        "id": "d85df1ec-0379-4b23-bd02-9bb00e63757d",
+        "name": "Calculate Usage %",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          960,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles?agent_id=eq.{{ $json.agent_id }}&billing_month=eq.{{ $json.billing_month }}&select=alert_80_sent,alert_100_sent",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "46067c55-71da-410e-ac33-be56504b98fa",
+        "name": "Supabase: Check If Alerts Already Sent",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          1200,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const alertData = $input.first().json;\nconst usageData = $('Calculate Usage %').item.json;\n\nconst existing = Array.isArray(alertData) ? alertData[0] : alertData;\nconst alert80Sent = existing?.alert_80_sent || false;\nconst alert100Sent = existing?.alert_100_sent || false;\n\n// Determine which alert to send (if any)\nlet alertType = null;\nif (usageData.needs_100_alert && !alert100Sent) {\n  alertType = '100';\n} else if (usageData.needs_80_alert && !alert80Sent) {\n  alertType = '80';\n}\n\nif (!alertType) return []; // No alert needed\n\nreturn [{\n  json: {\n    ...usageData,\n    alert_type: alertType,\n    alert_80_sent: alert80Sent,\n    alert_100_sent: alert100Sent\n  }\n}];"
+        },
+        "id": "73efe797-4be4-4b2b-a207-9c003efeeb73",
+        "name": "Determine Alert Needed",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.client_email }}",
+          "subject": "={{ $json.alert_type === '100' ? '\u26a0\ufe0f Syntharra: You\\'ve exceeded your included minutes \u2014 ' : '\u26a1 Syntharra: 80% of included minutes used \u2014 ' }}{{ $json.company_name }}",
+          "message": "=<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><div style='background:{{ $json.alert_type === '100' ? '#e53e3e' : '#dd6b20' }};padding:24px;border-radius:12px 12px 0 0'><h1 style='color:#fff;margin:0;font-size:20px'>{{ $json.alert_type === '100' ? '\u26a0\ufe0f Minutes Limit Exceeded' : '\u26a1 80% Usage Warning' }}</h1></div><div style='background:#f9f9f9;padding:24px;border:1px solid #e0e0e0'><p style='font-size:15px;color:#333'>Hi {{ $json.company_name }},</p>{{ $json.alert_type === '100' ? \"<p style='font-size:15px;color:#333'>Your AI Receptionist has <strong>exceeded the \" + $json.included_minutes + \" minutes</strong> included in your <strong>\" + $json.plan_type + \" plan</strong> this month.</p><p style='font-size:15px;color:#333'>You've used <strong>\" + $json.total_minutes + \" minutes</strong> so far, which is <strong>\" + $json.overage_minutes + \" minutes over</strong> your limit.</p><p style='font-size:15px;color:#e53e3e;font-weight:600'>Additional minutes are billed at $0.25/minute and will be invoiced at the end of the billing cycle.</p>\" : \"<p style='font-size:15px;color:#333'>Your AI Receptionist has used <strong>\" + $json.total_minutes + \" of \" + $json.included_minutes + \" minutes</strong> (\" + $json.usage_percent + \"%) included in your <strong>\" + $json.plan_type + \" plan</strong> this month.</p><p style='font-size:15px;color:#333'>You have approximately <strong>\" + $json.remaining_minutes + \" minutes remaining</strong>.</p>\" }}<div style='background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-top:16px'><p style='margin:0;font-size:14px;color:#666'><strong>Want more minutes?</strong> Upgrade to our Premium plan (1,000 min/mo) for better value. Contact us at <a href='mailto:daniel@syntharra.com'>daniel@syntharra.com</a>.</p></div></div><div style='padding:12px 24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;text-align:center'><p style='color:#999;font-size:12px;margin:0'>Syntharra AI | <a href='mailto:daniel@syntharra.com'>daniel@syntharra.com</a></p></div></div>",
+          "options": {}
+        },
+        "id": "9f327ba0-eaa8-463d-8a1c-1573b9628713",
+        "name": "Gmail: Send Usage Alert",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          1680,
+          0
+        ],
+        "webhookId": "3b00a905-af40-4167-b6b9-6fdebbe3a7b1",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation,resolution=merge-duplicates"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ agent_id: $json.agent_id, billing_month: $json.billing_month, period_start: $json.period_start, period_end: new Date(new Date($json.period_start).getFullYear(), new Date($json.period_start).getMonth() + 1, 1).toISOString(), included_minutes: $json.included_minutes, total_minutes: $json.total_minutes, [($json.alert_type === '80' ? 'alert_80_sent' : 'alert_100_sent')]: true }) }}",
+          "options": {}
+        },
+        "id": "0158ea78-0dd9-4bbf-8b31-f443f56d5c07",
+        "name": "Supabase: Mark Alert Sent",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          1920,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "daniel@syntharra.com",
+          "subject": "=[INTERNAL] Usage Alert \u2014 {{ $json.company_name }} at {{ $json.usage_percent }}%",
+          "message": "=<p><strong>{{ $json.company_name }}</strong> ({{ $json.plan_type }} plan) is at <strong>{{ $json.usage_percent }}%</strong> usage.</p><p>Used: {{ $json.total_minutes }} / {{ $json.included_minutes }} min</p><p>{{ $json.overage_minutes > 0 ? 'Overage: ' + $json.overage_minutes + ' min ($' + (($json.overage_minutes * 25) / 100).toFixed(2) + ')' : 'Remaining: ' + $json.remaining_minutes + ' min' }}</p>",
+          "options": {}
+        },
+        "id": "fbb5c651-dde0-45da-b803-25ea17eefdf6",
+        "name": "Gmail: Notify You (Internal)",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          208
+        ],
+        "webhookId": "635097df-869c-483e-9d16-0fb7a2a31c91",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        },
+        "onError": "continueErrorOutput"
+      }
+    ],
+    "connections": {
+      "Daily Check (9AM UTC)": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Fetch Active Subscriptions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Fetch Active Subscriptions": {
+        "main": [
+          [
+            {
+              "node": "Prepare Subscription Checks",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Subscription Checks": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Fetch Current Month Usage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Fetch Current Month Usage": {
+        "main": [
+          [
+            {
+              "node": "Calculate Usage %",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Usage %": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Check If Alerts Already Sent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Check If Alerts Already Sent": {
+        "main": [
+          [
+            {
+              "node": "Determine Alert Needed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Determine Alert Needed": {
+        "main": [
+          [
+            {
+              "node": "Gmail: Send Usage Alert",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gmail: Notify You (Internal)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gmail: Send Usage Alert": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Mark Alert Sent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": "Version 004959fc",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-24T15:35:33.787Z",
+        "id": 133,
+        "workflowId": "lQsYJWQeP5YPikam",
+        "versionId": "004959fc-6c31-4ba4-8b25-6e2b84ac90a8",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-24T23:17:38.938Z",
+        "id": 139,
+        "workflowId": "lQsYJWQeP5YPikam",
+        "versionId": "004959fc-6c31-4ba4-8b25-6e2b84ac90a8",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-24T23:17:38.859Z",
+        "id": 138,
+        "workflowId": "lQsYJWQeP5YPikam",
+        "versionId": "004959fc-6c31-4ba4-8b25-6e2b84ac90a8",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
