@@ -225,7 +225,7 @@ if flow_id:
     nodes = flow.get('nodes', [])
     names = [n['name'] for n in nodes]
     check("Flow exists in Retell",           bool(flow.get('conversation_flow_id')))
-    check("12 nodes present",                len(nodes) == 12,                                      f"{len(nodes)} nodes")
+    check("13 nodes present",                len(nodes) == 13,                                      f"{len(nodes)} nodes")
     check("flex_mode off",                   flow.get('flex_mode') in [False, None])
     check("start_speaker = agent",           flow.get('start_speaker') == 'agent')
     check("Greeting node present",           'greeting_node' in names)

@@ -1,8 +1,15 @@
 // ============================================================
-// Build Retell Prompt v5, Supabase Edition
+// Build Retell Prompt v6, Supabase Edition
 // ============================================================
-// Removed Google Sheets settings dependency
-// Transfer number: lead_phone default, emergency_phone override
+// v6 changes:
+//   - Separate Emergency Transfer node (13 nodes total)
+//   - transfer_phone (q48) = general transfer destination
+//   - emergency_phone (q21) = emergency transfer, falls back to transfer_phone
+//   - Fixed duplicate full name step in lead capture
+//   - Richer verify_emergency prompt with data collection
+//   - Improved identify_call instruction and edge labels
+//   - Added finetune examples to callback node
+//   - Improved general_questions to use global prompt pricing
 // ============================================================
 
 const data = $input.first().json;
@@ -59,14 +66,21 @@ const testMode           = false;
 const voiceMap = { female: 'retell-Sloane', male: 'retell-Nico' };
 const voiceId = voiceMap[voiceGender] || 'retell-Sloane';
 
-// === Transfer number for the Transfer Call node ===
-// Priority: transfer_phone (q48) from Jotform is the default destination.
-// emergency_phone (q21) is spoken to the caller in the prompt but the actual
-// SIP transfer always goes to transfer_phone. Fallback to lead_phone if neither set.
+// === Transfer numbers ===
+// General transfer: transfer_phone (q48) from Jotform, fallback to lead_phone
 const rawTransferPhone = transferPhone || leadPhone;
 const transferNumber = rawTransferPhone
   ? (rawTransferPhone.startsWith('+') ? rawTransferPhone : `+1${rawTransferPhone.replace(/\D/g, '')}`)
   : '+10000000000';
+
+// Emergency transfer: emergency_phone (q21) if provided, otherwise same as general transfer
+const rawEmergencyPhone = emergencyPhone || rawTransferPhone;
+const emergencyTransferNumber = rawEmergencyPhone
+  ? (rawEmergencyPhone.startsWith('+') ? rawEmergencyPhone : `+1${rawEmergencyPhone.replace(/\D/g, '')}`)
+  : transferNumber;
+
+// Display version of emergency number for the agent to speak
+const emergencyDisplayNumber = emergencyPhone || transferPhone || companyPhone || '';
 
 // ============================================================
 // BUILD PRICING RESPONSE INSTRUCTIONS
@@ -92,7 +106,8 @@ if (pricingPolicy === 'We provide free quotes on-site') {
 // ============================================================
 const triggerList = transferTriggers.split(',').map(t => t.trim()).filter(Boolean);
 let transferRules = `## CALL TRANSFER PROTOCOL\n\n`;
-transferRules += `Transfer destination: ${transferNumber}\n`;
+transferRules += `General transfer destination: ${transferNumber}\n`;
+transferRules += `Emergency transfer destination: ${emergencyTransferNumber}\n`;
 transferRules += `Transfer behavior: ${transferBehavior}\n\n`;
 transferRules += `Transfer the call ONLY when one of these conditions is met:\n`;
 triggerList.forEach((t, i) => { transferRules += `${i + 1}. ${t}\n`; });
@@ -147,7 +162,11 @@ if (paymentMethods) {
 // ============================================================
 // GLOBAL PROMPT
 // ============================================================
-const globalPrompt = `## ROLE\\nYou are ${agentName}, a virtual AI receptionist for ${companyName}.${companyTagline ? ' ' + companyTagline + '.' : ''}\\nYou are warm, professional and concise. Speak naturally, one topic at a time. Address callers by first name once you have it.\\n\\nIf asked if you are a real person: \"I'm a virtual assistant, but I'm here to make sure you get exactly the help you need.\"\\n\\n## STYLE\\n- One question at a time, always wait for the answer\\n- Match the caller's energy. Calm if calm, reassuring if stressed\\n- Never rush. Be patient with elderly callers\\n- Vary your language naturally\\n\\n## CONFIRMING DETAILS\\nSlow down when collecting contact info. Confirm each piece back before moving on.\\n- Phone: read back in groups \"512, 555, 0192, is that right?\"\\n- Name: spell uncommon names letter by letter\\n- Address: confirm street and suburb \"123 Main Street, Austin, is that right?\"\\n- Email: read back slowly using dot, at, dash\\n- ZIP: digit by digit\\nIf anything is unclear, ask them to spell it. Never guess.\\n\\n## TRANSCRIPTION\\nIf you cannot understand something: \"I'm sorry, I didn't quite catch that, could you say that again?\" Never guess at names, addresses or emails.\\n\\n## COMPANY INFORMATION\\n\n{{COMPANY_INFO_BLOCK}}\n\nUse the information above to answer any company-specific questions\nsuch as service areas, hours of operation, services offered, and\ncontact details. If a question about the company is NOT covered\nabove, do NOT guess or make up information. Say:\n"That's a great question, one of our team members will be able\nto answer that when they call you back."\n\n\n\n## PRICING & QUOTING\n\n${pricingInstructions}\n\n\n\n${transferRules}\n\n\n\n## PAYMENT & FINANCING\n${paymentSection || `When callers ask about payment methods:\n- Say: "Our team can go over payment options with you at the appointment."`}\n\n\n${promotionsSection}\n${doNotServiceSection}\n## CRITICAL RULES, NEVER BREAK THESE\n\n- NEVER ask more than one question at a time\n- NEVER make up prices, estimates, or timeframes unless price ranges\n  are explicitly listed in the company information\n- NEVER diagnose ${industryType} problems or recommend specific repairs\n- NEVER promise availability or same-day service unless explicitly\n  stated in the company information\n- NEVER guess answers to company-specific questions not found in\n  the company information\n- NEVER continue a conversation with obvious spam or robocalls,\n  end politely\n- NEVER transfer a call unless it matches one of the transfer\n  triggers listed in the Call Transfer Protocol above\n- ALWAYS collect lead information before ending any legitimate call\n- ALWAYS confirm information back to the caller before ending\n  the call\n- ALWAYS be warm, calm, and professional regardless of caller\n  frustration\n- ALWAYS try to understand what the caller means even if their\n  words are unclear, never mention transcription errors, simply\n  work with context to interpret their intent\n\n\n\n## IF CALLER IS RELUCTANT TO SHARE INFORMATION\n\n"I completely understand, this information simply helps our team\nfollow up with you accurately. We never share your details\nwith third parties."\n\n\n\n## ERROR HANDLING\n\n### Didn't hear or understand:\n"I apologise, I didn't quite catch that, could you repeat\nthat for me?"\n\n### Don't know the answer:\n"That's a great question. I want to make sure you get the\nright answer, can I grab your details so someone from our\nteam can call you back?"\n\n### Caller can't hear you:\n"I'm sorry about that, is this any better?"\nSpeak slightly louder and more clearly.\n\n\n\n## SPECIAL SCENARIOS\n\n### Angry or Upset Callers\n1. Stay calm and lower your tone slightly\n2. Acknowledge: "I can hear how frustrated you are and\n   I sincerely apologise for that."\n3. Redirect: "Let me see how I can help sort this out\n   for you right now."\n4. If abuse continues: "I do want to help you, but I need\n   us to work together respectfully. How can I best\n   assist you today?"\n\n### Silent Callers\n- After 3 seconds: "Hello, are you there?"\n- After 5 more seconds: "I'm having trouble hearing you,\n  can you hear me okay?"\n- If no response after a further 5 seconds: end the call politely\n\n### Threats or Safety Concerns\nStay calm, do not engage or argue. Note any relevant details\nand flag the call immediately for human review after it ends.\n`;
+let globalPrompt = `## ROLE\nYou are ${agentName}, a virtual AI receptionist for ${companyName}.${companyTagline ? ' ' + companyTagline + '.' : ''}\nYou are warm, professional and concise. Speak naturally, one topic at a time. Address callers by first name once you have it.\n\nIf asked if you are a real person: "I'm a virtual assistant, but I'm here to make sure you get exactly the help you need."\n\n## STYLE\n- One question at a time, always wait for the answer\n- Match the caller's energy. Calm if calm, reassuring if stressed\n- Never rush. Be patient with elderly callers\n- Vary your language naturally\n\n## CONFIRMING DETAILS\nSlow down when collecting contact info. Confirm each piece back before moving on.\n- Phone: read back in groups "512, 555, 0192, is that right?"\n- Name: spell uncommon names letter by letter\n- Address: confirm street and suburb "123 Main Street, Austin, is that right?"\n- Email: read back slowly using dot, at, dash\n- ZIP: digit by digit\nIf anything is unclear, ask them to spell it. Never guess.\n\n## TRANSCRIPTION\nIf you cannot understand something: "I'm sorry, I didn't quite catch that, could you say that again?" Never guess at names, addresses or emails.\n\n## COMPANY INFORMATION\n\n{{COMPANY_INFO_BLOCK}}\n\nUse the information above to answer any company-specific questions\nsuch as service areas, hours of operation, services offered, and\ncontact details. If a question about the company is NOT covered\nabove, do NOT guess or make up information. Say:\n"That's a great question, one of our team members will be able\nto answer that when they call you back."\n\n\n\n## PRICING & QUOTING\n\n${pricingInstructions}\n\n\n\n${transferRules}\n\n\n\n## PAYMENT & FINANCING\n${paymentSection || `When callers ask about payment methods:\n- Say: "Our team can go over payment options with you at the appointment."`}\n\n\n${promotionsSection}\n${doNotServiceSection}\n## CRITICAL RULES, NEVER BREAK THESE\n\n- NEVER ask more than one question at a time\n- NEVER make up prices, estimates, or timeframes unless explicitly listed in company information\n- NEVER diagnose ${industryType} problems or recommend specific repairs\n- NEVER promise availability or same-day service unless explicitly stated in company information\n- NEVER guess answers to company-specific questions not found in company information\n- NEVER continue a conversation with obvious spam or robocalls, end politely\n- NEVER transfer a call unless it matches a transfer trigger or is a confirmed emergency\n- ALWAYS collect lead information before ending any legitimate call\n- ALWAYS confirm information back to the caller before ending the call\n- ALWAYS be warm, calm, and professional regardless of caller frustration\n- ALWAYS try to understand what the caller means even if unclear, never mention transcription errors\n\n\n\n## IF CALLER IS RELUCTANT TO SHARE INFORMATION\n\n"I completely understand, this information simply helps our team follow up with you accurately. We never share your details with third parties."\n\n\n\n## ERROR HANDLING\n\n### Didn't hear or understand:\n"I apologise, I didn't quite catch that, could you repeat that for me?"\n\n### Don't know the answer:\n"That's a great question. I want to make sure you get the right answer, can I grab your details so someone from our team can call you back?"\n\n### Caller can't hear you:\n"I'm sorry about that, is this any better?" Speak slightly louder and more clearly.\n\n\n\n## SPECIAL SCENARIOS\n\n### Angry or Upset Callers\n1. Stay calm and lower your tone slightly\n2. Acknowledge: "I can hear how frustrated you are and I sincerely apologise for that."\n3. Redirect: "Let me see how I can help sort this out for you right now."\n4. If abuse continues: "I do want to help you, but I need us to work together respectfully. How can I best assist you today?"\n\n### Silent Callers\n- After 3 seconds: "Hello, are you there?"\n- After 5 more seconds: "I'm having trouble hearing you, can you hear me okay?"\n- If no response after a further 5 seconds: end the call politely\n\n### Threats or Safety Concerns\nStay calm, do not engage or argue. Note any relevant details and flag the call immediately for human review after it ends.\n`;
+
+// Capturing details section
+const capturingSection = `\n\n## CAPTURING DETAILS\nWhen collecting any detail that could be misheard, slow down noticeably.\n- Phone numbers: read back in groups, "512, 555, 0192, is that right?"\n- Emails: spell each part, "J-O-H-N dot S-M-I-T-H at gmail dot com, correct?"\n- Unusual street names: ask them to spell it out\n- Names: always get first and last name, confirm spelling for uncommon names\n- If you have confirmed something twice and the caller is still unclear, say: "No problem, our team will confirm all the details when they call you back" and move on`;
+globalPrompt += capturingSection;
 
 // ============================================================
 // BUILD GREETING
@@ -157,21 +176,8 @@ const greetingText = customGreeting
   : `Hello this is ${agentName} from ${companyName}`;
 
 // ============================================================
-// BUILD CONVERSATION FLOW NODES
+// BUILD CONVERSATION FLOW (13 NODES)
 // ============================================================
-
-// Capturing details section — appended to global prompt
-const capturingSection = `
-
-## CAPTURING DETAILS
-When collecting any detail that could be misheard, slow down noticeably.
-- Phone numbers: read back in groups, "512, 555, 0192, is that right?"
-- Emails: spell each part, "J-O-H-N dot S-M-I-T-H at gmail dot com, correct?"
-- Unusual street names: ask them to spell it out
-- Names: always get first and last name, confirm spelling for uncommon names
-- If you have confirmed something twice and the caller is still unclear, say: "No problem, our team will confirm all the details when they call you back" and move on`;
-globalPrompt += capturingSection;
-
 const conversationFlow = {
   name: `${companyName} - ${industryType} Receptionist Flow`,
   start_speaker: "agent",
@@ -186,112 +192,131 @@ const conversationFlow = {
     {
       id: "node-greeting", name: "greeting_node", type: "conversation",
       instruction: { type: "static_text", text: greetingText },
-      edges: [{ id: "edge-greeting-to-identify", destination_node_id: "node-identify-call", transition_condition: { type: "prompt", prompt: "All" } }],
+      edges: [{ id: "edge-greeting-to-identify", destination_node_id: "node-identify-call", transition_condition: { type: "prompt", prompt: "Always" } }],
       display_position: { x: 558, y: 462 }
     },
     {
       id: "node-identify-call", name: "identify_call_node", type: "conversation", start_speaker: "agent",
-      instruction: { type: "prompt", text: "Identify the reason for the call" },
+      instruction: { type: "prompt", text: "Listen and identify the reason for the call. Route to the correct node immediately without asking unnecessary questions." },
       edges: [
-        { id: "edge-to-leadcapture-service", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Repair/Service/Maintenance" } },
-        { id: "edge-to-leadcapture-quote", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Quote/Estimate/Price/Installation" } },
-        { id: "edge-to-emergency", destination_node_id: "node-verify-emergency", transition_condition: { type: "prompt", prompt: "Emergency" } },
-        { id: "edge-to-existing-customer", destination_node_id: "node-existing-customer", transition_condition: { type: "prompt", prompt: "Existing Customer" } },
-        { id: "edge-to-general-questions", destination_node_id: "node-general-questions", transition_condition: { type: "prompt", prompt: "General Questions" } },
-        { id: "edge-to-transfer-live", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "Live Person/Owner/Specific Person" } }
+        { id: "edge-to-leadcapture-service", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Repair, service, maintenance, tune-up, inspection" } },
+        { id: "edge-to-leadcapture-quote", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Quote, estimate, installation, replacement, new system" } },
+        { id: "edge-to-emergency", destination_node_id: "node-verify-emergency", transition_condition: { type: "prompt", prompt: "Emergency, urgent, no cooling, no heat, water leak, burning smell, gas smell" } },
+        { id: "edge-to-callback", destination_node_id: "node-callback", transition_condition: { type: "prompt", prompt: "Returning a missed call, got a call from this number, calling back" } },
+        { id: "edge-to-existing-customer", destination_node_id: "node-existing-customer", transition_condition: { type: "prompt", prompt: "Existing customer, question about appointment, invoice, technician, job status" } },
+        { id: "edge-to-general-questions", destination_node_id: "node-general-questions", transition_condition: { type: "prompt", prompt: "General question about services, hours, pricing, area, credentials" } },
+        { id: "edge-to-transfer-live", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "Wants to speak to a real person, manager, owner, or specific person" } },
+        { id: "edge-to-spam", destination_node_id: "node-spam-robocall", transition_condition: { type: "prompt", prompt: "Robocall, spam, automated message, silence after greeting" } }
       ],
       finetune_transition_examples: [
+        { id: "fe-service-repair", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "My AC isn't working\nMy heater broke down\nI need a repair\nMy system won't turn on\nIt's blowing warm air\nMy unit is making a loud noise\nI need someone to come fix my AC\nMy furnace stopped working\nI need a tune-up\nCan someone come check my system" }, { role: "agent", content: "I can help with that" }] },
+        { id: "fe-quote-install", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "I want a quote\nI need an estimate\nHow much does a new system cost\nI want to install a new AC\nI need to replace my furnace\nI'm looking for a new unit\nWhat would a new system run me\nI want to upgrade my AC\nCan I get a quote on a heat pump" }, { role: "agent", content: "Absolutely, let me get some details" }] },
+        { id: "fe-emergency", destination_node_id: "node-verify-emergency", transcript: [{ role: "user", content: "no cooling\nno heating\nsystem not working\nAC not working\nheater not working\nleaking unit\nwater leaking\nburning smell\nloud noise\nbroken system\nurgent repair\nemergency repair\nI smell gas\nno air coming out\nmy pipes are freezing" }, { role: "agent", content: "Sounds like you have an emergency" }] },
+        { id: "fe-callback", destination_node_id: "node-callback", transcript: [{ role: "user", content: "Yeah I just missed a call from this number\nSomeone called me from here\nI am calling back\nI got a voicemail from you guys\nYou guys called me earlier\nReturning your call\nI saw a missed call" }, { role: "agent", content: "Thanks for calling back" }] },
         { id: "fe-existing-customer", destination_node_id: "node-existing-customer", transcript: [{ role: "user", content: "calling about my appointment\nchecking appointment time\ntechnician arrival\nwhere is the technician\nfollowing up on a quote\ncalling about my quote\nchecking on my job\ncalling about service appointment\nquestion about invoice\nquestion about billing\npayment question\ncalling back about earlier service" }, { role: "agent", content: "Sure" }] },
-        { id: "fe-emergency", destination_node_id: "node-verify-emergency", transcript: [{ role: "user", content: "no cooling\nno heating\nsystem not working\nAC not working\nheater not working\nleaking unit\nwater leaking\nburning smell\nloud noise\nbroken system\nurgent repair\nemergency repair" }, { role: "agent", content: "Sounds like you have an emergency" }] },
         { id: "fe-transfer-live", destination_node_id: "node-transfer-call", transcript: [{ role: "user", content: "Let me speak to someone\nI want to talk to a real person\nCan I speak to a human\nTransfer me\nPut me through to someone\nI don't want to talk to a bot\nLet me speak to the owner\nI want to talk to the manager\nGet me your supervisor\nIs the boss available\nJust forget it\nThis is useless\nNever mind" }] },
-        { id: "fe-quote-install", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "I want a quote\nI need an estimate\nWhat's the price\nHow much does it cost\nHow much do you charge\nI want to install\nI need a new system\nI want to replace my system" }] },
-        { id: "fe-service-repair", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "My system is not working\nMy system is broken\nMy system won't turn on\nMy system keeps turning off\nMy system is not cooling\nMy system is not heating\nMy system is blowing warm air" }] }
+        { id: "fe-spam", destination_node_id: "node-spam-robocall", transcript: [{ role: "user", content: "Hello\nHello\nHello" }, { role: "agent", content: "Routing to spam handler" }] }
       ],
       display_position: { x: 1110, y: 366 }
     },
     {
       id: "node-leadcapture", name: "nonemergency_leadcapture_node", type: "conversation",
-      instruction: { type: "prompt", text: `## CALL TYPE IDENTIFICATION\n\nAt the start of the call, listen carefully to identify whether the caller is:\n\nA. Requesting a SERVICE, REPAIR, or MAINTENANCE visit\nB. Requesting a QUOTE, INSTALLATION, ESTIMATE, or PRICE\n\nBoth call types follow the same data capture flow below.\n\n\n\n## PRICING RESPONSES\n\nIf the caller asks "how much?" or "what does it cost?" during data capture:\n${pricingInstructions}\n\nThen continue with data capture.\n\n\n\n## DATA CAPTURE FLOW\n\nCollect the following information for ALL call types:\n\n1. A short description of the issue, service, or installation needed\n2. The caller's full name\n3. The best phone number to reach them\n4. The caller's full name (first and last name).
-
-- If they only give a first name, say:
-  "And your last name?"
-- Always confirm the full name back, spelling it out if it sounds unusual.
-
-5. The service address. A full address is ideal but not required.
-
-- After the caller gives any address details, ALWAYS confirm back what you heard.
-- If they give a street address but no city or ZIP, ask:
-  "And what city or suburb is that in?"
-- If the address is unclear, say:
-  "Could you spell out the street name for me just to make sure I have that right?"
-- If the caller won't give a full address, say:
-  "No problem at all, could I at least get the suburb, city, or ZIP code? That helps our team plan the visit."
-- A suburb, city, or ZIP code alone is acceptable if the caller won't give more.""\n\n5. Any additional notes or details\n\n\n\n## EMERGENCY DETECTION\n\nAt all times during the call, listen for emergency signals:\n- System completely stopped, significant leaking, burning smell\n- No heat in freezing conditions, gas smell\n\nIF detected: IMMEDIATELY route to verify_emergency_node.\n\n\n\n## CONFIRMATION\n\nOnce all details are collected, confirm back to the caller.\n\n\n\n## CLOSING\n\n"Okay, I have recorded all of that information and someone from\nour team will be in touch with you soon."` },
+      instruction: { type: "prompt", text: `Collect the following in order, one question at a time. Do not move to the next until the caller has answered.\n\n1. What is the issue or service needed? If the caller hasn't already explained, ask: "What can we help you with today?" Let them describe the problem fully before moving on.\n\n2. Full name, first and last. Ask: "Can I get your full name please?" If they give only a first name, ask: "And your last name?" Confirm spelling for uncommon names.\n\n3. Best callback number. Read it back in groups to confirm: "So that is 512, 555, 0192, is that right?"\n\n4. Service address. A full address is ideal but not required.\n- After the caller gives any address details, ALWAYS confirm back what you heard.\n- If they give a street address but no city or ZIP, ask: "And what city or suburb is that in?"\n- If the address is unclear, say: "Could you spell out the street name for me just to make sure I have that right?"\n- If the caller won't give a full address, say: "No problem at all, could I at least get the suburb, city, or ZIP code? That helps our team plan the visit."\n- A suburb, city, or ZIP code alone is acceptable.\n\n5. Any additional notes or details.\n\n\n\n## PRICING RESPONSES\n\nIf the caller asks "how much?" or "what does it cost?" during data capture:\n${pricingInstructions}\n\nThen continue with data capture.\n\n\n\n## EMERGENCY DETECTION\n\nAt all times during the call, listen for emergency signals:\n- System completely stopped, significant leaking, burning smell\n- No heat in freezing conditions, gas smell\n\nIF detected: IMMEDIATELY route to verify_emergency_node.\n\n\n\n## CONFIRMATION\n\nOnce all details are collected, read everything back to the caller:\n"Just to confirm, I have your name as [name], best number [phone], and you need [service] at [address]. Is that all correct?"\n\n\n\n## CLOSING\n\n"Perfect, I have recorded all of that and someone from our team will be in touch with you shortly."` },
       edges: [
-        { id: "edge-leadcapture-to-emergency", destination_node_id: "node-verify-emergency", transition_condition: { type: "prompt", prompt: "If Emergency, go to" } },
-        { id: "edge-leadcapture-to-ending", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Confirm the details with the caller, then proceed" } }
+        { id: "edge-leadcapture-to-emergency", destination_node_id: "node-verify-emergency", transition_condition: { type: "prompt", prompt: "Emergency signals detected" } },
+        { id: "edge-leadcapture-to-ending", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "All details confirmed, close" } }
       ],
-      finetune_transition_examples: [{ id: "fe-leadcapture-emergency", destination_node_id: "node-verify-emergency", transcript: [{ role: "user", content: "no cooling\nno heating\nsystem not working\nAC not working\nburning smell\nurgent repair\nemergency repair" }] }],
+      finetune_transition_examples: [{ id: "fe-leadcapture-emergency", destination_node_id: "node-verify-emergency", transcript: [{ role: "user", content: "Actually it completely stopped working\nThere is no air at all\nI smell something burning\nWater is pouring out\nI think I smell gas" }] }],
       display_position: { x: 2190, y: 726 }
     },
     {
       id: "node-verify-emergency", name: "verify_emergency_node", type: "conversation",
-      instruction: { type: "prompt", text: "Ask user if this is an emergency." },
+      instruction: { type: "prompt", text: `Stay calm and reassuring. This caller has an urgent situation.\n\n1. Acknowledge immediately: "I completely understand, let me get you sorted right away."\n2. Is this a true emergency right now? No cooling in extreme heat, no heat in freezing temps, water leak, burning smell, gas smell?\n3. If YES emergency:\n   - If not already collected, quickly get their name and callback number first.\n   - Say: "I am going to transfer you to our emergency line now. The number is ${emergencyDisplayNumber} in case we get disconnected."\n   - Then transfer immediately.\n4. If NOT a true emergency (urgent but can wait):\n   - Say: "I understand this feels urgent. Let me get your details through to the team as a priority so they can get to you as quickly as possible."\n   - Route back to lead capture as a priority lead.` },
       edges: [
-        { id: "edge-emergency-yes", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "If this is an emergency" } },
-        { id: "edge-emergency-no", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "If this is not an emergency" } }
+        { id: "edge-emergency-yes", destination_node_id: "node-emergency-transfer", transition_condition: { type: "prompt", prompt: "Confirmed emergency, transfer now" } },
+        { id: "edge-emergency-no", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Urgent but not emergency, capture as priority lead" } }
+      ],
+      finetune_transition_examples: [
+        { id: "fe-emergency-yes", destination_node_id: "node-emergency-transfer", transcript: [{ role: "user", content: "Yes it's an emergency\nI have no heat and it's freezing\nI smell gas\nWater is flooding my basement\nThere is smoke coming from the unit\nYes we need someone now" }] },
+        { id: "fe-emergency-no", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "No it's not an emergency but I need it fixed soon\nIt's not urgent but it's been out for a couple days\nNo emergency but I'd like someone today if possible\nNot really, it's just not working well" }] }
       ],
       display_position: { x: 2742, y: 1470 }
     },
     {
-      id: "node-existing-customer", name: "existing_customer_node", type: "conversation",
-      instruction: { type: "prompt", text: `## EXISTING CUSTOMER ENQUIRY\n\nThe caller is an existing customer calling about a current or past job.\n\n## YOUR GOAL\n\nCollect details so the team at ${companyName} can follow up.\n\n## DATA CAPTURE\n\nAsk naturally, one question at a time:\n1. A short description of their enquiry\n2. The caller's full name\n3. The best phone number to reach them\n4. If relevant: service address, date of job, technician name, job/invoice number\n\n## CLOSING\n\nConfirm back: "Just to confirm, I have your name as [name], best phone number as [phone], and your enquiry is regarding [description]. Is that all correct?"\n\nThen: "Perfect, I have passed all of that through to the team at ${companyName} and someone will be in touch shortly."` },
+      id: "node-callback", name: "callback_node", type: "conversation",
+      instruction: { type: "prompt", text: `The caller is returning a missed call.\n\nSay: "Thanks for calling back! We may have been trying to reach you about a service enquiry."\n\nAsk: "Do you know what it was regarding?" Let them explain if they know.\n\nThen collect:\n1. Full name, first and last\n2. Confirm their number: "Is the best number to reach you still the one you're calling from?"\n\nIf they describe a new issue, route to lead capture.\n\nClose: "Perfect, I have let the team know you called and someone will be in touch shortly."` },
       edges: [
-        { id: "edge-existing-resolved", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Enquiry Resolved" } },
-        { id: "edge-existing-unresolved", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "Enquiry Not Resolved\n" } }
+        { id: "edge-callback-end", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Details captured, close" } },
+        { id: "edge-callback-to-leadcapture", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Caller describes a new issue that needs lead capture" } }
+      ],
+      finetune_transition_examples: [
+        { id: "fe-callback-new-issue", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "Actually I need to book a repair\nI wanted to schedule a service\nI need someone to come out\nI think my AC needs fixing\nI wanted to get a quote" }] }
+      ],
+      display_position: { x: 1662, y: 3000 }
+    },
+    {
+      id: "node-existing-customer", name: "existing_customer_node", type: "conversation",
+      instruction: { type: "prompt", text: `The caller is an existing customer with a question about their job, appointment, invoice, or technician.\n\nIMPORTANT: You cannot look up appointments, job status, invoices, or any account information. Do not attempt to do so.\n\nSay: "I don't have access to job details from here, but I can get the right person to call you back or transfer you now."\n\nAsk which they prefer: transfer now or callback.\n\nIf callback: collect full name, best number (confirm back), and brief description of their enquiry.\nConfirm: "Just to confirm, I have [name], [number], and your enquiry is about [description]. Is that correct?"\nClose: "Perfect, I have passed all of that through to the team at ${companyName} and someone will be in touch shortly."` },
+      edges: [
+        { id: "edge-existing-resolved", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Enquiry noted, close" } },
+        { id: "edge-existing-unresolved", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "Caller insists on speaking to someone now" } }
       ],
       display_position: { x: 2742, y: 6 }
     },
     {
       id: "node-general-questions", name: "general_questions_node", type: "conversation",
-      instruction: { type: "prompt", text: `## GENERAL FAQ HANDLING\n\nUse the company information to answer general questions.\n\n### PRICING QUESTIONS\n${pricingInstructions}\n\n### PAYMENT QUESTIONS\n${paymentMethods ? `We accept: ${paymentMethods}.` : 'Our team can go over payment options at the appointment.'}\n${financingAvailable === 'Yes' ? (financingDetails ? `Financing: ${financingDetails}` : 'We offer financing options.') : ''}\n\n### If the Question Cannot Be Answered\n"That's a great question, I want to make sure you get the right answer. Can I grab your name and number so someone from our team can follow up?"\nProceed to lead capture.` },
+      instruction: { type: "prompt", text: `Answer using company information in the global prompt only. Keep answers brief, one point at a time.\n\nPricing questions: Use the pricing rules from the global prompt. Share only the specific fees listed there. Never estimate or guess.\n\nCannot answer from company info: "Great question, let me get someone to call you back with that." Then collect name and number.\n\nAfter answering always ask: "Is there anything else, or would you like to book someone to come out?"` },
       edges: [
-        { id: "edge-general-answered", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Question Answered Correctly" } },
-        { id: "edge-general-further-help", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "Further Assistance/Help" } },
-        { id: "edge-general-lead", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Lead Generated" } }
+        { id: "edge-general-answered", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Question answered, no booking needed" } },
+        { id: "edge-general-lead", destination_node_id: "node-leadcapture", transition_condition: { type: "prompt", prompt: "Caller wants to book or get a quote" } },
+        { id: "edge-general-further-help", destination_node_id: "node-transfer-call", transition_condition: { type: "prompt", prompt: "Caller needs further help beyond FAQ" } }
       ],
       finetune_transition_examples: [
         { id: "fe-general-further-help", destination_node_id: "node-transfer-call", transcript: [{ role: "user", content: "I need more help\nThis doesn't answer my question\nCan someone call me back about this\nI need a specialist\nI want to speak to someone who can help" }] },
-        { id: "fe-general-lead", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "I want to book\nCan someone come out\nI want to get a quote\nHow much would it cost\nI think I need a repair\nWhen can someone come out\nYes let's do that" }] }
+        { id: "fe-general-lead", destination_node_id: "node-leadcapture", transcript: [{ role: "user", content: "I want to book\nCan someone come out\nI want to get a quote\nHow much would it cost\nI think I need a repair\nWhen can someone come out\nYes let's do that\nOkay I'd like to schedule something" }] }
       ],
       display_position: { x: 1662, y: 2190 }
     },
     {
+      id: "node-spam-robocall", name: "spam_robocall_node", type: "conversation",
+      instruction: { type: "static_text", text: "Say: \"Thank you for calling, have a great day.\" Then end the call." },
+      edges: [{ id: "edge-spam-end", destination_node_id: "node-end-call", transition_condition: { type: "prompt", prompt: "Always" } }],
+      display_position: { x: 1662, y: 3300 }
+    },
+    {
       id: "node-transfer-call", name: "Transfer Call", type: "transfer_call",
-      instruction: { type: "prompt", text: "Transferring your call now." },
+      instruction: { type: "prompt", text: "Say: \"Let me get someone on the line for you right now, just one moment.\" Then transfer." },
       transfer_destination: { type: "predefined", number: transferNumber },
       transfer_option: { type: "cold_transfer", cold_transfer_mode: "sip_invite", enable_bridge_audio_cue: true, agent_detection_timeout_ms: 30000, show_transferee_as_caller: false },
       edge: { id: "edge-transfer-failed", destination_node_id: "node-transfer-failed", transition_condition: { type: "prompt", prompt: "Transfer failed" } },
       display_position: { x: 3294, y: 2238 }
     },
     {
+      id: "node-emergency-transfer", name: "Emergency Transfer", type: "transfer_call",
+      instruction: { type: "prompt", text: `Say: "I am transferring you to our emergency line right now. The number is ${emergencyDisplayNumber} in case we get disconnected. Stay on the line." Then transfer immediately.` },
+      transfer_destination: { type: "predefined", number: emergencyTransferNumber },
+      transfer_option: { type: "cold_transfer", cold_transfer_mode: "sip_invite", enable_bridge_audio_cue: true, agent_detection_timeout_ms: 30000, show_transferee_as_caller: false },
+      edge: { id: "edge-emergency-transfer-failed", destination_node_id: "node-transfer-failed", transition_condition: { type: "prompt", prompt: "Transfer failed" } },
+      display_position: { x: 3294, y: 1470 }
+    },
+    {
       id: "node-transfer-failed", name: "transfer_failed_node", type: "conversation",
-      instruction: { type: "static_text", text: "Say:\n\"I'm sorry, it looks like that call didn't go through. All of our agents must be on the phone at the moment, let me take down your Full name and Phone number so I can have someone get back to you right away\"" },
-      edges: [{ id: "edge-transfer-failed-to-ending", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Proceed to End" } }],
+      instruction: { type: "static_text", text: "Say:\n\"I'm sorry, I wasn't able to connect you right now. Let me take your name and number and have someone call you back as soon as possible.\" Collect name and callback number, confirm back, then close." },
+      edges: [{ id: "edge-transfer-failed-to-ending", destination_node_id: "node-ending", transition_condition: { type: "prompt", prompt: "Details taken, close" } }],
       display_position: { x: 3846, y: 2166 }
     },
     {
       id: "node-ending", name: "Ending", type: "conversation",
       instruction: { type: "static_text", text: "Is there anything else I can help you with today?" },
       edges: [
-        { id: "edge-ending-to-end", destination_node_id: "node-end-call", transition_condition: { type: "prompt", prompt: "If not, say:\n\"Hope you have a great day, take care!\"" } },
-        { id: "edge-ending-to-restart", destination_node_id: "node-identify-call", transition_condition: { type: "prompt", prompt: "If yes, return to " } }
+        { id: "edge-ending-to-end", destination_node_id: "node-end-call", transition_condition: { type: "prompt", prompt: "Nothing else. Close: \"Have a great day, take care!\"" } },
+        { id: "edge-ending-to-restart", destination_node_id: "node-identify-call", transition_condition: { type: "prompt", prompt: "Caller has another question or request" } }
       ],
       display_position: { x: 4398, y: 2190 }
     },
     {
       id: "node-end-call", name: "End Call", type: "end",
-      instruction: { type: "prompt", text: "Politely end the call" },
+      instruction: { type: "prompt", text: "End the call warmly." },
       display_position: { x: 4950, y: 2238 }
     }
   ],
@@ -339,7 +364,7 @@ const extractedData = {
   financing_details: financingDetails, warranty: warranty, warranty_details: warrantyDetails,
   licensed_insured: licensedInsured, certifications: certifications, payment_methods: paymentMethods,
   maintenance_plans: maintenancePlans, lead_contact_method: leadContactMethod, lead_phone: leadPhone,
-  lead_email: leadEmail, custom_greeting: customGreeting, company_tagline: companyTagline,
+  lead_email: leadEmail, notification_email_2: data.notification_email_2 || '', notification_email_3: data.notification_email_3 || '', notification_sms_2: data.notification_sms_2 || '', notification_sms_3: data.notification_sms_3 || '', custom_greeting: customGreeting, company_tagline: companyTagline,
   transfer_phone: transferPhone || leadPhone, transfer_triggers: transferTriggers,
   transfer_behavior: transferBehavior, unique_selling_points: uniqueSellingPts,
   current_promotion: currentPromotion, seasonal_services: seasonalServices,
@@ -358,5 +383,6 @@ return {
   companyInfoBlock: companyInfoBlock,
   extractedData: extractedData,
   transferNumber: transferNumber,
+  emergencyTransferNumber: emergencyTransferNumber,
   timestamp: new Date().toISOString()
 };
