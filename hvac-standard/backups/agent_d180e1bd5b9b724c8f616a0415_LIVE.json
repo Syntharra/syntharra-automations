@@ -1,18 +1,18 @@
 {
   "agent_id": "agent_d180e1bd5b9b724c8f616a0415",
   "channel": "voice",
-  "last_modification_timestamp": 1774573093891,
+  "last_modification_timestamp": 1774573408162,
   "agent_name": "Arctic Breeze HVAC [HVAC-STD]",
   "response_engine": {
     "type": "conversation-flow",
-    "version": 3,
+    "version": 4,
     "conversation_flow_id": "conversation_flow_ed1ff4a600af"
   },
   "webhook_url": "https://syntharra.app.n8n.cloud/webhook/retell-hvac-webhook",
   "language": "multi",
   "data_storage_setting": "everything",
   "opt_in_signed_url": false,
-  "version": 3,
+  "version": 4,
   "is_published": false,
   "post_call_analysis_model": "gpt-4o-mini",
   "pii_config": {
@@ -45,7 +45,9 @@
   "enable_dynamic_voice_speed": true,
   "volume": 1,
   "max_call_duration_ms": 3600000,
-  "interruption_sensitivity": 0.8,
+  "interruption_sensitivity": 0.9,
+  "ambient_sound": "call-center",
+  "ambient_sound_volume": 0.7,
   "responsiveness": 0.9,
   "enable_dynamic_responsiveness": true,
   "allow_user_dtmf": true,
