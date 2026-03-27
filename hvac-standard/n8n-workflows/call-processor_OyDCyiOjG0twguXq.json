@@ -1,0 +1,1819 @@
+{
+  "updatedAt": "2026-03-26T23:39:28.093Z",
+  "createdAt": "2026-03-23T23:30:46.479Z",
+  "id": "OyDCyiOjG0twguXq",
+  "name": "HVAC Standard Call Processor",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-hvac-webhook",
+        "options": {}
+      },
+      "id": "94b607a1-e9f8-4a75-bbfb-ae7d1a72c351",
+      "name": "Retell Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1920,
+        112
+      ],
+      "webhookId": "66fdd35b-30b1-4776-9fd7-e0751a45624e"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Retell sends events at different paths depending on event type\n// Check all possible locations for the event field\nconst body = $input.first().json.body || $input.first().json;\nconst event = body.event || $input.first().json.event || '';\n\n// Also require a transcript to exist (blocks call_started which has empty transcript)\nconst call = body.call || body;\nconst transcript = call.transcript || '';\n\nif (event !== 'call_analyzed') {\n  // Not a call_analyzed event - stop processing\n  return [];\n}\n\nif (!transcript || transcript.trim() === '') {\n  // call_analyzed but no transcript yet - stop processing  \n  return [];\n}\n\n// Valid call_analyzed with transcript - pass through\nreturn $input.first().json;\n"
+      },
+      "id": "4386e044-9ca0-4ab5-96b1-4c31ddf0e900",
+      "name": "Filter: call_analyzed Only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nreturn {\n  call_id: call.call_id || '',\n  agent_id: call.agent_id || '',\n  from_number: call.from_number || '',\n  to_number: call.to_number || '',\n  transcript: call.transcript || '',\n  duration_seconds: Math.round((call.end_timestamp - call.start_timestamp) / 1000) || 0,\n  disconnection_reason: call.disconnection_reason || '',\n  call_analysis: call.call_analysis || {},\n  call_timestamp: new Date().toISOString()\n};"
+      },
+      "id": "e9cd3473-17e9-4d3d-b4d6-02c3bdd84c8e",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "[JWT_REDACTED]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b4ff94eb-c081-4f4b-8fe2-c05ec2da49a5",
+      "name": "Supabase: Lookup Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1200,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const clients = $input.first().json;\nconst callData = $('Extract Call Data').first().json;\nconst client = Array.isArray(clients) ? clients[0] : clients;\n\nif (!client || !client.company_name) {\n  return {\n    ...callData,\n    client_found: false,\n    company_name: 'Unknown', agent_name: 'Unknown',\n    lead_phone: '', lead_email: '',\n    notification_email_2: '', notification_email_3: '',\n    notification_sms_2: '', notification_sms_3: '',\n    twilio_from: '', timezone: 'America/Chicago'\n  };\n}\n\nreturn {\n  ...callData,\n  client_found: true,\n  company_name: client.company_name || '',\n  agent_name: client.agent_name || '',\n  lead_phone: client.lead_phone || '',\n  lead_email: client.lead_email || '',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  twilio_from: client.twilio_from || client.twilio_number || '',\n  timezone: client.timezone || 'America/Chicago',\n  lead_contact_method: client.lead_contact_method || 'Both'\n};"
+      },
+      "id": "e56fdaa7-562f-4e11-b5cb-b0f3a162f859",
+      "name": "Parse Client Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a call classifier for an HVAC company AI receptionist. Analyze the transcript and context, then return a JSON classification.\n\nLEAD DEFINITION \u2014 IS a lead (is_lead=true) if the caller wants ANY of the following:\n- Repair or fix for any HVAC system\n- Installation or replacement\n- Maintenance, tune-up, service, or annual check\n- Estimate or quote for any work\n- Emergency service\nWhen in doubt, mark is_lead=true. ANY request for HVAC work of any kind is a lead.\n\nNOT a lead (is_lead=false) ONLY if:\n- Complaint about a previous completed job with no new work requested\n- Existing job status check only (part ordered? tech coming when?)\n- Billing dispute or refund request only\n- Obvious spam, robocall, or telemarketer\n- Wrong number\n- Caller hangs up with zero service request made\n\nSPAM: is_lead=false, call_tier=Standard, lead_score=1 for robocall patterns (\"press 1\", \"lower your rates\", repetitive selling, no HVAC request).\n\nCALL TIER \u2014 must be exactly one of:\n- \"Emergency\": HUMAN safety risk only \u2014 no heat in freezing temps with people present, no AC in extreme heat with vulnerable person (baby, elderly, medical), burning smell, gas smell, active flooding, system failure causing immediate health risk. ALSO Emergency if local_hour is 22-6 AND system is not working. Business/commercial impact alone (restaurant opening, office too hot) is NOT Emergency \u2014 that is Urgent.\n- \"Urgent\": System not working but no immediate safety risk, caller needs service today or ASAP, commercial property affected.\n- \"Standard\": Routine, flexible timing, quote only, maintenance scheduling. Also use for all non-leads.\n\nVULNERABILITY: vulnerable_occupant=true if transcript mentions baby, infant, newborn, toddler, young children, elderly, senior, disabled, medical condition, oxygen, medication needing refrigeration.\n\nJOB TYPE: \"Residential\" (home/apartment), \"Commercial\" (business, office, restaurant, shop), \"Multi-Unit\" (apartment building, complex, multiple units).\n\nCALLER SENTIMENT: 1=very distressed or angry, 2=frustrated, 3=neutral, 4=cooperative, 5=calm and easy.\n\nReturn ONLY valid JSON \u2014 no markdown, no explanation:\n{\n  \"is_lead\": boolean,\n  \"call_tier\": \"Emergency\"|\"Urgent\"|\"Standard\",\n  \"lead_score\": integer 1-10,\n  \"caller_name\": string,\n  \"caller_phone\": string,\n  \"caller_address\": string,\n  \"service_requested\": \"Repair\"|\"Maintenance\"|\"Installation\"|\"Estimate\"|\"Emergency\"|\"Complaint\"|\"Spam\"|\"WrongNumber\"|\"ExistingCustomer\"|\"Other\",\n  \"job_type\": \"Residential\"|\"Commercial\"|\"Multi-Unit\",\n  \"vulnerable_occupant\": boolean,\n  \"caller_sentiment\": integer 1-5,\n  \"summary\": \"1-2 sentence summary\",\n  \"urgency\": \"Low\"|\"Medium\"|\"High\"|\"Emergency\",\n  \"notes\": \"key details: communication issues, partial info, after-hours, transfer attempts\"\n}",
+              "role": "system"
+            },
+            {
+              "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}\nClient timezone: {{ $json.timezone || 'America/Chicago' }}\nLocal hour (24h): {{ (() => { try { return parseInt(new Date().toLocaleString('en-US', { timeZone: $json.timezone || 'America/Chicago', hour: 'numeric', hour12: false })); } catch(e) { return 12; } })() }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "755bd162-f2b5-46c6-acfc-48df05d57afb",
+      "name": "GPT: Analyze Transcript",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        112
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "ubVD6nIZ6FkIStS8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const gptRaw = $input.first().json.message?.content || $input.first().json.text || '{}';\nlet analysis = {};\ntry {\n  const clean = gptRaw.replace(/```json|```/g, '').trim();\n  analysis = JSON.parse(clean);\n} catch(e) {\n  analysis = { is_lead: false, call_tier: 'Standard', lead_score: 0 };\n}\n\nconst clientData = $('Parse Client Data').item.json;\nconst callData   = $('Extract Call Data').item.json;\n\nconst durationMs = (callData.end_timestamp || 0) - (callData.start_timestamp || 0);\nconst durationSec = Math.round(durationMs / 1000);\n\nreturn {\n  // Call metadata\n  call_id:           callData.call_id,\n  agent_id:          callData.agent_id,\n  from_number:       callData.from_number,\n  to_number:         callData.to_number,\n  transcript:        callData.transcript,\n  duration_seconds:  durationSec,\n  call_timestamp:    new Date().toISOString(),\n\n  // Client config\n  company_name:         clientData.company_name,\n  agent_name:           clientData.agent_name,\n  lead_email:           clientData.lead_email,\n  lead_phone:           clientData.lead_phone,\n  notification_email_2: clientData.notification_email_2,\n  notification_email_3: clientData.notification_email_3,\n  notification_sms_2:   clientData.notification_sms_2,\n  notification_sms_3:   clientData.notification_sms_3,\n  twilio_from:          clientData.twilio_from,\n  timezone:             clientData.timezone,\n\n  // GPT classification \u2014 core\n  is_lead:           analysis.is_lead || false,\n  call_tier:         analysis.call_tier || 'Standard',\n  lead_score:        analysis.lead_score || 0,\n  caller_name:       analysis.caller_name || '',\n  caller_phone:      analysis.caller_phone || '',\n  caller_address:    analysis.caller_address || '',\n  service_requested: analysis.service_requested || 'Other',\n  summary:           analysis.summary || '',\n  urgency:           analysis.urgency || 'Low',\n  notes:             analysis.notes || '',\n\n  // GPT classification \u2014 new intelligence fields\n  job_type:            analysis.job_type || 'Residential',\n  vulnerable_occupant: analysis.vulnerable_occupant || false,\n  caller_sentiment:    analysis.caller_sentiment || 3\n};"
+      },
+      "id": "e5dcf87c-0034-4530-abbf-c954895a2f9b",
+      "name": "Parse Lead Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-lead-check",
+              "leftValue": "={{ $json.is_lead }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "22a6deb1-22b2-4425-a625-e3253892f553",
+      "name": "Is Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "[JWT_REDACTED]"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation,resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { call_id: $json.call_id, agent_id: $json.agent_id, company_name: $json.company_name, caller_name: $json.caller_name || '', caller_phone: $json.caller_phone || $json.from_number || '', caller_address: $json.caller_address || '', service_requested: $json.service_requested || '', lead_score: $json.lead_score || 0, urgency: $json.urgency || '', call_tier: $json.call_tier || 'Standard', job_type: $json.job_type || 'Residential', vulnerable_occupant: $json.vulnerable_occupant || false, caller_sentiment: $json.caller_sentiment || 3, summary: $json.summary || '', notes: $json.notes || '', is_lead: $json.is_lead || false, duration_seconds: $json.duration_seconds || 0, geocode_status: $('Geocode: Parse Result').item.json.geocode_status || '', geocode_formatted: $('Geocode: Parse Result').item.json.geocode_formatted || '' } }}",
+        "options": {}
+      },
+      "id": "7b3027c9-ee1e-4e9f-98ab-af02ca8ea4a6",
+      "name": "Supabase: Log Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        240,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Parse Lead Data').item.json.lead_email }}",
+        "subject": "={{ (() => { const t = $('Classify Notification').item.json.notify_type; const tier = $('Geocode: Parse Result').item.json.call_tier; if (t === 'emergency') return '\ud83d\udea8 EMERGENCY \u2014 ' + $('Parse Lead Data').item.json.company_name + ($('Parse Lead Data').item.json.vulnerable_occupant ? ' \u26a0\ufe0f VULNERABLE' : ''); return '\ud83d\udd25 New Lead \u2014 ' + $('Parse Lead Data').item.json.company_name + ' | ' + tier; })() }}",
+        "message": "={{ $('Geocode: Parse Result').item.json.lead_email_html || 'No content' }}",
+        "options": {}
+      },
+      "id": "ffd85bab-258f-4e27-bad3-166e691eec64",
+      "name": "Gmail: Send Lead Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -96
+      ],
+      "webhookId": "d305f623-abc4-4e4e-b5d4-8bb20995b02b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-email-2",
+              "leftValue": "={{ $('Parse Lead Data').item.json.notification_email_2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000001",
+      "name": "Has Email 2?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Parse Lead Data').item.json.notification_email_2 }}",
+        "subject": "={{ (() => { const t = $('Classify Notification').item.json.notify_type; if (t === 'emergency') return '\ud83d\udea8 EMERGENCY \u2014 ' + $('Parse Lead Data').item.json.company_name; return '\ud83d\udd25 New Lead \u2014 ' + $('Parse Lead Data').item.json.company_name; })() }}",
+        "message": "={{ $('Geocode: Parse Result').item.json.lead_email_html || 'No content' }}",
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000002",
+      "name": "Gmail: Send Lead Email 2",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        720,
+        64
+      ],
+      "webhookId": "74980db5-bea7-426c-9326-f96421f6808c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-email-3",
+              "leftValue": "={{ $('Parse Lead Data').item.json.notification_email_3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000003",
+      "name": "Has Email 3?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Parse Lead Data').item.json.notification_email_3 }}",
+        "subject": "={{ (() => { const t = $('Classify Notification').item.json.notify_type; if (t === 'emergency') return '\ud83d\udea8 EMERGENCY \u2014 ' + $('Parse Lead Data').item.json.company_name; return '\ud83d\udd25 New Lead \u2014 ' + $('Parse Lead Data').item.json.company_name; })() }}",
+        "message": "={{ $('Geocode: Parse Result').item.json.lead_email_html || 'No content' }}",
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000004",
+      "name": "Gmail: Send Lead Email 3",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        720,
+        240
+      ],
+      "webhookId": "0f990018-3301-4a3c-9581-d1a93d2417eb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telnyx.com/v2/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer [TELNYX_API_KEY]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "+19294510009"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Parse Lead Data').item.json.lead_phone }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Geocode: Parse Result').item.json.sms_text }}"
+            },
+            {
+              "name": "messaging_profile_id",
+              "value": "40019d2a-ee8f-4ac7-b105-02469f10820e"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b3033acc-aeba-4e5d-85fc-89ddda478c8a",
+      "name": "Telnyx: Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        480,
+        432
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-sms-2",
+              "leftValue": "={{ $('Parse Lead Data').item.json.notification_sms_2 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000005",
+      "name": "Has SMS 2?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telnyx.com/v2/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer [TELNYX_API_KEY]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "+19294510009"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Parse Lead Data').item.json.notification_sms_2 }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Geocode: Parse Result').item.json.sms_text }}"
+            },
+            {
+              "name": "messaging_profile_id",
+              "value": "40019d2a-ee8f-4ac7-b105-02469f10820e"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000006",
+      "name": "Telnyx: Send SMS 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        608
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-sms-3",
+              "leftValue": "={{ $('Parse Lead Data').item.json.notification_sms_3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000007",
+      "name": "Has SMS 3?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telnyx.com/v2/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer [TELNYX_API_KEY]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "+19294510009"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Parse Lead Data').item.json.notification_sms_3 }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Geocode: Parse Result').item.json.sms_text }}"
+            },
+            {
+              "name": "messaging_profile_id",
+              "value": "40019d2a-ee8f-4ac7-b105-02469f10820e"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa001111-1111-1111-1111-000000000008",
+      "name": "Telnyx: Send SMS 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        784
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return { message: `Non-lead call logged: ${$json.call_id}, score: ${$json.lead_score}` };"
+      },
+      "id": "d837f73e-190e-47f3-bba4-37dd04c10ddd",
+      "name": "Log Non-Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://maps.googleapis.com/maps/api/geocode/json?address={{encodeURIComponent($json.caller_address || '')}}&key=[GOOGLE_API_KEY]",
+        "options": {}
+      },
+      "id": "geocode-http-001",
+      "name": "Geocode: Maps API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -368,
+        112
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst leadData = $('Parse Lead Data').item.json;\nconst geoResponse = $input.first().json;\n\n// \u2500\u2500 GEOCODE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet geocode_status = 'not_provided', geocode_formatted = '', geocode_lat = null,\n    geocode_lng = null, geocode_maps_url = '', geocode_confidence = 'low', address_check_html = '';\n\nif (!leadData.caller_address || leadData.caller_address.trim().length < 5) {\n  geocode_status = 'not_provided';\n  address_check_html = '<span style=\"color:#718096\">\u2014 Not provided</span>';\n} else if (geoResponse.status === 'OK' && geoResponse.results && geoResponse.results.length > 0) {\n  const top = geoResponse.results[0];\n  geocode_formatted = top.formatted_address;\n  geocode_lat = top.geometry.location.lat;\n  geocode_lng = top.geometry.location.lng;\n  geocode_maps_url = 'https://maps.google.com/?q=' + encodeURIComponent(geocode_formatted);\n  const types = top.types || [];\n  if (types.includes('street_address') || types.includes('premise') || types.includes('subpremise')) {\n    geocode_status = 'verified'; geocode_confidence = 'high';\n    address_check_html = '<span style=\"color:#38a169;font-weight:600\">\u2705 Verified</span> \u2014 ' + geocode_formatted + ' &nbsp;<a href=\"' + geocode_maps_url + '\" style=\"color:#6C63FF;text-decoration:none;font-weight:600\">\ud83d\udccd View Map</a>';\n  } else if (types.includes('route') || types.includes('intersection')) {\n    geocode_status = 'partial'; geocode_confidence = 'medium';\n    address_check_html = '<span style=\"color:#d69e2e;font-weight:600\">\u26a0\ufe0f Partial match</span> \u2014 ' + geocode_formatted + ' &nbsp;<a href=\"' + geocode_maps_url + '\" style=\"color:#6C63FF;text-decoration:none\">\ud83d\udccd View Map</a>';\n  } else {\n    geocode_status = 'unverified'; geocode_confidence = 'low';\n    address_check_html = '<span style=\"color:#e53e3e;font-weight:600\">\u26a0\ufe0f Unverified</span> \u2014 Closest: ' + geocode_formatted + '. Confirm with caller.';\n  }\n} else if (geoResponse.status === 'ZERO_RESULTS') {\n  geocode_status = 'not_found';\n  address_check_html = '<span style=\"color:#e53e3e;font-weight:600\">\u274c Not found</span> \u2014 Confirm address with caller before dispatching.';\n} else {\n  geocode_status = 'error';\n  address_check_html = '<span style=\"color:#718096\">\u26a0\ufe0f Could not verify \u2014 confirm with caller</span>';\n}\n\n// \u2500\u2500 SCORE BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst score = leadData.lead_score || 0;\nconst scoreColor = score >= 8 ? '#dc2626' : score >= 6 ? '#d97706' : '#718096';\nconst score_badge = '<span style=\"background:' + (score >= 8 ? '#fef2f2' : score >= 6 ? '#fffbeb' : '#f9fafb') + ';color:' + scoreColor + ';border:2px solid ' + scoreColor + ';border-radius:20px;padding:3px 12px;font-weight:700;font-size:15px\">' + score + '/10</span>';\n\n// \u2500\u2500 URGENCY BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst urgency = leadData.urgency || 'Medium';\nconst urgencyColor = urgency === 'Emergency' ? '#dc2626' : urgency === 'High' ? '#d97706' : urgency === 'Medium' ? '#2563eb' : '#718096';\nconst urgency_badge = '<span style=\"color:' + urgencyColor + ';font-weight:600\">' + urgency + '</span>';\n\n// \u2500\u2500 TIER BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst callTier = leadData.call_tier || 'Standard';\nconst tierMap = {\n  'Emergency': { bg: '#dc2626', label: '\ud83d\udea8 EMERGENCY \u2014 Transfer Attempted' },\n  'Urgent':    { bg: '#d97706', label: '\u26a1 URGENT \u2014 Respond Within 1 Hour' },\n  'Standard':  { bg: '#6C63FF', label: '\ud83d\udccb STANDARD \u2014 Business Hours' }\n};\nconst tc = tierMap[callTier] || tierMap['Standard'];\nconst tier_badge = '<span style=\"background:' + tc.bg + ';color:#ffffff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:Helvetica,Arial,sans-serif\">' + tc.label + '</span>';\n\n// \u2500\u2500 JOB TYPE BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst jobType = leadData.job_type || 'Residential';\nconst jobColor = jobType === 'Commercial' ? '#7c3aed' : jobType === 'Multi-Unit' ? '#0369a1' : '#374151';\nconst jobBg    = jobType === 'Commercial' ? '#f5f3ff' : jobType === 'Multi-Unit' ? '#e0f2fe' : '#f9fafb';\nconst job_type_badge = '<span style=\"background:' + jobBg + ';color:' + jobColor + ';padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;border:1px solid ' + jobColor + '\">' + jobType + '</span>';\n\n// \u2500\u2500 VULNERABILITY FLAG \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst vulnerable = leadData.vulnerable_occupant || false;\nconst vulnerability_flag = vulnerable\n  ? '<span style=\"background:#fef2f2;color:#dc2626;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700;border:1px solid #dc2626\">\u26a0\ufe0f VULNERABLE OCCUPANT</span>'\n  : '';\n\n// \u2500\u2500 SENTIMENT INDICATOR \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst sentiment = leadData.caller_sentiment || 3;\nconst sentimentLabel = sentiment <= 2 ? '\ud83d\ude1f Distressed' : sentiment === 3 ? '\ud83d\ude10 Neutral' : '\ud83d\ude0a Cooperative';\nconst sentimentColor = sentiment <= 2 ? '#dc2626' : sentiment === 3 ? '#6b7280' : '#16a34a';\n\n// \u2500\u2500 DURATION \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst dur = leadData.duration_seconds || 0;\nconst duration_formatted = dur >= 60 ? Math.floor(dur/60) + 'm ' + (dur%60) + 's' : dur + 's';\n\n// \u2500\u2500 SMS TEXT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Rich SMS with all key flags \u2014 keeps it scannable on a phone\nconst tierEmoji = callTier === 'Emergency' ? '\ud83d\udea8' : callTier === 'Urgent' ? '\u26a1' : '\ud83d\udccb';\nconst vulnFlag  = vulnerable ? ' VULNERABLE' : '';\nconst repeatFlag = ''; // populated later by repeat caller check\nconst notifyType = leadData.notify_type || 'lead';\nconst sms_header = notifyType === 'emergency'\n  ? 'EMERGENCY' + vulnFlag\n  : notifyType === 'customer_query'\n  ? 'CUSTOMER QUERY'\n  : 'NEW LEAD';\nconst addrShort = geocode_status === 'verified' ? geocode_formatted : (leadData.caller_address || 'No address');\nconst sms_text = sms_header + ' - ' + leadData.company_name + '\\n'\n  + 'Name: ' + (leadData.caller_name || 'Unknown') + '\\n'\n  + 'Ph: ' + (leadData.caller_phone || leadData.from_number || 'N/A') + '\\n'\n  + 'Addr: ' + addrShort + '\\n'\n  + (leadData.service_requested || 'General') + ' | ' + jobType + ' | Score: ' + score + '/10';\n\n// \u2500\u2500 EMAIL HTML \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst notifyTypeForEmail = leadData.notify_type || 'lead';\nconst isEmergencyEmail = notifyTypeForEmail === 'emergency';\nconst accentColor = isEmergencyEmail ? '#dc2626' : '#6C63FF';\nconst headerLabel = isEmergencyEmail ? '\ud83d\udea8 Emergency Alert' : 'New Lead Alert';\nconst emergencyBanner = isEmergencyEmail ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr><td style=\"background:#fef2f2;border-radius:8px;border:1px solid #fecaca;padding:12px 16px\"><p style=\"margin:0;font-size:13px;color:#991b1b;line-height:1.6;font-family:Helvetica,Arial,sans-serif\"><strong>Live transfer was attempted.</strong> If the transfer connected, the caller is with your team now.</p></td></tr></table>' : '';\nconst vulnBanner = vulnerable ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:14px\"><tr><td style=\"background:#fef2f2;border-radius:8px;border:1px solid #fecaca;padding:12px 16px\"><p style=\"margin:0;font-size:13px;font-weight:700;color:#991b1b;font-family:Helvetica,Arial,sans-serif\">\u26a0\ufe0f VULNERABLE OCCUPANT \u2014 Baby, elderly or medical risk mentioned. Dispatch priority is critical.</p></td></tr></table>' : '';\nconst notesHtml = leadData.notes ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px\"><tr><td width=\"3\" style=\"background:#f59e0b;border-radius:2px;vertical-align:top\">&nbsp;</td><td style=\"padding-left:14px;font-size:13px;color:#92400e;line-height:1.7;font-family:Helvetica,Arial,sans-serif\"><strong>Note:</strong> ' + leadData.notes + '</td></tr></table>' : '';\nconst lead_email_html = [EMAIL_HTML_TEMPLATE];\n\nreturn {\n  ...leadData,\n  lead_email_html,\n  geocode_status, geocode_formatted, geocode_lat, geocode_lng,\n  geocode_maps_url, geocode_confidence, address_check_html,\n  score_badge, urgency_badge, tier_badge, job_type_badge,\n  vulnerability_flag, sentimentLabel, sentimentColor,\n  duration_formatted, sms_text, call_tier: callTier\n};\n"
+      },
+      "id": "geocode-parse-001",
+      "name": "Geocode: Parse Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst service  = $json.service_requested || '';\nconst isLead   = $json.is_lead || false;\nconst callTier = $json.call_tier || 'Standard';\n\n// Completely drop \u2014 return [] stops n8n flow entirely\nconst dropTypes = ['Spam', 'WrongNumber'];\nif (dropTypes.includes(service)) {\n  return [];\n}\n\n// Classify notification type\nlet notify_type;\nif (callTier === 'Emergency') {\n  notify_type = 'emergency';          // red email always for emergency\n} else if (service === 'ExistingCustomer' || service === 'Complaint') {\n  notify_type = 'customer_query';     // amber email\n} else if (isLead) {\n  notify_type = 'lead';               // purple email\n} else {\n  notify_type = 'log_only';           // Supabase only, no email\n}\n\nreturn [{ json: { ...($input.first().json), notify_type } }];\n"
+      },
+      "id": "classify-notification",
+      "name": "Classify Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Parse Lead Data').item.json.lead_email }}",
+        "subject": "=\ud83d\udcde Customer Query \u2014 {{ $('Parse Lead Data').item.json.caller_name || 'Unknown' }} | {{ $('Parse Lead Data').item.json.company_name }}",
+        "message": "=<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"color-scheme\" content=\"light only\"></head>\n<body style=\"margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f3f4f6\">\n<tr><td align=\"center\" style=\"padding:40px 16px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:540px\">\n  <tr><td bgcolor=\"#d97706\" style=\"background-color:#d97706;height:4px;border-radius:8px 8px 0 0;font-size:4px;line-height:4px\">&nbsp;</td></tr>\n  <tr><td bgcolor=\"#ffffff\" style=\"background-color:#ffffff;border-radius:0 0 12px 12px;padding:32px 40px 28px\">\n    \n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr>\n      <td>\n        <p style=\"margin:0 0 4px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#d97706;font-family:Helvetica,Arial,sans-serif\">Customer Query</p>\n        <h1 style=\"margin:0 0 4px;font-size:22px;font-weight:700;color:#111827;line-height:1.2;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.company_name }}</h1>\n        <p style=\"margin:0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">{{ $('Geocode: Parse Result').item.json.duration_formatted }} call &nbsp;\u00b7&nbsp; {{ $('Parse Lead Data').item.json.call_timestamp }}</p>\n      </td>\n    </tr></table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr>\n      <td bgcolor=\"#fffbeb\" style=\"background-color:#fffbeb;border-radius:8px;border:1px solid #fde68a;padding:12px 16px\">\n        <p style=\"margin:0;font-size:13px;color:#92400e;line-height:1.6;font-family:Helvetica,Arial,sans-serif\">An existing customer called with a query. <strong>This is not a new lead.</strong> The AI attempted to transfer the call \u2014 if the transfer failed, the caller's details are below so your team can follow up.</p>\n      </td>\n    </tr></table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:18px 0\"><tr><td bgcolor=\"#f3f0ff\" style=\"background-color:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n      <tr><td style=\"padding:10px 0;border-bottom:1px solid #fffbeb;width:36%;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Name</p></td>\n      <td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:14px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.caller_name || 'Not provided' }}</p></td></tr>\n\n      <tr><td style=\"padding:10px 0;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Phone</p></td>\n      <td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #fffbeb;vertical-align:top\"><a href=\"tel:{{ $('Parse Lead Data').item.json.caller_phone || $('Parse Lead Data').item.json.from_number }}\" style=\"font-size:14px;font-weight:600;color:#d97706;text-decoration:none;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.caller_phone || $('Parse Lead Data').item.json.from_number }}</a></td></tr>\n\n      <tr><td style=\"padding:10px 0;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Query Type</p></td>\n      <td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:14px;color:#111827;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.service_requested }}</p></td></tr>\n\n      <tr><td style=\"padding:10px 0;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Summary</p></td>\n      <td style=\"padding:10px 0 10px 12px;vertical-align:top\"><p style=\"margin:0;font-size:14px;color:#374151;line-height:1.6;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.summary }}</p></td></tr>\n    </table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:22px\"><tr><td bgcolor=\"#f3f0ff\" style=\"background-color:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:18px\"><tr><td style=\"text-align:center\">\n      <p style=\"margin:0 0 3px;font-size:11px;font-weight:800;letter-spacing:3px;color:#6C63FF;font-family:Helvetica,Arial,sans-serif\">SYNTHARRA</p>\n      <p style=\"margin:0;font-size:11px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">syntharra.com &nbsp;\u00b7&nbsp; support@syntharra.com</p>\n    </td></tr></table>\n  </td></tr>\n</table>\n</td></tr>\n</table>\n</body></html>",
+        "options": {}
+      },
+      "id": "gmail-customer-query",
+      "name": "Gmail: Customer Query Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -400
+      ],
+      "webhookId": "3dc7b08c-2da3-4fe1-8b9b-574477f66ef8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "lead-check",
+              "leftValue": "={{ $('Classify Notification').item.json.notify_type }}",
+              "rightValue": "log_only",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notify-gate",
+      "name": "Should Send Notifications?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -64
+      ]
+    }
+  ],
+  "connections": {
+    "Retell Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter: call_analyzed Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: call_analyzed Only": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Lookup Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Lookup Client": {
+      "main": [
+        [
+          {
+            "node": "Parse Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Client Data": {
+      "main": [
+        [
+          {
+            "node": "GPT: Analyze Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT: Analyze Transcript": {
+      "main": [
+        [
+          {
+            "node": "Parse Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Geocode: Maps API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Lead?": {
+      "main": [
+        [
+          {
+            "node": "Classify Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Log Call": {
+      "main": [
+        [
+          {
+            "node": "Should Send Notifications?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Email 2?": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Lead Email 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Has Email 3?": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Lead Email 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Geocode: Maps API": {
+      "main": [
+        [
+          {
+            "node": "Geocode: Parse Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Geocode: Parse Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Geocode: Parse Result": {
+      "main": [
+        [
+          {
+            "node": "Is Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Notification": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Log Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send Notifications?": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Lead Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Email 2?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Email 3?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail: Customer Query Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedMode": "fixed"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+  "activeVersionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+  "versionCounter": 263,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-23T23:30:46.481Z",
+      "createdAt": "2026-03-23T23:30:46.481Z",
+      "role": "workflow:owner",
+      "workflowId": "OyDCyiOjG0twguXq",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-26T23:39:28.094Z",
+    "createdAt": "2026-03-26T23:39:28.094Z",
+    "versionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+    "workflowId": "OyDCyiOjG0twguXq",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "retell-hvac-webhook",
+          "options": {}
+        },
+        "id": "94b607a1-e9f8-4a75-bbfb-ae7d1a72c351",
+        "name": "Retell Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -1920,
+          112
+        ],
+        "webhookId": "66fdd35b-30b1-4776-9fd7-e0751a45624e"
+      },
+      {
+        "parameters": {
+          "jsCode": "\n// Retell sends events at different paths depending on event type\n// Check all possible locations for the event field\nconst body = $input.first().json.body || $input.first().json;\nconst event = body.event || $input.first().json.event || '';\n\n// Also require a transcript to exist (blocks call_started which has empty transcript)\nconst call = body.call || body;\nconst transcript = call.transcript || '';\n\nif (event !== 'call_analyzed') {\n  // Not a call_analyzed event - stop processing\n  return [];\n}\n\nif (!transcript || transcript.trim() === '') {\n  // call_analyzed but no transcript yet - stop processing  \n  return [];\n}\n\n// Valid call_analyzed with transcript - pass through\nreturn $input.first().json;\n"
+        },
+        "id": "4386e044-9ca0-4ab5-96b1-4c31ddf0e900",
+        "name": "Filter: call_analyzed Only",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1680,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nreturn {\n  call_id: call.call_id || '',\n  agent_id: call.agent_id || '',\n  from_number: call.from_number || '',\n  to_number: call.to_number || '',\n  transcript: call.transcript || '',\n  duration_seconds: Math.round((call.end_timestamp - call.start_timestamp) / 1000) || 0,\n  disconnection_reason: call.disconnection_reason || '',\n  call_analysis: call.call_analysis || {},\n  call_timestamp: new Date().toISOString()\n};"
+        },
+        "id": "e9cd3473-17e9-4d3d-b4d6-02c3bdd84c8e",
+        "name": "Extract Call Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1440,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "[JWT_REDACTED]"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "b4ff94eb-c081-4f4b-8fe2-c05ec2da49a5",
+        "name": "Supabase: Lookup Client",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -1200,
+          112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const clients = $input.first().json;\nconst callData = $('Extract Call Data').first().json;\nconst client = Array.isArray(clients) ? clients[0] : clients;\n\nif (!client || !client.company_name) {\n  return {\n    ...callData,\n    client_found: false,\n    company_name: 'Unknown', agent_name: 'Unknown',\n    lead_phone: '', lead_email: '',\n    notification_email_2: '', notification_email_3: '',\n    notification_sms_2: '', notification_sms_3: '',\n    twilio_from: '', timezone: 'America/Chicago'\n  };\n}\n\nreturn {\n  ...callData,\n  client_found: true,\n  company_name: client.company_name || '',\n  agent_name: client.agent_name || '',\n  lead_phone: client.lead_phone || '',\n  lead_email: client.lead_email || '',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  twilio_from: client.twilio_from || client.twilio_number || '',\n  timezone: client.timezone || 'America/Chicago',\n  lead_contact_method: client.lead_contact_method || 'Both'\n};"
+        },
+        "id": "e56fdaa7-562f-4e11-b5cb-b0f3a162f859",
+        "name": "Parse Client Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -960,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "You are a call classifier for an HVAC company AI receptionist. Analyze the transcript and context, then return a JSON classification.\n\nLEAD DEFINITION \u2014 IS a lead (is_lead=true) if the caller wants ANY of the following:\n- Repair or fix for any HVAC system\n- Installation or replacement\n- Maintenance, tune-up, service, or annual check\n- Estimate or quote for any work\n- Emergency service\nWhen in doubt, mark is_lead=true. ANY request for HVAC work of any kind is a lead.\n\nNOT a lead (is_lead=false) ONLY if:\n- Complaint about a previous completed job with no new work requested\n- Existing job status check only (part ordered? tech coming when?)\n- Billing dispute or refund request only\n- Obvious spam, robocall, or telemarketer\n- Wrong number\n- Caller hangs up with zero service request made\n\nSPAM: is_lead=false, call_tier=Standard, lead_score=1 for robocall patterns (\"press 1\", \"lower your rates\", repetitive selling, no HVAC request).\n\nCALL TIER \u2014 must be exactly one of:\n- \"Emergency\": HUMAN safety risk only \u2014 no heat in freezing temps with people present, no AC in extreme heat with vulnerable person (baby, elderly, medical), burning smell, gas smell, active flooding, system failure causing immediate health risk. ALSO Emergency if local_hour is 22-6 AND system is not working. Business/commercial impact alone (restaurant opening, office too hot) is NOT Emergency \u2014 that is Urgent.\n- \"Urgent\": System not working but no immediate safety risk, caller needs service today or ASAP, commercial property affected.\n- \"Standard\": Routine, flexible timing, quote only, maintenance scheduling. Also use for all non-leads.\n\nVULNERABILITY: vulnerable_occupant=true if transcript mentions baby, infant, newborn, toddler, young children, elderly, senior, disabled, medical condition, oxygen, medication needing refrigeration.\n\nJOB TYPE: \"Residential\" (home/apartment), \"Commercial\" (business, office, restaurant, shop), \"Multi-Unit\" (apartment building, complex, multiple units).\n\nCALLER SENTIMENT: 1=very distressed or angry, 2=frustrated, 3=neutral, 4=cooperative, 5=calm and easy.\n\nReturn ONLY valid JSON \u2014 no markdown, no explanation:\n{\n  \"is_lead\": boolean,\n  \"call_tier\": \"Emergency\"|\"Urgent\"|\"Standard\",\n  \"lead_score\": integer 1-10,\n  \"caller_name\": string,\n  \"caller_phone\": string,\n  \"caller_address\": string,\n  \"service_requested\": \"Repair\"|\"Maintenance\"|\"Installation\"|\"Estimate\"|\"Emergency\"|\"Complaint\"|\"Spam\"|\"WrongNumber\"|\"ExistingCustomer\"|\"Other\",\n  \"job_type\": \"Residential\"|\"Commercial\"|\"Multi-Unit\",\n  \"vulnerable_occupant\": boolean,\n  \"caller_sentiment\": integer 1-5,\n  \"summary\": \"1-2 sentence summary\",\n  \"urgency\": \"Low\"|\"Medium\"|\"High\"|\"Emergency\",\n  \"notes\": \"key details: communication issues, partial info, after-hours, transfer attempts\"\n}",
+                "role": "system"
+              },
+              {
+                "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}\nClient timezone: {{ $json.timezone || 'America/Chicago' }}\nLocal hour (24h): {{ (() => { try { return parseInt(new Date().toLocaleString('en-US', { timeZone: $json.timezone || 'America/Chicago', hour: 'numeric', hour12: false })); } catch(e) { return 12; } })() }}"
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.2
+          }
+        },
+        "id": "755bd162-f2b5-46c6-acfc-48df05d57afb",
+        "name": "GPT: Analyze Transcript",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1,
+        "position": [
+          -720,
+          112
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "ubVD6nIZ6FkIStS8",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const gptRaw = $input.first().json.message?.content || $input.first().json.text || '{}';\nlet analysis = {};\ntry {\n  const clean = gptRaw.replace(/```json|```/g, '').trim();\n  analysis = JSON.parse(clean);\n} catch(e) {\n  analysis = { is_lead: false, call_tier: 'Standard', lead_score: 0 };\n}\n\nconst clientData = $('Parse Client Data').item.json;\nconst callData   = $('Extract Call Data').item.json;\n\nconst durationMs = (callData.end_timestamp || 0) - (callData.start_timestamp || 0);\nconst durationSec = Math.round(durationMs / 1000);\n\nreturn {\n  // Call metadata\n  call_id:           callData.call_id,\n  agent_id:          callData.agent_id,\n  from_number:       callData.from_number,\n  to_number:         callData.to_number,\n  transcript:        callData.transcript,\n  duration_seconds:  durationSec,\n  call_timestamp:    new Date().toISOString(),\n\n  // Client config\n  company_name:         clientData.company_name,\n  agent_name:           clientData.agent_name,\n  lead_email:           clientData.lead_email,\n  lead_phone:           clientData.lead_phone,\n  notification_email_2: clientData.notification_email_2,\n  notification_email_3: clientData.notification_email_3,\n  notification_sms_2:   clientData.notification_sms_2,\n  notification_sms_3:   clientData.notification_sms_3,\n  twilio_from:          clientData.twilio_from,\n  timezone:             clientData.timezone,\n\n  // GPT classification \u2014 core\n  is_lead:           analysis.is_lead || false,\n  call_tier:         analysis.call_tier || 'Standard',\n  lead_score:        analysis.lead_score || 0,\n  caller_name:       analysis.caller_name || '',\n  caller_phone:      analysis.caller_phone || '',\n  caller_address:    analysis.caller_address || '',\n  service_requested: analysis.service_requested || 'Other',\n  summary:           analysis.summary || '',\n  urgency:           analysis.urgency || 'Low',\n  notes:             analysis.notes || '',\n\n  // GPT classification \u2014 new intelligence fields\n  job_type:            analysis.job_type || 'Residential',\n  vulnerable_occupant: analysis.vulnerable_occupant || false,\n  caller_sentiment:    analysis.caller_sentiment || 3\n};"
+        },
+        "id": "e5dcf87c-0034-4530-abbf-c954895a2f9b",
+        "name": "Parse Lead Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -480,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "is-lead-check",
+                "leftValue": "={{ $json.is_lead }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "22a6deb1-22b2-4425-a625-e3253892f553",
+        "name": "Is Lead?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -240,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "[JWT_REDACTED]"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation,resolution=merge-duplicates"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { call_id: $json.call_id, agent_id: $json.agent_id, company_name: $json.company_name, caller_name: $json.caller_name || '', caller_phone: $json.caller_phone || $json.from_number || '', caller_address: $json.caller_address || '', service_requested: $json.service_requested || '', lead_score: $json.lead_score || 0, urgency: $json.urgency || '', call_tier: $json.call_tier || 'Standard', job_type: $json.job_type || 'Residential', vulnerable_occupant: $json.vulnerable_occupant || false, caller_sentiment: $json.caller_sentiment || 3, summary: $json.summary || '', notes: $json.notes || '', is_lead: $json.is_lead || false, duration_seconds: $json.duration_seconds || 0, geocode_status: $('Geocode: Parse Result').item.json.geocode_status || '', geocode_formatted: $('Geocode: Parse Result').item.json.geocode_formatted || '' } }}",
+          "options": {}
+        },
+        "id": "7b3027c9-ee1e-4e9f-98ab-af02ca8ea4a6",
+        "name": "Supabase: Log Call",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          240,
+          112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Parse Lead Data').item.json.lead_email }}",
+          "subject": "={{ (() => { const t = $('Classify Notification').item.json.notify_type; const tier = $('Geocode: Parse Result').item.json.call_tier; if (t === 'emergency') return '\ud83d\udea8 EMERGENCY \u2014 ' + $('Parse Lead Data').item.json.company_name + ($('Parse Lead Data').item.json.vulnerable_occupant ? ' \u26a0\ufe0f VULNERABLE' : ''); return '\ud83d\udd25 New Lead \u2014 ' + $('Parse Lead Data').item.json.company_name + ' | ' + tier; })() }}",
+          "message": "={{ $('Geocode: Parse Result').item.json.lead_email_html || 'No content' }}",
+          "options": {}
+        },
+        "id": "ffd85bab-258f-4e27-bad3-166e691eec64",
+        "name": "Gmail: Send Lead Email",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          480,
+          -96
+        ],
+        "webhookId": "d305f623-abc4-4e4e-b5d4-8bb20995b02b",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-email-2",
+                "leftValue": "={{ $('Parse Lead Data').item.json.notification_email_2 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000001",
+        "name": "Has Email 2?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          64
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Parse Lead Data').item.json.notification_email_2 }}",
+          "subject": "={{ (() => { const t = $('Classify Notification').item.json.notify_type; if (t === 'emergency') return '\ud83d\udea8 EMERGENCY \u2014 ' + $('Parse Lead Data').item.json.company_name; return '\ud83d\udd25 New Lead \u2014 ' + $('Parse Lead Data').item.json.company_name; })() }}",
+          "message": "={{ $('Geocode: Parse Result').item.json.lead_email_html || 'No content' }}",
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000002",
+        "name": "Gmail: Send Lead Email 2",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          720,
+          64
+        ],
+        "webhookId": "74980db5-bea7-426c-9326-f96421f6808c",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-email-3",
+                "leftValue": "={{ $('Parse Lead Data').item.json.notification_email_3 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000003",
+        "name": "Has Email 3?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Parse Lead Data').item.json.notification_email_3 }}",
+          "subject": "={{ (() => { const t = $('Classify Notification').item.json.notify_type; if (t === 'emergency') return '\ud83d\udea8 EMERGENCY \u2014 ' + $('Parse Lead Data').item.json.company_name; return '\ud83d\udd25 New Lead \u2014 ' + $('Parse Lead Data').item.json.company_name; })() }}",
+          "message": "={{ $('Geocode: Parse Result').item.json.lead_email_html || 'No content' }}",
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000004",
+        "name": "Gmail: Send Lead Email 3",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          720,
+          240
+        ],
+        "webhookId": "0f990018-3301-4a3c-9581-d1a93d2417eb",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telnyx.com/v2/messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer [TELNYX_API_KEY]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "from",
+                "value": "+19294510009"
+              },
+              {
+                "name": "to",
+                "value": "={{ $('Parse Lead Data').item.json.lead_phone }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $('Geocode: Parse Result').item.json.sms_text }}"
+              },
+              {
+                "name": "messaging_profile_id",
+                "value": "40019d2a-ee8f-4ac7-b105-02469f10820e"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "b3033acc-aeba-4e5d-85fc-89ddda478c8a",
+        "name": "Telnyx: Send SMS",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          480,
+          432
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-sms-2",
+                "leftValue": "={{ $('Parse Lead Data').item.json.notification_sms_2 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000005",
+        "name": "Has SMS 2?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telnyx.com/v2/messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer [TELNYX_API_KEY]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "from",
+                "value": "+19294510009"
+              },
+              {
+                "name": "to",
+                "value": "={{ $('Parse Lead Data').item.json.notification_sms_2 }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $('Geocode: Parse Result').item.json.sms_text }}"
+              },
+              {
+                "name": "messaging_profile_id",
+                "value": "40019d2a-ee8f-4ac7-b105-02469f10820e"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000006",
+        "name": "Telnyx: Send SMS 2",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          608
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "check-sms-3",
+                "leftValue": "={{ $('Parse Lead Data').item.json.notification_sms_3 }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000007",
+        "name": "Has SMS 3?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          784
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.telnyx.com/v2/messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer [TELNYX_API_KEY]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "from",
+                "value": "+19294510009"
+              },
+              {
+                "name": "to",
+                "value": "={{ $('Parse Lead Data').item.json.notification_sms_3 }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $('Geocode: Parse Result').item.json.sms_text }}"
+              },
+              {
+                "name": "messaging_profile_id",
+                "value": "40019d2a-ee8f-4ac7-b105-02469f10820e"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "aa001111-1111-1111-1111-000000000008",
+        "name": "Telnyx: Send SMS 3",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          784
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "return { message: `Non-lead call logged: ${$json.call_id}, score: ${$json.lead_score}` };"
+        },
+        "id": "d837f73e-190e-47f3-bba4-37dd04c10ddd",
+        "name": "Log Non-Lead",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -240,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://maps.googleapis.com/maps/api/geocode/json?address={{encodeURIComponent($json.caller_address || '')}}&key=[GOOGLE_API_KEY]",
+          "options": {}
+        },
+        "id": "geocode-http-001",
+        "name": "Geocode: Maps API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -368,
+          112
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst leadData = $('Parse Lead Data').item.json;\nconst geoResponse = $input.first().json;\n\n// \u2500\u2500 GEOCODE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet geocode_status = 'not_provided', geocode_formatted = '', geocode_lat = null,\n    geocode_lng = null, geocode_maps_url = '', geocode_confidence = 'low', address_check_html = '';\n\nif (!leadData.caller_address || leadData.caller_address.trim().length < 5) {\n  geocode_status = 'not_provided';\n  address_check_html = '<span style=\"color:#718096\">\u2014 Not provided</span>';\n} else if (geoResponse.status === 'OK' && geoResponse.results && geoResponse.results.length > 0) {\n  const top = geoResponse.results[0];\n  geocode_formatted = top.formatted_address;\n  geocode_lat = top.geometry.location.lat;\n  geocode_lng = top.geometry.location.lng;\n  geocode_maps_url = 'https://maps.google.com/?q=' + encodeURIComponent(geocode_formatted);\n  const types = top.types || [];\n  if (types.includes('street_address') || types.includes('premise') || types.includes('subpremise')) {\n    geocode_status = 'verified'; geocode_confidence = 'high';\n    address_check_html = '<span style=\"color:#38a169;font-weight:600\">\u2705 Verified</span> \u2014 ' + geocode_formatted + ' &nbsp;<a href=\"' + geocode_maps_url + '\" style=\"color:#6C63FF;text-decoration:none;font-weight:600\">\ud83d\udccd View Map</a>';\n  } else if (types.includes('route') || types.includes('intersection')) {\n    geocode_status = 'partial'; geocode_confidence = 'medium';\n    address_check_html = '<span style=\"color:#d69e2e;font-weight:600\">\u26a0\ufe0f Partial match</span> \u2014 ' + geocode_formatted + ' &nbsp;<a href=\"' + geocode_maps_url + '\" style=\"color:#6C63FF;text-decoration:none\">\ud83d\udccd View Map</a>';\n  } else {\n    geocode_status = 'unverified'; geocode_confidence = 'low';\n    address_check_html = '<span style=\"color:#e53e3e;font-weight:600\">\u26a0\ufe0f Unverified</span> \u2014 Closest: ' + geocode_formatted + '. Confirm with caller.';\n  }\n} else if (geoResponse.status === 'ZERO_RESULTS') {\n  geocode_status = 'not_found';\n  address_check_html = '<span style=\"color:#e53e3e;font-weight:600\">\u274c Not found</span> \u2014 Confirm address with caller before dispatching.';\n} else {\n  geocode_status = 'error';\n  address_check_html = '<span style=\"color:#718096\">\u26a0\ufe0f Could not verify \u2014 confirm with caller</span>';\n}\n\n// \u2500\u2500 SCORE BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst score = leadData.lead_score || 0;\nconst scoreColor = score >= 8 ? '#dc2626' : score >= 6 ? '#d97706' : '#718096';\nconst score_badge = '<span style=\"background:' + (score >= 8 ? '#fef2f2' : score >= 6 ? '#fffbeb' : '#f9fafb') + ';color:' + scoreColor + ';border:2px solid ' + scoreColor + ';border-radius:20px;padding:3px 12px;font-weight:700;font-size:15px\">' + score + '/10</span>';\n\n// \u2500\u2500 URGENCY BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst urgency = leadData.urgency || 'Medium';\nconst urgencyColor = urgency === 'Emergency' ? '#dc2626' : urgency === 'High' ? '#d97706' : urgency === 'Medium' ? '#2563eb' : '#718096';\nconst urgency_badge = '<span style=\"color:' + urgencyColor + ';font-weight:600\">' + urgency + '</span>';\n\n// \u2500\u2500 TIER BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst callTier = leadData.call_tier || 'Standard';\nconst tierMap = {\n  'Emergency': { bg: '#dc2626', label: '\ud83d\udea8 EMERGENCY \u2014 Transfer Attempted' },\n  'Urgent':    { bg: '#d97706', label: '\u26a1 URGENT \u2014 Respond Within 1 Hour' },\n  'Standard':  { bg: '#6C63FF', label: '\ud83d\udccb STANDARD \u2014 Business Hours' }\n};\nconst tc = tierMap[callTier] || tierMap['Standard'];\nconst tier_badge = '<span style=\"background:' + tc.bg + ';color:#ffffff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;font-family:Helvetica,Arial,sans-serif\">' + tc.label + '</span>';\n\n// \u2500\u2500 JOB TYPE BADGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst jobType = leadData.job_type || 'Residential';\nconst jobColor = jobType === 'Commercial' ? '#7c3aed' : jobType === 'Multi-Unit' ? '#0369a1' : '#374151';\nconst jobBg    = jobType === 'Commercial' ? '#f5f3ff' : jobType === 'Multi-Unit' ? '#e0f2fe' : '#f9fafb';\nconst job_type_badge = '<span style=\"background:' + jobBg + ';color:' + jobColor + ';padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;border:1px solid ' + jobColor + '\">' + jobType + '</span>';\n\n// \u2500\u2500 VULNERABILITY FLAG \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst vulnerable = leadData.vulnerable_occupant || false;\nconst vulnerability_flag = vulnerable\n  ? '<span style=\"background:#fef2f2;color:#dc2626;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700;border:1px solid #dc2626\">\u26a0\ufe0f VULNERABLE OCCUPANT</span>'\n  : '';\n\n// \u2500\u2500 SENTIMENT INDICATOR \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst sentiment = leadData.caller_sentiment || 3;\nconst sentimentLabel = sentiment <= 2 ? '\ud83d\ude1f Distressed' : sentiment === 3 ? '\ud83d\ude10 Neutral' : '\ud83d\ude0a Cooperative';\nconst sentimentColor = sentiment <= 2 ? '#dc2626' : sentiment === 3 ? '#6b7280' : '#16a34a';\n\n// \u2500\u2500 DURATION \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst dur = leadData.duration_seconds || 0;\nconst duration_formatted = dur >= 60 ? Math.floor(dur/60) + 'm ' + (dur%60) + 's' : dur + 's';\n\n// \u2500\u2500 SMS TEXT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Rich SMS with all key flags \u2014 keeps it scannable on a phone\nconst tierEmoji = callTier === 'Emergency' ? '\ud83d\udea8' : callTier === 'Urgent' ? '\u26a1' : '\ud83d\udccb';\nconst vulnFlag  = vulnerable ? ' VULNERABLE' : '';\nconst repeatFlag = ''; // populated later by repeat caller check\nconst notifyType = leadData.notify_type || 'lead';\nconst sms_header = notifyType === 'emergency'\n  ? 'EMERGENCY' + vulnFlag\n  : notifyType === 'customer_query'\n  ? 'CUSTOMER QUERY'\n  : 'NEW LEAD';\nconst addrShort = geocode_status === 'verified' ? geocode_formatted : (leadData.caller_address || 'No address');\nconst sms_text = sms_header + ' - ' + leadData.company_name + '\\n'\n  + 'Name: ' + (leadData.caller_name || 'Unknown') + '\\n'\n  + 'Ph: ' + (leadData.caller_phone || leadData.from_number || 'N/A') + '\\n'\n  + 'Addr: ' + addrShort + '\\n'\n  + (leadData.service_requested || 'General') + ' | ' + jobType + ' | Score: ' + score + '/10';\n\n// \u2500\u2500 EMAIL HTML \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst notifyTypeForEmail = leadData.notify_type || 'lead';\nconst isEmergencyEmail = notifyTypeForEmail === 'emergency';\nconst accentColor = isEmergencyEmail ? '#dc2626' : '#6C63FF';\nconst headerLabel = isEmergencyEmail ? '\ud83d\udea8 Emergency Alert' : 'New Lead Alert';\nconst emergencyBanner = isEmergencyEmail ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr><td style=\"background:#fef2f2;border-radius:8px;border:1px solid #fecaca;padding:12px 16px\"><p style=\"margin:0;font-size:13px;color:#991b1b;line-height:1.6;font-family:Helvetica,Arial,sans-serif\"><strong>Live transfer was attempted.</strong> If the transfer connected, the caller is with your team now.</p></td></tr></table>' : '';\nconst vulnBanner = vulnerable ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:14px\"><tr><td style=\"background:#fef2f2;border-radius:8px;border:1px solid #fecaca;padding:12px 16px\"><p style=\"margin:0;font-size:13px;font-weight:700;color:#991b1b;font-family:Helvetica,Arial,sans-serif\">\u26a0\ufe0f VULNERABLE OCCUPANT \u2014 Baby, elderly or medical risk mentioned. Dispatch priority is critical.</p></td></tr></table>' : '';\nconst notesHtml = leadData.notes ? '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:8px\"><tr><td width=\"3\" style=\"background:#f59e0b;border-radius:2px;vertical-align:top\">&nbsp;</td><td style=\"padding-left:14px;font-size:13px;color:#92400e;line-height:1.7;font-family:Helvetica,Arial,sans-serif\"><strong>Note:</strong> ' + leadData.notes + '</td></tr></table>' : '';\nconst lead_email_html = '<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"></head><body style=\"margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f3f4f6\"><tr><td align=\"center\" style=\"padding:40px 16px\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:540px\"><tr><td style=\"background:' + accentColor + ';height:4px;border-radius:8px 8px 0 0;font-size:4px;line-height:4px\">&nbsp;</td></tr><tr><td style=\"background:#ffffff;border-radius:0 0 12px 12px;padding:32px 40px 28px\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr><td><p style=\"margin:0 0 4px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:' + accentColor + ';font-family:Helvetica,Arial,sans-serif\">' + headerLabel + '</p><h1 style=\"margin:0 0 4px;font-size:22px;font-weight:700;color:#111827;line-height:1.2;font-family:Helvetica,Arial,sans-serif\">' + leadData.company_name + '</h1><p style=\"margin:0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">' + duration_formatted + ' call &middot; ' + leadData.call_timestamp + '</p></td><td align=\"right\" valign=\"top\" style=\"padding-left:16px\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"background:' + accentColor + ';border-radius:10px;padding:10px 16px;text-align:center;white-space:nowrap\"><p style=\"margin:0;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);font-family:Helvetica,Arial,sans-serif\">Score</p><p style=\"margin:2px 0 0;font-size:26px;font-weight:800;color:#ffffff;line-height:1;font-family:Helvetica,Arial,sans-serif\">' + score + '<span style=\"font-size:13px;font-weight:400\">/10</span></p></td></tr></table></td></tr></table>' + emergencyBanner + vulnBanner + '<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr><td style=\"white-space:nowrap\">' + tier_badge + '</td>' + (vulnerable ? '<td style=\"white-space:nowrap;padding-left:8px\">' + vulnerability_flag + '</td>' : '') + '</tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:18px 0\"><tr><td style=\"background:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;width:36%;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Name</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:14px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif\">' + (leadData.caller_name || 'Not provided') + '</p></td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Phone</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top\"><a href=\"tel:' + (leadData.caller_phone || leadData.from_number) + '\" style=\"font-size:14px;font-weight:600;color:' + accentColor + ';text-decoration:none;font-family:Helvetica,Arial,sans-serif\">' + (leadData.caller_phone || leadData.from_number) + '</a></td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Address</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:14px;color:#111827;font-family:Helvetica,Arial,sans-serif\">' + (leadData.caller_address || 'Not provided') + '</p></td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Verified</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top;font-size:13px;font-family:Helvetica,Arial,sans-serif\">' + address_check_html + '</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Service</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:14px;color:#111827;font-family:Helvetica,Arial,sans-serif\">' + leadData.service_requested + '</p></td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Property</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top;font-size:14px;font-family:Helvetica,Arial,sans-serif\">' + job_type_badge + '</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f3f0ff;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Urgency</p></td><td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #f3f0ff;vertical-align:top;font-size:14px;font-family:Helvetica,Arial,sans-serif\">' + urgency_badge + '</td></tr><tr><td style=\"padding:10px 0;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Caller Mood</p></td><td style=\"padding:10px 0 10px 12px;vertical-align:top\"><p style=\"margin:0;font-size:13px;color:' + sentimentColor + ';font-family:Helvetica,Arial,sans-serif\">' + sentimentLabel + '</p></td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:18px 0\"><tr><td style=\"background:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table><p style=\"margin:0 0 10px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Call Summary</p><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:12px\"><tr><td width=\"3\" style=\"background:' + accentColor + ';border-radius:2px;vertical-align:top\">&nbsp;</td><td style=\"padding-left:14px;font-size:14px;color:#374151;line-height:1.75;font-family:Helvetica,Arial,sans-serif\">' + leadData.summary + '</td></tr></table>' + notesHtml + '<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:22px\"><tr><td style=\"background:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:18px\"><tr><td style=\"text-align:center\"><p style=\"margin:0 0 3px;font-size:11px;font-weight:800;letter-spacing:3px;color:#6C63FF;font-family:Helvetica,Arial,sans-serif\">SYNTHARRA</p><p style=\"margin:0;font-size:11px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">syntharra.com &middot; support@syntharra.com</p></td></tr></table></td></tr></table></td></tr></table></body></html>';\n\nreturn {\n  ...leadData,\n  lead_email_html,\n  geocode_status, geocode_formatted, geocode_lat, geocode_lng,\n  geocode_maps_url, geocode_confidence, address_check_html,\n  score_badge, urgency_badge, tier_badge, job_type_badge,\n  vulnerability_flag, sentimentLabel, sentimentColor,\n  duration_formatted, sms_text, call_tier: callTier\n};\n"
+        },
+        "id": "geocode-parse-001",
+        "name": "Geocode: Parse Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -128,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst service  = $json.service_requested || '';\nconst isLead   = $json.is_lead || false;\nconst callTier = $json.call_tier || 'Standard';\n\n// Completely drop \u2014 return [] stops n8n flow entirely\nconst dropTypes = ['Spam', 'WrongNumber'];\nif (dropTypes.includes(service)) {\n  return [];\n}\n\n// Classify notification type\nlet notify_type;\nif (callTier === 'Emergency') {\n  notify_type = 'emergency';          // red email always for emergency\n} else if (service === 'ExistingCustomer' || service === 'Complaint') {\n  notify_type = 'customer_query';     // amber email\n} else if (isLead) {\n  notify_type = 'lead';               // purple email\n} else {\n  notify_type = 'log_only';           // Supabase only, no email\n}\n\nreturn [{ json: { ...($input.first().json), notify_type } }];\n"
+        },
+        "id": "classify-notification",
+        "name": "Classify Notification",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -960,
+          -208
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Parse Lead Data').item.json.lead_email }}",
+          "subject": "=\ud83d\udcde Customer Query \u2014 {{ $('Parse Lead Data').item.json.caller_name || 'Unknown' }} | {{ $('Parse Lead Data').item.json.company_name }}",
+          "message": "=<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"color-scheme\" content=\"light only\"></head>\n<body style=\"margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f3f4f6\">\n<tr><td align=\"center\" style=\"padding:40px 16px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width:540px\">\n  <tr><td bgcolor=\"#d97706\" style=\"background-color:#d97706;height:4px;border-radius:8px 8px 0 0;font-size:4px;line-height:4px\">&nbsp;</td></tr>\n  <tr><td bgcolor=\"#ffffff\" style=\"background-color:#ffffff;border-radius:0 0 12px 12px;padding:32px 40px 28px\">\n    \n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr>\n      <td>\n        <p style=\"margin:0 0 4px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#d97706;font-family:Helvetica,Arial,sans-serif\">Customer Query</p>\n        <h1 style=\"margin:0 0 4px;font-size:22px;font-weight:700;color:#111827;line-height:1.2;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.company_name }}</h1>\n        <p style=\"margin:0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">{{ $('Geocode: Parse Result').item.json.duration_formatted }} call &nbsp;\u00b7&nbsp; {{ $('Parse Lead Data').item.json.call_timestamp }}</p>\n      </td>\n    </tr></table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-bottom:16px\"><tr>\n      <td bgcolor=\"#fffbeb\" style=\"background-color:#fffbeb;border-radius:8px;border:1px solid #fde68a;padding:12px 16px\">\n        <p style=\"margin:0;font-size:13px;color:#92400e;line-height:1.6;font-family:Helvetica,Arial,sans-serif\">An existing customer called with a query. <strong>This is not a new lead.</strong> The AI attempted to transfer the call \u2014 if the transfer failed, the caller's details are below so your team can follow up.</p>\n      </td>\n    </tr></table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:18px 0\"><tr><td bgcolor=\"#f3f0ff\" style=\"background-color:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n      <tr><td style=\"padding:10px 0;border-bottom:1px solid #fffbeb;width:36%;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Name</p></td>\n      <td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:14px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.caller_name || 'Not provided' }}</p></td></tr>\n\n      <tr><td style=\"padding:10px 0;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Phone</p></td>\n      <td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #fffbeb;vertical-align:top\"><a href=\"tel:{{ $('Parse Lead Data').item.json.caller_phone || $('Parse Lead Data').item.json.from_number }}\" style=\"font-size:14px;font-weight:600;color:#d97706;text-decoration:none;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.caller_phone || $('Parse Lead Data').item.json.from_number }}</a></td></tr>\n\n      <tr><td style=\"padding:10px 0;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Query Type</p></td>\n      <td style=\"padding:10px 0 10px 12px;border-bottom:1px solid #fffbeb;vertical-align:top\"><p style=\"margin:0;font-size:14px;color:#111827;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.service_requested }}</p></td></tr>\n\n      <tr><td style=\"padding:10px 0;vertical-align:top\"><p style=\"margin:0;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">Summary</p></td>\n      <td style=\"padding:10px 0 10px 12px;vertical-align:top\"><p style=\"margin:0;font-size:14px;color:#374151;line-height:1.6;font-family:Helvetica,Arial,sans-serif\">{{ $('Parse Lead Data').item.json.summary }}</p></td></tr>\n    </table>\n\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:22px\"><tr><td bgcolor=\"#f3f0ff\" style=\"background-color:#f3f0ff;height:1px;font-size:1px;line-height:1px\">&nbsp;</td></tr></table>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin-top:18px\"><tr><td style=\"text-align:center\">\n      <p style=\"margin:0 0 3px;font-size:11px;font-weight:800;letter-spacing:3px;color:#6C63FF;font-family:Helvetica,Arial,sans-serif\">SYNTHARRA</p>\n      <p style=\"margin:0;font-size:11px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif\">syntharra.com &nbsp;\u00b7&nbsp; support@syntharra.com</p>\n    </td></tr></table>\n  </td></tr>\n</table>\n</td></tr>\n</table>\n</body></html>",
+          "options": {}
+        },
+        "id": "gmail-customer-query",
+        "name": "Gmail: Customer Query Email",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          -480,
+          -400
+        ],
+        "webhookId": "3dc7b08c-2da3-4fe1-8b9b-574477f66ef8",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "lead-check",
+                "leftValue": "={{ $('Classify Notification').item.json.notify_type }}",
+                "rightValue": "log_only",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "notify-gate",
+        "name": "Should Send Notifications?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.1,
+        "position": [
+          -480,
+          -64
+        ]
+      }
+    ],
+    "connections": {
+      "Retell Webhook": {
+        "main": [
+          [
+            {
+              "node": "Filter: call_analyzed Only",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter: call_analyzed Only": {
+        "main": [
+          [
+            {
+              "node": "Extract Call Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Call Data": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Lookup Client",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Lookup Client": {
+        "main": [
+          [
+            {
+              "node": "Parse Client Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Client Data": {
+        "main": [
+          [
+            {
+              "node": "GPT: Analyze Transcript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT: Analyze Transcript": {
+        "main": [
+          [
+            {
+              "node": "Parse Lead Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Lead Data": {
+        "main": [
+          [
+            {
+              "node": "Geocode: Maps API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Lead?": {
+        "main": [
+          [
+            {
+              "node": "Classify Notification",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Classify Notification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Log Call": {
+        "main": [
+          [
+            {
+              "node": "Should Send Notifications?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Email 2?": {
+        "main": [
+          [
+            {
+              "node": "Gmail: Send Lead Email 2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Has Email 3?": {
+        "main": [
+          [
+            {
+              "node": "Gmail: Send Lead Email 3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Geocode: Maps API": {
+        "main": [
+          [
+            {
+              "node": "Geocode: Parse Result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Geocode: Parse Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Geocode: Parse Result": {
+        "main": [
+          [
+            {
+              "node": "Is Lead?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Classify Notification": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Log Call",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Should Send Notifications?": {
+        "main": [
+          [
+            {
+              "node": "Gmail: Send Lead Email",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Has Email 2?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Has Email 3?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Gmail: Customer Query Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-26T23:39:28.321Z",
+        "id": 458,
+        "workflowId": "OyDCyiOjG0twguXq",
+        "versionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-26T23:39:32.531Z",
+        "id": 460,
+        "workflowId": "OyDCyiOjG0twguXq",
+        "versionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-26T23:39:28.217Z",
+        "id": 457,
+        "workflowId": "OyDCyiOjG0twguXq",
+        "versionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-26T23:39:32.405Z",
+        "id": 459,
+        "workflowId": "OyDCyiOjG0twguXq",
+        "versionId": "e6a7e59b-90bf-4193-ad9d-56430d1333a7",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
