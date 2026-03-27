@@ -100,32 +100,39 @@
     {
       "id": "node-gpt-analyze",
       "name": "GPT: Analyze Call",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
       "position": [
         160,
         512
       ],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
             {
-              "name": "Authorization",
-              "value": "=Bearer {{ $vars.OPENAI_API_KEY }}"
+              "content": "You are a call analysis specialist for a premium HVAC AI receptionist service. Analyze the call transcript and extract ALL relevant data.\n\nReturn a JSON object with these fields:\n\nCALLER INFORMATION:\n- caller_name (string): Full name if provided, empty string if not\n- caller_phone (string): Phone number if stated, empty string if not\n- caller_address (string): Service address if provided, empty string if not\n- caller_sentiment (string): happy, neutral, frustrated, angry, anxious, grateful\n\nCALL CLASSIFICATION:\n- call_type (string): new_booking, reschedule, cancellation, emergency, callback, existing_customer, general_question, spam, transfer_request\n- service_requested (string): Specific service discussed\n- urgency (string): low, medium, high, emergency\n- job_type (string): Repair, Maintenance, Installation, Estimate, Emergency, Inspection, General, Other\n\nBOOKING DATA:\n- booking_attempted (boolean): Did the agent try to book?\n- booking_success (boolean): Was an appointment confirmed?\n- appointment_date (string): YYYY-MM-DD or empty string\n- appointment_time_window (string): morning or afternoon or empty string\n- job_type_booked (string): Service booked or empty string\n- reschedule_or_cancel (string): reschedule, cancel, or neither\n\nLEAD QUALIFICATION:\n- lead_score (integer 0-10): 0=spam, 1-3=low, 4-6=moderate, 7-8=high, 9-10=hot. Booking made=9-10. Booking attempted but failed=7-8.\n- is_hot_lead (boolean): true if lead_score >= 7\n- is_lead (boolean): true if any service need expressed\n\nADDITIONAL:\n- vulnerable_occupant (boolean): elderly, disabled, young children mentioned\n- transfer_attempted (boolean): Was transfer attempted?\n- transfer_success (boolean or null): true/false/null\n- summary (string): 1-3 sentence summary with outcome and action needed\n- notes (string): Important additional details\n\nReturn ONLY valid JSON. No markdown, no backticks.",
+              "role": "system"
             },
             {
-              "name": "Content-Type",
-              "value": "application/json"
+              "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}\n\nPost-call analysis:\n{{ JSON.stringify($json.call_analysis || {}) }}"
             }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"model\": \"gpt-4o-mini\", \"temperature\": 0.2, \"messages\": [{\"role\": \"system\", \"content\": \"You are a call analysis specialist for a premium HVAC AI receptionist service. Analyze the call transcript and extract ALL relevant data.\\n\\nReturn a JSON object with these fields:\\n\\nCALLER INFORMATION:\\n- caller_name (string): Full name if provided, empty string if not\\n- caller_phone (string): Phone number if stated, empty string if not\\n- caller_address (string): Service address if provided, empty string if not\\n- caller_sentiment (string): happy, neutral, frustrated, angry, anxious, grateful\\n\\nCALL CLASSIFICATION:\\n- call_type (string): new_booking, reschedule, cancellation, emergency, callback, existing_customer, general_question, spam, transfer_request\\n- service_requested (string): Specific service discussed\\n- urgency (string): low, medium, high, emergency\\n- job_type (string): Repair, Maintenance, Installation, Estimate, Emergency, Inspection, General, Other\\n\\nBOOKING DATA:\\n- booking_attempted (boolean): Did the agent try to book?\\n- booking_success (boolean): Was an appointment confirmed?\\n- appointment_date (string): YYYY-MM-DD or empty string\\n- appointment_time_window (string): morning or afternoon or empty string\\n- job_type_booked (string): Service booked or empty string\\n- reschedule_or_cancel (string): reschedule, cancel, or neither\\n\\nLEAD QUALIFICATION:\\n- lead_score (integer 0-10): 0=spam, 1-3=low, 4-6=moderate, 7-8=high, 9-10=hot. Booking made=9-10. Booking attempted but failed=7-8.\\n- is_hot_lead (boolean): true if lead_score >= 7\\n\\nADDITIONAL:\\n- vulnerable_occupant (boolean): elderly, disabled, young children mentioned\\n- transfer_attempted (boolean): Was transfer attempted?\\n- transfer_success (boolean or null): true/false/null\\n- summary (string): 1-3 sentence summary with outcome and action needed\\n- notes (string): Important additional details\\n\\nReturn ONLY valid JSON. No markdown, no backticks.\"}, {\"role\": \"user\", \"content\": \"=Transcript:\\n---\\n{{ $json.transcript }}\\n---\\n\\nFrom number: {{ $json.from_number }}\\n\\nPost-call analysis:\\n{{ JSON.stringify($json.call_analysis || {}) }}\"}]}",
-        "options": {}
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ubVD6nIZ6FkIStS8",
+          "name": "OpenAi account"
+        }
       }
     },
     {
@@ -144,44 +151,14 @@
     {
       "id": "node-log-to-supabase",
       "name": "Log Call to Supabase",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         800,
         512
       ],
       "parameters": {
-        "method": "POST",
-        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation,resolution=merge-duplicates"
-            },
-            {
-              "name": "on_conflict",
-              "value": "call_id"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\n  \"agent_id\": \"={{ $json.agent_id }}\",\n  \"call_id\": \"={{ $json.call_id }}\",\n  \"company_name\": \"={{ $json.company_name }}\",\n  \"call_tier\": \"premium\",\n  \"duration_seconds\": {{ $json.duration_seconds || 0 }},\n  \"call_status\": \"={{ $json.disconnection_reason || 'completed' }}\",\n  \"call_successful\": {{ $json.booking_success || $json.is_lead || false }},\n  \"summary\": {{ JSON.stringify($json.summary || '') }},\n  \"caller_name\": {{ JSON.stringify($json.caller_name || '') }},\n  \"caller_phone\": {{ JSON.stringify($json.caller_phone || '') }},\n  \"caller_address\": {{ JSON.stringify($json.caller_address || '') }},\n  \"caller_sentiment\": {{ JSON.stringify($json.caller_sentiment || '') }},\n  \"lead_score\": {{ $json.lead_score || 0 }},\n  \"is_lead\": {{ $json.is_lead || false }},\n  \"is_hot_lead\": {{ $json.is_hot_lead || false }},\n  \"job_type\": {{ JSON.stringify($json.job_type || '') }},\n  \"urgency\": {{ JSON.stringify($json.urgency || '') }},\n  \"vulnerable_occupant\": {{ $json.vulnerable_occupant || false }},\n  \"notes\": {{ JSON.stringify($json.notes || '') }},\n  \"service_requested\": {{ JSON.stringify($json.service_requested || '') }},\n  \"booking_attempted\": {{ $json.booking_attempted || false }},\n  \"booking_success\": {{ $json.booking_success || false }},\n  \"appointment_date\": {{ $json.appointment_date ? JSON.stringify($json.appointment_date) : 'null' }},\n  \"appointment_time\": {{ JSON.stringify($json.appointment_time_window || '') }},\n  \"job_type_booked\": {{ JSON.stringify($json.job_type_booked || '') }},\n  \"reschedule_requested\": {{ $json.reschedule_or_cancel === 'reschedule' }},\n  \"cancellation_requested\": {{ $json.reschedule_or_cancel === 'cancel' }},\n  \"call_type\": {{ JSON.stringify($json.call_type || '') }},\n  \"transfer_attempted\": {{ $json.transfer_attempted || false }},\n  \"transfer_success\": {{ $json.transfer_success === true ? true : $json.transfer_success === false ? false : null }},\n  \"from_number\": {{ JSON.stringify($json.from_number || '') }},\n  \"notification_type\": {{ JSON.stringify($json.notification_type || '') }},\n  \"notification_priority\": {{ JSON.stringify($json.notification_priority || '') }}\n}",
-        "options": {}
+        "jsCode": "const d = $input.first().json;\n\nconst body = {\n  agent_id: d.agent_id || '',\n  call_id: d.call_id || '',\n  company_name: d.company_name || '',\n  call_tier: 'premium',\n  duration_seconds: d.duration_seconds || 0,\n  call_status: d.disconnection_reason || 'completed',\n  call_successful: d.booking_success || d.is_lead || false,\n  summary: d.summary || '',\n  caller_name: d.caller_name || '',\n  caller_phone: d.caller_phone || '',\n  caller_address: d.caller_address || '',\n  caller_sentiment: d.caller_sentiment || '',\n  lead_score: d.lead_score || 0,\n  is_lead: d.is_lead || false,\n  is_hot_lead: d.is_hot_lead || false,\n  job_type: d.job_type || '',\n  urgency: d.urgency || '',\n  vulnerable_occupant: d.vulnerable_occupant || false,\n  notes: d.notes || '',\n  service_requested: d.service_requested || '',\n  booking_attempted: d.booking_attempted || false,\n  booking_success: d.booking_success || false,\n  appointment_date: d.appointment_date || null,\n  appointment_time: d.appointment_time_window || '',\n  job_type_booked: d.job_type_booked || '',\n  reschedule_requested: d.reschedule_or_cancel === 'reschedule',\n  cancellation_requested: d.reschedule_or_cancel === 'cancel',\n  call_type: d.call_type || '',\n  transfer_attempted: d.transfer_attempted || false,\n  transfer_success: d.transfer_success === true ? true : d.transfer_success === false ? false : null,\n  from_number: d.from_number || '',\n  notification_type: d.notification_type || '',\n  notification_priority: d.notification_priority || ''\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log',\n  headers: {\n    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Content-Type': 'application/json',\n    'Prefer': 'return=representation'\n  },\n  body: body,\n  json: true\n});\n\n// Pass through all original data plus the Supabase response\nreturn { ...d, _supabase_logged: true, _supabase_id: Array.isArray(response) && response[0] ? response[0].id : null };"
       }
     },
     {
