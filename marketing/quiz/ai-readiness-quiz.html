@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Readiness Score — Syntharra</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#F7F7FB;font-family:'DM Sans',-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:480px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.12);overflow:hidden}
+.bar{height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)}
+.hdr{padding:28px 32px 0}
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6C63FF;background:#F0EEFF;padding:4px 12px;border-radius:20px;margin-bottom:8px}
+h2{font-family:'DM Serif Display',serif;font-size:24px;color:#1A1A2E;line-height:1.2;margin-bottom:6px}
+.sub{color:#6B7280;font-size:14px;line-height:1.5}
+.prog{padding:16px 32px 0}
+.prog-meta{display:flex;justify-content:space-between;margin-bottom:6px}
+.prog-meta span{font-size:12px;font-weight:600;color:#6B7280}
+.prog-meta .p{color:#6C63FF}
+.prog-bar{height:4px;background:#E5E7EB;border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#6C63FF,#00D4FF);border-radius:2px;transition:width 0.4s;width:0%}
+.body{padding:24px 32px 32px}
+.qt{font-size:16px;font-weight:600;color:#1A1A2E;margin-bottom:20px;line-height:1.4}
+.ob{display:block;width:100%;text-align:left;padding:14px 18px;margin-bottom:10px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;font-size:14px;font-family:inherit;color:#1A1A2E;cursor:pointer;transition:all 0.15s}
+.ob:hover{border-color:#6C63FF;background:#F9F8FF}
+.ei{width:100%;padding:14px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;font-family:inherit;margin-bottom:12px;outline:none;transition:border-color 0.2s}
+.ei:focus{border-color:#6C63FF}
+.sb{display:block;width:100%;padding:16px;background:#6C63FF;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(108,99,255,0.35);transition:transform 0.15s;text-decoration:none;text-align:center}
+.sb:hover{transform:translateY(-1px)}
+.sb:disabled{opacity:0.7;cursor:not-allowed;transform:none}
+.fp{text-align:center;font-size:11px;color:#9CA3AF;margin-top:10px}
+.rb{background:#F0EEFF;border-radius:10px;padding:16px;margin-bottom:20px;text-align:center}
+.cl{display:block;text-align:center;margin-top:12px}
+.cl a{color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="bar"></div>
+<div class="hdr">
+<span class="badge">Free Assessment</span>
+<h2 id="t">How AI-Ready is Your Business?</h2>
+<p class="sub" id="s">Answer 5 quick questions to get your personalised AI readiness score.</p>
+</div>
+<div class="prog">
+<div class="prog-meta"><span id="st">Question 1 of 5</span><span class="p" id="pc">0%</span></div>
+<div class="prog-bar"><div class="prog-fill" id="bf"></div></div>
+</div>
+<div class="body" id="b"></div>
+</div>
+<script>
+var qs=[
+{q:"How many inbound calls does your business get per week?",o:[{t:"Less than 10",s:5},{t:"10 \u2014 25",s:15},{t:"25 \u2014 50",s:20},{t:"50+",s:20}]},
+{q:"What percentage of calls do you think you miss?",o:[{t:"Almost none \u2014 we answer everything",s:5},{t:"Maybe 10 \u2014 20%",s:10},{t:"Probably 30 \u2014 40%",s:18},{t:"Honestly, no idea",s:15}]},
+{q:"What happens when you miss a call?",o:[{t:"They leave a voicemail and we call back",s:8},{t:"Some leave voicemails, most don\u2019t",s:15},{t:"We just lose them",s:20},{t:"We have a receptionist but not 24/7",s:12}]},
+{q:"How do you currently handle after-hours calls?",o:[{t:"Someone answers 24/7",s:5},{t:"Voicemail",s:15},{t:"They go unanswered",s:20},{t:"Outsourced answering service",s:10}]},
+{q:"What\u2019s the average value of a job for your business?",o:[{t:"Under $150",s:8},{t:"$150 \u2014 $350",s:15},{t:"$350 \u2014 $750",s:18},{t:"$750+",s:20}]}
+];
+var c=0,tot=0,ans=[];
+function rn(){
+var q=qs[c],p=Math.round(c/qs.length*100);
+document.getElementById('st').textContent='Question '+(c+1)+' of '+qs.length;
+document.getElementById('pc').textContent=p+'%';
+document.getElementById('bf').style.width=p+'%';
+var h='<p class="qt">'+q.q+'</p>';
+for(var i=0;i<q.o.length;i++)h+='<button class="ob" onclick="pk('+i+')">'+q.o[i].t+'</button>';
+document.getElementById('b').innerHTML=h;
+}
+function pk(i){
+tot+=qs[c].o[i].s;ans.push({q:qs[c].q,a:qs[c].o[i].t});c++;
+if(c<qs.length)rn();else em();
+}
+function em(){
+document.getElementById('st').textContent='Almost done!';
+document.getElementById('pc').textContent='90%';
+document.getElementById('bf').style.width='90%';
+document.getElementById('t').textContent='Your score is ready';
+document.getElementById('s').textContent='Enter your email to see your AI readiness score and personalised report.';
+document.getElementById('b').innerHTML=
+'<div style="text-align:center;margin-bottom:20px"><div style="display:inline-block;width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#8B7FFF);line-height:80px;text-align:center"><span style="font-size:28px;font-weight:700;color:#fff">?</span></div><p style="color:#6B7280;font-size:13px;margin-top:8px">Your score is calculated. Enter your email to reveal it.</p></div>'+
+'<input type="email" id="qe" class="ei" placeholder="your@email.com">'+
+'<button class="sb" id="qb" onclick="go()">Get My AI Readiness Score</button>'+
+'<p class="fp">No spam. Unsubscribe anytime.</p>';
+}
+function go(){
+var e=document.getElementById('qe').value.trim();
+if(!e||e.indexOf('@')===-1){document.getElementById('qe').style.borderColor='#EF4444';return;}
+document.getElementById('qb').textContent='Calculating...';document.getElementById('qb').disabled=true;
+var l,x;
+if(tot>=75){l='High Potential';x='Your business has significant call volume and is likely losing substantial revenue to missed calls. An AI receptionist would have an immediate, measurable impact on your bottom line.';}
+else if(tot>=50){l='Strong Candidate';x="You\u2019re missing enough calls to feel the impact. An AI receptionist would pay for itself within the first month.";}
+else if(tot>=30){l='Good Fit';x="While your call volume might be moderate, there\u2019s still real revenue being lost. An AI receptionist ensures you never miss an opportunity.";}
+else{l='Room to Grow';x="Your current setup handles calls reasonably well. As your business grows, an AI receptionist will become increasingly valuable.";}
+setTimeout(function(){rs(tot,l,x,e)},800);
+}
+function rs(sc,lb,ex,em){
+document.getElementById('st').textContent='Complete!';
+document.getElementById('pc').textContent='100%';
+document.getElementById('bf').style.width='100%';
+document.getElementById('t').textContent='Your AI Readiness Score';
+document.getElementById('s').textContent='';
+var co=sc>=75?'#10B981':sc>=50?'#6C63FF':sc>=30?'#F59E0B':'#6B7280';
+var bg=sc>=75?'#ECFDF5':sc>=50?'#F0EEFF':sc>=30?'#FEF3C7':'#F3F4F6';
+document.getElementById('b').innerHTML=
+'<div style="text-align:center;margin-bottom:24px"><div style="display:inline-block;width:100px;height:100px;border-radius:50%;background:'+bg+';border:3px solid '+co+';line-height:100px;text-align:center"><span style="font-size:36px;font-weight:700;color:'+co+'">'+sc+'</span></div><p style="font-size:16px;font-weight:700;color:#1A1A2E;margin:12px 0 4px">'+lb+'</p><p style="font-size:13px;color:#6B7280;line-height:1.5;max-width:360px;margin:0 auto">'+ex+'</p></div>'+
+'<div class="rb"><p style="font-size:13px;color:#6B7280;margin:0 0 4px">Full report sent to</p><p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0">'+em+'</p></div>'+
+'<a href="https://calendar.app.google/jxUu7XfiMXMqvdiw6" class="sb">Book a Free Demo Call</a>'+
+'<div class="cl"><a href="https://syntharra-checkout-production.up.railway.app/">Or view pricing \u2192</a></div>';
+}
+rn();
+</script>
+</body>
+</html>
