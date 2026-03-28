@@ -56,6 +56,7 @@ Final versions in `brand-assets/email-signature/`:
 | `admin@syntharra.com` | Internal admin, contract notices | Service agreement, call processor notifications, scenario test reports |
 | `onboarding@syntharra.com` | Onboarding notifications (internal) | Stripe Workflow, HVAC Standard Onboarding, HVAC Premium Onboarding |
 | `noreply@syntharra.com` | Sender address for automated emails | All SMTP2GO outbound emails |
+| `info@syntharra.com` | General enquiries, public-facing contact | Google Workspace footer (appended to all outgoing emails) |
 | `daniel@syntharra.com` | Founder personal email | **NEVER** in any workflows or customer-facing content |
 
 ### n8n Workflow Email Mapping
@@ -77,9 +78,30 @@ Final versions in `brand-assets/email-signature/`:
 - **Service agreement:** `admin@syntharra.com` (contract cancellation notices)
 - **Legal pages footer (privacy, terms, security, service-agreement):** Contact + Feedback links
 
+### Google Workspace Footer
+All outgoing emails from @syntharra.com append this plain text footer:
+```
+Syntharra | Global AI Solutions | www.syntharra.com | info@syntharra.com
+```
+
+### Email Signatures
+Branded HTML signatures for each alias, stored in `brand-assets/email-signature/`:
+| File | Name | Subtitle |
+|---|---|---|
+| `syntharra-signature-PASTE-THIS.html` | Daniel Blackmore | Founder & CEO |
+| `syntharra-signature-support.html` | Syntharra Support | Customer Support |
+| `syntharra-signature-admin.html` | Syntharra Admin | Administration |
+| `syntharra-signature-onboarding.html` | Syntharra Onboarding | Client Onboarding |
+| `syntharra-signature-feedback.html` | Syntharra Feedback | Feedback & Enquiries |
+| `syntharra-signature-careers.html` | Syntharra Careers | Careers & Opportunities |
+| `syntharra-signature-info.html` | Syntharra Info | General Enquiries |
+
+To apply: open HTML file in Chrome, Select All → Copy → paste into Gmail signature settings for that alias.
+
 ### Email Rules
 - `daniel@syntharra.com` must NEVER appear in any workflow node logic, email body, or website content
 - All customer-facing "contact us" references → `support@syntharra.com`
+- All general public enquiries → `info@syntharra.com`
 - All internal operational notifications → `admin@` or `onboarding@` depending on context
 - All automated email sender address → `noreply@syntharra.com`
 
