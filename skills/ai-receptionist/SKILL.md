@@ -2,189 +2,291 @@
 name: ai-receptionist
 description: >
   Build a complete AI phone receptionist automation system for any service-based business
-  (HVAC, Plumbing, Cleaning, Landscaping, Pest Control, Electrician, etc.).
+  (HVAC, Plumbing, Electrical, Cleaning, Landscaping, Pest Control, Roofing, Garage Door, etc.).
 
-  ALWAYS use this skill when the user asks about: setting up an AI receptionist for a new
-  industry/vertical, automating client onboarding, building a call-handling AI agent,
-  creating a Retell AI conversation flow, connecting Retell to n8n workflows, setting up
-  lead capture via phone calls, creating Jotform onboarding for service businesses,
-  replicating the Syntharra system for a new industry, or anything involving the
-  Standard or Premium AI receptionist pipelines.
+  ALWAYS use this skill when the user asks about: setting up an AI receptionist for a new industry,
+  automating client onboarding, building a call-handling AI agent, creating a Retell AI conversation flow,
+  connecting Retell to n8n and Supabase, setting up lead capture via phone calls, creating a Jotform
+  onboarding flow, or replicating the Syntharra AI Receptionist system for a new trade vertical.
 
-  Also trigger when the user says things like "set this up for plumbing",
-  "do the same thing for cleaning companies", "new industry", "new vertical",
-  "build the electrical version", or references the Syntharra receptionist system.
+  Also trigger when the user says things like "set this up for plumbing", "build plumbing standard",
+  "do the same thing for cleaning companies", "new industry", "new vertical", "[INDUSTRY]-STD",
+  "[INDUSTRY]-PRM", or anything about cloning/adapting the HVAC system for another trade.
 
-  This skill covers the COMPLETE production stack: Retell AI agents + conversation flows,
-  Jotform onboarding, n8n workflows (onboarding, call processor, Stripe, usage tracking),
-  Supabase database, SMTP2GO emails, OAuth integrations, client dashboard, and the
-  Stripe checkout pipeline. Use the HVAC Standard and Premium pipelines as the template.
+  This skill generates: Retell conversation flow JSON, n8n workflow configs, Supabase migration SQL,
+  Jotform onboarding form structure, call processor code, prompt templates, and a setup guide —
+  all customized for the specified industry. Two tiers: Standard (lead capture + notifications)
+  and Premium (Standard + booking + CRM/calendar integration).
 ---
 
 # AI Receptionist System — Multi-Industry Builder
 
-This skill generates a complete end-to-end AI phone receptionist system for any service-based industry, based on the production Syntharra architecture.
+This skill generates a complete end-to-end AI phone receptionist system for any service-based industry,
+matching the production Syntharra architecture.
 
-## Production Architecture (2026)
+## Current Production Architecture
 
 ```
-Stripe Checkout (pricing page)
-    | checkout.session.completed webhook
+Stripe Checkout (client pays)
+    | webhook: checkout.session.completed
     v
 n8n Stripe Workflow -> Supabase (stripe_payment_data) -> Welcome Email with Jotform link
     |
     v
-Jotform Onboarding Form (industry-specific, 50-60 questions)
+Jotform Onboarding (client fills company details)
     | webhook to n8n
     v
 n8n Onboarding Workflow
-    |-- Parse form data
-    |-- Build prompts from template
-    |-- Create Retell agent via API (conversation flow based)
-    |-- Save client config to Supabase
-    |-- Send branded welcome email (SMTP2GO)
-    |-- Send integration setup emails (OAuth/API key)
-    +-- Notify Dan internally
-
-Retell AI Agent (live, per-client)
-    | post_call_analysis webhook
+    |-- Creates Retell Agent via API (conversation flow clone)
+    |-- Assigns phone number
+    |-- Saves client config to Supabase ([industry]_[tier]_agent)
+    |-- Sends client welcome email (with phone number + dashboard link)
+    |-- Sends setup emails for CRM/calendar OAuth (Premium only)
+    +-- Sends Dan internal notification
+        |
+        v (client's phone starts ringing)
+Retell AI Agent (handles inbound calls via conversation flow)
+    | post-call webhook
     v
 n8n Call Processor Workflow
-    |-- Parse transcript + call analysis
-    |-- Score lead, extract caller data
-    |-- Save to Supabase (call_log)
-    |-- Send notification emails (SMTP2GO)
-    |-- Send SMS notifications (Telnyx, when enabled)
+    |-- Parses transcript via code node (NOT GPT, uses JS extraction)
+    |-- Scores lead, extracts caller info, detects emergency
+    |-- Saves to Supabase ([industry]_call_log)
+    |-- Sends email notification to client (SMTP2GO)
+    |-- Sends SMS notification (Telnyx, when enabled)
     +-- Repeat caller detection (Premium)
-
-Premium Extras:
-    |-- Integration Dispatcher (Google Cal + Jobber booking)
-    |-- OAuth Server (calendar/CRM connections)
-    +-- Client Dashboard (syntharra.com/dashboard.html?agent_id=X)
-
-Supporting Workflows:
-    |-- Weekly Lead Report (branded email to clients)
-    |-- Monthly Minutes Calculator + Overage Billing
-    |-- Usage Alert Monitor (80% / 100% warnings)
-    |-- Nightly GitHub Backup
-    +-- Scenario Test Runner (E2E testing)
+        |
+        v
+Client Dashboard (syntharra.com/dashboard.html?agent_id=X)
+    +-- Real-time call data from Supabase
 ```
 
-## Tech Stack
+## Tech Stack (DO NOT deviate)
 
-| Component | Technology | Notes |
-|-----------|-----------|-------|
-| Agent builder | Retell AI | Conversation flow based, not prompt-only |
+| Component | Tool | Notes |
+|-----------|------|-------|
+| Agent builder | Retell AI | Conversation flows, NOT single-prompt agents |
+| Phone numbers | Retell (built-in) | Buy directly through Retell, NOT Twilio |
 | Automation | n8n (cloud) | syntharra.app.n8n.cloud |
 | Database | Supabase | hgheyqwnrcvwtgngqdnq.supabase.co |
-| Onboarding forms | Jotform | REST API (NOT MCP connector) |
-| Email | SMTP2GO | API key in all email nodes |
-| SMS | Telnyx | Pending activation, wired but disabled |
-| Payments | Stripe | Checkout + webhook pipeline |
-| OAuth | Custom Express server | Railway, Google/Outlook/Calendly/CRM |
-| Website | GitHub Pages | syntharra.com |
-| Hosting | Railway | OAuth server + Stripe checkout |
-| Version control | GitHub | syntharra-automations repo |
+| Onboarding form | Jotform | REST API (NOT MCP OAuth connector, it is broken) |
+| Email | SMTP2GO | API key: api-0BE30DA64A074BC79F28BE6AEDC9DB9E |
+| SMS | Telnyx | Preferred. NOT Twilio, NOT Plivo |
+| Payments | Stripe | Checkout sessions with setup fee + subscription |
+| OAuth server | Express.js on Railway | auth.syntharra.com |
+| Website/Dashboard | GitHub Pages | syntharra.com |
+| Prompts | Commas not dashes | Always use commas instead of dashes in agent prompts |
 
 ## Two Tiers
 
-### Standard ($497/mo)
-- AI receptionist handles inbound calls
-- Lead capture, scoring, notifications
-- Emergency detection + live transfer
+### Standard ($497/mo, 475 min)
+- Inbound call handling with AI conversation flow
+- Lead capture (name, phone, address, service needed)
+- Emergency detection and transfer
+- Email/SMS notifications to client on each call
 - Client dashboard
-- Weekly lead report emails
-- 475 minutes/month
+- Weekly usage report email
 
-### Premium ($997/mo)
-- Everything in Standard, plus:
-- Calendar booking (Google Cal, Outlook, Calendly, etc.)
-- CRM integration (Jobber, Housecall Pro, HubSpot, GoHighLevel, etc.)
+### Premium ($997/mo, 1000 min)
+Everything in Standard, plus:
+- Real-time job booking via CRM/calendar integration
 - Repeat caller detection
+- CRM sync (Jobber, Housecall Pro, ServiceTitan, HubSpot, GoHighLevel, etc.)
+- Calendar integration (Google Calendar, Outlook, Calendly, Cal.com, etc.)
 - Integration dispatcher workflow
-- 1,000 minutes/month
+- Enhanced call analysis
 
 ---
 
-## How To Build a New Industry
+## How To Use This Skill
 
-When the user asks to set up this system for a new industry, follow these steps:
+When building a new industry vertical, follow these steps:
 
-### Step 1: Read References
+### Step 1: Gather Requirements
 
-Read the industry-specific reference file:
-- `references/hvac.md` — production template
-- `references/plumbing.md`
-- `references/cleaning.md`
-- `references/generic-service.md` — any other industry
+1. **Industry** — e.g., Plumbing, Electrical, Cleaning, Roofing
+2. **Tier** — Standard or Premium (or both)
+3. **Industry tag** — e.g., [PLMB-STD], [ELEC-PRM]
 
-Also read production files from GitHub syntharra-automations repo for exact patterns.
+If the user says "build plumbing standard" or similar, infer from context.
 
-### Step 2: Create Supabase Tables
+### Step 2: Read the Industry Reference
 
-Create per industry (clone from HVAC schema):
+Read the appropriate references/[industry].md file for:
+- Service categories and common services
+- Emergency scenarios and routing logic
+- Hot/warm/cold lead signals for scoring
+- Seasonal patterns
+- Industry-specific Jotform fields
 
-**`[industry]_standard_agent`** — client config (60+ columns):
-Core, Agent config, Services, Hours, Pricing, Notifications, Transfer, Marketing, Billing, Meta
+If no reference exists, use references/generic-service.md and adapt.
 
-**`[industry]_call_log`** — call data:
-agent_id, call_id, retell_call_id, created_at, caller_name, caller_phone, caller_address, service_requested, notification_type, lead_score, is_hot_lead, booking_success, summary, duration_seconds, call_type, urgency, caller_sentiment, job_type, notes
+### Step 3: Generate All Components
 
-Premium adds: `[industry]_premium_agent` (standard + CRM/calendar integration columns)
+For each new industry, generate and customize:
 
-### Step 3: Create Jotform Onboarding Form
+| Component | File Pattern | Purpose |
+|-----------|-------------|---------|
+| Conversation flow | [industry]-conversation-flow.json | Retell conversation flow nodes |
+| Prompt builder | [industry]-prompt-builder.js | Builds agent prompt from client config |
+| Call processor | [industry]-call-processor.js | JS code node for n8n call processor |
+| Supabase migration | [industry]-supabase-migration.sql | Creates agent + call_log tables |
+| Jotform structure | [industry]-jotform-fields.md | Onboarding form field list |
+| n8n onboarding | [industry]-onboarding-workflow.json | n8n workflow JSON |
+| n8n call processor | [industry]-call-processor-workflow.json | n8n workflow JSON |
+| Setup guide | [industry]-SETUP-GUIDE.md | Step-by-step deployment instructions |
 
-50-60 questions in 5-7 sections via Jotform REST API:
-1. Business Information
-2. AI Receptionist Configuration
-3. Services and Coverage (industry-specific)
-4. Call Handling and Pricing
-5. Lead Capture and Notifications
-6. Branding, Promotions and Extras
-7. Booking and Integration (Premium only)
+### Step 4: Industry Customization Points
 
-### Step 4: Build Retell Conversation Flow
+Each industry requires customizing:
 
-Standard flow (12 nodes): greeting, identify_call, nonemergency_leadcapture, verify_emergency, callback, existing_customer, general_questions, spam_robocall, Transfer Call, transfer_failed, Ending, End Call
+**Conversation Flow Nodes** (adapt the HVAC Standard 12-node flow):
+- greeting, identify_call, nonemergency_leadcapture, verify_emergency,
+  callback, existing_customer, general_questions, spam_robocall,
+  Transfer Call (warm whisper), transfer_failed, Ending, End Call
 
-**Prompt rules:** commas not dashes, dynamic variables (agent_name, company_name, COMPANY_INFO_BLOCK), under 30 words per response, never guess pricing.
+**Call Processor JS** (adapt from HVAC):
+- notification_type mapping (industry-specific call categories)
+- service_requested extraction (industry service list)
+- urgency detection (industry emergency keywords)
+- lead_score calculation (industry scoring criteria)
+- job_type classification
 
-### Step 5: Build n8n Workflows
+**Supabase Tables**:
+- [industry]_standard_agent / [industry]_premium_agent (client config)
+- [industry]_call_log (call records with industry-specific fields)
 
-Clone from HVAC and adapt:
-1. **Onboarding** — Jotform webhook -> parse -> create Retell agent -> Supabase -> welcome email
-2. **Call Processor** — Retell webhook -> parse -> score -> Supabase -> notifications
-3. **Stripe** — update Jotform URL for new industry
-4. **Supporting** — weekly report, minutes calc, usage alerts (shared)
-
-### Step 6: Update Dashboard
-
-Add new table names to the dashboard lookup chain in dashboard.html.
-
-### Step 7: Test End-to-End
-
-Simulate: Jotform submission -> agent creation -> test call -> call log -> dashboard -> weekly report.
+**Jotform Fields**:
+- Base fields same across all industries (company info, contact, AI config)
+- Industry-specific: services offered, certifications, equipment brands
+- Premium adds: CRM platform, calendar platform, booking config
 
 ---
 
-## Key Rules (ALWAYS follow)
+## Retell Conversation Flow Architecture
 
-- Never delete or recreate a Retell agent — patch in place
-- Always publish after Retell agent updates
-- Always push to GitHub after sessions with changes
-- Use commas not dashes in all agent prompts
-- n8n edits require manual Publish to go live
-- Jotform: REST API only, NOT MCP connector
-- SMTP2GO for all emails, never Gmail or SES
-- Telnyx for SMS, never Twilio
+### Standard Flow (12 nodes)
+greeting -> identify_call
+    |-- nonemergency_leadcapture -> Ending -> End Call
+    |-- verify_emergency -> Transfer Call -> transfer_failed
+    |-- callback -> Ending
+    |-- existing_customer -> Transfer Call
+    |-- general_questions -> Ending
+    +-- spam_robocall -> End Call
+
+### Premium Flow (adds booking + dispatch)
+Same as Standard plus:
+- check_availability (queries calendar via tool)
+- book_appointment (creates booking via tool)
+- confirm_booking (confirms details with caller)
+
+### Key Rules
+- Use conversation flows, NOT single-prompt agents
+- Dynamic variables: {{agent_name}}, {{company_name}}, {{COMPANY_INFO_BLOCK}}
+- Always use commas instead of dashes in prompts
+- Keep individual node prompts under 200 words
+- Warm transfer whisper: tell the human who is calling before connecting
+
+---
+
+## n8n Workflow Patterns
+
+### Onboarding Workflow (per industry)
+Trigger: Jotform webhook -> Extract form data -> Build prompt -> Create Retell agent via API ->
+Assign phone number -> Save to Supabase -> Publish agent -> Send welcome email (SMTP2GO) ->
+Send setup emails (Premium: OAuth links) -> Send internal notification to Dan
+
+### Call Processor Workflow (per industry)
+Trigger: Retell post-call webhook -> Filter (only completed calls) ->
+Lookup agent in Supabase -> Parse transcript (JS code node, NOT GPT) ->
+Calculate lead score -> Save to Supabase call_log -> Send notification email (SMTP2GO) ->
+Send SMS if enabled (Telnyx)
+
+### Supporting Workflows (shared across all industries)
+- Stripe Workflow (checkout.session.completed)
+- Minutes Calculator (monthly usage per client)
+- Usage Alert (80% and 100% warnings)
+- Weekly Lead Report (branded weekly summary per client)
+- Publish Retell (publishes agent after API updates)
+- Nightly GitHub Backup
+
+### Critical n8n Rules
+- ALWAYS click Publish after editing any workflow
+- ALL emails via SMTP2GO (api key in code nodes)
+- Error handling: every workflow needs an error notification email node
+
+---
+
+## Supabase Schema Pattern
+
+### Agent Table: [industry]_[tier]_agent
+Core columns (same across all industries):
+agent_id, conversation_flow_id, voice_id, agent_language, company_name, owner_name,
+company_phone, client_email, website, years_in_business, timezone, industry_type,
+agent_name, voice_gender, custom_greeting, company_tagline, services_offered,
+service_area, service_area_radius, licensed_insured, business_hours, response_time,
+emergency_service, emergency_phone, after_hours_behavior, after_hours_transfer,
+pricing_policy, free_estimates, financing_available, warranty, warranty_details,
+payment_methods, lead_contact_method, lead_phone, lead_email, transfer_phone,
+transfer_triggers, transfer_behavior, plan_type, stripe_customer_id, subscription_id,
+notification_email_2, notification_email_3, notification_sms_2, notification_sms_3
+
+Premium adds: crm_platform, crm_status, crm_access_token, crm_refresh_token,
+calendar_platform, calendar_status, calendar_access_token, calendar_refresh_token,
+booking_buffer_minutes, default_appointment_duration, dispatch_mode
+
+### Call Log Table: [industry]_call_log
+agent_id, call_id, created_at, caller_name, caller_phone, caller_address,
+service_requested, notification_type, lead_score, is_hot_lead, booking_success,
+summary, duration_seconds, call_type, urgency, job_type, caller_sentiment,
+vulnerable_occupant, notes, geocode_status, geocode_formatted
+
+---
+
+## Retell Agent Management Rules (CRITICAL)
+
+- NEVER delete or recreate a Retell agent. Agent ID is the foreign key. Always patch in place.
+- ALWAYS call POST https://api.retellai.com/publish-agent/{agent_id} after any update.
+- ALWAYS push to GitHub after sessions with changes.
+- Buy phone numbers through Retell directly, not Twilio.
+
+---
+
+## OAuth / Integration Architecture (Premium only)
+
+OAuth server at auth.syntharra.com handles:
+- Calendar OAuth: Google Calendar, Outlook, Calendly, Cal.com, Acuity Scheduling
+- CRM OAuth: Jobber, Housecall Pro, HubSpot, GoHighLevel
+- API key entry: ServiceTitan, FieldEdge, Kickserv, Workiz (via /submit-key endpoint)
+
+Flow: Client clicks connect link -> Platform login -> Token saved to Supabase -> AI can book/sync
 
 ---
 
 ## Industry Reference Files
 
-- `references/hvac.md` — HVAC (production template)
-- `references/plumbing.md` — Plumbing
-- `references/cleaning.md` — Cleaning
-- `references/generic-service.md` — Any other industry
+Read the relevant file before generating any industry components:
+- references/hvac.md
+- references/plumbing.md
+- references/electrical.md
+- references/cleaning.md
+- references/generic-service.md
 
-For unlisted industries, use generic-service.md and adapt services, emergencies, lead signals, seasonal patterns.
+If a reference file does not exist for the requested industry, create one following
+the pattern of existing reference files, then proceed with generation.
+
+---
+
+## Output Checklist
+
+Before declaring the task complete, verify:
+- [ ] Conversation flow JSON has all 12+ nodes with proper routing
+- [ ] Prompt builder uses {{agent_name}}, {{company_name}}, {{COMPANY_INFO_BLOCK}}
+- [ ] All prompts use commas, not dashes
+- [ ] Call processor JS handles all notification types for the industry
+- [ ] Supabase migration creates both agent and call_log tables
+- [ ] Jotform field list covers all industry-specific needs
+- [ ] n8n workflows use SMTP2GO for email, NOT Gmail
+- [ ] Setup guide includes all API keys, webhook URLs, and step-by-step instructions
+- [ ] Emergency routing is appropriate for the industry
+- [ ] Lead scoring criteria are industry-specific
