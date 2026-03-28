@@ -1,7 +1,13 @@
-# Syntharra — Project State Reference
+# Syntharra — Project State (Master Reference)
 
-> Auto-generated reference doc. Last updated: 2026-03-28.
-> Contains operational config, IDs, and architecture notes for fast session handoff.
+> **This is the single source of truth for all Syntharra operational state.**
+> Last updated: 2026-03-28.
+>
+> **RULE FOR ALL CLAUDE SESSIONS:**
+> 1. READ this file + `syntharra-website/CLAUDE.md` at the start of every chat
+> 2. UPDATE this file at the end of every chat that changes anything
+> 3. Drop a session log in `docs/session-logs/` with what changed and why
+> 4. Push all changes to GitHub before the chat ends
 
 ---
 
@@ -11,13 +17,32 @@
 |---|---|
 | Primary colour | `#6C63FF` (violet) |
 | Accent colour | `#00D4FF` (cyan) |
-| Fonts | DM Serif Display + DM Sans |
-| Logo | 4 ascending signal bars (violet) + "Syntharra" wordmark |
+| Gradient | `linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)` |
+| Fonts (website) | Inter (Google Fonts) |
+| Fonts (checkout) | DM Serif Display + DM Sans |
+| Background | `#FAFAFA` |
+| Surface/cards | `#FFFFFF` |
+| Text primary | `#1A1A2E` |
+| Text secondary | `#4A4A6A` |
+| Text tertiary | `#8A8AA0` |
+| Border | `#E5E7EB` |
+| Logo | 4 ascending vertical bars, rounded corners, flat `#6C63FF` |
 | Contact | support@syntharra.com \| www.syntharra.com |
 
-Logo variants in `brand-assets/`:
+### Logo variants (in `brand-assets/`)
 - Default: bars purple, "Syntharra" purple, "AI SOLUTIONS" black
-- Swapped v2: bars purple, "Syntharra" black, "AI SOLUTIONS" purple
+- Swapped v2: bars purple, "Syntharra" black, "AI SOLUTIONS" purple (`syntharra-logo-swapped-v2.png`)
+- Favicon: `favicon.svg` (purple on transparent), `favicon-white.svg` (white on transparent)
+- NEVER use emoji as substitute for logo anywhere
+
+### Email templates
+ALL Syntharra emails must be **LIGHT THEME**: white (#fff) cards, grey (#F7F7FB) outer bg, dark text (#1A1A2E), purple (#6C63FF) accents. NEVER dark-theme emails — let client email apps handle dark mode. Applies to every n8n email template: welcome, reports, scores, onboarding, invoices.
+
+### Email signature
+Final versions in `brand-assets/email-signature/`:
+- `syntharra-signature-PASTE-THIS.html` — Gmail + universal, purple circle white icon, inline base64 PNGs, border-top divider
+- `syntharra-signature-outlook.html` — Outlook desktop
+- Phone: +1 (000) 000-0000 placeholder
 
 ---
 
@@ -31,7 +56,7 @@ Logo variants in `brand-assets/`:
 | `admin@syntharra.com` | Internal admin, contract notices | Service agreement, call processor notifications, scenario test reports |
 | `onboarding@syntharra.com` | Onboarding notifications (internal) | Stripe Workflow, HVAC Standard Onboarding, HVAC Premium Onboarding |
 | `noreply@syntharra.com` | Sender address for automated emails | All SMTP2GO outbound emails |
-| `daniel@syntharra.com` | Founder personal email | NOT used in any workflows or customer-facing content |
+| `daniel@syntharra.com` | Founder personal email | **NEVER** in any workflows or customer-facing content |
 
 ### n8n Workflow Email Mapping
 
@@ -47,34 +72,45 @@ Logo variants in `brand-assets/`:
 | Monthly Minutes Calculator (`9SuchBjqhFmLbH8o`) | — | `support@` |
 
 ### Website Email Placement
-
 - **Every page footer:** Contact (`support@`) + Feedback (`feedback@`)
 - **Careers page:** `careers@syntharra.com`
 - **Service agreement:** `admin@syntharra.com` (contract cancellation notices)
 - **Legal pages footer (privacy, terms, security, service-agreement):** Contact + Feedback links
 
-### Rules
-- `daniel@syntharra.com` should NEVER appear in any workflow node logic, email body, or website content
+### Email Rules
+- `daniel@syntharra.com` must NEVER appear in any workflow node logic, email body, or website content
 - All customer-facing "contact us" references → `support@syntharra.com`
-- All internal operational notifications → `admin@syntharra.com` or `onboarding@syntharra.com` depending on context
+- All internal operational notifications → `admin@` or `onboarding@` depending on context
 - All automated email sender address → `noreply@syntharra.com`
+
+---
+
+## Pricing
+
+| Plan | Monthly | Annual (2 months free) | Setup Fee | Minutes |
+|---|---|---|---|---|
+| Standard | $497/mo | $414/mo | $1,499 | 475 min/mo |
+| Premium | $997/mo | $831/mo | $2,499 | 1,000 min/mo |
+
+Pricing page: `https://syntharra-checkout-production.up.railway.app`
+Pricing is NOT public on the main website.
 
 ---
 
 ## Infrastructure Overview
 
-| Platform | Purpose |
+| Platform | URL / Detail |
 |---|---|
+| Website | syntharra.com (GitHub Pages) |
+| Checkout | syntharra-checkout-production.up.railway.app (Railway) |
+| n8n | syntharra.app.n8n.cloud |
+| Supabase | hgheyqwnrcvwtgngqdnq.supabase.co |
+| Stripe | Currently **TEST MODE** |
+| Jotform | Account: Blackmore_Daniel |
 | Retell AI | AI phone agent builder |
-| n8n (syntharra.app.n8n.cloud) | Automation / workflow orchestration |
-| Supabase | Database (hgheyqwnrcvwtgngqdnq.supabase.co) |
-| Jotform | Client onboarding forms |
-| Stripe | Payments (currently TEST MODE) |
-| Railway | Hosts Node.js checkout server |
-| Amazon SES | Transactional email — noreply@syntharra.com (migration in progress) |
 | SMTP2GO | Current email provider across all n8n workflows |
-| Telnyx | SMS (pending AI evaluation approval — account created, $5 loaded) |
-| GitHub Pages | syntharra.com website |
+| Telnyx | SMS (pending AI evaluation approval — account created, $5 loaded, identity verified) |
+| Plivo | SMS backup option if Telnyx doesn't work out. NOT Twilio. |
 
 ---
 
@@ -87,36 +123,61 @@ Logo variants in `brand-assets/`:
 | Demo — Sophie | `agent_2723c07c83f65c71afd06e1d50` |
 
 - Arctic Breeze phone: `+18129944371` | Transfer: `+18563630633`
-- Live flow: `conversation_flow_34d169608460`
-- **Never delete or recreate a Retell agent** — agent_id is foreign key across Retell, Supabase, call processor, and phone number
-- **Always publish after any agent update**: `POST https://api.retellai.com/publish-agent/{agent_id}` (Bearer auth)
+- Live conversation flow: `conversation_flow_34d169608460`
+- Flow has 12 nodes: greeting, identify_call, nonemergency_leadcapture, verify_emergency, callback, existing_customer, general_questions, spam_robocall, Transfer Call, transfer_failed, Ending, End Call
+
+### Retell Critical Rules
+- **NEVER delete or recreate a Retell agent** — agent_id is the foreign key tying Retell, Supabase, call processor, and phone number together. Always patch in place.
+- If a new agent is ever created, immediately update Supabase agent_id, phone assignment, and n8n in the same operation
+- **Always publish after any agent update**: `POST https://api.retellai.com/publish-agent/{agent_id}` with Bearer auth (returns 200 empty body)
 - Demo agents must always stay published
+
+### HVAC Prompt Architecture
+- Master base prompt + company info block + call type nodes (service/repair, install/quote, existing customer, FAQ, emergency, live transfer)
+- Dynamic variables: `{{agent_name}}`, `{{company_name}}`, `{{COMPANY_INFO_BLOCK}}`
+- **Always use commas instead of dashes** in agent prompts for better AI readability
 
 ---
 
-## n8n Workflows
+## n8n Workflows (Active)
 
-| Workflow | ID |
-|---|---|
-| HVAC Std Onboarding | `k0KeQxWb3j3BbQEk` |
-| HVAC Std Call Processor | `OyDCyiOjG0twguXq` |
-| HVAC Prem Onboarding | `KXDSMVKSf59tAtal` |
-| HVAC Prem Call Processor | `UhxfrDaEeYUk4jAD` |
-| HVAC Prem Dispatcher | `kVKyPQO7cXKUJFbW` |
-| Stripe | `ydzfhitWiF5wNzEy` |
-| Weekly Lead Report | `mFuiB4pyXyWSIM5P` |
-| Minutes Calculator | `9SuchBjqhFmLbH8o` |
-| Usage Alert | `lQsYJWQeP5YPikam` |
-| Publish Retell | `sBFhshlsz31L6FV8` |
-| Scenario Runner v4 | `94QmMVGdEDl2S9MF` |
-| Transcript Generator | `dHO8O0QHBZJyzytn` |
-| Integration Hub (inactive) | `8WYFy093XA6UKB7L` |
-| Nightly Backup | `EAHgqAfQoCDumvPU` |
-| Send Welcome Email (manual backup) | `Rd5HiN7v2SRwNmiY` |
+| Workflow | ID | Type |
+|---|---|---|
+| HVAC Std Onboarding | `k0KeQxWb3j3BbQEk` | Standard |
+| HVAC Std Call Processor | `OyDCyiOjG0twguXq` | Standard |
+| HVAC Prem Onboarding | `KXDSMVKSf59tAtal` | Premium |
+| HVAC Prem Call Processor | `UhxfrDaEeYUk4jAD` | Premium |
+| HVAC Prem Dispatcher | `kVKyPQO7cXKUJFbW` | Premium |
+| Stripe Workflow | `ydzfhitWiF5wNzEy` | Shared |
+| Weekly Lead Report | `mFuiB4pyXyWSIM5P` | Shared |
+| Minutes Calculator | `9SuchBjqhFmLbH8o` | Shared |
+| Usage Alert Monitor | `lQsYJWQeP5YPikam` | Shared |
+| Publish Retell Agent | `sBFhshlsz31L6FV8` | Shared |
+| Scenario Runner v4 | `94QmMVGdEDl2S9MF` | Testing |
+| Scenario Transcript Gen | `dHO8O0QHBZJyzytn` | Testing |
+| Scenario Process Single | `rlf1dHVcTlzUbPX7` | Testing |
+| Website Lead → AI Score | `FBNjSmb3eLdBS3N9` | Lead Gen |
+| Website Lead → Free Report | `ykaZkQXWO2zEJCdu` | Lead Gen |
+| Nightly GitHub Backup | `EAHgqAfQoCDumvPU` | Ops |
+| Send Welcome Email (manual) | `Rd5HiN7v2SRwNmiY` | Backup |
 
-- Minutes Calculator + Usage Alert have `availableInMCP: false` — enable before editing via MCP
-- Always click **Publish** after any workflow edits
-- SMTP2GO key: `api-0BE30DA64A074BC79F28BE6AEDC9DB9E`
+### Inactive (confirm with Dan before deleting)
+| Integration Hub | `8WYFy093XA6UKB7L` | Inactive |
+
+### n8n Rules
+- **Always click Publish after any workflow edits**
+- SMTP2GO key: `[stored in Claude project memory]`
+- n8n API update payload must include: `name`, `nodes`, `connections` (required). For `settings`, only include `executionOrder` — extra keys like `availableInMCP`, `callerPolicy`, `binaryMode` cause 400 errors.
+
+### n8n Stripe Workflow Detail (`ydzfhitWiF5wNzEy`)
+Trigger: `checkout.session.completed` → Extract Session Data (JS, builds emailHtml + dynamic Jotform URL) → Save to Supabase → Send Welcome Email → Send Internal Notification
+
+### HVAC Premium Detail
+- Onboarding `KXDSMVKSf59tAtal`: 13 nodes, 17 PCA, 4 tools
+- Call Processor `UhxfrDaEeYUk4jAD`: 15 nodes, repeat caller detection
+- Dispatcher `kVKyPQO7cXKUJFbW`: 4 nodes, Google Cal + Jobber
+- SMS wired but disabled (`SMS_ENABLED=false`)
+- OAuth server repo: `Syntharra/syntharra-oauth-server`
 
 ---
 
@@ -124,9 +185,9 @@ Logo variants in `brand-assets/`:
 
 | Table | Purpose |
 |---|---|
-| `hvac_standard_agent` | Client config, notification emails/SMS |
-| `hvac_call_log` | Call records (call_tier, job_type, vulnerable_occupant, caller_sentiment, geocode fields, notes) |
-| `stripe_payment_data` | Checkout session data |
+| `hvac_standard_agent` | Client config (includes notification_email_2/3, notification_sms_2/3) |
+| `hvac_call_log` | Call records (call_tier, job_type, vulnerable_occupant, caller_sentiment, geocode_status, geocode_formatted, caller_address, notes) |
+| `stripe_payment_data` | Checkout session data (stripe_customer_id, subscription_id, session_id, customer_email, customer_name, plan_name, plan_billing, plan_amount, minutes, setup_fee_price_id, payment_status, jotform_sent, signup_date) |
 | `client_subscriptions` | Active subscription tracking |
 | `billing_cycles` | Billing cycle records |
 | `overage_charges` | Usage overage tracking |
@@ -140,47 +201,50 @@ Logo variants in `brand-assets/`:
 
 | Plan | Price ID |
 |---|---|
-| Standard Monthly | `price_1TDckaECS71NQsk8DdNsWy1o` |
-| Standard Annual | `price_1TDckiECS71NQsk8fqDio8pw` |
+| Standard Monthly ($497) | `price_1TDckaECS71NQsk8DdNsWy1o` |
+| Standard Annual ($414/mo) | `price_1TDckiECS71NQsk8fqDio8pw` |
 | Standard Setup ($1,499) | `price_1TEKKrECS71NQsk8Mw3Z8CoC` |
-| Premium Monthly | `price_1TDclGECS71NQsk8OoLoMV0q` |
-| Premium Annual | `price_1TDclPECS71NQsk8S9bAPGoJ` |
+| Premium Monthly ($997) | `price_1TDclGECS71NQsk8OoLoMV0q` |
+| Premium Annual ($831/mo) | `price_1TDclPECS71NQsk8S9bAPGoJ` |
 | Premium Setup ($2,499) | `price_1TEKKvECS71NQsk8vWGjHLUP` |
 
 Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 
-### Coupons (TEST MODE — recreate in live mode, same names)
+### Coupons (TEST MODE — recreate in live mode, same code names)
 
 | Code | ID | Discount |
 |---|---|---|
-| FOUNDING-STANDARD | `gzp8vnD7` | $1,499 off (once) |
-| FOUNDING-PREMIUM | `RsOnUuo4` | $2,499 off (once) |
+| FOUNDING-STANDARD | `gzp8vnD7` | $1,499 off (once) — waives full setup |
+| FOUNDING-PREMIUM | `RsOnUuo4` | $2,499 off (once) — waives full setup |
 | CLOSER-250 | `mGTTQZOw` | $250 off (once) |
 | CLOSER-500 | `GJiRoaMY` | $500 off (once) |
 | CLOSER-750 | `fUzLNIgz` | $750 off (once) |
 | CLOSER-1000 | `3wraC3tQ` | $1,000 off (once) |
 
+Discount codes doc: `docs/discount-codes.md`
+
 ### Webhook
 - URL: `https://syntharra.app.n8n.cloud/webhook/syntharra-stripe-webhook`
 - Event: `checkout.session.completed`
 - ID: `we_1TEJXzECS71NQsk8eOMIs8JE`
-- Signing secret: `whsec_D7eMVF0vdm2KRrVkZLzrhTihYeMbloQO`
+- Signing secret: `[stored in Claude project memory]`
 
 ### Branded Invoices (COMPLETED ✅)
-- Stripe Dashboard branding set: logo, `#6C63FF`, `#00D4FF`
+- Dashboard branding: logo, `#6C63FF`, `#00D4FF`
 - Automatic email receipts enabled (successful payments + renewals)
 - Invoice footer added
 - `invoice_creation` block live in `server.js` (commit `fcec7af92232`)
 
 ---
 
-## Checkout Server (syntharra-checkout repo)
+## Checkout Server
 
 - URL: `https://syntharra-checkout-production.up.railway.app`
+- Repo: `Syntharra/syntharra-checkout` — keep SEPARATE from syntharra-automations
 - Stack: Node.js / Express, deployed on Railway
 - Key env vars: `STRIPE_SECRET_KEY`, `RETELL_API_KEY`, `SITE_URL`
 - `allow_promotion_codes: true` in server.js
-- `invoice_creation` block added — every checkout generates branded invoice PDF
+- `invoice_creation` block live — every checkout generates branded invoice PDF
 
 ---
 
@@ -192,8 +256,9 @@ Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 | Standard Onboarding v2 | `260812373840657` |
 | Premium Onboarding | `260819259556671` |
 
+- API key: `[stored in Claude project memory]` (account: Blackmore_Daniel)
+- **Use REST API directly** — do NOT use MCP OAuth connector (broken)
 - Standard onboarding webhook: `https://syntharra.app.n8n.cloud/webhook/jotform-hvac-onboarding`
-- Use REST API directly with API key — do NOT use MCP OAuth connector (broken)
 
 ---
 
@@ -203,21 +268,69 @@ Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 |---|---|
 | `Syntharra/syntharra-automations` | All operational code: prompts, flows, n8n workflows, docs |
 | `Syntharra/syntharra-checkout` | Pricing page + Stripe checkout only (Railway) |
-| `Syntharra/syntharra-website` | index.html, demo.html, terms/privacy/security.html, favicon.svg |
+| `Syntharra/syntharra-website` | Website (GitHub Pages). `CLAUDE.md` at root = master handbook |
 | `Syntharra/syntharra-oauth-server` | Premium OAuth server |
 
 - **Do NOT merge syntharra-checkout into syntharra-automations**
-- Push after every session with changes
+- **Push after every session with changes**
+- GitHub token: `[stored in Claude project memory]`
+
+### Website Edit Workflow
+1. Fetch page from GitHub API (get SHA + content)
+2. Edit using Python `str.replace()` — never shell curl for large files
+3. Verify exactly ONE `<style>` block (`content.count('<style>') == 1`)
+4. Push back via GitHub API (PUT with SHA)
+
+### Website CSS Rules
+- NEVER use `overflow:hidden` on html/body — use `overflow-x:clip`
+- Use `100dvh` for video sections (not `100vh`)
+- Video background filter: `contrast(1.2) brightness(0.85) saturate(1.3) sepia(0.25) hue-rotate(-15deg)`
+- Dark panel overlay: `linear-gradient(to bottom, rgba(0,0,0,0) 35%, rgba(4,4,14,0.97) 100%)`
+- Hamburger menu must be IDENTICAL on every page — copy from existing, never build from scratch
+- When adding menu items, update ALL pages via script
+- `preview.html` is a temporary design tool only
+
+### Dashboard
+- Live at `syntharra.com/dashboard.html?agent_id=X`
 
 ---
 
-## Website CSS Rules
+## Scaling Plan
 
-- Never use `overflow:hidden` on `html`/`body` — use `overflow-x:clip`
-- Use `100dvh` for video sections
-- Video background filter: `contrast(1.2) brightness(0.85) saturate(1.3) sepia(0.25) hue-rotate(-15deg)`
-- Dark panel overlay: `linear-gradient(to bottom, rgba(0,0,0,0) 35%, rgba(4,4,14,0.97) 100%)`
-- `preview.html` is a temporary design tool only
+- Use Retell API to auto-clone agents per client via n8n onboarding workflow triggered by Jotform
+- Supabase stores client config
+- Preferred n8n scaling path: Railway (self-hosted n8n on Railway Pro)
+- Repo structure: `hvac-standard/`, `hvac-premium/`, `plumbing-standard/`, etc. with `shared/` folder
+
+---
+
+## Marketing (Planned, Not Yet Actioned)
+
+- Automated lead sourcing: Google Places API → Supabase
+- n8n cold email sequences with click tracking
+- Branded video landing page
+- Social content calendar with automated posting (TikTok, LinkedIn)
+- Self-booking calendar link throughout
+- VSL package exists (`Syntharra_VSL_Package.docx`) — script, video assets, outreach email
+
+---
+
+## API Keys Reference
+
+> All sensitive keys are stored in Claude project memory and injected at runtime.
+> They are NOT committed to GitHub. This table shows where each key lives.
+
+| Service | Storage Location |
+|---|---|
+| n8n API key | Claude project memory |
+| Retell API key | Claude project memory + Railway env |
+| GitHub Token | Claude project memory |
+| Jotform API key | Claude project memory |
+| SMTP2GO key | Claude project memory + n8n credentials store |
+| Stripe secret key | Railway env `STRIPE_SECRET_KEY` |
+| Stripe webhook signing secret | Claude project memory |
+| Supabase URL | `hgheyqwnrcvwtgngqdnq.supabase.co` (not secret) |
+| Supabase service role key | n8n credentials store |
 
 ---
 
@@ -228,23 +341,7 @@ Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 - [ ] Switch Stripe to live mode: recreate all products, prices, coupons (same names), webhook
 - [ ] Update Railway `STRIPE_SECRET_KEY` → `sk_live_...`
 - [ ] Update n8n webhook signing secret to live mode value
-- [x] ~~Change all internal notification emails from `daniel@syntharra.com`~~ — **DONE 2026-03-28**: migrated to `admin@`, `onboarding@`, and `support@` across all workflows + website
-- [ ] Telnyx SMS swap (replace Twilio nodes — awaiting AI evaluation approval)
+- [x] ~~Email migration~~ — **DONE 2026-03-28**: `daniel@` removed from all workflows + website. Replaced with `admin@`, `onboarding@`, `support@`
+- [ ] Telnyx SMS swap (awaiting AI evaluation approval)
 - [ ] Enable repeat caller detection
 - [ ] Build Premium pipeline
-
----
-
-## Key API Keys
-
-> Actual keys are stored in Claude project memory, Railway env vars, and n8n credentials — not committed to GitHub.
-
-| Service | Location |
-|---|---|
-| n8n API key | Claude memory |
-| Retell API key | Claude memory + Railway env |
-| GitHub Token | Claude memory |
-| Jotform API key | Claude memory |
-| SMTP2GO key | n8n credentials store |
-| Stripe secret key | Railway env `STRIPE_SECRET_KEY` |
-| Supabase service role key | n8n credentials store |
