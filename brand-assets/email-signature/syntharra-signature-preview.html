@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 30px; }
+
+  .label {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 10px;
+  }
+
+  .box {
+    padding: 28px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: inline-block;
+    min-width: 420px;
+  }
+  .light { background: #ffffff; border: 1px solid #ddd; }
+  .dark  { background: #1e1e1e; border: 1px solid #333; }
+
+  /* ── SIGNATURE ── */
+  .sig { width: 380px; }
+
+  .logo-row     { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .sig-wordmark { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: normal; letter-spacing: 0.5px; line-height: 1.1; }
+  .sig-sub      { font-family: Arial, Helvetica, sans-serif; font-size: 8px; font-weight: bold; letter-spacing: 3.5px; text-transform: uppercase; margin-top: 3px; }
+
+  .divider { height: 2px; background: #6C63FF; border-radius: 2px; margin-bottom: 14px; }
+
+  .sig-name  { font-family: Georgia, 'Times New Roman', serif; font-size: 17px; font-weight: bold; line-height: 1.2; margin-bottom: 4px; }
+  .sig-title { font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: bold; color: #6C63FF; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px; }
+
+  .contact-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .contact-row:last-of-type { margin-bottom: 14px; }
+  .contact-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .contact-link { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #6C63FF; text-decoration: none; }
+  .contact-num  { font-family: Arial, Helvetica, sans-serif; font-size: 13px; }
+
+  .footer { font-family: Arial, Helvetica, sans-serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding-top: 10px; }
+
+  .light .sig-wordmark { color: #111; }
+  .light .sig-sub      { color: #111; }
+  .light .sig-name     { color: #111; }
+  .light .contact-num  { color: #555; }
+  .light .footer       { color: #999; border-top: 1px solid #ddd; }
+
+  .dark .sig-wordmark { color: #fff; }
+  .dark .sig-sub      { color: #fff; }
+  .dark .sig-name     { color: #fff; }
+  .dark .contact-num  { color: #ccc; }
+  .dark .footer       { color: #aaa; border-top: 1px solid #444; }
+</style>
+</head>
+<body>
+
+<!-- LIGHT -->
+<div class="label">☀️ Light Mode</div>
+<div class="box light">
+  <div class="sig">
+
+    <div class="logo-row">
+      <svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2"  y="20" width="5" height="10" rx="1.5" fill="#6C63FF"/>
+        <rect x="10" y="14" width="5" height="16" rx="1.5" fill="#6C63FF"/>
+        <rect x="18" y="8"  width="5" height="22" rx="1.5" fill="#6C63FF"/>
+        <rect x="26" y="2"  width="5" height="28" rx="1.5" fill="#6C63FF"/>
+      </svg>
+      <div>
+        <div class="sig-wordmark">Syntharra</div>
+        <div class="sig-sub">AI SOLUTIONS</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sig-name">Daniel Blackmore</div>
+    <div class="sig-title">Founder &amp; CEO</div>
+
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="20" height="16" rx="2" stroke="#6C63FF" stroke-width="2"/>
+        <path d="M2 7l10 7 10-7" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <a class="contact-link" href="/cdn-cgi/l/email-protection#e68287888f838aa6959f88928e87949487c885898b"><span class="__cf_email__" data-cfemail="c8aca9a6a1ada488bbb1a6bca0a9babaa9e6aba7a5">[email&#160;protected]</span></a>
+    </div>
+
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="#6C63FF" stroke-width="2"/>
+        <path d="M12 3c-2.5 3-4 5.5-4 9s1.5 6 4 9" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 3c2.5 3 4 5.5 4 9s-1.5 6-4 9" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 12h18" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <a class="contact-link" href="https://www.syntharra.com">www.syntharra.com</a>
+    </div>
+
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.6 10.8a15.3 15.3 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1A17 17 0 0 1 3 6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.02L6.6 10.8z" stroke="#6C63FF" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+      <span class="contact-num">+1 (000) 000-0000</span>
+    </div>
+
+    <div class="footer">AI Receptionists &nbsp;·&nbsp; Built for the Trades &nbsp;·&nbsp; Available 24/7</div>
+
+  </div>
+</div>
+
+<br>
+
+<!-- DARK -->
+<div class="label">🌙 Dark Mode</div>
+<div class="box dark">
+  <div class="sig">
+
+    <div class="logo-row">
+      <svg width="30" height="30" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2"  y="20" width="5" height="10" rx="1.5" fill="#6C63FF"/>
+        <rect x="10" y="14" width="5" height="16" rx="1.5" fill="#6C63FF"/>
+        <rect x="18" y="8"  width="5" height="22" rx="1.5" fill="#6C63FF"/>
+        <rect x="26" y="2"  width="5" height="28" rx="1.5" fill="#6C63FF"/>
+      </svg>
+      <div>
+        <div class="sig-wordmark">Syntharra</div>
+        <div class="sig-sub">AI SOLUTIONS</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sig-name">Daniel Blackmore</div>
+    <div class="sig-title">Founder &amp; CEO</div>
+
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="20" height="16" rx="2" stroke="#6C63FF" stroke-width="2"/>
+        <path d="M2 7l10 7 10-7" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <a class="contact-link" href="/cdn-cgi/l/email-protection#0460656a6d616844777d6a706c657676652a676b69"><span class="__cf_email__" data-cfemail="aacecbc4c3cfc6ead9d3c4dec2cbd8d8cb84c9c5c7">[email&#160;protected]</span></a>
+    </div>
+
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="#6C63FF" stroke-width="2"/>
+        <path d="M12 3c-2.5 3-4 5.5-4 9s1.5 6 4 9" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 3c2.5 3 4 5.5 4 9s-1.5 6-4 9" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 12h18" stroke="#6C63FF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <a class="contact-link" href="https://www.syntharra.com">www.syntharra.com</a>
+    </div>
+
+    <div class="contact-row">
+      <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.6 10.8a15.3 15.3 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1A17 17 0 0 1 3 6a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.02L6.6 10.8z" stroke="#6C63FF
