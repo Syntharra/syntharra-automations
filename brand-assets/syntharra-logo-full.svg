@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80">
+  <!-- 4-bar icon -->
+  <rect x="4" y="56" width="12" height="20" rx="4" fill="#6C63FF"/>
+  <rect x="22" y="40" width="12" height="36" rx="4" fill="#6C63FF"/>
+  <rect x="40" y="24" width="12" height="52" rx="4" fill="#6C63FF"/>
+  <rect x="58" y="4" width="12" height="72" rx="4" fill="#6C63FF"/>
+  <!-- Wordmark -->
+  <text x="84" y="48" font-family="Inter, -apple-system, sans-serif" font-size="22" font-weight="700" letter-spacing="-0.4" fill="#0f0f1a">Syntharra</text>
+  <!-- Tagline -->
+  <text x="84" y="62" font-family="Inter, -apple-system, sans-serif" font-size="8" font-weight="500" letter-spacing="1.5" fill="#6C63FF">GLOBAL AI SOLUTIONS</text>
+</svg>
