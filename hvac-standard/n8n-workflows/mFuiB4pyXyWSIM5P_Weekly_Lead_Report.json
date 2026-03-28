@@ -1,648 +1,632 @@
 {
-  "updatedAt": "2026-03-27T22:06:18.346Z",
-  "createdAt": "2026-03-24T00:36:26.862Z",
-  "id": "mFuiB4pyXyWSIM5P",
-  "name": "HVAC Weekly Lead Report",
-  "description": null,
-  "active": true,
-  "isArchived": false,
-  "nodes": [
-    {
-      "id": "2383e2f3-1295-42e9-a8bb-9114fdb0289f",
-      "name": "Hourly Trigger (Sundays)",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        0,
-        0
-      ],
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "4e972fde-a7ed-49b9-a242-390e837c2b69",
-      "name": "Check Sunday 6pm",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        240,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const now = new Date();\nif (now.getUTCDay() !== 0) return [];\nconst tzGroups = [\"America/New_York\",\"America/Chicago\",\"America/Denver\",\"America/Los_Angeles\",\"America/Anchorage\",\"Pacific/Honolulu\",\"America/Phoenix\"];\nconst target = [];\nfor (const tz of tzGroups) { try { const lt = new Date(now.toLocaleString(\"en-US\",{timeZone:tz})); if (lt.getHours()===18) target.push(tz); } catch(e){} }\nif (!target.length) return [];\nconst aliases = {\"America/New_York\":[\"America/New_York\",\"US/Eastern\",\"Eastern\",\"EST\",\"EDT\",\"ET\"],\"America/Chicago\":[\"America/Chicago\",\"US/Central\",\"Central\",\"CST\",\"CDT\",\"CT\"],\"America/Denver\":[\"America/Denver\",\"US/Mountain\",\"Mountain\",\"MST\",\"MDT\",\"MT\"],\"America/Los_Angeles\":[\"America/Los_Angeles\",\"US/Pacific\",\"Pacific\",\"PST\",\"PDT\",\"PT\"],\"America/Anchorage\":[\"America/Anchorage\",\"US/Alaska\",\"Alaska\",\"AKST\",\"AKDT\"],\"Pacific/Honolulu\":[\"Pacific/Honolulu\",\"US/Hawaii\",\"Hawaii\",\"HST\"],\"America/Phoenix\":[\"America/Phoenix\",\"US/Arizona\",\"Arizona\"]};\nlet all = [];\nfor (const tz of target) { if (aliases[tz]) all = all.concat(aliases[tz]); else all.push(tz); }\nreturn {targetTimezones: target, allMatchingTimezones: all, utcHour: now.getUTCHours(), runTime: now.toISOString()};"
-      }
-    },
-    {
-      "id": "5fa1a287-d444-4bc6-8855-0536a927f7bc",
-      "name": "Supabase: Fetch All Clients",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        480,
-        0
-      ],
-      "onError": "continueErrorOutput",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "dSCVell30U6Yt1qA",
-          "name": "Supabase Anon Key"
-        }
-      },
-      "parameters": {
-        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?select=agent_id,company_name,agent_name,lead_email,lead_phone,timezone,services_offered&lead_email=neq.",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
-            }
-          ]
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "cb3a7766-dead-4392-a2d1-d0edb2b4ac07",
-      "name": "Filter Clients by Timezone",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        720,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const clients = .first().json;\nconst checkData = .first().json;\nconst matchingTimezones = checkData.allMatchingTimezones || [];\nif (!Array.isArray(clients) || !clients.length) return [];\nconst filtered = clients.filter(c => { const tz = (c.timezone||\"America/Chicago\").trim(); return matchingTimezones.some(t => t.toLowerCase()===tz.toLowerCase()); });\nif (!filtered.length) return [];\nreturn filtered.map(c => ({json: c}));"
-      }
-    },
-    {
-      "id": "eb58086e-457d-4ec8-bcdd-e0c0bc28f57b",
-      "name": "Split Into Batches",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        960,
-        0
-      ],
-      "parameters": {
-        "options": {}
-      }
-    },
-    {
-      "id": "d91aa38c-931e-471b-89ca-9c2a4df84ea8",
-      "name": "Supabase: Fetch Call Logs (7 Days)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        1200,
-        0
-      ],
-      "onError": "continueErrorOutput",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "dSCVell30U6Yt1qA",
-          "name": "Supabase Anon Key"
-        }
-      },
-      "parameters": {
-        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ .agent_id }}&call_timestamp=gte.{{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&select=*&order=call_timestamp.desc",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
-            }
-          ]
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "0045d0ba-e016-4602-abb2-b2c6fb84349b",
-      "name": "Calculate Lead Stats",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1440,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const callLogs = .first().json;\nconst client = .first().json;\nconst logs = Array.isArray(callLogs) ? callLogs : [];\nconst totalCalls = logs.length;\nconst leads = logs.filter(l => l.is_lead===true||(l.lead_score&&l.lead_score>=6));\nconst totalLeads = leads.length;\nconst totalHotLeads = logs.filter(l=>l.lead_score&&l.lead_score>=8).length;\nconst totalWarmLeads = logs.filter(l=>l.lead_score&&l.lead_score>=6&&l.lead_score<8).length;\nconst totalSpam = logs.filter(l=>!l.is_lead&&l.lead_score!==null&&l.lead_score<3).length;\nconst totalGeneral = logs.filter(l=>!l.is_lead&&l.lead_score>=3&&l.lead_score<6).length;\nconst avgScore = logs.length>0?(logs.reduce((s,l)=>s+(l.lead_score||0),0)/logs.length).toFixed(1):\"0\";\nconst totalDuration = logs.reduce((s,l)=>s+(l.duration_seconds||0),0);\nconst avgDuration = logs.length>0?Math.round(totalDuration/logs.length):0;\nconst svcBreakdown = {};\nlogs.forEach(l=>{const s=l.service_requested||\"Other\";svcBreakdown[s]=(svcBreakdown[s]||0)+1;});\nconst weekEnd=new Date(),weekStart=new Date(Date.now()-7*24*60*60*1000);\nconst fmt=d=>d.toLocaleDateString(\"en-US\",{month:\"short\",day:\"numeric\",year:\"numeric\"});\nreturn {company_name:client.company_name||\"Client\",agent_name:client.agent_name||\"AI Receptionist\",lead_email:client.lead_email||\"\",agent_id:client.agent_id||\"\",totalCalls,totalLeads,totalHotLeads,totalWarmLeads,totalSpam,totalGeneral,avgScore,totalDuration,avgDuration,serviceBreakdown:svcBreakdown,weekStart:fmt(weekStart),weekEnd:fmt(weekEnd),topLeads:leads.slice(0,5).map(l=>({name:l.caller_name||\"Unknown\",phone:l.caller_phone||\"\",service:l.service_requested||\"\",score:l.lead_score||0}))};"
-      }
-    },
-    {
-      "id": "400604df-badf-416b-b331-342abf9891ea",
-      "name": "Build Email HTML",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1680,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const d = .first().json;\nconst fmtD = (s) => { if(s<60) return s+\"s\"; const m=Math.floor(s/60),sec=s%60; return sec>0?m+\"m \"+sec+\"s\":m+\"m\"; };\nconst emailHtml = \"<html><body><h2>Weekly Report: \"+d.company_name+\"</h2><p>Period: \"+d.weekStart+\" - \"+d.weekEnd+\"</p><p>Total Calls: \"+d.totalCalls+\" | Leads: \"+d.totalLeads+\" | Hot Leads: \"+d.totalHotLeads+\"</p></body></html>\";\nreturn {emailHtml, lead_email: d.lead_email, company_name: d.company_name, agent_name: d.agent_name, totalCalls: d.totalCalls, totalLeads: d.totalLeads, weekStart: d.weekStart, weekEnd: d.weekEnd};"
-      }
-    },
-    {
-      "id": "4bdb5887-6107-4b24-9318-34d4ec027b3c",
-      "name": "Send Weekly Report Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        1920,
-        0
-      ],
-      "onError": "continueErrorOutput",
-      "credentials": {
-        "smtp": {
-          "id": "KxD4uGr3CVvIXJII",
-          "name": "SMTP2GO - Syntharra"
-        }
-      },
-      "parameters": {
-        "fromEmail": "Syntharra AI <noreply@syntharra.com>",
-        "toEmail": "={{ .lead_email }}",
-        "subject": "=Weekly Report: {{ .agent_name }} handled {{ .totalCalls }} calls & captured {{ .totalLeads }} leads | {{ .company_name }}",
-        "emailFormat": "html",
-        "html": "={{ .emailHtml }}",
-        "options": {
-          "appendAttribution": false
-        }
-      }
-    }
-  ],
-  "connections": {
-    "Hourly Trigger (Sundays)": {
-      "main": [
-        [
-          {
-            "node": "Check Sunday 6pm",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Sunday 6pm": {
-      "main": [
-        [
-          {
-            "node": "Supabase: Fetch All Clients",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Supabase: Fetch All Clients": {
-      "main": [
-        [
-          {
-            "node": "Filter Clients by Timezone",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Filter Clients by Timezone": {
-      "main": [
-        [
-          {
-            "node": "Split Into Batches",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Into Batches": {
-      "main": [
-        [
-          {
-            "node": "Supabase: Fetch Call Logs (7 Days)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Supabase: Fetch Call Logs (7 Days)": {
-      "main": [
-        [
-          {
-            "node": "Calculate Lead Stats",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Calculate Lead Stats": {
-      "main": [
-        [
-          {
-            "node": "Build Email HTML",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Email HTML": {
-      "main": [
-        [
-          {
-            "node": "Send Weekly Report Email",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Weekly Report Email": {
-      "main": [
-        [
-          {
-            "node": "Split Into Batches",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false,
-    "callerPolicy": "workflowsFromSameOwner"
-  },
-  "staticData": {
-    "node:Hourly Trigger (Sundays)": {
-      "recurrenceRules": []
-    }
-  },
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "pinData": {},
-  "versionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-  "activeVersionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-  "versionCounter": 18,
-  "triggerCount": 1,
-  "shared": [
-    {
-      "updatedAt": "2026-03-24T00:36:26.864Z",
-      "createdAt": "2026-03-24T00:36:26.864Z",
-      "role": "workflow:owner",
-      "workflowId": "mFuiB4pyXyWSIM5P",
-      "projectId": "fHNxQE9IeGCcfUfO",
-      "project": {
-        "updatedAt": "2026-03-17T23:00:52.768Z",
-        "createdAt": "2026-03-17T23:00:46.569Z",
-        "id": "fHNxQE9IeGCcfUfO",
-        "name": "Daniel Blackmore <daniel@syntharra.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
-      }
-    }
-  ],
-  "tags": [],
-  "activeVersion": {
-    "updatedAt": "2026-03-27T22:06:18.347Z",
-    "createdAt": "2026-03-27T22:06:18.347Z",
-    "versionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-    "workflowId": "mFuiB4pyXyWSIM5P",
+    "updatedAt": "2026-03-28T01:05:08.932Z",
+    "createdAt": "2026-03-24T00:36:26.862Z",
+    "id": "mFuiB4pyXyWSIM5P",
+    "name": "HVAC Weekly Lead Report",
+    "description": null,
+    "active": true,
+    "isArchived": false,
     "nodes": [
-      {
-        "id": "2383e2f3-1295-42e9-a8bb-9114fdb0289f",
-        "name": "Hourly Trigger (Sundays)",
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.2,
-        "position": [
-          0,
-          0
-        ],
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "hours"
-              }
-            ]
-          }
-        }
-      },
-      {
-        "id": "4e972fde-a7ed-49b9-a242-390e837c2b69",
-        "name": "Check Sunday 6pm",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          240,
-          0
-        ],
-        "parameters": {
-          "jsCode": "const now = new Date();\nif (now.getUTCDay() !== 0) return [];\nconst tzGroups = [\"America/New_York\",\"America/Chicago\",\"America/Denver\",\"America/Los_Angeles\",\"America/Anchorage\",\"Pacific/Honolulu\",\"America/Phoenix\"];\nconst target = [];\nfor (const tz of tzGroups) { try { const lt = new Date(now.toLocaleString(\"en-US\",{timeZone:tz})); if (lt.getHours()===18) target.push(tz); } catch(e){} }\nif (!target.length) return [];\nconst aliases = {\"America/New_York\":[\"America/New_York\",\"US/Eastern\",\"Eastern\",\"EST\",\"EDT\",\"ET\"],\"America/Chicago\":[\"America/Chicago\",\"US/Central\",\"Central\",\"CST\",\"CDT\",\"CT\"],\"America/Denver\":[\"America/Denver\",\"US/Mountain\",\"Mountain\",\"MST\",\"MDT\",\"MT\"],\"America/Los_Angeles\":[\"America/Los_Angeles\",\"US/Pacific\",\"Pacific\",\"PST\",\"PDT\",\"PT\"],\"America/Anchorage\":[\"America/Anchorage\",\"US/Alaska\",\"Alaska\",\"AKST\",\"AKDT\"],\"Pacific/Honolulu\":[\"Pacific/Honolulu\",\"US/Hawaii\",\"Hawaii\",\"HST\"],\"America/Phoenix\":[\"America/Phoenix\",\"US/Arizona\",\"Arizona\"]};\nlet all = [];\nfor (const tz of target) { if (aliases[tz]) all = all.concat(aliases[tz]); else all.push(tz); }\nreturn {targetTimezones: target, allMatchingTimezones: all, utcHour: now.getUTCHours(), runTime: now.toISOString()};"
-        }
-      },
-      {
-        "id": "5fa1a287-d444-4bc6-8855-0536a927f7bc",
-        "name": "Supabase: Fetch All Clients",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.1,
-        "position": [
-          480,
-          0
-        ],
-        "onError": "continueErrorOutput",
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "dSCVell30U6Yt1qA",
-            "name": "Supabase Anon Key"
-          }
+        {
+            "id": "2383e2f3-1295-42e9-a8bb-9114fdb0289f",
+            "name": "Hourly Trigger (Sundays)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                0,
+                0
+            ],
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours"
+                        }
+                    ]
+                }
+            }
         },
-        "parameters": {
-          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?select=agent_id,company_name,agent_name,lead_email,lead_phone,timezone,services_offered&lead_email=neq.",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "httpHeaderAuth",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
-              }
-            ]
-          },
-          "options": {}
-        }
-      },
-      {
-        "id": "cb3a7766-dead-4392-a2d1-d0edb2b4ac07",
-        "name": "Filter Clients by Timezone",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          720,
-          0
-        ],
-        "parameters": {
-          "jsCode": "const clients = .first().json;\nconst checkData = .first().json;\nconst matchingTimezones = checkData.allMatchingTimezones || [];\nif (!Array.isArray(clients) || !clients.length) return [];\nconst filtered = clients.filter(c => { const tz = (c.timezone||\"America/Chicago\").trim(); return matchingTimezones.some(t => t.toLowerCase()===tz.toLowerCase()); });\nif (!filtered.length) return [];\nreturn filtered.map(c => ({json: c}));"
-        }
-      },
-      {
-        "id": "eb58086e-457d-4ec8-bcdd-e0c0bc28f57b",
-        "name": "Split Into Batches",
-        "type": "n8n-nodes-base.splitInBatches",
-        "typeVersion": 3,
-        "position": [
-          960,
-          0
-        ],
-        "parameters": {
-          "options": {}
-        }
-      },
-      {
-        "id": "d91aa38c-931e-471b-89ca-9c2a4df84ea8",
-        "name": "Supabase: Fetch Call Logs (7 Days)",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.1,
-        "position": [
-          1200,
-          0
-        ],
-        "onError": "continueErrorOutput",
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "dSCVell30U6Yt1qA",
-            "name": "Supabase Anon Key"
-          }
+        {
+            "id": "4e972fde-a7ed-49b9-a242-390e837c2b69",
+            "name": "Check Sunday 6pm",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                240,
+                0
+            ],
+            "parameters": {
+                "jsCode": "const now = new Date();\nif (now.getUTCDay() !== 0) return [];\nconst tzGroups = [\"America/New_York\",\"America/Chicago\",\"America/Denver\",\"America/Los_Angeles\",\"America/Anchorage\",\"Pacific/Honolulu\",\"America/Phoenix\"];\nconst target = [];\nfor (const tz of tzGroups) { try { const lt = new Date(now.toLocaleString(\"en-US\",{timeZone:tz})); if (lt.getHours()===18) target.push(tz); } catch(e){} }\nif (!target.length) return [];\nconst aliases = {\"America/New_York\":[\"America/New_York\",\"US/Eastern\",\"Eastern\",\"EST\",\"EDT\",\"ET\"],\"America/Chicago\":[\"America/Chicago\",\"US/Central\",\"Central\",\"CST\",\"CDT\",\"CT\"],\"America/Denver\":[\"America/Denver\",\"US/Mountain\",\"Mountain\",\"MST\",\"MDT\",\"MT\"],\"America/Los_Angeles\":[\"America/Los_Angeles\",\"US/Pacific\",\"Pacific\",\"PST\",\"PDT\",\"PT\"],\"America/Anchorage\":[\"America/Anchorage\",\"US/Alaska\",\"Alaska\",\"AKST\",\"AKDT\"],\"Pacific/Honolulu\":[\"Pacific/Honolulu\",\"US/Hawaii\",\"Hawaii\",\"HST\"],\"America/Phoenix\":[\"America/Phoenix\",\"US/Arizona\",\"Arizona\"]};\nlet all = [];\nfor (const tz of target) { if (aliases[tz]) all = all.concat(aliases[tz]); else all.push(tz); }\nreturn {targetTimezones: target, allMatchingTimezones: all, utcHour: now.getUTCHours(), runTime: now.toISOString()};"
+            }
         },
-        "parameters": {
-          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ .agent_id }}&call_timestamp=gte.{{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&select=*&order=call_timestamp.desc",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "httpHeaderAuth",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
-              }
-            ]
-          },
-          "options": {}
-        }
-      },
-      {
-        "id": "0045d0ba-e016-4602-abb2-b2c6fb84349b",
-        "name": "Calculate Lead Stats",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          1440,
-          0
-        ],
-        "parameters": {
-          "jsCode": "const callLogs = .first().json;\nconst client = .first().json;\nconst logs = Array.isArray(callLogs) ? callLogs : [];\nconst totalCalls = logs.length;\nconst leads = logs.filter(l => l.is_lead===true||(l.lead_score&&l.lead_score>=6));\nconst totalLeads = leads.length;\nconst totalHotLeads = logs.filter(l=>l.lead_score&&l.lead_score>=8).length;\nconst totalWarmLeads = logs.filter(l=>l.lead_score&&l.lead_score>=6&&l.lead_score<8).length;\nconst totalSpam = logs.filter(l=>!l.is_lead&&l.lead_score!==null&&l.lead_score<3).length;\nconst totalGeneral = logs.filter(l=>!l.is_lead&&l.lead_score>=3&&l.lead_score<6).length;\nconst avgScore = logs.length>0?(logs.reduce((s,l)=>s+(l.lead_score||0),0)/logs.length).toFixed(1):\"0\";\nconst totalDuration = logs.reduce((s,l)=>s+(l.duration_seconds||0),0);\nconst avgDuration = logs.length>0?Math.round(totalDuration/logs.length):0;\nconst svcBreakdown = {};\nlogs.forEach(l=>{const s=l.service_requested||\"Other\";svcBreakdown[s]=(svcBreakdown[s]||0)+1;});\nconst weekEnd=new Date(),weekStart=new Date(Date.now()-7*24*60*60*1000);\nconst fmt=d=>d.toLocaleDateString(\"en-US\",{month:\"short\",day:\"numeric\",year:\"numeric\"});\nreturn {company_name:client.company_name||\"Client\",agent_name:client.agent_name||\"AI Receptionist\",lead_email:client.lead_email||\"\",agent_id:client.agent_id||\"\",totalCalls,totalLeads,totalHotLeads,totalWarmLeads,totalSpam,totalGeneral,avgScore,totalDuration,avgDuration,serviceBreakdown:svcBreakdown,weekStart:fmt(weekStart),weekEnd:fmt(weekEnd),topLeads:leads.slice(0,5).map(l=>({name:l.caller_name||\"Unknown\",phone:l.caller_phone||\"\",service:l.service_requested||\"\",score:l.lead_score||0}))};"
-        }
-      },
-      {
-        "id": "400604df-badf-416b-b331-342abf9891ea",
-        "name": "Build Email HTML",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          1680,
-          0
-        ],
-        "parameters": {
-          "jsCode": "const d = .first().json;\nconst fmtD = (s) => { if(s<60) return s+\"s\"; const m=Math.floor(s/60),sec=s%60; return sec>0?m+\"m \"+sec+\"s\":m+\"m\"; };\nconst emailHtml = \"<html><body><h2>Weekly Report: \"+d.company_name+\"</h2><p>Period: \"+d.weekStart+\" - \"+d.weekEnd+\"</p><p>Total Calls: \"+d.totalCalls+\" | Leads: \"+d.totalLeads+\" | Hot Leads: \"+d.totalHotLeads+\"</p></body></html>\";\nreturn {emailHtml, lead_email: d.lead_email, company_name: d.company_name, agent_name: d.agent_name, totalCalls: d.totalCalls, totalLeads: d.totalLeads, weekStart: d.weekStart, weekEnd: d.weekEnd};"
-        }
-      },
-      {
-        "id": "4bdb5887-6107-4b24-9318-34d4ec027b3c",
-        "name": "Send Weekly Report Email",
-        "type": "n8n-nodes-base.emailSend",
-        "typeVersion": 2.1,
-        "position": [
-          1920,
-          0
-        ],
-        "onError": "continueErrorOutput",
-        "credentials": {
-          "smtp": {
-            "id": "KxD4uGr3CVvIXJII",
-            "name": "SMTP2GO - Syntharra"
-          }
+        {
+            "id": "5fa1a287-d444-4bc6-8855-0536a927f7bc",
+            "name": "Supabase: Fetch All Clients",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                480,
+                0
+            ],
+            "onError": "continueErrorOutput",
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "dSCVell30U6Yt1qA",
+                    "name": "Supabase Anon Key"
+                }
+            },
+            "parameters": {
+                "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?select=agent_id,company_name,agent_name,lead_email,lead_phone,timezone,services_offered&lead_email=neq.",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+                        }
+                    ]
+                },
+                "options": {}
+            }
         },
-        "parameters": {
-          "fromEmail": "Syntharra AI <noreply@syntharra.com>",
-          "toEmail": "={{ .lead_email }}",
-          "subject": "=Weekly Report: {{ .agent_name }} handled {{ .totalCalls }} calls & captured {{ .totalLeads }} leads | {{ .company_name }}",
-          "emailFormat": "html",
-          "html": "={{ .emailHtml }}",
-          "options": {
-            "appendAttribution": false
-          }
+        {
+            "id": "cb3a7766-dead-4392-a2d1-d0edb2b4ac07",
+            "name": "Filter Clients by Timezone",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                720,
+                0
+            ],
+            "parameters": {
+                "jsCode": "const clients = .first().json;\nconst checkData = .first().json;\nconst matchingTimezones = checkData.allMatchingTimezones || [];\nif (!Array.isArray(clients) || !clients.length) return [];\nconst filtered = clients.filter(c => { const tz = (c.timezone||\"America/Chicago\").trim(); return matchingTimezones.some(t => t.toLowerCase()===tz.toLowerCase()); });\nif (!filtered.length) return [];\nreturn filtered.map(c => ({json: c}));"
+            }
+        },
+        {
+            "id": "eb58086e-457d-4ec8-bcdd-e0c0bc28f57b",
+            "name": "Split Into Batches",
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                960,
+                0
+            ],
+            "parameters": {
+                "options": {}
+            }
+        },
+        {
+            "id": "d91aa38c-931e-471b-89ca-9c2a4df84ea8",
+            "name": "Supabase: Fetch Call Logs (7 Days)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1200,
+                0
+            ],
+            "onError": "continueErrorOutput",
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "dSCVell30U6Yt1qA",
+                    "name": "Supabase Anon Key"
+                }
+            },
+            "parameters": {
+                "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ .agent_id }}&call_timestamp=gte.{{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&select=*&order=call_timestamp.desc",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "0045d0ba-e016-4602-abb2-b2c6fb84349b",
+            "name": "Calculate Lead Stats",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1440,
+                0
+            ],
+            "parameters": {
+                "jsCode": "const callLogs = .first().json;\nconst client = .first().json;\nconst logs = Array.isArray(callLogs) ? callLogs : [];\nconst totalCalls = logs.length;\nconst leads = logs.filter(l => l.is_lead===true||(l.lead_score&&l.lead_score>=6));\nconst totalLeads = leads.length;\nconst totalHotLeads = logs.filter(l=>l.lead_score&&l.lead_score>=8).length;\nconst totalWarmLeads = logs.filter(l=>l.lead_score&&l.lead_score>=6&&l.lead_score<8).length;\nconst totalSpam = logs.filter(l=>!l.is_lead&&l.lead_score!==null&&l.lead_score<3).length;\nconst totalGeneral = logs.filter(l=>!l.is_lead&&l.lead_score>=3&&l.lead_score<6).length;\nconst avgScore = logs.length>0?(logs.reduce((s,l)=>s+(l.lead_score||0),0)/logs.length).toFixed(1):\"0\";\nconst totalDuration = logs.reduce((s,l)=>s+(l.duration_seconds||0),0);\nconst avgDuration = logs.length>0?Math.round(totalDuration/logs.length):0;\nconst svcBreakdown = {};\nlogs.forEach(l=>{const s=l.service_requested||\"Other\";svcBreakdown[s]=(svcBreakdown[s]||0)+1;});\nconst weekEnd=new Date(),weekStart=new Date(Date.now()-7*24*60*60*1000);\nconst fmt=d=>d.toLocaleDateString(\"en-US\",{month:\"short\",day:\"numeric\",year:\"numeric\"});\nreturn {company_name:client.company_name||\"Client\",agent_name:client.agent_name||\"AI Receptionist\",lead_email:client.lead_email||\"\",agent_id:client.agent_id||\"\",totalCalls,totalLeads,totalHotLeads,totalWarmLeads,totalSpam,totalGeneral,avgScore,totalDuration,avgDuration,serviceBreakdown:svcBreakdown,weekStart:fmt(weekStart),weekEnd:fmt(weekEnd),topLeads:leads.slice(0,5).map(l=>({name:l.caller_name||\"Unknown\",phone:l.caller_phone||\"\",service:l.service_requested||\"\",score:l.lead_score||0}))};"
+            }
+        },
+        {
+            "id": "400604df-badf-416b-b331-342abf9891ea",
+            "name": "Build Email HTML",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1680,
+                0
+            ],
+            "parameters": {
+                "jsCode": "const d = $('Calculate Lead Stats').first().json;\n\nconst fmtD = (s) => {\n  if (s < 60) return s + \"s\";\n  const m = Math.floor(s / 60), sec = s % 60;\n  return sec > 0 ? m + \"m \" + sec + \"s\" : m + \"m\";\n};\n\nconst totalMinutes = Math.round(d.totalDuration / 60);\nconst dashboardUrl = \"https://syntharra.com/dashboard.html?agent_id=\" + d.agent_id;\n\n// Service breakdown rows\nlet svcRows = \"\";\nconst svcEntries = Object.entries(d.serviceBreakdown || {}).sort((a,b) => b[1] - a[1]);\nfor (const [svc, count] of svcEntries.slice(0, 5)) {\n  svcRows += `<tr><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px\">${svc}</td><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${count}</td></tr>`;\n}\n\n// Top leads rows\nlet leadRows = \"\";\nif (d.topLeads && d.topLeads.length > 0) {\n  for (const lead of d.topLeads) {\n    const scoreColor = lead.score >= 8 ? \"#10B981\" : lead.score >= 6 ? \"#F59E0B\" : \"#6B7280\";\n    leadRows += `<tr><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:14px\"><strong style=\"color:#1A1A2E\">${lead.name}</strong>${lead.phone ? '<br><span style=\"color:#6B7280;font-size:12px\">' + lead.phone + '</span>' : ''}</td><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#6B7280\">${lead.service || '\u2014'}</td><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;text-align:center\"><span style=\"display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;background:${scoreColor}20;color:${scoreColor};font-size:12px;font-weight:700;text-align:center\">${lead.score}</span></td></tr>`;\n  }\n}\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head>\n<body style=\"margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F7F7FB;padding:40px 16px\"><tr><td align=\"center\">\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:580px;width:100%\">\n\n<tr><td style=\"padding:0 0 24px;text-align:center\">\n  <svg viewBox=\"0 0 80 80\" xmlns=\"http://www.w3.org/2000/svg\" width=\"36\" height=\"36\"><rect x=\"4\" y=\"56\" width=\"12\" height=\"20\" rx=\"4\" fill=\"#6C63FF\"/><rect x=\"22\" y=\"40\" width=\"12\" height=\"36\" rx=\"4\" fill=\"#6C63FF\"/><rect x=\"40\" y=\"24\" width=\"12\" height=\"52\" rx=\"4\" fill=\"#6C63FF\"/><rect x=\"58\" y=\"4\" width=\"12\" height=\"72\" rx=\"4\" fill=\"#6C63FF\"/></svg>\n</td></tr>\n\n<tr><td style=\"background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)\">\n<div style=\"height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)\"></div>\n<div style=\"padding:32px 36px\">\n\n<h2 style=\"color:#1A1A2E;font-size:20px;font-weight:700;margin:0 0 4px\">Weekly Report \u2014 ${d.company_name}</h2>\n<p style=\"color:#6B7280;font-size:14px;margin:0 0 24px\">${d.weekStart} \u2014 ${d.weekEnd}</p>\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px\">\n<tr>\n  <td style=\"background:#F0EEFF;border-radius:8px;padding:16px;text-align:center;width:33%\">\n    <div style=\"font-size:28px;font-weight:700;color:#6C63FF\">${d.totalCalls}</div>\n    <div style=\"font-size:12px;color:#6B7280;margin-top:2px\">Total Calls</div>\n  </td>\n  <td style=\"width:8px\"></td>\n  <td style=\"background:#ECFDF5;border-radius:8px;padding:16px;text-align:center;width:33%\">\n    <div style=\"font-size:28px;font-weight:700;color:#10B981\">${d.totalLeads}</div>\n    <div style=\"font-size:12px;color:#6B7280;margin-top:2px\">Leads Captured</div>\n  </td>\n  <td style=\"width:8px\"></td>\n  <td style=\"background:#FEF3C7;border-radius:8px;padding:16px;text-align:center;width:33%\">\n    <div style=\"font-size:28px;font-weight:700;color:#F59E0B\">${d.totalHotLeads}</div>\n    <div style=\"font-size:12px;color:#6B7280;margin-top:2px\">Hot Leads</div>\n  </td>\n</tr>\n</table>\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden\">\n<tr>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px\">Avg Lead Score</td>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${d.avgScore} / 10</td>\n</tr>\n<tr>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px\">Total Minutes</td>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${totalMinutes} min</td>\n</tr>\n<tr>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px\">Avg Call Duration</td>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${fmtD(d.avgDuration)}</td>\n</tr>\n<tr>\n  <td style=\"padding:10px 16px;color:#6B7280;font-size:13px\">Spam Filtered</td>\n  <td style=\"padding:10px 16px;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${d.totalSpam}</td>\n</tr>\n</table>\n\n${svcRows ? `\n<p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 8px\">Services Requested</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden\">\n<tr><th style=\"padding:8px 12px;background:#FAFAFA;text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Service</th><th style=\"padding:8px 12px;background:#FAFAFA;text-align:right;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Calls</th></tr>\n${svcRows}\n</table>` : ''}\n\n${leadRows ? `\n<p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 8px\">Top Leads This Week</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden\">\n<tr><th style=\"padding:8px 12px;background:#FAFAFA;text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Caller</th><th style=\"padding:8px 12px;background:#FAFAFA;text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Service</th><th style=\"padding:8px 12px;background:#FAFAFA;text-align:center;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Score</th></tr>\n${leadRows}\n</table>` : ''}\n\n<div style=\"text-align:center;margin:24px 0 0\">\n  <a href=\"${dashboardUrl}\" style=\"display:inline-block;background:#6C63FF;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px\">View Full Dashboard</a>\n</div>\n\n</div>\n</td></tr>\n\n<tr><td style=\"padding:20px;text-align:center\">\n  <p style=\"color:#9CA3AF;font-size:12px;margin:0\">Powered by <a href=\"https://www.syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">Syntharra AI</a> \u00b7 <a href=\"mailto:support@syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">support@syntharra.com</a></p>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>`;\n\nreturn {\n  emailHtml,\n  lead_email: d.lead_email,\n  company_name: d.company_name,\n  agent_name: d.agent_name,\n  totalCalls: d.totalCalls,\n  totalLeads: d.totalLeads,\n  weekStart: d.weekStart,\n  weekEnd: d.weekEnd\n};"
+            }
+        },
+        {
+            "id": "4bdb5887-6107-4b24-9318-34d4ec027b3c",
+            "name": "Send Weekly Report Email",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2.1,
+            "position": [
+                1920,
+                0
+            ],
+            "onError": "continueErrorOutput",
+            "credentials": {
+                "smtp": {
+                    "id": "KxD4uGr3CVvIXJII",
+                    "name": "SMTP2GO - Syntharra"
+                }
+            },
+            "parameters": {
+                "fromEmail": "Syntharra AI <noreply@syntharra.com>",
+                "toEmail": "={{ .lead_email }}",
+                "subject": "=Weekly Report: {{ .agent_name }} handled {{ .totalCalls }} calls & captured {{ .totalLeads }} leads | {{ .company_name }}",
+                "emailFormat": "html",
+                "html": "={{ .emailHtml }}",
+                "options": {
+                    "appendAttribution": false
+                }
+            }
         }
-      }
     ],
     "connections": {
-      "Hourly Trigger (Sundays)": {
-        "main": [
-          [
-            {
-              "node": "Check Sunday 6pm",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Check Sunday 6pm": {
-        "main": [
-          [
-            {
-              "node": "Supabase: Fetch All Clients",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Supabase: Fetch All Clients": {
-        "main": [
-          [
-            {
-              "node": "Filter Clients by Timezone",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Filter Clients by Timezone": {
-        "main": [
-          [
-            {
-              "node": "Split Into Batches",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Split Into Batches": {
-        "main": [
-          [
-            {
-              "node": "Supabase: Fetch Call Logs (7 Days)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Supabase: Fetch Call Logs (7 Days)": {
-        "main": [
-          [
-            {
-              "node": "Calculate Lead Stats",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Calculate Lead Stats": {
-        "main": [
-          [
-            {
-              "node": "Build Email HTML",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Build Email HTML": {
-        "main": [
-          [
-            {
-              "node": "Send Weekly Report Email",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Send Weekly Report Email": {
-        "main": [
-          [
-            {
-              "node": "Split Into Batches",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      }
+        "Hourly Trigger (Sundays)": {
+            "main": [
+                [
+                    {
+                        "node": "Check Sunday 6pm",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check Sunday 6pm": {
+            "main": [
+                [
+                    {
+                        "node": "Supabase: Fetch All Clients",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Supabase: Fetch All Clients": {
+            "main": [
+                [
+                    {
+                        "node": "Filter Clients by Timezone",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filter Clients by Timezone": {
+            "main": [
+                [
+                    {
+                        "node": "Split Into Batches",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Into Batches": {
+            "main": [
+                [
+                    {
+                        "node": "Supabase: Fetch Call Logs (7 Days)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Supabase: Fetch Call Logs (7 Days)": {
+            "main": [
+                [
+                    {
+                        "node": "Calculate Lead Stats",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Calculate Lead Stats": {
+            "main": [
+                [
+                    {
+                        "node": "Build Email HTML",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build Email HTML": {
+            "main": [
+                [
+                    {
+                        "node": "Send Weekly Report Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Weekly Report Email": {
+            "main": [
+                [
+                    {
+                        "node": "Split Into Batches",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
     },
-    "authors": "Daniel Blackmore",
-    "name": null,
-    "description": null,
-    "autosaved": false,
-    "workflowPublishHistory": [
-      {
-        "createdAt": "2026-03-27T22:06:18.561Z",
-        "id": 678,
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false,
+        "callerPolicy": "workflowsFromSameOwner"
+    },
+    "staticData": {
+        "node:Hourly Trigger (Sundays)": {
+            "recurrenceRules": []
+        }
+    },
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "6c22e45b-3882-4df5-8edb-1dfa08116b05",
+    "activeVersionId": "6c22e45b-3882-4df5-8edb-1dfa08116b05",
+    "versionCounter": 21,
+    "triggerCount": 1,
+    "shared": [
+        {
+            "updatedAt": "2026-03-24T00:36:26.864Z",
+            "createdAt": "2026-03-24T00:36:26.864Z",
+            "role": "workflow:owner",
+            "workflowId": "mFuiB4pyXyWSIM5P",
+            "projectId": "fHNxQE9IeGCcfUfO",
+            "project": {
+                "updatedAt": "2026-03-17T23:00:52.768Z",
+                "createdAt": "2026-03-17T23:00:46.569Z",
+                "id": "fHNxQE9IeGCcfUfO",
+                "name": "Daniel Blackmore <daniel@syntharra.com>",
+                "type": "personal",
+                "icon": null,
+                "description": null,
+                "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+            }
+        }
+    ],
+    "tags": [],
+    "activeVersion": {
+        "updatedAt": "2026-03-28T01:05:08.934Z",
+        "createdAt": "2026-03-28T01:05:08.934Z",
+        "versionId": "6c22e45b-3882-4df5-8edb-1dfa08116b05",
         "workflowId": "mFuiB4pyXyWSIM5P",
-        "versionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-        "event": "activated",
-        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
-      },
-      {
-        "createdAt": "2026-03-27T22:11:25.553Z",
-        "id": 690,
-        "workflowId": "mFuiB4pyXyWSIM5P",
-        "versionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-        "event": "activated",
-        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
-      },
-      {
-        "createdAt": "2026-03-27T22:06:18.456Z",
-        "id": 677,
-        "workflowId": "mFuiB4pyXyWSIM5P",
-        "versionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-        "event": "deactivated",
-        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
-      },
-      {
-        "createdAt": "2026-03-27T22:11:25.473Z",
-        "id": 689,
-        "workflowId": "mFuiB4pyXyWSIM5P",
-        "versionId": "50e67f7a-946c-4891-a31c-137f3b87d9f7",
-        "event": "deactivated",
-        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
-      }
-    ]
-  }
+        "nodes": [
+            {
+                "id": "2383e2f3-1295-42e9-a8bb-9114fdb0289f",
+                "name": "Hourly Trigger (Sundays)",
+                "type": "n8n-nodes-base.scheduleTrigger",
+                "typeVersion": 1.2,
+                "position": [
+                    0,
+                    0
+                ],
+                "parameters": {
+                    "rule": {
+                        "interval": [
+                            {
+                                "field": "hours"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "4e972fde-a7ed-49b9-a242-390e837c2b69",
+                "name": "Check Sunday 6pm",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    240,
+                    0
+                ],
+                "parameters": {
+                    "jsCode": "const now = new Date();\nif (now.getUTCDay() !== 0) return [];\nconst tzGroups = [\"America/New_York\",\"America/Chicago\",\"America/Denver\",\"America/Los_Angeles\",\"America/Anchorage\",\"Pacific/Honolulu\",\"America/Phoenix\"];\nconst target = [];\nfor (const tz of tzGroups) { try { const lt = new Date(now.toLocaleString(\"en-US\",{timeZone:tz})); if (lt.getHours()===18) target.push(tz); } catch(e){} }\nif (!target.length) return [];\nconst aliases = {\"America/New_York\":[\"America/New_York\",\"US/Eastern\",\"Eastern\",\"EST\",\"EDT\",\"ET\"],\"America/Chicago\":[\"America/Chicago\",\"US/Central\",\"Central\",\"CST\",\"CDT\",\"CT\"],\"America/Denver\":[\"America/Denver\",\"US/Mountain\",\"Mountain\",\"MST\",\"MDT\",\"MT\"],\"America/Los_Angeles\":[\"America/Los_Angeles\",\"US/Pacific\",\"Pacific\",\"PST\",\"PDT\",\"PT\"],\"America/Anchorage\":[\"America/Anchorage\",\"US/Alaska\",\"Alaska\",\"AKST\",\"AKDT\"],\"Pacific/Honolulu\":[\"Pacific/Honolulu\",\"US/Hawaii\",\"Hawaii\",\"HST\"],\"America/Phoenix\":[\"America/Phoenix\",\"US/Arizona\",\"Arizona\"]};\nlet all = [];\nfor (const tz of target) { if (aliases[tz]) all = all.concat(aliases[tz]); else all.push(tz); }\nreturn {targetTimezones: target, allMatchingTimezones: all, utcHour: now.getUTCHours(), runTime: now.toISOString()};"
+                }
+            },
+            {
+                "id": "5fa1a287-d444-4bc6-8855-0536a927f7bc",
+                "name": "Supabase: Fetch All Clients",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.1,
+                "position": [
+                    480,
+                    0
+                ],
+                "onError": "continueErrorOutput",
+                "credentials": {
+                    "httpHeaderAuth": {
+                        "id": "dSCVell30U6Yt1qA",
+                        "name": "Supabase Anon Key"
+                    }
+                },
+                "parameters": {
+                    "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?select=agent_id,company_name,agent_name,lead_email,lead_phone,timezone,services_offered&lead_email=neq.",
+                    "authentication": "genericCredentialType",
+                    "genericAuthType": "httpHeaderAuth",
+                    "sendHeaders": true,
+                    "headerParameters": {
+                        "parameters": [
+                            {
+                                "name": "apikey",
+                                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+                            }
+                        ]
+                    },
+                    "options": {}
+                }
+            },
+            {
+                "id": "cb3a7766-dead-4392-a2d1-d0edb2b4ac07",
+                "name": "Filter Clients by Timezone",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    720,
+                    0
+                ],
+                "parameters": {
+                    "jsCode": "const clients = .first().json;\nconst checkData = .first().json;\nconst matchingTimezones = checkData.allMatchingTimezones || [];\nif (!Array.isArray(clients) || !clients.length) return [];\nconst filtered = clients.filter(c => { const tz = (c.timezone||\"America/Chicago\").trim(); return matchingTimezones.some(t => t.toLowerCase()===tz.toLowerCase()); });\nif (!filtered.length) return [];\nreturn filtered.map(c => ({json: c}));"
+                }
+            },
+            {
+                "id": "eb58086e-457d-4ec8-bcdd-e0c0bc28f57b",
+                "name": "Split Into Batches",
+                "type": "n8n-nodes-base.splitInBatches",
+                "typeVersion": 3,
+                "position": [
+                    960,
+                    0
+                ],
+                "parameters": {
+                    "options": {}
+                }
+            },
+            {
+                "id": "d91aa38c-931e-471b-89ca-9c2a4df84ea8",
+                "name": "Supabase: Fetch Call Logs (7 Days)",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.1,
+                "position": [
+                    1200,
+                    0
+                ],
+                "onError": "continueErrorOutput",
+                "credentials": {
+                    "httpHeaderAuth": {
+                        "id": "dSCVell30U6Yt1qA",
+                        "name": "Supabase Anon Key"
+                    }
+                },
+                "parameters": {
+                    "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ .agent_id }}&call_timestamp=gte.{{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() }}&select=*&order=call_timestamp.desc",
+                    "authentication": "genericCredentialType",
+                    "genericAuthType": "httpHeaderAuth",
+                    "sendHeaders": true,
+                    "headerParameters": {
+                        "parameters": [
+                            {
+                                "name": "apikey",
+                                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+                            }
+                        ]
+                    },
+                    "options": {}
+                }
+            },
+            {
+                "id": "0045d0ba-e016-4602-abb2-b2c6fb84349b",
+                "name": "Calculate Lead Stats",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    1440,
+                    0
+                ],
+                "parameters": {
+                    "jsCode": "const callLogs = .first().json;\nconst client = .first().json;\nconst logs = Array.isArray(callLogs) ? callLogs : [];\nconst totalCalls = logs.length;\nconst leads = logs.filter(l => l.is_lead===true||(l.lead_score&&l.lead_score>=6));\nconst totalLeads = leads.length;\nconst totalHotLeads = logs.filter(l=>l.lead_score&&l.lead_score>=8).length;\nconst totalWarmLeads = logs.filter(l=>l.lead_score&&l.lead_score>=6&&l.lead_score<8).length;\nconst totalSpam = logs.filter(l=>!l.is_lead&&l.lead_score!==null&&l.lead_score<3).length;\nconst totalGeneral = logs.filter(l=>!l.is_lead&&l.lead_score>=3&&l.lead_score<6).length;\nconst avgScore = logs.length>0?(logs.reduce((s,l)=>s+(l.lead_score||0),0)/logs.length).toFixed(1):\"0\";\nconst totalDuration = logs.reduce((s,l)=>s+(l.duration_seconds||0),0);\nconst avgDuration = logs.length>0?Math.round(totalDuration/logs.length):0;\nconst svcBreakdown = {};\nlogs.forEach(l=>{const s=l.service_requested||\"Other\";svcBreakdown[s]=(svcBreakdown[s]||0)+1;});\nconst weekEnd=new Date(),weekStart=new Date(Date.now()-7*24*60*60*1000);\nconst fmt=d=>d.toLocaleDateString(\"en-US\",{month:\"short\",day:\"numeric\",year:\"numeric\"});\nreturn {company_name:client.company_name||\"Client\",agent_name:client.agent_name||\"AI Receptionist\",lead_email:client.lead_email||\"\",agent_id:client.agent_id||\"\",totalCalls,totalLeads,totalHotLeads,totalWarmLeads,totalSpam,totalGeneral,avgScore,totalDuration,avgDuration,serviceBreakdown:svcBreakdown,weekStart:fmt(weekStart),weekEnd:fmt(weekEnd),topLeads:leads.slice(0,5).map(l=>({name:l.caller_name||\"Unknown\",phone:l.caller_phone||\"\",service:l.service_requested||\"\",score:l.lead_score||0}))};"
+                }
+            },
+            {
+                "id": "400604df-badf-416b-b331-342abf9891ea",
+                "name": "Build Email HTML",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    1680,
+                    0
+                ],
+                "parameters": {
+                    "jsCode": "const d = $('Calculate Lead Stats').first().json;\n\nconst fmtD = (s) => {\n  if (s < 60) return s + \"s\";\n  const m = Math.floor(s / 60), sec = s % 60;\n  return sec > 0 ? m + \"m \" + sec + \"s\" : m + \"m\";\n};\n\nconst totalMinutes = Math.round(d.totalDuration / 60);\nconst dashboardUrl = \"https://syntharra.com/dashboard.html?agent_id=\" + d.agent_id;\n\n// Service breakdown rows\nlet svcRows = \"\";\nconst svcEntries = Object.entries(d.serviceBreakdown || {}).sort((a,b) => b[1] - a[1]);\nfor (const [svc, count] of svcEntries.slice(0, 5)) {\n  svcRows += `<tr><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px\">${svc}</td><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${count}</td></tr>`;\n}\n\n// Top leads rows\nlet leadRows = \"\";\nif (d.topLeads && d.topLeads.length > 0) {\n  for (const lead of d.topLeads) {\n    const scoreColor = lead.score >= 8 ? \"#10B981\" : lead.score >= 6 ? \"#F59E0B\" : \"#6B7280\";\n    leadRows += `<tr><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:14px\"><strong style=\"color:#1A1A2E\">${lead.name}</strong>${lead.phone ? '<br><span style=\"color:#6B7280;font-size:12px\">' + lead.phone + '</span>' : ''}</td><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#6B7280\">${lead.service || '\u2014'}</td><td style=\"padding:8px 12px;border-bottom:1px solid #E5E7EB;text-align:center\"><span style=\"display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;background:${scoreColor}20;color:${scoreColor};font-size:12px;font-weight:700;text-align:center\">${lead.score}</span></td></tr>`;\n  }\n}\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head>\n<body style=\"margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F7F7FB;padding:40px 16px\"><tr><td align=\"center\">\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:580px;width:100%\">\n\n<tr><td style=\"padding:0 0 24px;text-align:center\">\n  <svg viewBox=\"0 0 80 80\" xmlns=\"http://www.w3.org/2000/svg\" width=\"36\" height=\"36\"><rect x=\"4\" y=\"56\" width=\"12\" height=\"20\" rx=\"4\" fill=\"#6C63FF\"/><rect x=\"22\" y=\"40\" width=\"12\" height=\"36\" rx=\"4\" fill=\"#6C63FF\"/><rect x=\"40\" y=\"24\" width=\"12\" height=\"52\" rx=\"4\" fill=\"#6C63FF\"/><rect x=\"58\" y=\"4\" width=\"12\" height=\"72\" rx=\"4\" fill=\"#6C63FF\"/></svg>\n</td></tr>\n\n<tr><td style=\"background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)\">\n<div style=\"height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)\"></div>\n<div style=\"padding:32px 36px\">\n\n<h2 style=\"color:#1A1A2E;font-size:20px;font-weight:700;margin:0 0 4px\">Weekly Report \u2014 ${d.company_name}</h2>\n<p style=\"color:#6B7280;font-size:14px;margin:0 0 24px\">${d.weekStart} \u2014 ${d.weekEnd}</p>\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px\">\n<tr>\n  <td style=\"background:#F0EEFF;border-radius:8px;padding:16px;text-align:center;width:33%\">\n    <div style=\"font-size:28px;font-weight:700;color:#6C63FF\">${d.totalCalls}</div>\n    <div style=\"font-size:12px;color:#6B7280;margin-top:2px\">Total Calls</div>\n  </td>\n  <td style=\"width:8px\"></td>\n  <td style=\"background:#ECFDF5;border-radius:8px;padding:16px;text-align:center;width:33%\">\n    <div style=\"font-size:28px;font-weight:700;color:#10B981\">${d.totalLeads}</div>\n    <div style=\"font-size:12px;color:#6B7280;margin-top:2px\">Leads Captured</div>\n  </td>\n  <td style=\"width:8px\"></td>\n  <td style=\"background:#FEF3C7;border-radius:8px;padding:16px;text-align:center;width:33%\">\n    <div style=\"font-size:28px;font-weight:700;color:#F59E0B\">${d.totalHotLeads}</div>\n    <div style=\"font-size:12px;color:#6B7280;margin-top:2px\">Hot Leads</div>\n  </td>\n</tr>\n</table>\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden\">\n<tr>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px\">Avg Lead Score</td>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${d.avgScore} / 10</td>\n</tr>\n<tr>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px\">Total Minutes</td>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${totalMinutes} min</td>\n</tr>\n<tr>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:13px\">Avg Call Duration</td>\n  <td style=\"padding:10px 16px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${fmtD(d.avgDuration)}</td>\n</tr>\n<tr>\n  <td style=\"padding:10px 16px;color:#6B7280;font-size:13px\">Spam Filtered</td>\n  <td style=\"padding:10px 16px;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${d.totalSpam}</td>\n</tr>\n</table>\n\n${svcRows ? `\n<p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 8px\">Services Requested</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden\">\n<tr><th style=\"padding:8px 12px;background:#FAFAFA;text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Service</th><th style=\"padding:8px 12px;background:#FAFAFA;text-align:right;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Calls</th></tr>\n${svcRows}\n</table>` : ''}\n\n${leadRows ? `\n<p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 8px\">Top Leads This Week</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden\">\n<tr><th style=\"padding:8px 12px;background:#FAFAFA;text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Caller</th><th style=\"padding:8px 12px;background:#FAFAFA;text-align:left;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Service</th><th style=\"padding:8px 12px;background:#FAFAFA;text-align:center;font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;border-bottom:1px solid #E5E7EB\">Score</th></tr>\n${leadRows}\n</table>` : ''}\n\n<div style=\"text-align:center;margin:24px 0 0\">\n  <a href=\"${dashboardUrl}\" style=\"display:inline-block;background:#6C63FF;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px\">View Full Dashboard</a>\n</div>\n\n</div>\n</td></tr>\n\n<tr><td style=\"padding:20px;text-align:center\">\n  <p style=\"color:#9CA3AF;font-size:12px;margin:0\">Powered by <a href=\"https://www.syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">Syntharra AI</a> \u00b7 <a href=\"mailto:support@syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">support@syntharra.com</a></p>\n</td></tr>\n\n</table>\n</td></tr></table>\n</body></html>`;\n\nreturn {\n  emailHtml,\n  lead_email: d.lead_email,\n  company_name: d.company_name,\n  agent_name: d.agent_name,\n  totalCalls: d.totalCalls,\n  totalLeads: d.totalLeads,\n  weekStart: d.weekStart,\n  weekEnd: d.weekEnd\n};"
+                }
+            },
+            {
+                "id": "4bdb5887-6107-4b24-9318-34d4ec027b3c",
+                "name": "Send Weekly Report Email",
+                "type": "n8n-nodes-base.emailSend",
+                "typeVersion": 2.1,
+                "position": [
+                    1920,
+                    0
+                ],
+                "onError": "continueErrorOutput",
+                "credentials": {
+                    "smtp": {
+                        "id": "KxD4uGr3CVvIXJII",
+                        "name": "SMTP2GO - Syntharra"
+                    }
+                },
+                "parameters": {
+                    "fromEmail": "Syntharra AI <noreply@syntharra.com>",
+                    "toEmail": "={{ .lead_email }}",
+                    "subject": "=Weekly Report: {{ .agent_name }} handled {{ .totalCalls }} calls & captured {{ .totalLeads }} leads | {{ .company_name }}",
+                    "emailFormat": "html",
+                    "html": "={{ .emailHtml }}",
+                    "options": {
+                        "appendAttribution": false
+                    }
+                }
+            }
+        ],
+        "connections": {
+            "Hourly Trigger (Sundays)": {
+                "main": [
+                    [
+                        {
+                            "node": "Check Sunday 6pm",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Check Sunday 6pm": {
+                "main": [
+                    [
+                        {
+                            "node": "Supabase: Fetch All Clients",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Supabase: Fetch All Clients": {
+                "main": [
+                    [
+                        {
+                            "node": "Filter Clients by Timezone",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Filter Clients by Timezone": {
+                "main": [
+                    [
+                        {
+                            "node": "Split Into Batches",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Split Into Batches": {
+                "main": [
+                    [
+                        {
+                            "node": "Supabase: Fetch Call Logs (7 Days)",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Supabase: Fetch Call Logs (7 Days)": {
+                "main": [
+                    [
+                        {
+                            "node": "Calculate Lead Stats",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Calculate Lead Stats": {
+                "main": [
+                    [
+                        {
+                            "node": "Build Email HTML",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Build Email HTML": {
+                "main": [
+                    [
+                        {
+                            "node": "Send Weekly Report Email",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Send Weekly Report Email": {
+                "main": [
+                    [
+                        {
+                            "node": "Split Into Batches",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            }
+        },
+        "authors": "Daniel Blackmore",
+        "name": null,
+        "description": null,
+        "autosaved": false,
+        "workflowPublishHistory": [
+            {
+                "createdAt": "2026-03-28T01:05:09.132Z",
+                "id": 712,
+                "workflowId": "mFuiB4pyXyWSIM5P",
+                "versionId": "6c22e45b-3882-4df5-8edb-1dfa08116b05",
+                "event": "activated",
+                "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+            },
+            {
+                "createdAt": "2026-03-28T01:05:09.035Z",
+                "id": 711,
+                "workflowId": "mFuiB4pyXyWSIM5P",
+                "versionId": "6c22e45b-3882-4df5-8edb-1dfa08116b05",
+                "event": "deactivated",
+                "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+            }
+        ]
+    }
 }
