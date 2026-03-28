@@ -13,11 +13,51 @@
 | Accent colour | `#00D4FF` (cyan) |
 | Fonts | DM Serif Display + DM Sans |
 | Logo | 4 ascending signal bars (violet) + "Syntharra" wordmark |
-| Contact | daniel@syntharra.com \| www.syntharra.com |
+| Contact | support@syntharra.com \| www.syntharra.com |
 
 Logo variants in `brand-assets/`:
 - Default: bars purple, "Syntharra" purple, "AI SOLUTIONS" black
 - Swapped v2: bars purple, "Syntharra" black, "AI SOLUTIONS" purple
+
+---
+
+## Email Architecture
+
+| Address | Purpose | Used In |
+|---|---|---|
+| `support@syntharra.com` | Customer-facing support, general contact | Website footer (all pages), FAQ answers, usage alerts, billing emails, legal pages |
+| `feedback@syntharra.com` | Customer feedback channel | Website footer (all pages) |
+| `careers@syntharra.com` | Job applications | Careers page |
+| `admin@syntharra.com` | Internal admin, contract notices | Service agreement, call processor notifications, scenario test reports |
+| `onboarding@syntharra.com` | Onboarding notifications (internal) | Stripe Workflow, HVAC Standard Onboarding, HVAC Premium Onboarding |
+| `noreply@syntharra.com` | Sender address for automated emails | All SMTP2GO outbound emails |
+| `daniel@syntharra.com` | Founder personal email | NOT used in any workflows or customer-facing content |
+
+### n8n Workflow Email Mapping
+
+| Workflow | Internal Notifications To | Customer-Facing Contact |
+|---|---|---|
+| HVAC Std Onboarding (`k0KeQxWb3j3BbQEk`) | `onboarding@` | `support@` |
+| HVAC Prem Onboarding (`KXDSMVKSf59tAtal`) | `onboarding@` | `support@` |
+| Stripe Workflow (`ydzfhitWiF5wNzEy`) | `onboarding@` | `support@` |
+| HVAC Std Call Processor (`OyDCyiOjG0twguXq`) | `admin@` | — |
+| HVAC Prem Call Processor (`UhxfrDaEeYUk4jAD`) | `admin@` | `support@` |
+| Scenario Test Runner (`94QmMVGdEDl2S9MF`) | `admin@` | — |
+| Usage Alert Monitor (`lQsYJWQeP5YPikam`) | `admin@` | `support@` |
+| Monthly Minutes Calculator (`9SuchBjqhFmLbH8o`) | — | `support@` |
+
+### Website Email Placement
+
+- **Every page footer:** Contact (`support@`) + Feedback (`feedback@`)
+- **Careers page:** `careers@syntharra.com`
+- **Service agreement:** `admin@syntharra.com` (contract cancellation notices)
+- **Legal pages footer (privacy, terms, security, service-agreement):** Contact + Feedback links
+
+### Rules
+- `daniel@syntharra.com` should NEVER appear in any workflow node logic, email body, or website content
+- All customer-facing "contact us" references → `support@syntharra.com`
+- All internal operational notifications → `admin@syntharra.com` or `onboarding@syntharra.com` depending on context
+- All automated email sender address → `noreply@syntharra.com`
 
 ---
 
@@ -188,7 +228,7 @@ Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 - [ ] Switch Stripe to live mode: recreate all products, prices, coupons (same names), webhook
 - [ ] Update Railway `STRIPE_SECRET_KEY` → `sk_live_...`
 - [ ] Update n8n webhook signing secret to live mode value
-- [ ] **Change all internal notification emails from `daniel@syntharra.com` → `support@syntharra.com`** across all n8n workflows
+- [x] ~~Change all internal notification emails from `daniel@syntharra.com`~~ — **DONE 2026-03-28**: migrated to `admin@`, `onboarding@`, and `support@` across all workflows + website
 - [ ] Telnyx SMS swap (replace Twilio nodes — awaiting AI evaluation approval)
 - [ ] Enable repeat caller detection
 - [ ] Build Premium pipeline
