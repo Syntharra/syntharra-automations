@@ -1,0 +1,279 @@
+{
+  "name": "Syntharra - Lead Sourcer",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-schedule-trigger",
+      "name": "Schedule Trigger (2am Daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "var-industry",
+              "name": "industry",
+              "value": "hvac",
+              "type": "string"
+            },
+            {
+              "id": "var-cities",
+              "name": "cities",
+              "value": "={{ JSON.stringify([\n  {\"city\": \"Houston\", \"state\": \"TX\"},\n  {\"city\": \"Phoenix\", \"state\": \"AZ\"},\n  {\"city\": \"Dallas\", \"state\": \"TX\"},\n  {\"city\": \"Atlanta\", \"state\": \"GA\"},\n  {\"city\": \"Miami\", \"state\": \"FL\"},\n  {\"city\": \"Tampa\", \"state\": \"FL\"},\n  {\"city\": \"Las Vegas\", \"state\": \"NV\"},\n  {\"city\": \"Charlotte\", \"state\": \"NC\"},\n  {\"city\": \"San Antonio\", \"state\": \"TX\"},\n  {\"city\": \"Jacksonville\", \"state\": \"FL\"}\n]) }}",
+              "type": "string"
+            },
+            {
+              "id": "var-search-term",
+              "name": "searchTerm",
+              "value": "hvac contractor",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "node-set-params",
+      "name": "Set Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "cities",
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "node-split-cities",
+      "name": "Split Cities",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst citiesRaw = item.cities;\nconst cities = typeof citiesRaw === 'string' ? JSON.parse(citiesRaw) : citiesRaw;\nreturn cities.map(c => ({ json: { ...item, city: c.city, state: c.state } }));"
+      },
+      "id": "node-parse-cities",
+      "name": "Parse Cities Array",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "node-loop",
+      "name": "Loop Over Cities",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://maps.googleapis.com/maps/api/place/textsearch/json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.searchTerm + ' ' + $json.city + ' ' + $json.state }}"
+            },
+            {
+              "name": "type",
+              "value": "establishment"
+            },
+            {
+              "name": "key",
+              "value": "={{ $vars.GOOGLE_PLACES_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-places-search",
+      "name": "Google Places Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst results = response.results || [];\nconst city = $('Loop Over Cities').first().json.city;\nconst state = $('Loop Over Cities').first().json.state;\nconst industry = $('Loop Over Cities').first().json.industry;\n\nconst filtered = results\n  .filter(r => r.user_ratings_total >= 3)\n  .filter(r => r.formatted_phone_number || r.international_phone_number)\n  .filter(r => {\n    const chains = ['home depot','lowes','sears','best buy','walmart','ace hardware'];\n    return !chains.some(c => r.name.toLowerCase().includes(c));\n  })\n  .map(r => ({\n    business_name: r.name,\n    google_place_id: r.place_id,\n    address: r.formatted_address,\n    phone: r.formatted_phone_number || r.international_phone_number || null,\n    website: r.website || null,\n    rating: r.rating || null,\n    review_count: r.user_ratings_total || 0,\n    city: city,\n    state: state,\n    country: 'USA',\n    industry: industry,\n    source: 'google_places',\n    status: 'new'\n  }));\n\nreturn filtered.map(f => ({ json: f }));"
+      },
+      "id": "node-filter-format",
+      "name": "Filter & Format Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM marketing_leads WHERE phone = '{{ $json.phone }}' OR (business_name ILIKE '%{{ $json.business_name }}%' AND city = '{{ $json.city }}') LIMIT 1;",
+        "options": {}
+      },
+      "id": "node-check-duplicate",
+      "name": "Check Duplicate in Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1560, 300],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-not-dup",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-not-dup",
+      "name": "Is New Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "tableId": "marketing_leads",
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "business_name", "fieldValue": "={{ $('Filter & Format Results').item.json.business_name }}" },
+            { "fieldId": "industry", "fieldValue": "={{ $('Filter & Format Results').item.json.industry }}" },
+            { "fieldId": "city", "fieldValue": "={{ $('Filter & Format Results').item.json.city }}" },
+            { "fieldId": "state", "fieldValue": "={{ $('Filter & Format Results').item.json.state }}" },
+            { "fieldId": "country", "fieldValue": "USA" },
+            { "fieldId": "phone", "fieldValue": "={{ $('Filter & Format Results').item.json.phone }}" },
+            { "fieldId": "website", "fieldValue": "={{ $('Filter & Format Results').item.json.website }}" },
+            { "fieldId": "address", "fieldValue": "={{ $('Filter & Format Results').item.json.address }}" },
+            { "fieldId": "google_place_id", "fieldValue": "={{ $('Filter & Format Results').item.json.google_place_id }}" },
+            { "fieldId": "rating", "fieldValue": "={{ $('Filter & Format Results').item.json.rating }}" },
+            { "fieldId": "review_count", "fieldValue": "={{ $('Filter & Format Results').item.json.review_count }}" },
+            { "fieldId": "source", "fieldValue": "google_places" },
+            { "fieldId": "status", "fieldValue": "new" }
+          ]
+        }
+      },
+      "id": "node-insert-supabase",
+      "name": "Insert to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2000, 200],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn [{ json: { new_leads_count: items.length, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "node-count",
+      "name": "Count New Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "solutions@syntharra.com",
+        "toEmail": "admin@syntharra.com",
+        "subject": "Lead Sourcer — {{ $json.new_leads_count }} new leads added",
+        "emailType": "html",
+        "message": "<div style='font-family:Inter,Arial,sans-serif;padding:24px;background:#F7F7FB;'><div style='background:#fff;border-radius:8px;padding:24px;border:1px solid #E5E7EB;'><h2 style='color:#6C63FF;margin:0 0 16px;'>Lead Sourcer Complete</h2><p style='color:#1A1A2E;'>New leads added: <strong>{{ $json.new_leads_count }}</strong></p><p style='color:#4A4A6A;font-size:13px;'>Run time: {{ $json.timestamp }}</p><p style='color:#4A4A6A;font-size:13px;'>Industry: HVAC | Source: Google Places</p></div></div>",
+        "options": {}
+      },
+      "id": "node-notify",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [2440, 200],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP2GO - Syntharra"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (2am Daily)": {
+      "main": [[{ "node": "Set Parameters", "type": "main", "index": 0 }]]
+    },
+    "Set Parameters": {
+      "main": [[{ "node": "Parse Cities Array", "type": "main", "index": 0 }]]
+    },
+    "Parse Cities Array": {
+      "main": [[{ "node": "Loop Over Cities", "type": "main", "index": 0 }]]
+    },
+    "Loop Over Cities": {
+      "main": [[{ "node": "Google Places Search", "type": "main", "index": 0 }]]
+    },
+    "Google Places Search": {
+      "main": [[{ "node": "Filter & Format Results", "type": "main", "index": 0 }]]
+    },
+    "Filter & Format Results": {
+      "main": [[{ "node": "Check Duplicate in Supabase", "type": "main", "index": 0 }]]
+    },
+    "Check Duplicate in Supabase": {
+      "main": [[{ "node": "Is New Lead?", "type": "main", "index": 0 }]]
+    },
+    "Is New Lead?": {
+      "main": [
+        [{ "node": "Insert to Supabase", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Insert to Supabase": {
+      "main": [[{ "node": "Count New Leads", "type": "main", "index": 0 }]]
+    },
+    "Count New Leads": {
+      "main": [[{ "node": "Notify Admin", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {}
+}
