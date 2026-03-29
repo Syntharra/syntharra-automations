@@ -1,0 +1,1338 @@
+{
+  "updatedAt": "2026-03-28T22:59:42.655Z",
+  "createdAt": "2026-03-24T15:32:40.759Z",
+  "id": "9SuchBjqhFmLbH8o",
+  "name": "Monthly Minutes Calculator & Overage Billing",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "1e6437a6-ca3d-4d06-97b1-087d69d61206",
+      "name": "Monthly Trigger (1st of Month 8AM UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1920,
+        112
+      ],
+      "notes": "Runs daily at 8AM UTC. The first Code node checks if today is the 1st of the month."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Only proceed on the 1st of the month\nconst now = new Date();\nconst dayOfMonth = now.getUTCDate();\n\nif (dayOfMonth !== 1) {\n  // Not the 1st \u2014 skip execution\n  return [];\n}\n\n// Calculate PREVIOUS month's billing period\nconst year = now.getUTCMonth() === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();\nconst month = now.getUTCMonth() === 0 ? 12 : now.getUTCMonth(); // getUTCMonth is 0-indexed\nconst billingMonth = `${year}-${String(month).padStart(2, '0')}`;\n\nconst periodStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0)).toISOString();\nconst periodEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString();\n\nreturn [{\n  json: {\n    billing_month: billingMonth,\n    period_start: periodStart,\n    period_end: periodEnd,\n    run_date: now.toISOString()\n  }\n}];"
+      },
+      "id": "a8ca90e5-7959-4590-9c2a-227848028e90",
+      "name": "Check: 1st of Month & Calc Period",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/stripe_payment_data?payment_status=eq.paid&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6510e233-dd84-440c-9c0c-858967227baf",
+      "name": "Supabase: Fetch Active Subscriptions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1440,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const payments = $input.first().json;\nconst billingData = $('Check: 1st of Month & Calc Period').first().json;\n\nif (!Array.isArray(payments) || payments.length === 0) {\n  return [{ json: { error: 'No active subscriptions found', ...billingData } }];\n}\n\n// Map stripe_payment_data fields to billing fields\nreturn payments.map(p => {\n  // Determine plan type and included minutes from the payment data\n  const planName = (p.plan_name || '').toLowerCase();\n  const isPremuim = planName.includes('premium');\n  const includedMinutes = p.minutes ? parseInt(p.minutes) : (isPremuim ? 1000 : 475);\n\n  return {\n    json: {\n      ...billingData,\n      subscription_id: p.id,\n      agent_id: p.agent_id,\n      company_name: p.customer_name,\n      client_email: p.customer_email,\n      plan_type: isPremuim ? 'premium' : 'standard',\n      included_minutes: includedMinutes,\n      overage_rate_cents: 25,\n      stripe_customer_id: p.stripe_customer_id,\n      stripe_subscription_id: p.stripe_subscription_id\n    }\n  };\n});"
+      },
+      "id": "d8c73a5d-5d85-43d0-80f4-e7997c29f18f",
+      "name": "Split Into Individual Subscriptions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ $json.agent_id }}&call_timestamp=gte.{{ $json.period_start }}&call_timestamp=lt.{{ $json.period_end }}&select=duration_seconds,call_id,call_timestamp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e173222d-debb-4a41-9967-59a1872e79bf",
+      "name": "Supabase: Fetch Call Logs for Period",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -960,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const calls = $input.first().json;\nconst sub = $('Split Into Individual Subscriptions').item;\n\n// Calculate totals\nconst callList = Array.isArray(calls) ? calls : [];\nconst totalCalls = callList.length;\nconst totalSeconds = callList.reduce((sum, c) => sum + (c.duration_seconds || 0), 0);\nconst totalMinutes = Math.ceil(totalSeconds / 60); // Round UP to nearest minute\nconst includedMinutes = sub.json.included_minutes;\n\n// Overage calculation\nconst overageMinutes = Math.max(0, totalMinutes - includedMinutes);\nconst overageRateCents = sub.json.overage_rate_cents || 25;\nconst overageAmountCents = overageMinutes * overageRateCents;\n\nconst usagePercent = includedMinutes > 0 ? Math.round((totalMinutes / includedMinutes) * 100) : 0;\n\nreturn [{\n  json: {\n    ...sub.json,\n    total_calls: totalCalls,\n    total_seconds: totalSeconds,\n    total_minutes: totalMinutes,\n    included_minutes: includedMinutes,\n    overage_minutes: overageMinutes,\n    overage_rate_cents: overageRateCents,\n    overage_amount_cents: overageAmountCents,\n    overage_amount_dollars: (overageAmountCents / 100).toFixed(2),\n    usage_percent: usagePercent,\n    has_overage: overageMinutes > 0\n  }\n}];"
+      },
+      "id": "07606e57-5ad6-42f7-be6f-41ae2cf459dd",
+      "name": "Calculate Minutes & Overage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ subscription_id: $json.subscription_id, agent_id: $json.agent_id, billing_month: $json.billing_month, period_start: $json.period_start, period_end: $json.period_end, total_calls: $json.total_calls, total_seconds: $json.total_seconds, total_minutes: $json.total_minutes, included_minutes: $json.included_minutes, overage_minutes: $json.overage_minutes, overage_rate_cents: $json.overage_rate_cents, overage_amount_cents: $json.overage_amount_cents, status: $json.has_overage ? 'invoiced' : 'closed' }) }}",
+        "options": {}
+      },
+      "id": "508fcad2-5a66-41d0-a187-92decde4626b",
+      "name": "Supabase: Save Billing Cycle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-overage",
+              "leftValue": "={{ $json.has_overage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f129a14-a949-41b7-a71c-88938a84351b",
+      "name": "Has Overage?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/invoices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customer",
+              "value": "={{ $json.stripe_customer_id }}"
+            },
+            {
+              "name": "auto_advance",
+              "value": "true"
+            },
+            {
+              "name": "collection_method",
+              "value": "charge_automatically"
+            },
+            {
+              "name": "description",
+              "value": "=Syntharra AI Receptionist \u2014 Overage Minutes ({{ $json.billing_month }}): {{ $json.overage_minutes }} minutes \u00d7 $0.25/min = ${{ $json.overage_amount_dollars }}"
+            },
+            {
+              "name": "metadata[billing_month]",
+              "value": "={{ $json.billing_month }}"
+            },
+            {
+              "name": "metadata[agent_id]",
+              "value": "={{ $json.agent_id }}"
+            },
+            {
+              "name": "metadata[overage_minutes]",
+              "value": "={{ $json.overage_minutes }}"
+            },
+            {
+              "name": "metadata[total_minutes_used]",
+              "value": "={{ $json.total_minutes }}"
+            },
+            {
+              "name": "metadata[included_minutes]",
+              "value": "={{ $json.included_minutes }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cec50ca6-5fbc-477c-976b-5585bc457c03",
+      "name": "Stripe: Create Overage Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2wIFInlIlTr2ujN1",
+          "name": "Stripe Secret Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/invoiceitems",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customer",
+              "value": "={{ $json.stripe_customer_id }}"
+            },
+            {
+              "name": "invoice",
+              "value": "={{ $('Stripe: Create Overage Invoice').first().json.id }}"
+            },
+            {
+              "name": "price",
+              "value": "price_1TEM2qECS71NQsk8cEXIgiTQ"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.overage_minutes }}"
+            },
+            {
+              "name": "description",
+              "value": "=AI Receptionist overage: {{ $json.overage_minutes }} minutes above {{ $json.included_minutes }}-minute {{ $json.plan_type }} plan limit ({{ $json.billing_month }})"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "380cddd6-e447-400c-9466-759764e1a796",
+      "name": "Stripe: Add Overage Line Item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2wIFInlIlTr2ujN1",
+          "name": "Stripe Secret Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.stripe.com/v1/invoices/{{ $('Stripe: Create Overage Invoice').first().json.id }}/finalize",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b5055b3a-66bd-4922-afc4-04d805923f76",
+      "name": "Stripe: Finalize & Auto-Charge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        480,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2wIFInlIlTr2ujN1",
+          "name": "Stripe Secret Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles?agent_id=eq.{{ $json.agent_id }}&billing_month=eq.{{ $json.billing_month }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ stripe_invoice_id: $('Stripe: Create Overage Invoice').first().json.id, overage_charged: true, overage_charge_date: new Date().toISOString(), status: 'invoiced' }) }}",
+        "options": {}
+      },
+      "id": "1a26665d-9921-4d16-b1e4-0c8460be35b5",
+      "name": "Supabase: Update Billing Cycle with Stripe ID",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/overage_charges",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ subscription_id: $json.subscription_id, agent_id: $json.agent_id, billing_month: $json.billing_month, overage_minutes: $json.overage_minutes, rate_per_minute_cents: $json.overage_rate_cents, total_amount_cents: $json.overage_amount_cents, stripe_invoice_id: $('Stripe: Create Overage Invoice').first().json.id, status: 'invoiced' }) }}",
+        "options": {}
+      },
+      "id": "6d2a322f-bc9a-4c71-862a-a50343d0d73a",
+      "name": "Supabase: Log Overage Charge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dSCVell30U6Yt1qA",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.client_email }}",
+        "subject": "=Syntharra Usage Report \u2014 {{ $json.billing_month }} | {{ $json.company_name }}",
+        "message": "=<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><div style='background:linear-gradient(135deg,#6C63FF,#00D4FF);padding:24px;border-radius:12px 12px 0 0'><h1 style='color:#fff;margin:0;font-size:22px'>Monthly Usage Report</h1><p style='color:rgba(255,255,255,0.85);margin:4px 0 0'>{{ $json.billing_month }} | {{ $json.company_name }}</p></div><div style='background:#f9f9f9;padding:24px;border:1px solid #e0e0e0'><table style='width:100%;border-collapse:collapse'><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Plan</td><td style='padding:10px;border-bottom:1px solid #e0e0e0;text-transform:capitalize'>{{ $json.plan_type }} ({{ $json.included_minutes }} min included)</td></tr><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Total Calls</td><td style='padding:10px;border-bottom:1px solid #e0e0e0'>{{ $json.total_calls }}</td></tr><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Minutes Used</td><td style='padding:10px;border-bottom:1px solid #e0e0e0'>{{ $json.total_minutes }} / {{ $json.included_minutes }}</td></tr><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Usage</td><td style='padding:10px;border-bottom:1px solid #e0e0e0;color:{{ $json.usage_percent > 100 ? \"#e53e3e\" : $json.usage_percent > 80 ? \"#dd6b20\" : \"#38a169\" }}'>{{ $json.usage_percent }}%</td></tr>{{ $json.has_overage ? \"<tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600;color:#e53e3e'>Overage Minutes</td><td style='padding:10px;border-bottom:1px solid #e0e0e0;color:#e53e3e;font-weight:700'>\" + $json.overage_minutes + \" minutes</td></tr><tr><td style='padding:10px;font-weight:600;color:#e53e3e'>Overage Charge</td><td style='padding:10px;color:#e53e3e;font-weight:700'>$\" + $json.overage_amount_dollars + \" (\" + $json.overage_minutes + \" min \u00d7 $0.25/min)</td></tr>\" : \"<tr><td colspan='2' style='padding:10px;color:#38a169;font-weight:600;text-align:center'>\u2713 No overage charges this month</td></tr>\" }}</table></div><div style='background:#fff;padding:16px 24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;text-align:center'><p style='color:#666;font-size:13px;margin:0'>{{ $json.has_overage ? 'An invoice for the overage amount has been created and will be charged to your card on file.' : 'Great job staying within your plan limits!' }}</p><p style='color:#666;font-size:12px;margin:8px 0 0'>Questions? Reply to this email or contact support@syntharra.com</p></div></div>",
+        "options": {}
+      },
+      "id": "033b3709-1e0a-4788-92e8-25fb7faa4196",
+      "name": "Gmail: Send Usage Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        960,
+        112
+      ],
+      "webhookId": "7d0b82b7-78a4-42a7-b73f-f09966681b1e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8sxMIlsjwpknHgNR",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// No overage \u2014 just log and continue to usage report\nreturn [{ json: { ...$input.first().json, overage_status: 'no_overage' } }];"
+      },
+      "id": "686b3805-7076-4687-9deb-8d45c8da3894",
+      "name": "No Overage \u2014 Continue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        256
+      ]
+    }
+  ],
+  "connections": {
+    "Monthly Trigger (1st of Month 8AM UTC)": {
+      "main": [
+        [
+          {
+            "node": "Check: 1st of Month & Calc Period",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check: 1st of Month & Calc Period": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Fetch Active Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Fetch Active Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Split Into Individual Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Individual Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Fetch Call Logs for Period",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Fetch Call Logs for Period": {
+      "main": [
+        [
+          {
+            "node": "Calculate Minutes & Overage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Minutes & Overage": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Save Billing Cycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Save Billing Cycle": {
+      "main": [
+        [
+          {
+            "node": "Has Overage?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Overage?": {
+      "main": [
+        [
+          {
+            "node": "Stripe: Create Overage Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Overage \u2014 Continue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe: Create Overage Invoice": {
+      "main": [
+        [
+          {
+            "node": "Stripe: Add Overage Line Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe: Add Overage Line Item": {
+      "main": [
+        [
+          {
+            "node": "Stripe: Finalize & Auto-Charge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stripe: Finalize & Auto-Charge": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Update Billing Cycle with Stripe ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Supabase: Log Overage Charge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail: Send Usage Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Overage \u2014 Continue": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Usage Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Monthly Trigger (1st of Month 8AM UTC)": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+  "activeVersionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+  "versionCounter": 27,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-24T15:32:40.761Z",
+      "createdAt": "2026-03-24T15:32:40.761Z",
+      "role": "workflow:owner",
+      "workflowId": "9SuchBjqhFmLbH8o",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-28T22:59:42.656Z",
+    "createdAt": "2026-03-28T22:59:42.656Z",
+    "versionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+    "workflowId": "9SuchBjqhFmLbH8o",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8
+              }
+            ]
+          }
+        },
+        "id": "1e6437a6-ca3d-4d06-97b1-087d69d61206",
+        "name": "Monthly Trigger (1st of Month 8AM UTC)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -1920,
+          112
+        ],
+        "notes": "Runs daily at 8AM UTC. The first Code node checks if today is the 1st of the month."
+      },
+      {
+        "parameters": {
+          "jsCode": "// Only proceed on the 1st of the month\nconst now = new Date();\nconst dayOfMonth = now.getUTCDate();\n\nif (dayOfMonth !== 1) {\n  // Not the 1st \u2014 skip execution\n  return [];\n}\n\n// Calculate PREVIOUS month's billing period\nconst year = now.getUTCMonth() === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();\nconst month = now.getUTCMonth() === 0 ? 12 : now.getUTCMonth(); // getUTCMonth is 0-indexed\nconst billingMonth = `${year}-${String(month).padStart(2, '0')}`;\n\nconst periodStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0)).toISOString();\nconst periodEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString();\n\nreturn [{\n  json: {\n    billing_month: billingMonth,\n    period_start: periodStart,\n    period_end: periodEnd,\n    run_date: now.toISOString()\n  }\n}];"
+        },
+        "id": "a8ca90e5-7959-4590-9c2a-227848028e90",
+        "name": "Check: 1st of Month & Calc Period",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1680,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/stripe_payment_data?payment_status=eq.paid&select=*",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "6510e233-dd84-440c-9c0c-858967227baf",
+        "name": "Supabase: Fetch Active Subscriptions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -1440,
+          112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const payments = $input.first().json;\nconst billingData = $('Check: 1st of Month & Calc Period').first().json;\n\nif (!Array.isArray(payments) || payments.length === 0) {\n  return [{ json: { error: 'No active subscriptions found', ...billingData } }];\n}\n\n// Map stripe_payment_data fields to billing fields\nreturn payments.map(p => {\n  // Determine plan type and included minutes from the payment data\n  const planName = (p.plan_name || '').toLowerCase();\n  const isPremuim = planName.includes('premium');\n  const includedMinutes = p.minutes ? parseInt(p.minutes) : (isPremuim ? 1000 : 475);\n\n  return {\n    json: {\n      ...billingData,\n      subscription_id: p.id,\n      agent_id: p.agent_id,\n      company_name: p.customer_name,\n      client_email: p.customer_email,\n      plan_type: isPremuim ? 'premium' : 'standard',\n      included_minutes: includedMinutes,\n      overage_rate_cents: 25,\n      stripe_customer_id: p.stripe_customer_id,\n      stripe_subscription_id: p.stripe_subscription_id\n    }\n  };\n});"
+        },
+        "id": "d8c73a5d-5d85-43d0-80f4-e7997c29f18f",
+        "name": "Split Into Individual Subscriptions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1200,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ $json.agent_id }}&call_timestamp=gte.{{ $json.period_start }}&call_timestamp=lt.{{ $json.period_end }}&select=duration_seconds,call_id,call_timestamp",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "e173222d-debb-4a41-9967-59a1872e79bf",
+        "name": "Supabase: Fetch Call Logs for Period",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -960,
+          112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const calls = $input.first().json;\nconst sub = $('Split Into Individual Subscriptions').item;\n\n// Calculate totals\nconst callList = Array.isArray(calls) ? calls : [];\nconst totalCalls = callList.length;\nconst totalSeconds = callList.reduce((sum, c) => sum + (c.duration_seconds || 0), 0);\nconst totalMinutes = Math.ceil(totalSeconds / 60); // Round UP to nearest minute\nconst includedMinutes = sub.json.included_minutes;\n\n// Overage calculation\nconst overageMinutes = Math.max(0, totalMinutes - includedMinutes);\nconst overageRateCents = sub.json.overage_rate_cents || 25;\nconst overageAmountCents = overageMinutes * overageRateCents;\n\nconst usagePercent = includedMinutes > 0 ? Math.round((totalMinutes / includedMinutes) * 100) : 0;\n\nreturn [{\n  json: {\n    ...sub.json,\n    total_calls: totalCalls,\n    total_seconds: totalSeconds,\n    total_minutes: totalMinutes,\n    included_minutes: includedMinutes,\n    overage_minutes: overageMinutes,\n    overage_rate_cents: overageRateCents,\n    overage_amount_cents: overageAmountCents,\n    overage_amount_dollars: (overageAmountCents / 100).toFixed(2),\n    usage_percent: usagePercent,\n    has_overage: overageMinutes > 0\n  }\n}];"
+        },
+        "id": "07606e57-5ad6-42f7-be6f-41ae2cf459dd",
+        "name": "Calculate Minutes & Overage",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -720,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ subscription_id: $json.subscription_id, agent_id: $json.agent_id, billing_month: $json.billing_month, period_start: $json.period_start, period_end: $json.period_end, total_calls: $json.total_calls, total_seconds: $json.total_seconds, total_minutes: $json.total_minutes, included_minutes: $json.included_minutes, overage_minutes: $json.overage_minutes, overage_rate_cents: $json.overage_rate_cents, overage_amount_cents: $json.overage_amount_cents, status: $json.has_overage ? 'invoiced' : 'closed' }) }}",
+          "options": {}
+        },
+        "id": "508fcad2-5a66-41d0-a187-92decde4626b",
+        "name": "Supabase: Save Billing Cycle",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -480,
+          112
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "has-overage",
+                "leftValue": "={{ $json.has_overage }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "3f129a14-a949-41b7-a71c-88938a84351b",
+        "name": "Has Overage?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -240,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/invoices",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "form-urlencoded",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "customer",
+                "value": "={{ $json.stripe_customer_id }}"
+              },
+              {
+                "name": "auto_advance",
+                "value": "true"
+              },
+              {
+                "name": "collection_method",
+                "value": "charge_automatically"
+              },
+              {
+                "name": "description",
+                "value": "=Syntharra AI Receptionist \u2014 Overage Minutes ({{ $json.billing_month }}): {{ $json.overage_minutes }} minutes \u00d7 $0.25/min = ${{ $json.overage_amount_dollars }}"
+              },
+              {
+                "name": "metadata[billing_month]",
+                "value": "={{ $json.billing_month }}"
+              },
+              {
+                "name": "metadata[agent_id]",
+                "value": "={{ $json.agent_id }}"
+              },
+              {
+                "name": "metadata[overage_minutes]",
+                "value": "={{ $json.overage_minutes }}"
+              },
+              {
+                "name": "metadata[total_minutes_used]",
+                "value": "={{ $json.total_minutes }}"
+              },
+              {
+                "name": "metadata[included_minutes]",
+                "value": "={{ $json.included_minutes }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "cec50ca6-5fbc-477c-976b-5585bc457c03",
+        "name": "Stripe: Create Overage Invoice",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          0,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2wIFInlIlTr2ujN1",
+            "name": "Stripe Secret Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/invoiceitems",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "form-urlencoded",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "customer",
+                "value": "={{ $json.stripe_customer_id }}"
+              },
+              {
+                "name": "invoice",
+                "value": "={{ $('Stripe: Create Overage Invoice').first().json.id }}"
+              },
+              {
+                "name": "price",
+                "value": "price_1TEM2qECS71NQsk8cEXIgiTQ"
+              },
+              {
+                "name": "quantity",
+                "value": "={{ $json.overage_minutes }}"
+              },
+              {
+                "name": "description",
+                "value": "=AI Receptionist overage: {{ $json.overage_minutes }} minutes above {{ $json.included_minutes }}-minute {{ $json.plan_type }} plan limit ({{ $json.billing_month }})"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "380cddd6-e447-400c-9466-759764e1a796",
+        "name": "Stripe: Add Overage Line Item",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          240,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2wIFInlIlTr2ujN1",
+            "name": "Stripe Secret Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://api.stripe.com/v1/invoices/{{ $('Stripe: Create Overage Invoice').first().json.id }}/finalize",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "b5055b3a-66bd-4922-afc4-04d805923f76",
+        "name": "Stripe: Finalize & Auto-Charge",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          480,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2wIFInlIlTr2ujN1",
+            "name": "Stripe Secret Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles?agent_id=eq.{{ $json.agent_id }}&billing_month=eq.{{ $json.billing_month }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ stripe_invoice_id: $('Stripe: Create Overage Invoice').first().json.id, overage_charged: true, overage_charge_date: new Date().toISOString(), status: 'invoiced' }) }}",
+          "options": {}
+        },
+        "id": "1a26665d-9921-4d16-b1e4-0c8460be35b5",
+        "name": "Supabase: Update Billing Cycle with Stripe ID",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          0
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/overage_charges",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ subscription_id: $json.subscription_id, agent_id: $json.agent_id, billing_month: $json.billing_month, overage_minutes: $json.overage_minutes, rate_per_minute_cents: $json.overage_rate_cents, total_amount_cents: $json.overage_amount_cents, stripe_invoice_id: $('Stripe: Create Overage Invoice').first().json.id, status: 'invoiced' }) }}",
+          "options": {}
+        },
+        "id": "6d2a322f-bc9a-4c71-862a-a50343d0d73a",
+        "name": "Supabase: Log Overage Charge",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          208
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dSCVell30U6Yt1qA",
+            "name": "Supabase Anon Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $json.client_email }}",
+          "subject": "=Syntharra Usage Report \u2014 {{ $json.billing_month }} | {{ $json.company_name }}",
+          "message": "=<div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto'><div style='background:linear-gradient(135deg,#6C63FF,#00D4FF);padding:24px;border-radius:12px 12px 0 0'><h1 style='color:#fff;margin:0;font-size:22px'>Monthly Usage Report</h1><p style='color:rgba(255,255,255,0.85);margin:4px 0 0'>{{ $json.billing_month }} | {{ $json.company_name }}</p></div><div style='background:#f9f9f9;padding:24px;border:1px solid #e0e0e0'><table style='width:100%;border-collapse:collapse'><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Plan</td><td style='padding:10px;border-bottom:1px solid #e0e0e0;text-transform:capitalize'>{{ $json.plan_type }} ({{ $json.included_minutes }} min included)</td></tr><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Total Calls</td><td style='padding:10px;border-bottom:1px solid #e0e0e0'>{{ $json.total_calls }}</td></tr><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Minutes Used</td><td style='padding:10px;border-bottom:1px solid #e0e0e0'>{{ $json.total_minutes }} / {{ $json.included_minutes }}</td></tr><tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600'>Usage</td><td style='padding:10px;border-bottom:1px solid #e0e0e0;color:{{ $json.usage_percent > 100 ? \"#e53e3e\" : $json.usage_percent > 80 ? \"#dd6b20\" : \"#38a169\" }}'>{{ $json.usage_percent }}%</td></tr>{{ $json.has_overage ? \"<tr><td style='padding:10px;border-bottom:1px solid #e0e0e0;font-weight:600;color:#e53e3e'>Overage Minutes</td><td style='padding:10px;border-bottom:1px solid #e0e0e0;color:#e53e3e;font-weight:700'>\" + $json.overage_minutes + \" minutes</td></tr><tr><td style='padding:10px;font-weight:600;color:#e53e3e'>Overage Charge</td><td style='padding:10px;color:#e53e3e;font-weight:700'>$\" + $json.overage_amount_dollars + \" (\" + $json.overage_minutes + \" min \u00d7 $0.25/min)</td></tr>\" : \"<tr><td colspan='2' style='padding:10px;color:#38a169;font-weight:600;text-align:center'>\u2713 No overage charges this month</td></tr>\" }}</table></div><div style='background:#fff;padding:16px 24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 12px 12px;text-align:center'><p style='color:#666;font-size:13px;margin:0'>{{ $json.has_overage ? 'An invoice for the overage amount has been created and will be charged to your card on file.' : 'Great job staying within your plan limits!' }}</p><p style='color:#666;font-size:12px;margin:8px 0 0'>Questions? Reply to this email or contact support@syntharra.com</p></div></div>",
+          "options": {}
+        },
+        "id": "033b3709-1e0a-4788-92e8-25fb7faa4196",
+        "name": "Gmail: Send Usage Report",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          960,
+          112
+        ],
+        "webhookId": "7d0b82b7-78a4-42a7-b73f-f09966681b1e",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "8sxMIlsjwpknHgNR",
+            "name": "Gmail OAuth2 API"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "// No overage \u2014 just log and continue to usage report\nreturn [{ json: { ...$input.first().json, overage_status: 'no_overage' } }];"
+        },
+        "id": "686b3805-7076-4687-9deb-8d45c8da3894",
+        "name": "No Overage \u2014 Continue",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          0,
+          256
+        ]
+      }
+    ],
+    "connections": {
+      "Monthly Trigger (1st of Month 8AM UTC)": {
+        "main": [
+          [
+            {
+              "node": "Check: 1st of Month & Calc Period",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check: 1st of Month & Calc Period": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Fetch Active Subscriptions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Fetch Active Subscriptions": {
+        "main": [
+          [
+            {
+              "node": "Split Into Individual Subscriptions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Into Individual Subscriptions": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Fetch Call Logs for Period",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Fetch Call Logs for Period": {
+        "main": [
+          [
+            {
+              "node": "Calculate Minutes & Overage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Minutes & Overage": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Save Billing Cycle",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase: Save Billing Cycle": {
+        "main": [
+          [
+            {
+              "node": "Has Overage?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Overage?": {
+        "main": [
+          [
+            {
+              "node": "Stripe: Create Overage Invoice",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Overage \u2014 Continue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Stripe: Create Overage Invoice": {
+        "main": [
+          [
+            {
+              "node": "Stripe: Add Overage Line Item",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Stripe: Add Overage Line Item": {
+        "main": [
+          [
+            {
+              "node": "Stripe: Finalize & Auto-Charge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Stripe: Finalize & Auto-Charge": {
+        "main": [
+          [
+            {
+              "node": "Supabase: Update Billing Cycle with Stripe ID",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Supabase: Log Overage Charge",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gmail: Send Usage Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No Overage \u2014 Continue": {
+        "main": [
+          [
+            {
+              "node": "Gmail: Send Usage Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-28T22:59:42.825Z",
+        "id": 766,
+        "workflowId": "9SuchBjqhFmLbH8o",
+        "versionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-28T22:59:54.887Z",
+        "id": 782,
+        "workflowId": "9SuchBjqhFmLbH8o",
+        "versionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-28T22:59:42.749Z",
+        "id": 765,
+        "workflowId": "9SuchBjqhFmLbH8o",
+        "versionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-28T22:59:54.760Z",
+        "id": 781,
+        "workflowId": "9SuchBjqhFmLbH8o",
+        "versionId": "b2a78d36-684b-47ee-9935-516aef11c8ff",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
