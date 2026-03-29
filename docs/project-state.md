@@ -367,3 +367,26 @@ Discount codes doc: `docs/discount-codes.md`
 - [ ] Telnyx SMS swap (awaiting AI evaluation approval)
 - [ ] Enable repeat caller detection
 - [ ] Build Premium pipeline
+
+
+---
+
+## Latest Session: March 29, 2026
+
+Website expanded from 14 to 30+ pages. Newsletter automation built. Full session log: docs/session-logs/2026-03-29-website-expansion.md
+
+### New n8n workflows
+- Weekly Newsletter (`VyNQeu7dVP3jynBJ`) — NEEDS PUBLISH + ACTIVE in dashboard
+- Newsletter Unsubscribe (`ejZV2qATduPdK4Eu`) — ACTIVE
+
+### Key numbers
+- 20 blog articles (was 8)
+- 30+ website pages (was 14)
+- 3 lead magnet quizzes/calculators (AI Readiness, Revenue Calculator, Plan Quiz)
+- 3 industry landing pages (HVAC, Plumbing, Electrical)
+- 3 Google Ads landing pages (noindex)
+- 5 blog content upgrades (email-gated)
+- 5 context-aware exit-intent popups
+- Schema markup on 14+ pages
+- Country count: 10+ (was 30+)
+- Pricing: NOT PUBLIC
