@@ -12,5 +12,7 @@ All avatars: 400×400px · circular crop · white background · Georgia italic �
 | feedback.png | feedback@syntharra.com |
 | careers.png | careers@syntharra.com |
 | info.png | info@syntharra.com |
+| solutions.png | solutions@syntharra.com |
+| sales.png | sales@syntharra.com |
 
 **To upload:** Google Account → Personal info → Photo → Upload
