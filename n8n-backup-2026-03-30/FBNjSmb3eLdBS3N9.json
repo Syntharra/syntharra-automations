@@ -1,0 +1,237 @@
+{
+  "updatedAt": "2026-03-29T01:11:27.684Z",
+  "createdAt": "2026-03-28T16:55:39.974Z",
+  "id": "FBNjSmb3eLdBS3N9",
+  "name": "Website Lead \u2192 AI Readiness Score Email",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-readiness-score",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI Readiness Score \u2192 Results Email (SMTP2GO) \u2014 APPROVED BRANDING\nconst input = $input.first().json;\nconst email = input.email || '';\nconst score = input.score || 0;\nconst scoreLabel = input.score_label || 'Calculated';\nconst scoreExplanation = input.score_explanation || '';\nif (!email) { return { sent: false }; }\n\nconst scoreColor = score >= 75 ? '#10B981' : score >= 50 ? '#6C63FF' : score >= 30 ? '#F59E0B' : '#6B7280';\nconst scoreBg = score >= 75 ? '#ECFDF5' : score >= 50 ? '#F0EEFF' : score >= 30 ? '#FEF3C7' : '#F3F4F6';\n\nconst LOGO = `<table cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 auto\"><tr>\n  <td style=\"vertical-align:middle;padding-right:10px\">\n    <img src=\"https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png\" alt=\"\" width=\"36\" height=\"36\" style=\"display:block;border:0\">\n  </td>\n  <td style=\"vertical-align:middle;text-align:left\">\n    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"text-align:left;padding:0;margin:0\">\n      <div style=\"font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1;text-align:left\">Syntharra</div>\n    </td></tr><tr><td style=\"text-align:left;padding:3px 0 0 0;margin:0\">\n      <div style=\"font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1;text-align:left\">Global AI Solutions</div>\n    </td></tr></table>\n  </td>\n</tr></table>`;\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap\" rel=\"stylesheet\"></head>\n<body style=\"margin:0;padding:0;background-color:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#F7F7FB;padding:40px 16px\"><tr><td align=\"center\">\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:580px;width:100%\">\n<tr><td style=\"padding:0 0 24px;text-align:center\">${LOGO}</td></tr>\n<tr><td style=\"background-color:#ffffff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)\">\n<div style=\"height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)\"></div>\n<div style=\"padding:32px 36px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:20px\"><tr><td>\n  <span style=\"display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6C63FF;background-color:#F0EEFF;padding:4px 12px;border-radius:20px\">Your AI Readiness Results</span>\n</td></tr></table>\n<h1 style=\"color:#1A1A2E;font-size:24px;font-weight:700;margin:0 0 6px;line-height:1.3\">Here\\u2019s Your Score</h1>\n<p style=\"color:#6B7280;font-size:14px;line-height:1.6;margin:0 0 28px\">Based on your answers, here\\u2019s how AI-ready your business is \\u2014 and what it means for your revenue.</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\"><tr><td style=\"text-align:center\">\n  <div style=\"display:inline-block;width:120px;height:120px;border-radius:50%;background-color:${scoreBg};border:4px solid ${scoreColor};line-height:120px;text-align:center\"><span style=\"font-size:44px;font-weight:700;color:${scoreColor}\">${score}</span></div>\n  <p style=\"font-size:18px;font-weight:700;color:#1A1A2E;margin:14px 0 4px\">${scoreLabel}</p>\n  <p style=\"font-size:13px;color:#6B7280;margin:0\">out of 100</p>\n</td></tr></table>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px;background-color:#F9F9FC;border-radius:10px\"><tr><td style=\"padding:20px\">\n  <p style=\"font-size:14px;color:#1A1A2E;line-height:1.7;margin:0\">${scoreExplanation}</p>\n</td></tr></table>\n<h2 style=\"font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 16px\">The Numbers Behind Your Score</h2>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden\">\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Average missed calls per week</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:700;color:#EF4444;font-size:14px\">12 calls</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Average job value in trades</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">$350</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Estimated monthly revenue lost</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:700;color:#EF4444;font-size:18px\">$16,800</td></tr>\n<tr><td style=\"padding:12px 20px;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Revenue recoverable with AI</td><td style=\"padding:12px 20px;background-color:#ffffff;text-align:right;font-weight:700;color:#10B981;font-size:18px\">$14,280+</td></tr>\n</table>\n<h2 style=\"font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 16px\">3 Quick Wins to Stop Losing Calls</h2>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:12px\"><tr><td style=\"width:32px;vertical-align:top;padding-top:2px\"><div style=\"width:28px;height:28px;border-radius:50%;background-color:#F0EEFF;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#6C63FF\">1</div></td><td style=\"padding:0 0 16px 12px\"><p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px\">Answer every call, 24/7</p><p style=\"font-size:13px;color:#6B7280;line-height:1.5;margin:0\">An AI receptionist picks up instantly \\u2014 nights, weekends, holidays.</p></td></tr></table>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:12px\"><tr><td style=\"width:32px;vertical-align:top;padding-top:2px\"><div style=\"width:28px;height:28px;border-radius:50%;background-color:#ECFDF5;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#10B981\">2</div></td><td style=\"padding:0 0 16px 12px\"><p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px\">Get instant lead alerts</p><p style=\"font-size:13px;color:#6B7280;line-height:1.5;margin:0\">Every qualified lead scored and sent to you via SMS and email within seconds.</p></td></tr></table>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\"><tr><td style=\"width:32px;vertical-align:top;padding-top:2px\"><div style=\"width:28px;height:28px;border-radius:50%;background-color:#FEF3C7;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#F59E0B\">3</div></td><td style=\"padding:0 0 16px 12px\"><p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px\">Track everything from one dashboard</p><p style=\"font-size:13px;color:#6B7280;line-height:1.5;margin:0\">See every call, every lead, every trend. Weekly reports straight to your inbox.</p></td></tr></table>\n<div style=\"text-align:center;margin:0 0 12px\"><a href=\"https://calendar.app.google/jxUu7XfiMXMqvdiw6\" style=\"display:inline-block;background-color:#6C63FF;color:#ffffff;padding:16px 44px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 14px rgba(108,99,255,0.35)\">Book a Free Demo Call</a></div>\n<p style=\"text-align:center;font-size:12px;color:#9CA3AF;margin:12px 0 0\">15 minutes. No commitment. See it working live with your business name.</p>\n</div></td></tr>\n<tr><td style=\"padding:20px;text-align:center\"><a href=\"https://checkout.syntharra.com/\" style=\"color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none;margin:0 10px\">View Pricing</a><span style=\"color:#D1D5DB\"> | </span><a href=\"https://www.syntharra.com/demo.html\" style=\"color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none;margin:0 10px\">Try the AI Demo</a></td></tr>\n<tr><td style=\"text-align:center\"><p style=\"color:#9CA3AF;font-size:11px;margin:0;line-height:1.6\">Syntharra AI Solutions<br><a href=\"https://www.syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">syntharra.com</a> &middot; <a href=\"mailto:support@syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">support@syntharra.com</a></p></td></tr>\n</table></td></tr></table></body></html>`;\n\nconst SMTP2GO_KEY = 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E';\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST', url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: { api_key: SMTP2GO_KEY, sender: 'Syntharra AI <noreply@syntharra.com>', to: [email],\n      subject: `Your AI Readiness Score: ${score}/100 \u2014 ${scoreLabel}`, html_body: emailHtml },\n    json: true\n  });\n  return { ...input, _email_sent: true };\n} catch (e) { return { ...input, _email_sent: false, _error: e.message }; }\n",
+        "nodeMode": "runOnceForEachItem"
+      },
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"success\":true}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "1c60cd6c-36e1-403c-890b-3c982ae0984b",
+  "activeVersionId": "1c60cd6c-36e1-403c-890b-3c982ae0984b",
+  "versionCounter": 16,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-28T16:55:39.976Z",
+      "createdAt": "2026-03-28T16:55:39.976Z",
+      "role": "workflow:owner",
+      "workflowId": "FBNjSmb3eLdBS3N9",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-29T01:11:27.685Z",
+    "createdAt": "2026-03-29T01:11:27.685Z",
+    "versionId": "1c60cd6c-36e1-403c-890b-3c982ae0984b",
+    "workflowId": "FBNjSmb3eLdBS3N9",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ai-readiness-score",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-trigger",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// AI Readiness Score \u2192 Results Email (SMTP2GO) \u2014 APPROVED BRANDING\nconst input = $input.first().json;\nconst email = input.email || '';\nconst score = input.score || 0;\nconst scoreLabel = input.score_label || 'Calculated';\nconst scoreExplanation = input.score_explanation || '';\nif (!email) { return { sent: false }; }\n\nconst scoreColor = score >= 75 ? '#10B981' : score >= 50 ? '#6C63FF' : score >= 30 ? '#F59E0B' : '#6B7280';\nconst scoreBg = score >= 75 ? '#ECFDF5' : score >= 50 ? '#F0EEFF' : score >= 30 ? '#FEF3C7' : '#F3F4F6';\n\nconst LOGO = `<table cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 auto\"><tr>\n  <td style=\"vertical-align:middle;padding-right:10px\">\n    <img src=\"https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png\" alt=\"\" width=\"36\" height=\"36\" style=\"display:block;border:0\">\n  </td>\n  <td style=\"vertical-align:middle;text-align:left\">\n    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"text-align:left;padding:0;margin:0\">\n      <div style=\"font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1;text-align:left\">Syntharra</div>\n    </td></tr><tr><td style=\"text-align:left;padding:3px 0 0 0;margin:0\">\n      <div style=\"font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1;text-align:left\">Global AI Solutions</div>\n    </td></tr></table>\n  </td>\n</tr></table>`;\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap\" rel=\"stylesheet\"></head>\n<body style=\"margin:0;padding:0;background-color:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#F7F7FB;padding:40px 16px\"><tr><td align=\"center\">\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:580px;width:100%\">\n<tr><td style=\"padding:0 0 24px;text-align:center\">${LOGO}</td></tr>\n<tr><td style=\"background-color:#ffffff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)\">\n<div style=\"height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)\"></div>\n<div style=\"padding:32px 36px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:20px\"><tr><td>\n  <span style=\"display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6C63FF;background-color:#F0EEFF;padding:4px 12px;border-radius:20px\">Your AI Readiness Results</span>\n</td></tr></table>\n<h1 style=\"color:#1A1A2E;font-size:24px;font-weight:700;margin:0 0 6px;line-height:1.3\">Here\\u2019s Your Score</h1>\n<p style=\"color:#6B7280;font-size:14px;line-height:1.6;margin:0 0 28px\">Based on your answers, here\\u2019s how AI-ready your business is \\u2014 and what it means for your revenue.</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\"><tr><td style=\"text-align:center\">\n  <div style=\"display:inline-block;width:120px;height:120px;border-radius:50%;background-color:${scoreBg};border:4px solid ${scoreColor};line-height:120px;text-align:center\"><span style=\"font-size:44px;font-weight:700;color:${scoreColor}\">${score}</span></div>\n  <p style=\"font-size:18px;font-weight:700;color:#1A1A2E;margin:14px 0 4px\">${scoreLabel}</p>\n  <p style=\"font-size:13px;color:#6B7280;margin:0\">out of 100</p>\n</td></tr></table>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px;background-color:#F9F9FC;border-radius:10px\"><tr><td style=\"padding:20px\">\n  <p style=\"font-size:14px;color:#1A1A2E;line-height:1.7;margin:0\">${scoreExplanation}</p>\n</td></tr></table>\n<h2 style=\"font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 16px\">The Numbers Behind Your Score</h2>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden\">\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Average missed calls per week</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:700;color:#EF4444;font-size:14px\">12 calls</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Average job value in trades</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">$350</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Estimated monthly revenue lost</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:700;color:#EF4444;font-size:18px\">$16,800</td></tr>\n<tr><td style=\"padding:12px 20px;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Revenue recoverable with AI</td><td style=\"padding:12px 20px;background-color:#ffffff;text-align:right;font-weight:700;color:#10B981;font-size:18px\">$14,280+</td></tr>\n</table>\n<h2 style=\"font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 16px\">3 Quick Wins to Stop Losing Calls</h2>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:12px\"><tr><td style=\"width:32px;vertical-align:top;padding-top:2px\"><div style=\"width:28px;height:28px;border-radius:50%;background-color:#F0EEFF;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#6C63FF\">1</div></td><td style=\"padding:0 0 16px 12px\"><p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px\">Answer every call, 24/7</p><p style=\"font-size:13px;color:#6B7280;line-height:1.5;margin:0\">An AI receptionist picks up instantly \\u2014 nights, weekends, holidays.</p></td></tr></table>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:12px\"><tr><td style=\"width:32px;vertical-align:top;padding-top:2px\"><div style=\"width:28px;height:28px;border-radius:50%;background-color:#ECFDF5;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#10B981\">2</div></td><td style=\"padding:0 0 16px 12px\"><p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px\">Get instant lead alerts</p><p style=\"font-size:13px;color:#6B7280;line-height:1.5;margin:0\">Every qualified lead scored and sent to you via SMS and email within seconds.</p></td></tr></table>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:28px\"><tr><td style=\"width:32px;vertical-align:top;padding-top:2px\"><div style=\"width:28px;height:28px;border-radius:50%;background-color:#FEF3C7;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#F59E0B\">3</div></td><td style=\"padding:0 0 16px 12px\"><p style=\"font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px\">Track everything from one dashboard</p><p style=\"font-size:13px;color:#6B7280;line-height:1.5;margin:0\">See every call, every lead, every trend. Weekly reports straight to your inbox.</p></td></tr></table>\n<div style=\"text-align:center;margin:0 0 12px\"><a href=\"https://calendar.app.google/jxUu7XfiMXMqvdiw6\" style=\"display:inline-block;background-color:#6C63FF;color:#ffffff;padding:16px 44px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 14px rgba(108,99,255,0.35)\">Book a Free Demo Call</a></div>\n<p style=\"text-align:center;font-size:12px;color:#9CA3AF;margin:12px 0 0\">15 minutes. No commitment. See it working live with your business name.</p>\n</div></td></tr>\n<tr><td style=\"padding:20px;text-align:center\"><a href=\"https://checkout.syntharra.com/\" style=\"color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none;margin:0 10px\">View Pricing</a><span style=\"color:#D1D5DB\"> | </span><a href=\"https://www.syntharra.com/demo.html\" style=\"color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none;margin:0 10px\">Try the AI Demo</a></td></tr>\n<tr><td style=\"text-align:center\"><p style=\"color:#9CA3AF;font-size:11px;margin:0;line-height:1.6\">Syntharra AI Solutions<br><a href=\"https://www.syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">syntharra.com</a> &middot; <a href=\"mailto:support@syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">support@syntharra.com</a></p></td></tr>\n</table></td></tr></table></body></html>`;\n\nconst SMTP2GO_KEY = 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E';\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST', url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: { api_key: SMTP2GO_KEY, sender: 'Syntharra AI <noreply@syntharra.com>', to: [email],\n      subject: `Your AI Readiness Score: ${score}/100 \u2014 ${scoreLabel}`, html_body: emailHtml },\n    json: true\n  });\n  return { ...input, _email_sent: true };\n} catch (e) { return { ...input, _email_sent: false, _error: e.message }; }\n",
+          "nodeMode": "runOnceForEachItem"
+        },
+        "id": "send-email",
+        "name": "Send Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\"success\":true}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "value": "Content-Type"
+                }
+              ]
+            }
+          }
+        },
+        "id": "respond-ok",
+        "name": "Respond OK",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          720,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Send Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Email": {
+        "main": [
+          [
+            {
+              "node": "Respond OK",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-29T01:11:27.895Z",
+        "id": 796,
+        "workflowId": "FBNjSmb3eLdBS3N9",
+        "versionId": "1c60cd6c-36e1-403c-890b-3c982ae0984b",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T01:11:27.795Z",
+        "id": 795,
+        "workflowId": "FBNjSmb3eLdBS3N9",
+        "versionId": "1c60cd6c-36e1-403c-890b-3c982ae0984b",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
