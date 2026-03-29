@@ -279,7 +279,6 @@ Discount codes doc: `docs/discount-codes.md`
 | Form | ID |
 |---|---|
 | Standard Onboarding | `260795139953066` |
-| Standard Onboarding v2 | `260812373840657` |
 | Premium Onboarding | `260819259556671` |
 
 - API key: `[stored in Claude project memory]` (account: Blackmore_Daniel)
