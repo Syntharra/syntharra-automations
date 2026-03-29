@@ -388,3 +388,42 @@ Discount codes doc: `docs/discount-codes.md`
 - Stripe key fixed: sk_test_ (was pk_test_), Twilio env vars removed, Telnyx placeholders added
 - Railway API token saved for direct service management
 
+
+## Session: 2026-03-29 — Ops Monitor Fixes & Dashboard Redesign
+
+### Ops Monitor (syntharra-ops-monitor on Railway)
+
+**SMTP / Email — Root Cause & Fix:**
+- Railway blocks ALL outbound SMTP ports (25, 465, 587, 2525) — nodemailer will never work on Railway
+- Fix: replaced nodemailer entirely with SMTP2GO REST API (HTTPS port 443)
+- Files changed: `src/monitors/email.js`, `src/utils/alertManager.js`
+- Railway env var added: `SMTP2GO_API_KEY = api-0BE30DA64A074BC79F28BE6AEDC9DB9E`
+- Also removed: `SMTP_PORT` env var no longer relevant (REST API doesn't use it)
+- alertManager.js now sends all alert emails via `POST https://api.smtp2go.com/v3/email/send`
+
+**n8n Monitor Not Loading — Root Cause & Fix:**
+- alertManager constructor was initialising nodemailer transport on startup
+- When n8n monitor tried to fire an alert (about execution errors), nodemailer timed out on SMTP connect
+- This crashed the entire checkN8n() call silently inside safeRun()
+- Fix: removing nodemailer fixed the crash — n8n monitor now loads and stores results correctly
+
+**HVAC Premium Onboarding — 25x Ghost Errors — Root Cause:**
+- NOT a credential issue. The ops monitor infrastructure.js v2.0 was using POST (not HEAD) on all webhook URLs
+- Every 5 min it POSTed `{}` to `jotform-hvac-premium-onboarding` webhook → triggered real workflow execution with empty body → failed at `Create Retell Conversation Flow` node with "Credentials not found" (a side effect of empty payload, not a real cred issue)
+- Fix was already committed (Mar 29 20:38): infrastructure.js webhook checks changed to HEAD
+- NEVER use POST to check webhook health — always HEAD. 404 response from HEAD = healthy (endpoint exists)
+- Errors will age out of 2h monitoring window automatically (~23:30 UTC Mar 29)
+
+**Dashboard Redesign:**
+- Full redesign: KPI row (6 cards), better card hierarchy, section labels, live clock, countdown progress bar
+- Password login screen added: dark branded gate, access code `syntharra2024`  
+- Login screen branding: Georgia italic "Syntharra" wordmark + "GLOBAL AI SOLUTIONS" in violet Inter caps
+- System cards reordered by priority: Clients → Pipeline → Retell → n8n → Supabase → Stripe → etc.
+
+### Key Learnings
+
+- **Railway blocks all SMTP ports** — any email sending from Railway must use an HTTP/REST API (SMTP2GO REST, SendGrid API, etc.). Never use nodemailer/SMTP on Railway.
+- **Never POST to webhooks for health checks** — always HEAD. POST triggers real workflow execution.
+- **alertManager crash pattern** — if alertManager.js throws during monitor execution, the entire monitor silently returns without updating statusStore (healthy stays null). Always check alertManager for SMTP/transport errors first when a monitor shows null.
+- **Railway build cache** — env var changes don't always trigger redeploy. Sometimes need a new git commit to bust cache and force fresh build.
+- **Duplicate const declarations** — careful with str_replace edits that prepend to existing method bodies; always verify full method contents before and after edits.
