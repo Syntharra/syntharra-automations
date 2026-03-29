@@ -1,0 +1,251 @@
+{
+  "updatedAt": "2026-03-27T00:46:11.960Z",
+  "createdAt": "2026-03-25T10:42:33.206Z",
+  "id": "sBFhshlsz31L6FV8",
+  "name": "Publish Retell Agent",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "publish-retell-agent",
+        "options": {}
+      }
+    },
+    {
+      "id": "call-publisher",
+      "name": "Call Publisher Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        300,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://syntharra-checkout-production.up.railway.app/publish-retell-agent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.PUBLISHER_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { agent_id: $json.body.agent_id } }}",
+        "options": {}
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Call Publisher Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Publisher Service": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "f5cbeb7b-442c-47b8-88bf-395a89d818bf",
+  "activeVersionId": "f5cbeb7b-442c-47b8-88bf-395a89d818bf",
+  "versionCounter": 8,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-25T10:42:33.208Z",
+      "createdAt": "2026-03-25T10:42:33.208Z",
+      "role": "workflow:owner",
+      "workflowId": "sBFhshlsz31L6FV8",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-25T10:42:33.239Z",
+    "createdAt": "2026-03-25T10:42:33.239Z",
+    "versionId": "f5cbeb7b-442c-47b8-88bf-395a89d818bf",
+    "workflowId": "sBFhshlsz31L6FV8",
+    "nodes": [
+      {
+        "id": "webhook-trigger",
+        "name": "Webhook Trigger",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "publish-retell-agent",
+          "options": {}
+        }
+      },
+      {
+        "id": "call-publisher",
+        "name": "Call Publisher Service",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          300,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "=https://syntharra-checkout-production.up.railway.app/publish-retell-agent",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.PUBLISHER_SECRET }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { agent_id: $json.body.agent_id } }}",
+          "options": {}
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "id": "respond",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          600,
+          0
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}"
+        }
+      }
+    ],
+    "connections": {
+      "Webhook Trigger": {
+        "main": [
+          [
+            {
+              "node": "Call Publisher Service",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call Publisher Service": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-25T10:42:33.813Z",
+        "id": 246,
+        "workflowId": "sBFhshlsz31L6FV8",
+        "versionId": "f5cbeb7b-442c-47b8-88bf-395a89d818bf",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-26T10:12:06.648Z",
+        "id": 416,
+        "workflowId": "sBFhshlsz31L6FV8",
+        "versionId": "f5cbeb7b-442c-47b8-88bf-395a89d818bf",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-26T10:12:06.545Z",
+        "id": 415,
+        "workflowId": "sBFhshlsz31L6FV8",
+        "versionId": "f5cbeb7b-442c-47b8-88bf-395a89d818bf",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
