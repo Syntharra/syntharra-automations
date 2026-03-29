@@ -1,0 +1,237 @@
+{
+  "updatedAt": "2026-03-29T00:28:36.924Z",
+  "createdAt": "2026-03-29T00:01:35.753Z",
+  "id": "ejZV2qATduPdK4Eu",
+  "name": "Newsletter Unsubscribe Webhook",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "newsletter-unsubscribe",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Unsubscribe Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "newsletter-unsubscribe",
+      "id": "43a35c04-22c6-48c6-8586-d598e5efee77"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mark email as unsubscribed in Supabase\nconst email = $input.first().json.query?.email;\nif (!email) {\n  return [{json: {success: false, message: 'No email provided'}}];\n}\n\ntry {\n  const resp = await fetch(`https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/website_leads?email=eq.${encodeURIComponent(email)}`, {\n    method: 'PATCH',\n    headers: {\n      'Content-Type': 'application/json',\n      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlty1DaJtgKEMOLMEkC0VCGhrlKbI0R4DNOPkNPWo',\n      'Prefer': 'return=minimal'\n    },\n    body: JSON.stringify({ source: 'unsubscribed' })\n  });\n  return [{json: {success: true, email}}];\n} catch(e) {\n  return [{json: {success: false, error: e.message}}];\n}"
+      },
+      "name": "Update Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "a53d9c79-45c9-4f07-bd8a-6985b0a81ab7"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Unsubscribed</title></head><body style='margin:0;padding:60px 20px;background:#F7F7FB;font-family:Helvetica,Arial,sans-serif;text-align:center'><div style='max-width:400px;margin:0 auto;background:#fff;border-radius:16px;padding:40px 32px;border:1px solid #E5E7EB'><div style='font-size:36px;margin-bottom:16px'>\u2713</div><h1 style='font-size:20px;font-weight:700;color:#1A1A2E;margin:0 0 8px'>You've been unsubscribed</h1><p style='font-size:14px;color:#4A4A6A;line-height:1.6;margin:0 0 24px'>You won't receive any more weekly emails from Syntharra. We're sorry to see you go.</p><a href='https://syntharra.com' style='font-size:13px;color:#6C63FF;text-decoration:none;font-weight:600'>Back to syntharra.com \u2192</a></div></body></html>",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Unsubscribe Page",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "d16ec23e-d3cf-4869-8d5c-0478919c0dba"
+    }
+  ],
+  "connections": {
+    "Unsubscribe Webhook": {
+      "main": [
+        [
+          {
+            "node": "Update Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Supabase": {
+      "main": [
+        [
+          {
+            "node": "Unsubscribe Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "11924c93-8af0-4279-acbc-3821c520dcdd",
+  "activeVersionId": "11924c93-8af0-4279-acbc-3821c520dcdd",
+  "versionCounter": 7,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-29T00:01:35.755Z",
+      "createdAt": "2026-03-29T00:01:35.755Z",
+      "role": "workflow:owner",
+      "workflowId": "ejZV2qATduPdK4Eu",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-29T00:01:35.790Z",
+    "createdAt": "2026-03-29T00:01:35.790Z",
+    "versionId": "11924c93-8af0-4279-acbc-3821c520dcdd",
+    "workflowId": "ejZV2qATduPdK4Eu",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "newsletter-unsubscribe",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "name": "Unsubscribe Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "newsletter-unsubscribe",
+        "id": "43a35c04-22c6-48c6-8586-d598e5efee77"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Mark email as unsubscribed in Supabase\nconst email = $input.first().json.query?.email;\nif (!email) {\n  return [{json: {success: false, message: 'No email provided'}}];\n}\n\ntry {\n  const resp = await fetch(`https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/website_leads?email=eq.${encodeURIComponent(email)}`, {\n    method: 'PATCH',\n    headers: {\n      'Content-Type': 'application/json',\n      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlty1DaJtgKEMOLMEkC0VCGhrlKbI0R4DNOPkNPWo',\n      'Prefer': 'return=minimal'\n    },\n    body: JSON.stringify({ source: 'unsubscribed' })\n  });\n  return [{json: {success: true, email}}];\n} catch(e) {\n  return [{json: {success: false, error: e.message}}];\n}"
+        },
+        "name": "Update Supabase",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ],
+        "id": "a53d9c79-45c9-4f07-bd8a-6985b0a81ab7"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "=<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Unsubscribed</title></head><body style='margin:0;padding:60px 20px;background:#F7F7FB;font-family:Helvetica,Arial,sans-serif;text-align:center'><div style='max-width:400px;margin:0 auto;background:#fff;border-radius:16px;padding:40px 32px;border:1px solid #E5E7EB'><div style='font-size:36px;margin-bottom:16px'>\u2713</div><h1 style='font-size:20px;font-weight:700;color:#1A1A2E;margin:0 0 8px'>You've been unsubscribed</h1><p style='font-size:14px;color:#4A4A6A;line-height:1.6;margin:0 0 24px'>You won't receive any more weekly emails from Syntharra. We're sorry to see you go.</p><a href='https://syntharra.com' style='font-size:13px;color:#6C63FF;text-decoration:none;font-weight:600'>Back to syntharra.com \u2192</a></div></body></html>",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "text/html"
+                }
+              ]
+            }
+          }
+        },
+        "name": "Unsubscribe Page",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          440,
+          0
+        ],
+        "id": "d16ec23e-d3cf-4869-8d5c-0478919c0dba"
+      }
+    ],
+    "connections": {
+      "Unsubscribe Webhook": {
+        "main": [
+          [
+            {
+              "node": "Update Supabase",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Supabase": {
+        "main": [
+          [
+            {
+              "node": "Unsubscribe Page",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-29T00:01:37.698Z",
+        "id": 783,
+        "workflowId": "ejZV2qATduPdK4Eu",
+        "versionId": "11924c93-8af0-4279-acbc-3821c520dcdd",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T00:28:37.103Z",
+        "id": 788,
+        "workflowId": "ejZV2qATduPdK4Eu",
+        "versionId": "11924c93-8af0-4279-acbc-3821c520dcdd",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T00:28:37.008Z",
+        "id": 787,
+        "workflowId": "ejZV2qATduPdK4Eu",
+        "versionId": "11924c93-8af0-4279-acbc-3821c520dcdd",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
