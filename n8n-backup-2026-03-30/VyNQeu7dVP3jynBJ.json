@@ -1,0 +1,303 @@
+{
+  "updatedAt": "2026-03-29T00:38:59.271Z",
+  "createdAt": "2026-03-29T00:25:08.372Z",
+  "id": "VyNQeu7dVP3jynBJ",
+  "name": "Weekly Newsletter - Syntharra",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "name": "Every Monday 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fd863b65-1ce0-4964-a76b-660f3021908a"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/website_leads?source=eq.blog_subscribe&select=email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlty1DaJtgKEMOLMEkC0VCGhrlKbI0R4DNOPkNPWo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Fetch Subscribers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "bce52627-f030-4dab-895f-488e57f3229c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const articles = [{\"tag\": \"HVAC\", \"title\": \"How HVAC companies lose $80,000 a year to missed calls\", \"desc\": \"35% of HVAC calls go unanswered. At $380 per job, that adds up fast.\", \"url\": \"https://syntharra.com/blog/hvac-missed-calls.html\"}, {\"tag\": \"AI\", \"title\": \"The real ROI of an AI receptionist for trade businesses\", \"desc\": \"Calculate how much revenue your business loses to missed calls.\", \"url\": \"https://syntharra.com/blog/ai-receptionist-roi-calculator.html\"}, {\"tag\": \"Growth\", \"title\": \"Why after-hours calls are your biggest untapped revenue stream\", \"desc\": \"42% of service calls come outside business hours.\", \"url\": \"https://syntharra.com/blog/after-hours-calls-trade-business.html\"}, {\"tag\": \"HVAC\", \"title\": \"How to handle emergency calls without burning out your team\", \"desc\": \"Emergency spikes during extreme weather. Here's how top contractors handle it.\", \"url\": \"https://syntharra.com/blog/hvac-emergency-call-handling.html\"}, {\"tag\": \"Plumbing\", \"title\": \"Speed to answer beats everything in plumbing\", \"desc\": \"The first plumber to answer books the job 78% of the time.\", \"url\": \"https://syntharra.com/blog/plumbing-lead-capture.html\"}, {\"tag\": \"Electrical\", \"title\": \"How smart scheduling doubles capacity\", \"desc\": \"15-20% of capacity lost to scheduling inefficiency.\", \"url\": \"https://syntharra.com/blog/electrical-contractor-scheduling.html\"}, {\"tag\": \"Growth\", \"title\": \"Customer experience is the new competitive moat\", \"desc\": \"Trade businesses investing in CX see 2-3x more referrals.\", \"url\": \"https://syntharra.com/blog/trade-business-customer-experience.html\"}, {\"tag\": \"AI\", \"title\": \"AI receptionist vs hiring: the honest comparison\", \"desc\": \"Cost, availability, quality, scalability \\u2014 we break it all down.\", \"url\": \"https://syntharra.com/blog/ai-vs-hiring-receptionist.html\"}, {\"tag\": \"Marketing\", \"title\": \"Your Google Business Profile is costing you leads\", \"desc\": \"Fix these 7 common mistakes to rank higher and convert more.\", \"url\": \"https://syntharra.com/blog/google-business-profile-trades.html\"}, {\"tag\": \"Business\", \"title\": \"What missed calls actually cost your business\", \"desc\": \"Every missed call costs more than the lost job. Here's the full picture.\", \"url\": \"https://syntharra.com/blog/cost-of-missed-calls-contractors.html\"}, {\"tag\": \"Seasonal\", \"title\": \"The HVAC spring marketing checklist\", \"desc\": \"Fill your summer pipeline before peak season hits.\", \"url\": \"https://syntharra.com/blog/hvac-spring-checklist.html\"}, {\"tag\": \"Plumbing\", \"title\": \"5 growth strategies from tech startups for plumbers\", \"desc\": \"Automate, measure, iterate \\u2014 the same playbook works.\", \"url\": \"https://syntharra.com/blog/plumbing-business-growth-strategies.html\"}, {\"tag\": \"Business\", \"title\": \"The #1 reason contractors lose jobs (it's not price)\", \"desc\": \"78% hire whoever responds first. Speed wins.\", \"url\": \"https://syntharra.com/blog/why-contractors-lose-to-competitors.html\"}, {\"tag\": \"AI\", \"title\": \"Answering service vs AI: what's actually better?\", \"desc\": \"We ran the numbers on cost, quality and lead capture.\", \"url\": \"https://syntharra.com/blog/answering-service-vs-ai.html\"}];\nconst tips = [\"<strong>Reply to every Google review</strong> this week \\u2014 positive and negative. Takes 2 minutes each, signals to Google you're active.\", \"<strong>Check your after-hours voicemail.</strong> If more than 3 callers hung up without leaving a message, you're losing leads.\", \"<strong>Ask your last 3 happy customers</strong> for a review. Send a text with a direct link. Most will do it if you make it easy.\", \"<strong>Pull your call logs</strong> for the last 7 days. Count how many went to voicemail. Multiply by your average job value. That's what you lost.\", \"<strong>Update your Google Business Profile</strong> with a fresh post this week. Businesses that post weekly get significantly more views.\", \"<strong>Set a 5-minute response rule</strong> for online enquiries. The contractor who responds in 5 minutes is 7x more likely to qualify the lead.\", \"<strong>Add photos of completed work</strong> to your Google profile. Profiles with real photos get 42% more direction requests.\", \"<strong>Send a follow-up text</strong> to every customer 24 hours after service. Ask if everything's working. This is where 5-star reviews come from.\", \"<strong>Check your voicemail greeting.</strong> Is it professional? Does it give callers a reason to leave a message? Most don't.\", \"<strong>Schedule 3 social media posts</strong> this week \\u2014 a completed job photo, a customer testimonial, and a seasonal tip.\", \"<strong>Call yourself.</strong> Seriously. Call your own business number at 8PM and see what happens. That's what your customers experience.\", \"<strong>Add emergency hours</strong> to your Google Business Profile if you handle after-hours calls. Customers filter by 'open now'.\", \"<strong>Review your top 3 competitors' Google profiles.</strong> Count their reviews. That's your target to beat this quarter.\", \"<strong>Send a maintenance reminder</strong> to customers you serviced 6+ months ago. Recurring revenue is easier than new leads.\", \"<strong>Record your best technician</strong> answering a customer question. Use that as training material for everyone else.\"];\nconst ctas = [{\"title\": \"Losing calls = losing money\", \"subtitle\": \"Find out exactly how much in 30 seconds\", \"text\": \"Calculate my lost revenue\", \"url\": \"https://syntharra.com/calculator.html\"}, {\"title\": \"How AI-ready is your business?\", \"subtitle\": \"Take the 30-second quiz\", \"text\": \"Get my score\", \"url\": \"https://syntharra.com/ai-readiness.html\"}, {\"title\": \"Which plan fits your business?\", \"subtitle\": \"Answer 4 questions, get a recommendation\", \"text\": \"Find my plan\", \"url\": \"https://syntharra.com/plan-quiz.html\"}, {\"title\": \"See it in action\", \"subtitle\": \"Talk to a real Syntharra AI receptionist\", \"text\": \"Try the live demo\", \"url\": \"https://syntharra.com/demo.html\"}, {\"title\": \"Ready to stop losing calls?\", \"subtitle\": \"Book a free 15-minute strategy call\", \"text\": \"Book a call\", \"url\": \"https://calendar.app.google/jxUu7XfiMXMqvdiw6\"}];\nconst weekNum = Math.floor(Date.now() / (7*24*60*60*1000));\nconst a1 = articles[weekNum % articles.length];\nconst a2 = articles[(weekNum+7) % articles.length];\nconst t1 = tips[weekNum % tips.length];\nconst t2 = tips[(weekNum+5) % tips.length];\nconst t3 = tips[(weekNum+10) % tips.length];\nconst cta = ctas[weekNum % ctas.length];\nconst now = new Date();\nconst months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst dateStr = months[now.getMonth()] + ' ' + now.getDate();\nconst subs = $input.all().map(i => i.json.email || i.json).filter(e => typeof e === 'string' && e.includes('@'));\nreturn [{json:{date:dateStr,a1,a2,t1,t2,t3,cta,subs,count:subs.length}}];"
+      },
+      "name": "Generate Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "77af23c8-6e26-48c7-9150-723034dd155a"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Send emails via SMTP2GO API\nconst d = $input.first().json;\nconst subs = d.subs || [];\nif (subs.length === 0) { return [{json: {sent: 0}}]; }\nlet sent = 0, failed = 0;\nfor (const email of subs) {\n  const html = '<html><body style=\"margin:0;padding:0;background:#F7F7FB;font-family:Helvetica,Arial,sans-serif\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F7F7FB;padding:32px 16px\"><tr><td align=\"center\"><table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%\"><tr><td style=\"height:4px;background:linear-gradient(90deg,#6C63FF,#8B85FF);border-radius:12px 12px 0 0\"></td></tr><tr><td style=\"background:#fff;padding:20px 32px;border-bottom:1px solid #f0f0f5\"><table width=\"100%\"><tr><td style=\"padding:0\"><table cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"padding-right:10px;vertical-align:middle\"><table cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse\"><tr><td style=\"width:4px;padding-right:2px;vertical-align:bottom\"><div style=\"width:4px;height:8px;background:#6C63FF;border-radius:1px\"></div></td><td style=\"width:4px;padding-right:2px;vertical-align:bottom\"><div style=\"width:4px;height:13px;background:#6C63FF;border-radius:1px\"></div></td><td style=\"width:4px;padding-right:2px;vertical-align:bottom\"><div style=\"width:4px;height:18px;background:#6C63FF;border-radius:1px\"></div></td><td style=\"width:4px;vertical-align:bottom\"><div style=\"width:4px;height:24px;background:#6C63FF;border-radius:1px\"></div></td></tr></table></td><td style=\"vertical-align:middle\"><div style=\"font-size:16px;font-weight:700;color:#1A1A2E;line-height:1;letter-spacing:-0.3px\">Syntharra</div><div style=\"font-size:7px;font-weight:600;letter-spacing:2px;color:#6C63FF;text-transform:uppercase;line-height:1;margin-top:3px\">GLOBAL AI SOLUTIONS</div></td></tr></table></td><td align=\"right\" style=\"font-size:11px;color:#8A8AA0\">Week of ' + d.date + '</td></tr></table></td></tr><tr><td style=\"background:#fff;padding:24px 32px 20px\"><p style=\"font-size:15px;color:#1A1A2E;line-height:1.6;margin:0\">Hey there,<br><br>Your weekly dose of trade business growth. Two reads and three quick wins.</p></td></tr><tr><td style=\"background:#fff;padding:0 32px 16px\"><table width=\"100%\" style=\"border:1px solid #E5E7EB;border-radius:12px;overflow:hidden\"><tr><td style=\"height:6px;background:linear-gradient(135deg,#6C63FF,#8B85FF)\"></td></tr><tr><td style=\"padding:20px\"><p style=\"font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6C63FF;margin:0 0 8px\">' + d.a1.tag + '</p><p style=\"font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 6px;line-height:1.3\">' + d.a1.title + '</p><p style=\"font-size:13px;color:#4A4A6A;line-height:1.6;margin:0 0 12px\">' + d.a1.desc + '</p><a href=\"' + d.a1.url + '\" style=\"font-size:12px;font-weight:600;color:#6C63FF;text-decoration:none\">Read article \u2192</a></td></tr></table></td></tr><tr><td style=\"background:#fff;padding:0 32px 16px\"><table width=\"100%\" style=\"border:1px solid #E5E7EB;border-radius:12px;overflow:hidden\"><tr><td style=\"height:6px;background:linear-gradient(135deg,#6C63FF,#8B85FF)\"></td></tr><tr><td style=\"padding:20px\"><p style=\"font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6C63FF;margin:0 0 8px\">' + d.a2.tag + '</p><p style=\"font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 6px;line-height:1.3\">' + d.a2.title + '</p><p style=\"font-size:13px;color:#4A4A6A;line-height:1.6;margin:0 0 12px\">' + d.a2.desc + '</p><a href=\"' + d.a2.url + '\" style=\"font-size:12px;font-weight:600;color:#6C63FF;text-decoration:none\">Read article \u2192</a></td></tr></table></td></tr><tr><td style=\"background:#fff;padding:20px 32px\"><p style=\"font-size:13px;font-weight:700;color:#1A1A2E;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 14px\">Quick wins this week</p><table width=\"100%\"><tr><td style=\"padding:10px 0;border-bottom:1px solid #f0f0f5;font-size:13px;color:#4A4A6A;line-height:1.5\">' + d.t1 + '</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f0f0f5;font-size:13px;color:#4A4A6A;line-height:1.5\">' + d.t2 + '</td></tr><tr><td style=\"padding:10px 0;font-size:13px;color:#4A4A6A;line-height:1.5\">' + d.t3 + '</td></tr></table></td></tr><tr><td style=\"background:#fff;padding:8px 32px 0\"><table width=\"100%\" style=\"background:#f8f7ff;border:1.5px solid rgba(108,99,255,0.15);border-radius:12px\"><tr><td style=\"padding:24px;text-align:center\"><p style=\"font-size:15px;font-weight:700;color:#1A1A2E;margin:0 0 4px\">' + d.cta.title + '</p><p style=\"font-size:12px;color:#8A8AA0;margin:0 0 14px\">' + d.cta.subtitle + '</p><a href=\"' + d.cta.url + '\" style=\"display:inline-block;padding:10px 24px;background:#6C63FF;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none\">' + d.cta.text + ' \u2192</a></td></tr></table></td></tr><tr><td style=\"background:#fff;padding:24px 32px;border-top:1px solid #f0f0f5;border-radius:0 0 12px 12px\"><p style=\"font-size:11px;color:#8A8AA0;line-height:1.6;margin:0\">You subscribed at syntharra.com<br><a href=\"https://syntharra.app.n8n.cloud/webhook/newsletter-unsubscribe?email=' + encodeURIComponent(email) + '\" style=\"color:#6C63FF;text-decoration:none\">Unsubscribe</a> \u00b7 <a href=\"https://syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">syntharra.com</a><br><br>\u00a9 2026 Syntharra AI Solutions</p></td></tr></table></td></tr></table></body></html>';\n  try {\n    await $http.request({\n      method: 'POST',\n      url: 'https://api.smtp2go.com/v3/email/send',\n      headers: { 'Content-Type': 'application/json' },\n      body: { api_key: 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E', sender: 'Syntharra <noreply@syntharra.com>', to: [email], subject: d.a1.title + ' \u2014 Syntharra Weekly', html_body: html },\n      json: true\n    });\n    sent++;\n  } catch (e) { failed++; }\n}\nreturn [{json: {sent, failed, total: subs.length}}];"
+      },
+      "name": "Send via SMTP2GO",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "63d119be-816f-4f3c-b626-687ef279475c"
+    }
+  ],
+  "connections": {
+    "Every Monday 9AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Subscribers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Subscribers": {
+      "main": [
+        [
+          {
+            "node": "Generate Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content": {
+      "main": [
+        [
+          {
+            "node": "Send via SMTP2GO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": {
+    "node:Every Monday 9AM": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+  "activeVersionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+  "versionCounter": 14,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-29T00:25:08.374Z",
+      "createdAt": "2026-03-29T00:25:08.374Z",
+      "role": "workflow:owner",
+      "workflowId": "VyNQeu7dVP3jynBJ",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-29T00:34:24.617Z",
+    "createdAt": "2026-03-29T00:34:24.617Z",
+    "versionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+    "workflowId": "VyNQeu7dVP3jynBJ",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9 * * 1"
+              }
+            ]
+          }
+        },
+        "name": "Every Monday 9AM",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "fd863b65-1ce0-4964-a76b-660f3021908a"
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/website_leads?source=eq.blog_subscribe&select=email",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlty1DaJtgKEMOLMEkC0VCGhrlKbI0R4DNOPkNPWo"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "name": "Fetch Subscribers",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "id": "bce52627-f030-4dab-895f-488e57f3229c"
+      },
+      {
+        "parameters": {
+          "jsCode": "const articles = [{\"tag\": \"HVAC\", \"title\": \"How HVAC companies lose $80,000 a year to missed calls\", \"desc\": \"35% of HVAC calls go unanswered. At $380 per job, that adds up fast.\", \"url\": \"https://syntharra.com/blog/hvac-missed-calls.html\"}, {\"tag\": \"AI\", \"title\": \"The real ROI of an AI receptionist for trade businesses\", \"desc\": \"Calculate how much revenue your business loses to missed calls.\", \"url\": \"https://syntharra.com/blog/ai-receptionist-roi-calculator.html\"}, {\"tag\": \"Growth\", \"title\": \"Why after-hours calls are your biggest untapped revenue stream\", \"desc\": \"42% of service calls come outside business hours.\", \"url\": \"https://syntharra.com/blog/after-hours-calls-trade-business.html\"}, {\"tag\": \"HVAC\", \"title\": \"How to handle emergency calls without burning out your team\", \"desc\": \"Emergency spikes during extreme weather. Here's how top contractors handle it.\", \"url\": \"https://syntharra.com/blog/hvac-emergency-call-handling.html\"}, {\"tag\": \"Plumbing\", \"title\": \"Speed to answer beats everything in plumbing\", \"desc\": \"The first plumber to answer books the job 78% of the time.\", \"url\": \"https://syntharra.com/blog/plumbing-lead-capture.html\"}, {\"tag\": \"Electrical\", \"title\": \"How smart scheduling doubles capacity\", \"desc\": \"15-20% of capacity lost to scheduling inefficiency.\", \"url\": \"https://syntharra.com/blog/electrical-contractor-scheduling.html\"}, {\"tag\": \"Growth\", \"title\": \"Customer experience is the new competitive moat\", \"desc\": \"Trade businesses investing in CX see 2-3x more referrals.\", \"url\": \"https://syntharra.com/blog/trade-business-customer-experience.html\"}, {\"tag\": \"AI\", \"title\": \"AI receptionist vs hiring: the honest comparison\", \"desc\": \"Cost, availability, quality, scalability \\u2014 we break it all down.\", \"url\": \"https://syntharra.com/blog/ai-vs-hiring-receptionist.html\"}, {\"tag\": \"Marketing\", \"title\": \"Your Google Business Profile is costing you leads\", \"desc\": \"Fix these 7 common mistakes to rank higher and convert more.\", \"url\": \"https://syntharra.com/blog/google-business-profile-trades.html\"}, {\"tag\": \"Business\", \"title\": \"What missed calls actually cost your business\", \"desc\": \"Every missed call costs more than the lost job. Here's the full picture.\", \"url\": \"https://syntharra.com/blog/cost-of-missed-calls-contractors.html\"}, {\"tag\": \"Seasonal\", \"title\": \"The HVAC spring marketing checklist\", \"desc\": \"Fill your summer pipeline before peak season hits.\", \"url\": \"https://syntharra.com/blog/hvac-spring-checklist.html\"}, {\"tag\": \"Plumbing\", \"title\": \"5 growth strategies from tech startups for plumbers\", \"desc\": \"Automate, measure, iterate \\u2014 the same playbook works.\", \"url\": \"https://syntharra.com/blog/plumbing-business-growth-strategies.html\"}, {\"tag\": \"Business\", \"title\": \"The #1 reason contractors lose jobs (it's not price)\", \"desc\": \"78% hire whoever responds first. Speed wins.\", \"url\": \"https://syntharra.com/blog/why-contractors-lose-to-competitors.html\"}, {\"tag\": \"AI\", \"title\": \"Answering service vs AI: what's actually better?\", \"desc\": \"We ran the numbers on cost, quality and lead capture.\", \"url\": \"https://syntharra.com/blog/answering-service-vs-ai.html\"}];\nconst tips = [\"<strong>Reply to every Google review</strong> this week \\u2014 positive and negative. Takes 2 minutes each, signals to Google you're active.\", \"<strong>Check your after-hours voicemail.</strong> If more than 3 callers hung up without leaving a message, you're losing leads.\", \"<strong>Ask your last 3 happy customers</strong> for a review. Send a text with a direct link. Most will do it if you make it easy.\", \"<strong>Pull your call logs</strong> for the last 7 days. Count how many went to voicemail. Multiply by your average job value. That's what you lost.\", \"<strong>Update your Google Business Profile</strong> with a fresh post this week. Businesses that post weekly get significantly more views.\", \"<strong>Set a 5-minute response rule</strong> for online enquiries. The contractor who responds in 5 minutes is 7x more likely to qualify the lead.\", \"<strong>Add photos of completed work</strong> to your Google profile. Profiles with real photos get 42% more direction requests.\", \"<strong>Send a follow-up text</strong> to every customer 24 hours after service. Ask if everything's working. This is where 5-star reviews come from.\", \"<strong>Check your voicemail greeting.</strong> Is it professional? Does it give callers a reason to leave a message? Most don't.\", \"<strong>Schedule 3 social media posts</strong> this week \\u2014 a completed job photo, a customer testimonial, and a seasonal tip.\", \"<strong>Call yourself.</strong> Seriously. Call your own business number at 8PM and see what happens. That's what your customers experience.\", \"<strong>Add emergency hours</strong> to your Google Business Profile if you handle after-hours calls. Customers filter by 'open now'.\", \"<strong>Review your top 3 competitors' Google profiles.</strong> Count their reviews. That's your target to beat this quarter.\", \"<strong>Send a maintenance reminder</strong> to customers you serviced 6+ months ago. Recurring revenue is easier than new leads.\", \"<strong>Record your best technician</strong> answering a customer question. Use that as training material for everyone else.\"];\nconst ctas = [{\"title\": \"Losing calls = losing money\", \"subtitle\": \"Find out exactly how much in 30 seconds\", \"text\": \"Calculate my lost revenue\", \"url\": \"https://syntharra.com/calculator.html\"}, {\"title\": \"How AI-ready is your business?\", \"subtitle\": \"Take the 30-second quiz\", \"text\": \"Get my score\", \"url\": \"https://syntharra.com/ai-readiness.html\"}, {\"title\": \"Which plan fits your business?\", \"subtitle\": \"Answer 4 questions, get a recommendation\", \"text\": \"Find my plan\", \"url\": \"https://syntharra.com/plan-quiz.html\"}, {\"title\": \"See it in action\", \"subtitle\": \"Talk to a real Syntharra AI receptionist\", \"text\": \"Try the live demo\", \"url\": \"https://syntharra.com/demo.html\"}, {\"title\": \"Ready to stop losing calls?\", \"subtitle\": \"Book a free 15-minute strategy call\", \"text\": \"Book a call\", \"url\": \"https://calendar.app.google/jxUu7XfiMXMqvdiw6\"}];\nconst weekNum = Math.floor(Date.now() / (7*24*60*60*1000));\nconst a1 = articles[weekNum % articles.length];\nconst a2 = articles[(weekNum+7) % articles.length];\nconst t1 = tips[weekNum % tips.length];\nconst t2 = tips[(weekNum+5) % tips.length];\nconst t3 = tips[(weekNum+10) % tips.length];\nconst cta = ctas[weekNum % ctas.length];\nconst now = new Date();\nconst months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst dateStr = months[now.getMonth()] + ' ' + now.getDate();\nconst subs = $input.all().map(i => i.json.email || i.json).filter(e => typeof e === 'string' && e.includes('@'));\nreturn [{json:{date:dateStr,a1,a2,t1,t2,t3,cta,subs,count:subs.length}}];"
+        },
+        "name": "Generate Content",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "id": "77af23c8-6e26-48c7-9150-723034dd155a"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Send emails via SMTP2GO API\nconst d = $input.first().json;\nconst subs = d.subs || [];\nif (subs.length === 0) { return [{json: {sent: 0}}]; }\nlet sent = 0, failed = 0;\nfor (const email of subs) {\n  const html = '<html><body style=\"margin:0;padding:0;background:#F7F7FB;font-family:Helvetica,Arial,sans-serif\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#F7F7FB;padding:32px 16px\"><tr><td align=\"center\"><table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%\"><tr><td style=\"height:4px;background:linear-gradient(90deg,#6C63FF,#8B85FF);border-radius:12px 12px 0 0\"></td></tr><tr><td style=\"background:#fff;padding:20px 32px;border-bottom:1px solid #f0f0f5\"><table width=\"100%\"><tr><td style=\"padding:0\"><table cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"padding-right:10px;vertical-align:middle\"><table cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse\"><tr><td style=\"width:4px;padding-right:2px;vertical-align:bottom\"><div style=\"width:4px;height:8px;background:#6C63FF;border-radius:1px\"></div></td><td style=\"width:4px;padding-right:2px;vertical-align:bottom\"><div style=\"width:4px;height:13px;background:#6C63FF;border-radius:1px\"></div></td><td style=\"width:4px;padding-right:2px;vertical-align:bottom\"><div style=\"width:4px;height:18px;background:#6C63FF;border-radius:1px\"></div></td><td style=\"width:4px;vertical-align:bottom\"><div style=\"width:4px;height:24px;background:#6C63FF;border-radius:1px\"></div></td></tr></table></td><td style=\"vertical-align:middle\"><div style=\"font-size:16px;font-weight:700;color:#1A1A2E;line-height:1;letter-spacing:-0.3px\">Syntharra</div><div style=\"font-size:7px;font-weight:600;letter-spacing:2px;color:#6C63FF;text-transform:uppercase;line-height:1;margin-top:3px\">GLOBAL AI SOLUTIONS</div></td></tr></table></td><td align=\"right\" style=\"font-size:11px;color:#8A8AA0\">Week of ' + d.date + '</td></tr></table></td></tr><tr><td style=\"background:#fff;padding:24px 32px 20px\"><p style=\"font-size:15px;color:#1A1A2E;line-height:1.6;margin:0\">Hey there,<br><br>Your weekly dose of trade business growth. Two reads and three quick wins.</p></td></tr><tr><td style=\"background:#fff;padding:0 32px 16px\"><table width=\"100%\" style=\"border:1px solid #E5E7EB;border-radius:12px;overflow:hidden\"><tr><td style=\"height:6px;background:linear-gradient(135deg,#6C63FF,#8B85FF)\"></td></tr><tr><td style=\"padding:20px\"><p style=\"font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6C63FF;margin:0 0 8px\">' + d.a1.tag + '</p><p style=\"font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 6px;line-height:1.3\">' + d.a1.title + '</p><p style=\"font-size:13px;color:#4A4A6A;line-height:1.6;margin:0 0 12px\">' + d.a1.desc + '</p><a href=\"' + d.a1.url + '\" style=\"font-size:12px;font-weight:600;color:#6C63FF;text-decoration:none\">Read article \u2192</a></td></tr></table></td></tr><tr><td style=\"background:#fff;padding:0 32px 16px\"><table width=\"100%\" style=\"border:1px solid #E5E7EB;border-radius:12px;overflow:hidden\"><tr><td style=\"height:6px;background:linear-gradient(135deg,#6C63FF,#8B85FF)\"></td></tr><tr><td style=\"padding:20px\"><p style=\"font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6C63FF;margin:0 0 8px\">' + d.a2.tag + '</p><p style=\"font-size:16px;font-weight:700;color:#1A1A2E;margin:0 0 6px;line-height:1.3\">' + d.a2.title + '</p><p style=\"font-size:13px;color:#4A4A6A;line-height:1.6;margin:0 0 12px\">' + d.a2.desc + '</p><a href=\"' + d.a2.url + '\" style=\"font-size:12px;font-weight:600;color:#6C63FF;text-decoration:none\">Read article \u2192</a></td></tr></table></td></tr><tr><td style=\"background:#fff;padding:20px 32px\"><p style=\"font-size:13px;font-weight:700;color:#1A1A2E;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 14px\">Quick wins this week</p><table width=\"100%\"><tr><td style=\"padding:10px 0;border-bottom:1px solid #f0f0f5;font-size:13px;color:#4A4A6A;line-height:1.5\">' + d.t1 + '</td></tr><tr><td style=\"padding:10px 0;border-bottom:1px solid #f0f0f5;font-size:13px;color:#4A4A6A;line-height:1.5\">' + d.t2 + '</td></tr><tr><td style=\"padding:10px 0;font-size:13px;color:#4A4A6A;line-height:1.5\">' + d.t3 + '</td></tr></table></td></tr><tr><td style=\"background:#fff;padding:8px 32px 0\"><table width=\"100%\" style=\"background:#f8f7ff;border:1.5px solid rgba(108,99,255,0.15);border-radius:12px\"><tr><td style=\"padding:24px;text-align:center\"><p style=\"font-size:15px;font-weight:700;color:#1A1A2E;margin:0 0 4px\">' + d.cta.title + '</p><p style=\"font-size:12px;color:#8A8AA0;margin:0 0 14px\">' + d.cta.subtitle + '</p><a href=\"' + d.cta.url + '\" style=\"display:inline-block;padding:10px 24px;background:#6C63FF;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none\">' + d.cta.text + ' \u2192</a></td></tr></table></td></tr><tr><td style=\"background:#fff;padding:24px 32px;border-top:1px solid #f0f0f5;border-radius:0 0 12px 12px\"><p style=\"font-size:11px;color:#8A8AA0;line-height:1.6;margin:0\">You subscribed at syntharra.com<br><a href=\"https://syntharra.app.n8n.cloud/webhook/newsletter-unsubscribe?email=' + encodeURIComponent(email) + '\" style=\"color:#6C63FF;text-decoration:none\">Unsubscribe</a> \u00b7 <a href=\"https://syntharra.com\" style=\"color:#6C63FF;text-decoration:none\">syntharra.com</a><br><br>\u00a9 2026 Syntharra AI Solutions</p></td></tr></table></td></tr></table></body></html>';\n  try {\n    await $http.request({\n      method: 'POST',\n      url: 'https://api.smtp2go.com/v3/email/send',\n      headers: { 'Content-Type': 'application/json' },\n      body: { api_key: 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E', sender: 'Syntharra <noreply@syntharra.com>', to: [email], subject: d.a1.title + ' \u2014 Syntharra Weekly', html_body: html },\n      json: true\n    });\n    sent++;\n  } catch (e) { failed++; }\n}\nreturn [{json: {sent, failed, total: subs.length}}];"
+        },
+        "name": "Send via SMTP2GO",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ],
+        "id": "63d119be-816f-4f3c-b626-687ef279475c"
+      }
+    ],
+    "connections": {
+      "Every Monday 9AM": {
+        "main": [
+          [
+            {
+              "node": "Fetch Subscribers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Subscribers": {
+        "main": [
+          [
+            {
+              "node": "Generate Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Content": {
+        "main": [
+          [
+            {
+              "node": "Send via SMTP2GO",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-29T00:34:24.778Z",
+        "id": 790,
+        "workflowId": "VyNQeu7dVP3jynBJ",
+        "versionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T00:38:59.425Z",
+        "id": 792,
+        "workflowId": "VyNQeu7dVP3jynBJ",
+        "versionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T00:34:24.706Z",
+        "id": 789,
+        "workflowId": "VyNQeu7dVP3jynBJ",
+        "versionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T00:38:59.327Z",
+        "id": 791,
+        "workflowId": "VyNQeu7dVP3jynBJ",
+        "versionId": "4fcc2cfc-529c-4219-ae74-ea1d9b9a7f82",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
