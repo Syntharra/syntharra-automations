@@ -1,0 +1,252 @@
+{
+  "name": "Syntharra - Email Sequence Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-hourly-trigger",
+      "name": "Hourly Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM marketing_leads WHERE status = 'new' AND email IS NOT NULL AND email != '' ORDER BY created_at ASC LIMIT 50;",
+        "options": {}
+      },
+      "id": "node-get-new-leads",
+      "name": "Get New Leads",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "cond-has-leads",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-has-leads",
+      "name": "Has New Leads?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $input.first().json;\nconst utmCode = lead.id.replace(/-/g,'').substring(0,16);\nconst demoUrl = `https://syntharra.com/demo?ref=${utmCode}`;\nconst bookingUrl = 'https://cal.com/syntharra/demo';\nconst firstName = lead.business_name.split(' ')[0];\n\nreturn [{\n  json: {\n    ...lead,\n    utm_code: utmCode,\n    demo_url: demoUrl,\n    booking_url: bookingUrl,\n    first_name: firstName,\n    unsubscribe_url: `https://syntharra.com/unsubscribe?ref=${utmCode}`\n  }\n}];"
+      },
+      "id": "node-prep-email1",
+      "name": "Prepare Email Variables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "solutions@syntharra.com",
+        "fromName": "Dan at Syntharra",
+        "toEmail": "={{ $json.email }}",
+        "subject": "8:47pm Friday. AC down. Did you answer?",
+        "emailType": "html",
+        "message": "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'></head><body style='margin:0;padding:0;background:#F7F7FB;font-family:Inter,Arial,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:32px 16px;'><tr><td align='center'><table width='560' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;'><tr><td style='background:#6C63FF;padding:24px 32px;'><span style='color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;'>Syntharra</span><span style='color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-left:8px;'>AI SOLUTIONS</span></td></tr><tr><td style='padding:32px;'><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>Hi there,</p><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>It's 8:47pm on a Friday. Someone's AC just failed. They're in Houston, it's 97°F, and they have an elderly parent at home.</p><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>They called <strong>{{ $json.business_name }}</strong>.</p><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>Did someone answer?</p><p style='margin:0 0 24px;color:#4A4A6A;font-size:15px;line-height:1.6;'>We built an AI receptionist that answers every call, 24/7 — captures the lead, triages the urgency, books the appointment, and alerts your tech. In under 3 minutes. No voicemail. No missed jobs.</p><table cellpadding='0' cellspacing='0'><tr><td style='background:#6C63FF;border-radius:8px;padding:14px 28px;'><a href='{{ $json.demo_url }}' style='color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;'>Watch the 2-minute demo →</a></td></tr></table><p style='margin:24px 0 0;color:#8A8AA0;font-size:13px;line-height:1.6;'>Real call. Real AI. Real results. No sales pitch — just press play.</p></td></tr><tr><td style='padding:20px 32px;border-top:1px solid #E5E7EB;'><p style='margin:0;color:#8A8AA0;font-size:12px;line-height:1.6;'>Syntharra Global AI Solutions &nbsp;·&nbsp; <a href='mailto:solutions@syntharra.com' style='color:#6C63FF;text-decoration:none;'>solutions@syntharra.com</a> &nbsp;·&nbsp; <a href='{{ $json.unsubscribe_url }}' style='color:#8A8AA0;text-decoration:none;'>Unsubscribe</a></p></td></tr></table></td></tr></table></body></html>",
+        "options": {}
+      },
+      "id": "node-send-email1",
+      "name": "Send Email 1",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1120, 200],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP2GO - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "marketing_leads",
+        "filters": {
+          "conditions": [
+            { "keyName": "id", "condition": "eq", "keyValue": "={{ $('Prepare Email Variables').item.json.id }}" }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "status", "fieldValue": "emailed" },
+            { "fieldId": "email_sent_at", "fieldValue": "={{ new Date().toISOString() }}" }
+          ]
+        }
+      },
+      "id": "node-update-status-e1",
+      "name": "Update Status → emailed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1340, 200],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO email_events (lead_id, event_type, email_number, utm_code) VALUES ('{{ $('Prepare Email Variables').item.json.id }}', 'sent', 1, '{{ $('Prepare Email Variables').item.json.utm_code }}');",
+        "options": {}
+      },
+      "id": "node-log-send-e1",
+      "name": "Log Email 1 Send",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1560, 200],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ml.*, ml.id as lead_id FROM marketing_leads ml WHERE ml.status = 'emailed' AND ml.email_sent_at < NOW() - INTERVAL '3 days' AND ml.email IS NOT NULL ORDER BY ml.email_sent_at ASC LIMIT 50;",
+        "options": {}
+      },
+      "id": "node-get-day3-leads",
+      "name": "Get Day-3 Leads",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 480],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "solutions@syntharra.com",
+        "fromName": "Dan at Syntharra",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ 'Re: ' + $json.business_name + ' — quick follow up' }}",
+        "emailType": "html",
+        "message": "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='margin:0;padding:0;background:#F7F7FB;font-family:Inter,Arial,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:32px 16px;'><tr><td align='center'><table width='560' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;'><tr><td style='background:#6C63FF;padding:24px 32px;'><span style='color:#ffffff;font-size:20px;font-weight:700;'>Syntharra</span><span style='color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-left:8px;'>AI SOLUTIONS</span></td></tr><tr><td style='padding:32px;'><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>Following up from earlier this week.</p><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>The average HVAC business misses <strong>35–40% of after-hours calls</strong>. Most of those callers don't leave a voicemail. They call the next company on the list.</p><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>Our AI receptionist is already handling calls for HVAC contractors across the US — after hours, on weekends, during jobs. It doesn't get tired, doesn't forget to call back, and never puts a customer on hold.</p><p style='margin:0 0 24px;color:#4A4A6A;font-size:15px;line-height:1.6;'>Setup takes under a week. No new hardware. Starts at $197/month.</p><table cellpadding='0' cellspacing='0'><tr><td style='background:#6C63FF;border-radius:8px;padding:14px 28px;'><a href='https://cal.com/syntharra/demo' style='color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;'>Book a 15-min call →</a></td></tr></table><p style='margin:24px 0 0;color:#8A8AA0;font-size:13px;'>No commitment. Just a conversation.</p></td></tr><tr><td style='padding:20px 32px;border-top:1px solid #E5E7EB;'><p style='margin:0;color:#8A8AA0;font-size:12px;'>Syntharra Global AI Solutions &nbsp;·&nbsp; <a href='mailto:solutions@syntharra.com' style='color:#6C63FF;text-decoration:none;'>solutions@syntharra.com</a> &nbsp;·&nbsp; <a href='https://syntharra.com/unsubscribe?ref={{ $json.id }}' style='color:#8A8AA0;text-decoration:none;'>Unsubscribe</a></p></td></tr></table></td></tr></table></body></html>",
+        "options": {}
+      },
+      "id": "node-send-email2",
+      "name": "Send Email 2",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [680, 480],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP2GO - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM marketing_leads WHERE status = 'emailed' AND email_sent_at < NOW() - INTERVAL '7 days' AND email IS NOT NULL ORDER BY email_sent_at ASC LIMIT 50;",
+        "options": {}
+      },
+      "id": "node-get-day7-leads",
+      "name": "Get Day-7 Leads",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 660],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "solutions@syntharra.com",
+        "fromName": "Dan at Syntharra",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Last message from me",
+        "emailType": "html",
+        "message": "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='margin:0;padding:0;background:#F7F7FB;font-family:Inter,Arial,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:32px 16px;'><tr><td align='center'><table width='560' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;'><tr><td style='background:#6C63FF;padding:24px 32px;'><span style='color:#ffffff;font-size:20px;font-weight:700;'>Syntharra</span><span style='color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-left:8px;'>AI SOLUTIONS</span></td></tr><tr><td style='padding:32px;'><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>This is my last email — I don't want to clog your inbox.</p><p style='margin:0 0 16px;color:#1A1A2E;font-size:15px;line-height:1.6;'>Just one question: is missing after-hours calls actually a problem for <strong>{{ $json.business_name }}</strong>, or is it covered?</p><p style='margin:0 0 24px;color:#4A4A6A;font-size:15px;line-height:1.6;'>Reply <strong>\"yes\"</strong> and I'll send over a 2-minute demo. Reply <strong>\"no\"</strong> and I'll stop emailing. Either way, I'll respect it.</p><table cellpadding='0' cellspacing='0'><tr><td style='background:#6C63FF;border-radius:8px;padding:12px 24px;'><a href='https://syntharra.com/demo?ref={{ $json.id }}&intent=yes' style='color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;'>Yes, show me the demo</a></td><td width='12'></td><td style='background:#F7F7FB;border:1px solid #E5E7EB;border-radius:8px;padding:12px 24px;'><a href='https://syntharra.com/unsubscribe?ref={{ $json.id }}' style='color:#4A4A6A;font-size:14px;font-weight:600;text-decoration:none;'>No thanks</a></td></tr></table></td></tr><tr><td style='padding:20px 32px;border-top:1px solid #E5E7EB;'><p style='margin:0;color:#8A8AA0;font-size:12px;'>Syntharra Global AI Solutions &nbsp;·&nbsp; <a href='mailto:solutions@syntharra.com' style='color:#6C63FF;text-decoration:none;'>solutions@syntharra.com</a> &nbsp;·&nbsp; <a href='https://syntharra.com/unsubscribe?ref={{ $json.id }}' style='color:#8A8AA0;text-decoration:none;'>Unsubscribe</a></p></td></tr></table></td></tr></table></body></html>",
+        "options": {}
+      },
+      "id": "node-send-email3",
+      "name": "Send Email 3",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [680, 660],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP2GO - Syntharra"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Hourly Trigger": {
+      "main": [
+        [
+          { "node": "Get New Leads", "type": "main", "index": 0 },
+          { "node": "Get Day-3 Leads", "type": "main", "index": 0 },
+          { "node": "Get Day-7 Leads", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Get New Leads": {
+      "main": [[{ "node": "Has New Leads?", "type": "main", "index": 0 }]]
+    },
+    "Has New Leads?": {
+      "main": [
+        [{ "node": "Prepare Email Variables", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Prepare Email Variables": {
+      "main": [[{ "node": "Send Email 1", "type": "main", "index": 0 }]]
+    },
+    "Send Email 1": {
+      "main": [[{ "node": "Update Status → emailed", "type": "main", "index": 0 }]]
+    },
+    "Update Status → emailed": {
+      "main": [[{ "node": "Log Email 1 Send", "type": "main", "index": 0 }]]
+    },
+    "Get Day-3 Leads": {
+      "main": [[{ "node": "Send Email 2", "type": "main", "index": 0 }]]
+    },
+    "Get Day-7 Leads": {
+      "main": [[{ "node": "Send Email 3", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "meta": { "templateCredsSetupCompleted": true },
+  "pinData": {}
+}
