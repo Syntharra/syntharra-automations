@@ -376,20 +376,15 @@ Discount codes doc: `docs/discount-codes.md`
 
 ## Latest Session: March 29, 2026
 
-Website expanded from 14 to 30+ pages. Newsletter automation built. Full session log: docs/session-logs/2026-03-29-website-expansion.md
+### Ops Monitor v2.0 — LIVE
+- Deployed: syntharra-ops-monitor-production.up.railway.app
+- GitHub: Syntharra/syntharra-ops-monitor
+- Railway service ID: 7ce0f943-5216-4a16-8aeb-794cc7cc1e65
+- 10 monitor systems, 70+ individual checks
+- Monitors: Retell, n8n, Supabase, Stripe, Jotform, Pipeline (E2E), CRM/Calendar, Infrastructure, Client Health, Revenue
+- SMS alerts via Telnyx (not Twilio), email via SMTP2GO, daily digest at 8am CT
+- Retell publish finding: is_published is NOT a health indicator — agents work immediately after creation, no publish step needed for onboarding pipeline
+- Cleaned: 4 Polar Peak test rows from hvac_standard_agent, Jotform v2 reference removed
+- Stripe key fixed: sk_test_ (was pk_test_), Twilio env vars removed, Telnyx placeholders added
+- Railway API token saved for direct service management
 
-### New n8n workflows
-- Weekly Newsletter (`VyNQeu7dVP3jynBJ`) — NEEDS PUBLISH + ACTIVE in dashboard
-- Newsletter Unsubscribe (`ejZV2qATduPdK4Eu`) — ACTIVE
-
-### Key numbers
-- 20 blog articles (was 8)
-- 30+ website pages (was 14)
-- 3 lead magnet quizzes/calculators (AI Readiness, Revenue Calculator, Plan Quiz)
-- 3 industry landing pages (HVAC, Plumbing, Electrical)
-- 3 Google Ads landing pages (noindex)
-- 5 blog content upgrades (email-gated)
-- 5 context-aware exit-intent popups
-- Schema markup on 14+ pages
-- Country count: 10+ (was 30+)
-- Pricing: NOT PUBLIC
