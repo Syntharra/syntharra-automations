@@ -39,7 +39,7 @@
 - Key tables: `hvac_standard_agent`, `hvac_call_log`, `stripe_payment_data`, `client_subscriptions`, `billing_cycles`, `overage_charges`, `website_leads`
 
 ### Stripe (TEST MODE)
-- Checkout: `syntharra-checkout-production.up.railway.app`
+- Checkout: `checkout.syntharra.com`
 - Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 - Webhook: `we_1TEJXzECS71NQsk8eOMIs8JE`
 

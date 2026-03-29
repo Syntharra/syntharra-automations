@@ -11,14 +11,14 @@ The server.js now returns the actual Stripe error detail so you can see what's w
 4. If missing or wrong, get it from [Stripe Dashboard](https://dashboard.stripe.com/apikeys) → Standard keys → Secret key
 5. Paste it as the value for `STRIPE_SECRET_KEY`
 6. Railway will auto-redeploy
-7. Test: go to https://syntharra-checkout-production.up.railway.app and click "Get Started"
+7. Test: go to https://checkout.syntharra.com and click "Get Started"
 
 **If it still fails:** Open browser dev tools (F12) → Network tab → click the button → check the response body. The `detail` field now shows the actual Stripe error.
 
 ---
 
 ## 2. Custom Domains on Railway (10 min)
-Currently: `syntharra-checkout-production.up.railway.app` and `syntharra-oauth-server-production.up.railway.app`
+Currently: `checkout.syntharra.com` and `syntharra-oauth-server-production.up.railway.app`
 Target: `checkout.syntharra.com` and `auth.syntharra.com`
 
 **Steps for each domain:**
@@ -41,7 +41,7 @@ Target: `checkout.syntharra.com` and `auth.syntharra.com`
 
 **After both are done:** Update these URLs across the system:
 - `syntharra-checkout/public/index.html` — update any self-referencing links
-- `syntharra-website/index.html` — update checkout links from `syntharra-checkout-production.up.railway.app` to `checkout.syntharra.com`
+- `syntharra-website/index.html` — update checkout links from `checkout.syntharra.com` to `checkout.syntharra.com`
 - n8n workflows — update any webhook URLs that reference the old Railway URLs
 
 ---

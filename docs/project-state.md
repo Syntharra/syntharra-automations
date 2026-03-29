@@ -136,7 +136,7 @@ Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 
 ## Checkout Server (syntharra-checkout repo)
 
-- URL: `https://syntharra-checkout-production.up.railway.app`
+- URL: `https://checkout.syntharra.com`
 - Stack: Node.js / Express, deployed on Railway
 - Key env vars: `STRIPE_SECRET_KEY`, `RETELL_API_KEY`, `SITE_URL`
 - `allow_promotion_codes: true` in server.js
