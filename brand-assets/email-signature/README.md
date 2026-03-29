@@ -14,3 +14,5 @@
 
 ## To update phone number
 Find `+1 (000) 000-0000` in `syntharra-signature-PASTE-THIS.html` and replace.
+- `syntharra-signature-solutions.html` — Gmail signature for solutions@syntharra.com
+- `syntharra-signature-sales.html` — Gmail signature for sales@syntharra.com
