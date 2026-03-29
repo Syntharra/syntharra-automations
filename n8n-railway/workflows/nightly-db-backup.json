@@ -1,0 +1,116 @@
+{
+  "name": "Syntharra — Nightly DB Backup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 3AM UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "command": "=pg_dump -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DB --format=custom --compress=9 -f /tmp/n8n-backup-$(date +%Y%m%d).dump && base64 /tmp/n8n-backup-$(date +%Y%m%d).dump && rm /tmp/n8n-backup-$(date +%Y%m%d).dump"
+      },
+      "id": "pg-dump",
+      "name": "Dump Postgres",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/Syntharra/syntharra-automations/contents/backups/n8n-db-{{ $now.format('yyyy-MM-dd') }}.dump.b64",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": \"Nightly DB backup {{ $now.format('yyyy-MM-dd') }}\",\n  \"content\": \"{{ $json.stdout }}\",\n  \"branch\": \"main\"\n}"
+      },
+      "id": "push-github",
+      "name": "Push to GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@syntharra.com",
+        "toEmail": "support@syntharra.com",
+        "subject": "=✅ Syntharra DB Backup Complete — {{ $now.format('yyyy-MM-dd') }}",
+        "emailType": "text",
+        "text": "=Nightly Postgres backup completed successfully.\n\nDate: {{ $now.format('yyyy-MM-dd HH:mm') }} UTC\nDestination: GitHub syntharra-automations/backups/\n\n— Syntharra Automation"
+      },
+      "id": "confirm-email",
+      "name": "Confirm Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_SMTP_CREDENTIAL_ID",
+          "name": "SMTP2GO"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 3AM UTC": {
+      "main": [
+        [
+          {
+            "node": "Dump Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dump Postgres": {
+      "main": [
+        [
+          {
+            "node": "Push to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push to GitHub": {
+      "main": [
+        [
+          {
+            "node": "Confirm Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "Shared"
+    }
+  ]
+}
