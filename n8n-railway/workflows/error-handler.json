@@ -1,0 +1,54 @@
+{
+  "name": "Syntharra — Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@syntharra.com",
+        "toEmail": "support@syntharra.com",
+        "subject": "=⚠️ Syntharra Workflow Failed: {{ $json.workflow.name }}",
+        "emailType": "html",
+        "html": "=<div style=\"font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background: #F7F7FB; padding: 24px;\">\n  <div style=\"background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e5e5ea;\">\n    <div style=\"border-bottom: 2px solid #6C63FF; padding-bottom: 16px; margin-bottom: 16px;\">\n      <h2 style=\"color: #1A1A2E; margin: 0;\">Workflow Failure Alert</h2>\n    </div>\n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr>\n        <td style=\"padding: 8px 0; color: #666; font-size: 14px;\">Workflow</td>\n        <td style=\"padding: 8px 0; font-weight: 600; color: #1A1A2E;\">{{ $json.workflow.name }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px 0; color: #666; font-size: 14px;\">Workflow ID</td>\n        <td style=\"padding: 8px 0; color: #1A1A2E;\">{{ $json.workflow.id }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px 0; color: #666; font-size: 14px;\">Error Message</td>\n        <td style=\"padding: 8px 0; color: #E24B4A; font-weight: 500;\">{{ $json.execution.error.message }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px 0; color: #666; font-size: 14px;\">Failed At</td>\n        <td style=\"padding: 8px 0; color: #1A1A2E;\">{{ $now.toISO() }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px 0; color: #666; font-size: 14px;\">Execution URL</td>\n        <td style=\"padding: 8px 0;\"><a href=\"{{ $json.execution.url }}\" style=\"color: #6C63FF;\">View Execution</a></td>\n      </tr>\n    </table>\n  </div>\n  <p style=\"text-align: center; color: #999; font-size: 12px; margin-top: 16px;\">Syntharra | Global AI Solutions</p>\n</div>"
+      },
+      "id": "send-alert",
+      "name": "Send Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_SMTP_CREDENTIAL_ID",
+          "name": "SMTP2GO"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "Shared"
+    }
+  ]
+}
