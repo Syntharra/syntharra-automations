@@ -1,0 +1,922 @@
+{
+  "updatedAt": "2026-03-29T15:48:49.167Z",
+  "createdAt": "2026-03-27T15:13:01.651Z",
+  "id": "UhxfrDaEeYUk4jAD",
+  "name": "HVAC Premium Call Processor",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-hvac-premium-webhook",
+        "options": {}
+      },
+      "id": "node-retell-webhook",
+      "name": "Retell Premium Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        512
+      ],
+      "webhookId": "6dddc745-704b-479b-8274-ac49b133d5c5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "call_analyzed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-filter-analyzed",
+      "name": "Filter: call_analyzed Only",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nconst agentId = call.agent_id || '';\nconst callId = call.call_id || '';\nconst transcript = call.transcript || '';\nconst durationMs = call.duration_ms || 0;\nconst callStatus = call.call_status || '';\nconst fromNumber = call.from_number || '';\nconst toNumber = call.to_number || '';\nconst disconnectionReason = call.disconnection_reason || '';\nconst analysis = call.call_analysis || {};\n\nreturn {\n  agent_id: agentId,\n  call_id: callId,\n  transcript: transcript,\n  from_number: fromNumber,\n  to_number: toNumber,\n  duration_seconds: Math.round(durationMs / 1000),\n  call_status: callStatus,\n  disconnection_reason: disconnectionReason,\n  call_analysis: analysis,\n  call_timestamp: new Date().toISOString()\n};"
+      },
+      "id": "node-extract-call-data",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        512
+      ]
+    },
+    {
+      "id": "node-lookup-client",
+      "name": "Look Up Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        512
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const callData = $('Extract Call Data').first().json;\nconst rawInput = $input.first().json;\n\n// n8n httpRequest with Supabase REST: when Supabase returns [{...}], \n// n8n passes the single object as the item json directly.\n// When Supabase returns [], n8n passes nothing (0 items) and this node won't run.\n// But with neverError, it may pass the empty array or an error object.\n\nlet client = rawInput;\n\n// Check if this is a Supabase error or empty response\nif (!client || !client.company_name) {\n  // Could be error object from Supabase\n  if (client && client.code) {\n    console.log('Supabase error:', client.code, client.message);\n  }\n  return {\n    ...callData,\n    company_name: 'Unknown Company',\n    client_email: '',\n    lead_email: '',\n    lead_phone: '',\n    lead_contact_method: 'Both',\n    notification_email_2: '',\n    notification_email_3: '',\n    notification_sms_2: '',\n    notification_sms_3: '',\n    timezone: 'America/Chicago',\n    calendar_platform: '',\n    crm_platform: '',\n    _client_found: false\n  };\n}\n\nreturn {\n  ...callData,\n  company_name: client.company_name || '',\n  client_email: client.client_email || '',\n  lead_email: client.lead_email || '',\n  lead_phone: client.lead_phone || '',\n  lead_contact_method: client.lead_contact_method || 'Both',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  timezone: client.timezone || 'America/Chicago',\n  calendar_platform: client.calendar_platform || '',\n  crm_platform: client.crm_platform || '',\n  _client_found: true\n};"
+      },
+      "id": "node-parse-client-data",
+      "name": "Parse Client Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        512
+      ]
+    },
+    {
+      "id": "node-gpt-analyze",
+      "name": "GPT: Analyze Call",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        160,
+        512
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a call analysis specialist for a premium HVAC AI receptionist service. Analyze the call transcript and extract ALL relevant data.\n\nReturn a JSON object with these fields:\n\nCALLER INFORMATION:\n- caller_name (string): Full name if provided, empty string if not\n- caller_phone (string): Phone number if stated, empty string if not\n- caller_address (string): Service address if provided, empty string if not\n- caller_sentiment (string): happy, neutral, frustrated, angry, anxious, grateful\n\nCALL CLASSIFICATION:\n- call_type (string): new_booking, reschedule, cancellation, emergency, callback, existing_customer, general_question, spam, transfer_request\n- service_requested (string): Specific service discussed\n- urgency (string): low, medium, high, emergency\n- job_type (string): Repair, Maintenance, Installation, Estimate, Emergency, Inspection, General, Other\n\nBOOKING DATA:\n- booking_attempted (boolean): Did the agent try to book?\n- booking_success (boolean): Was an appointment confirmed?\n- appointment_date (string): YYYY-MM-DD or empty string\n- appointment_time_window (string): morning or afternoon or empty string\n- job_type_booked (string): Service booked or empty string\n- reschedule_or_cancel (string): reschedule, cancel, or neither\n\nLEAD QUALIFICATION:\n- lead_score (integer 0-10): 0=spam, 1-3=low, 4-6=moderate, 7-8=high, 9-10=hot. Booking made=9-10. Booking attempted but failed=7-8.\n- is_hot_lead (boolean): true if lead_score >= 7\n- is_lead (boolean): true if any service need expressed\n\nADDITIONAL:\n- vulnerable_occupant (boolean): elderly, disabled, young children mentioned\n- transfer_attempted (boolean): Was transfer attempted?\n- transfer_success (boolean or null): true/false/null\n- summary (string): 1-3 sentence summary with outcome and action needed\n- notes (string): Important additional details\n\nReturn ONLY valid JSON. No markdown, no backticks.",
+              "role": "system"
+            },
+            {
+              "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}\n\nRepeat caller context:\n{{ $json._history_context || \"First-time caller\" }}\n\nPost-call analysis:\n{{ JSON.stringify($json.call_analysis || {}) }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ubVD6nIZ6FkIStS8",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// \u2500\u2500 Call Alert Email \u2014 Standard + Premium \u2500\u2500\n// Input: processed call data from GPT analysis\nconst d = $input.first().json;\nconst companyName = d.company_name || 'your company';\nconst callerName = d.caller_name || 'Unknown Caller';\nconst callerPhone = d.caller_phone || 'Not provided';\nconst serviceType = d.service_type || d.job_type || 'General Enquiry';\nconst urgency = d.urgency || 'Normal';\nconst address = d.caller_address || d.address || 'Not provided';\nconst summary = d.call_summary || d.ai_summary || '';\nconst callDuration = d.call_duration || '';\nconst callTime = d.call_time || new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });\nconst isLead = d.is_lead !== false;\n\n// Premium-only fields\nconst appointmentBooked = d.appointment_booked || false;\nconst appointmentTime = d.appointment_time || '';\nconst assignedTech = d.assigned_technician || '';\n\nconst urgencyColor = urgency.toLowerCase().includes('high') || urgency.toLowerCase().includes('emergency') ? '#EF4444' : urgency.toLowerCase().includes('medium') ? '#F59E0B' : '#10B981';\nconst badge = isLead ? 'New Lead' : 'Call Handled';\n\nconst ICON_URL = 'https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png';\nconst LOGO = `<table cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 auto\"><tr><td style=\"vertical-align:middle;padding-right:10px\"><img src=\"${ICON_URL}\" alt=\"\" width=\"36\" height=\"36\" style=\"display:block;border:0\"></td><td style=\"vertical-align:middle;text-align:left\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"text-align:left;padding:0\"><div style=\"font-family:Inter,-apple-system,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1;text-align:left\">Syntharra</div></td></tr><tr><td style=\"text-align:left;padding:3px 0 0 0\"><div style=\"font-family:Inter,-apple-system,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1;text-align:left\">Global AI Solutions</div></td></tr></table></td></tr></table>`;\nconst FOOTER = `<tr><td style=\"padding:20px;text-align:center\"><a href=\"https://www.syntharra.com\" style=\"color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none\">syntharra.com</a></td></tr><tr><td style=\"text-align:center;padding:0 0 16px\"><p style=\"color:#9CA3AF;font-size:11px;margin:0\">Syntharra AI Solutions</p></td></tr>`;\n\nconst appointmentBlock = appointmentBooked ? `\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;background-color:#ECFDF5;border-radius:10px;overflow:hidden\"><tr><td style=\"padding:18px 22px\">\n  <p style=\"font-size:12px;font-weight:700;color:#065F46;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 8px\">\\ud83d\\udcc5 Appointment Booked</p>\n  <p style=\"font-size:16px;font-weight:700;color:#065F46;margin:0\">${appointmentTime}</p>\n  ${assignedTech ? `<p style=\"font-size:13px;color:#047857;margin:4px 0 0\">Assigned to: ${assignedTech}</p>` : ''}\n</td></tr></table>` : '';\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap\" rel=\"stylesheet\"></head>\n<body style=\"margin:0;padding:0;background-color:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#F7F7FB;padding:40px 16px\"><tr><td align=\"center\">\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:580px;width:100%\">\n<tr><td style=\"padding:0 0 24px;text-align:center\">${LOGO}</td></tr>\n<tr><td style=\"background-color:#ffffff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)\">\n<div style=\"height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)\"></div>\n<div style=\"padding:32px 36px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:16px\"><tr><td><span style=\"display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6C63FF;background-color:#F0EEFF;padding:4px 12px;border-radius:20px\">${badge}</span></td></tr></table>\n<h1 style=\"color:#1A1A2E;font-size:24px;font-weight:700;margin:0 0 6px;line-height:1.3\">${isLead ? 'New Lead Captured' : 'Call Handled'}${appointmentBooked ? ' & Booked' : ''}</h1>\n<p style=\"color:#6B7280;font-size:14px;line-height:1.6;margin:0 0 24px\">Your AI Receptionist just handled a call for ${companyName}.</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden\">\n<tr><td style=\"padding:14px 20px;border-bottom:1px solid #E5E7EB;background-color:#FAFAFA;font-size:12px;font-weight:700;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase\" colspan=\"2\">Call Details</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Caller</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${callerName}</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Phone</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${callerPhone}</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Service</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${serviceType}</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Urgency</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:${urgencyColor};font-size:14px\">${urgency}</td></tr>\n<tr><td style=\"padding:12px 20px;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Address</td><td style=\"padding:12px 20px;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${address}</td></tr>\n</table>\n${appointmentBlock}\n${summary ? `<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;background-color:#F9F9FC;border-radius:10px\"><tr><td style=\"padding:16px 20px\">\n  <p style=\"font-size:12px;font-weight:700;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 8px\">AI Summary</p>\n  <p style=\"font-size:14px;color:#1A1A2E;line-height:1.6;margin:0\">${summary}</p>\n</td></tr></table>` : ''}\n<p style=\"text-align:center;font-size:13px;color:#9CA3AF;margin:0\">Call handled at ${callTime}${callDuration ? ` \\u2014 Duration: ${callDuration}` : ''}</p>\n</div></td></tr>\n${FOOTER}\n</table></td></tr></table></body></html>`;\n\nconst emailSubject = `\\ud83d\\udcde ${isLead ? 'New Lead' : 'Call'}: ${callerName} \\u2014 ${serviceType} | ${companyName}`;\n\nreturn [{ json: { ...d, emailHtml, email_subject: emailSubject } }];\n"
+      },
+      "id": "node-parse-call-data",
+      "name": "Parse Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        512
+      ]
+    },
+    {
+      "id": "node-log-to-supabase",
+      "name": "Log Call to Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        512
+      ],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nconst body = {\n  agent_id: d.agent_id || '',\n  call_id: d.call_id || '',\n  company_name: d.company_name || '',\n  call_tier: 'premium',\n  duration_seconds: d.duration_seconds || 0,\n  call_status: d.disconnection_reason || 'completed',\n  call_successful: d.booking_success || d.is_lead || false,\n  summary: d.summary || '',\n  caller_name: d.caller_name || '',\n  caller_phone: d.caller_phone || '',\n  caller_address: d.caller_address || '',\n  caller_sentiment: d.caller_sentiment || '',\n  lead_score: d.lead_score || 0,\n  is_lead: d.is_lead || false,\n  is_hot_lead: d.is_hot_lead || false,\n  job_type: d.job_type || '',\n  urgency: d.urgency || '',\n  vulnerable_occupant: d.vulnerable_occupant || false,\n  notes: d.notes || '',\n  service_requested: d.service_requested || '',\n  booking_attempted: d.booking_attempted || false,\n  booking_success: d.booking_success || false,\n  appointment_date: d.appointment_date || null,\n  appointment_time: d.appointment_time_window || '',\n  job_type_booked: d.job_type_booked || '',\n  reschedule_requested: d.reschedule_or_cancel === 'reschedule',\n  cancellation_requested: d.reschedule_or_cancel === 'cancel',\n  call_type: d.call_type || '',\n  transfer_attempted: d.transfer_attempted || false,\n  transfer_success: d.transfer_success === true ? true : d.transfer_success === false ? false : null,\n  from_number: d.from_number || '',\n  notification_type: d.notification_type || '',\n  notification_priority: d.notification_priority || '',\n  is_repeat_caller: d.is_repeat_caller || false,\n  repeat_call_count: d.repeat_call_count || 0\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log',\n  headers: {\n    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Content-Type': 'application/json',\n    'Prefer': 'return=representation'\n  },\n  body: body,\n  json: true\n});\n\n// Pass through all original data plus the Supabase response\nreturn { ...d, _supabase_logged: true, _supabase_id: Array.isArray(response) && response[0] ? response[0].id : null };"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Should we send notifications?\nconst data = $('Parse Call Data').first().json;\nconst shouldNotify = data.should_notify || false;\nconst notificationType = data.notification_type || 'unknown';\nconst leadEmail = data.lead_email || '';\n\nreturn {\n  should_notify: shouldNotify && leadEmail,\n  notification_type: notificationType,\n  ...data\n};"
+      },
+      "id": "node-route-notifications",
+      "name": "Route Notifications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "should-notify",
+              "leftValue": "={{ $json.should_notify }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        }
+      },
+      "id": "node-should-notify",
+      "name": "Should Notify?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst emailHtml = d.email_html || '';\nconst emailSubject = d.email_subject || 'New Call Alert';\nconst leadEmail = d.lead_email || '';\nconst email2 = d.notification_email_2 || '';\nconst email3 = d.notification_email_3 || '';\n\nif (!leadEmail || !emailHtml) {\n  console.log('[EMAIL] No email or HTML \u2014 skipping');\n  return { ...d, _email_sent: false, _reason: 'No email address or HTML' };\n}\n\n// Build recipient list\nconst recipients = [leadEmail];\nif (email2) recipients.push(email2);\nif (email3) recipients.push(email3);\n\nconst SMTP2GO_KEY = 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E';\n\nif (!SMTP2GO_KEY) {\n  console.log('[EMAIL] SMTP2GO_API_KEY not set \u2014 logging only');\n  console.log(`[EMAIL] Would send to: ${recipients.join(', ')}`);\n  console.log(`[EMAIL] Subject: ${emailSubject}`);\n  return { ...d, _email_sent: false, _reason: 'SMTP2GO_API_KEY not configured' };\n}\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: SMTP2GO_KEY,\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: recipients,\n      subject: emailSubject,\n      html_body: emailHtml\n    },\n    json: true\n  });\n  \n  console.log(`[EMAIL] Sent to ${recipients.join(', ')}: ${emailSubject}`);\n  return { ...d, _email_sent: true, _email_recipients: recipients };\n} catch (e) {\n  console.log('[EMAIL] Send failed:', e.message);\n  return { ...d, _email_sent: false, _reason: e.message };\n}"
+      },
+      "id": "node-placeholder-email",
+      "name": "Send Client Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst smsText = d.sms_text || '';\nconst leadPhone = d.lead_phone || '';\nconst sms2 = d.notification_sms_2 || '';\nconst sms3 = d.notification_sms_3 || '';\n\nif (!leadPhone || !smsText) {\n  console.log('[SMS] No phone or text \u2014 skipping');\n  return { ...d, _sms_sent: false, _reason: 'No phone number or text' };\n}\n\n// Build recipient list\nconst recipients = [leadPhone];\nif (sms2) recipients.push(sms2);\nif (sms3) recipients.push(sms3);\n\nconst TELNYX_KEY = $vars.TELNYX_API_KEY || '';\nconst TELNYX_FROM = $vars.TELNYX_FROM_NUMBER || '';\n\n// \u2500\u2500 SMS DISABLED UNTIL TELNYX IS CONFIGURED \u2500\u2500\n// When ready: set TELNYX_API_KEY and TELNYX_FROM_NUMBER in n8n Variables\nconst SMS_ENABLED = false; // \u2190 Change to true when Telnyx is ready\n\nif (!SMS_ENABLED || !TELNYX_KEY || !TELNYX_FROM) {\n  console.log(`[SMS] Disabled or not configured \u2014 would send to: ${recipients.join(', ')}`);\n  console.log(`[SMS] Text: ${smsText.substring(0, 100)}`);\n  return { ...d, _sms_sent: false, _reason: 'SMS disabled \u2014 awaiting Telnyx configuration' };\n}\n\n// Send to each recipient\nlet sentCount = 0;\nfor (const phone of recipients) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telnyx.com/v2/messages',\n      headers: {\n        'Authorization': 'Bearer ' + TELNYX_KEY,\n        'Content-Type': 'application/json'\n      },\n      body: {\n        from: TELNYX_FROM,\n        to: phone,\n        text: smsText\n      },\n      json: true\n    });\n    sentCount++;\n  } catch (e) {\n    console.log(`[SMS] Failed to send to ${phone}:`, e.message);\n  }\n}\n\nconsole.log(`[SMS] Sent ${sentCount}/${recipients.length} messages`);\nreturn { ...d, _sms_sent: sentCount > 0, _sms_count: sentCount };"
+      },
+      "id": "node-placeholder-sms",
+      "name": "Send Client SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst companyName = d.company_name || '';\nconst callerName = d.caller_name || 'Unknown';\nconst notificationType = d.notification_type || 'unknown';\nconst summary = d.summary || '';\nconst callId = d.call_id || '';\n\nconst SMTP2GO_KEY = 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E';\nconst internalEmail = 'admin@syntharra.com'; // Change to support@syntharra.com at go-live\n\nconst subject = `[${notificationType.toUpperCase()}] ${callerName} \u2014 ${companyName} | Call ${callId}`;\nconst html = `<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h3 style=\"color:#6C63FF\">${notificationType.replace(/_/g,' ').toUpperCase()} \u2014 ${companyName}</h3>\n<p><strong>Caller:</strong> ${callerName}</p>\n<p><strong>Type:</strong> ${notificationType}</p>\n<p><strong>Summary:</strong> ${summary}</p>\n<p><strong>Call ID:</strong> ${callId}</p>\n<p style=\"color:#999;font-size:12px\">Syntharra AI Premium \u2014 Internal Notification</p>\n</div>`;\n\nif (!SMTP2GO_KEY) {\n  console.log(`[INTERNAL] ${subject}`);\n  return { ...d, _internal_sent: false, _reason: 'SMTP2GO_API_KEY not configured' };\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: SMTP2GO_KEY,\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: [internalEmail],\n      subject: subject,\n      html_body: html\n    },\n    json: true\n  });\n  return { ...d, _internal_sent: true };\n} catch (e) {\n  console.log('[INTERNAL] Send failed:', e.message);\n  return { ...d, _internal_sent: false, _reason: e.message };\n}"
+      },
+      "id": "node-internal-notify",
+      "name": "Internal Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log non-notifiable calls\nconst data = $('Parse Call Data').first().json;\nconsole.log(`[PREMIUM] No notification: type=${data.notification_type}, score=${data.lead_score}, call_id=${data.call_id}`);\nreturn { logged: true, notification_type: data.notification_type, call_id: data.call_id };"
+      },
+      "id": "node-log-no-notify",
+      "name": "Log: No Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        900
+      ]
+    },
+    {
+      "id": "a2391bc9-0c2f-4917-97b0-b6c91e94064d",
+      "name": "Check Repeat Caller",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        512
+      ],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst fromNumber = d.from_number || '';\nconst agentId = d.agent_id || '';\n\nif (!fromNumber || !agentId) {\n  return { ...d, _repeat_caller: false, _call_history: [] };\n}\n\n// Query Supabase for previous calls from this number to this agent's company\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log?from_number=eq.' + encodeURIComponent(fromNumber) + '&agent_id=eq.' + agentId + '&order=created_at.desc&limit=5&select=call_id,caller_name,service_requested,call_type,booking_success,appointment_date,created_at,summary',\n    headers: {\n      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg'\n    },\n    json: true\n  });\n\n  if (Array.isArray(response) && response.length > 0) {\n    const lastCall = response[0];\n    const callCount = response.length;\n    \n    // Build caller history context for GPT\n    let historyContext = `REPEAT CALLER DETECTED \u2014 ${callCount} previous call(s) from this number.\\n`;\n    historyContext += `Last call: ${lastCall.created_at ? new Date(lastCall.created_at).toLocaleDateString() : 'unknown'}\\n`;\n    if (lastCall.caller_name) historyContext += `Known name: ${lastCall.caller_name}\\n`;\n    if (lastCall.service_requested) historyContext += `Last service: ${lastCall.service_requested}\\n`;\n    if (lastCall.booking_success) historyContext += `Had a booking: Yes (${lastCall.appointment_date || 'date unknown'})\\n`;\n    if (lastCall.summary) historyContext += `Last call summary: ${lastCall.summary}\\n`;\n    \n    return {\n      ...d,\n      _repeat_caller: true,\n      _call_count: callCount,\n      _last_caller_name: lastCall.caller_name || '',\n      _last_service: lastCall.service_requested || '',\n      _last_call_date: lastCall.created_at || '',\n      _last_booking: lastCall.booking_success || false,\n      _call_history: response,\n      _history_context: historyContext\n    };\n  }\n} catch (e) {\n  console.log('Repeat caller check failed:', e.message);\n}\n\nreturn { ...d, _repeat_caller: false, _call_history: [] };"
+      }
+    }
+  ],
+  "connections": {
+    "Retell Premium Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter: call_analyzed Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: call_analyzed Only": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Look Up Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look Up Client": {
+      "main": [
+        [
+          {
+            "node": "Parse Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Client Data": {
+      "main": [
+        [
+          {
+            "node": "Check Repeat Caller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT: Analyze Call": {
+      "main": [
+        [
+          {
+            "node": "Parse Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Call Data": {
+      "main": [
+        [
+          {
+            "node": "Log Call to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Call to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Route Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Notifications": {
+      "main": [
+        [
+          {
+            "node": "Should Notify?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Notify?": {
+      "main": [
+        [
+          {
+            "node": "Send Client Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Client SMS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Internal Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: No Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Repeat Caller": {
+      "main": [
+        [
+          {
+            "node": "GPT: Analyze Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+  "activeVersionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+  "versionCounter": 91,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-27T15:13:01.653Z",
+      "createdAt": "2026-03-27T15:13:01.653Z",
+      "role": "workflow:owner",
+      "workflowId": "UhxfrDaEeYUk4jAD",
+      "projectId": "fHNxQE9IeGCcfUfO",
+      "project": {
+        "updatedAt": "2026-03-17T23:00:52.768Z",
+        "createdAt": "2026-03-17T23:00:46.569Z",
+        "id": "fHNxQE9IeGCcfUfO",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-28T22:59:19.346Z",
+    "createdAt": "2026-03-28T22:59:19.346Z",
+    "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+    "workflowId": "UhxfrDaEeYUk4jAD",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "retell-hvac-premium-webhook",
+          "options": {}
+        },
+        "id": "node-retell-webhook",
+        "name": "Retell Premium Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -1440,
+          512
+        ],
+        "webhookId": "6dddc745-704b-479b-8274-ac49b133d5c5"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.body.event }}",
+                "rightValue": "call_analyzed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "id": "node-filter-analyzed",
+        "name": "Filter: call_analyzed Only",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2,
+        "position": [
+          -1120,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nconst agentId = call.agent_id || '';\nconst callId = call.call_id || '';\nconst transcript = call.transcript || '';\nconst durationMs = call.duration_ms || 0;\nconst callStatus = call.call_status || '';\nconst fromNumber = call.from_number || '';\nconst toNumber = call.to_number || '';\nconst disconnectionReason = call.disconnection_reason || '';\nconst analysis = call.call_analysis || {};\n\nreturn {\n  agent_id: agentId,\n  call_id: callId,\n  transcript: transcript,\n  from_number: fromNumber,\n  to_number: toNumber,\n  duration_seconds: Math.round(durationMs / 1000),\n  call_status: callStatus,\n  disconnection_reason: disconnectionReason,\n  call_analysis: analysis,\n  call_timestamp: new Date().toISOString()\n};"
+        },
+        "id": "node-extract-call-data",
+        "name": "Extract Call Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -800,
+          512
+        ]
+      },
+      {
+        "id": "node-lookup-client",
+        "name": "Look Up Client",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -480,
+          512
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const callData = $('Extract Call Data').first().json;\nconst rawInput = $input.first().json;\n\n// n8n httpRequest with Supabase REST: when Supabase returns [{...}], \n// n8n passes the single object as the item json directly.\n// When Supabase returns [], n8n passes nothing (0 items) and this node won't run.\n// But with neverError, it may pass the empty array or an error object.\n\nlet client = rawInput;\n\n// Check if this is a Supabase error or empty response\nif (!client || !client.company_name) {\n  // Could be error object from Supabase\n  if (client && client.code) {\n    console.log('Supabase error:', client.code, client.message);\n  }\n  return {\n    ...callData,\n    company_name: 'Unknown Company',\n    client_email: '',\n    lead_email: '',\n    lead_phone: '',\n    lead_contact_method: 'Both',\n    notification_email_2: '',\n    notification_email_3: '',\n    notification_sms_2: '',\n    notification_sms_3: '',\n    timezone: 'America/Chicago',\n    calendar_platform: '',\n    crm_platform: '',\n    _client_found: false\n  };\n}\n\nreturn {\n  ...callData,\n  company_name: client.company_name || '',\n  client_email: client.client_email || '',\n  lead_email: client.lead_email || '',\n  lead_phone: client.lead_phone || '',\n  lead_contact_method: client.lead_contact_method || 'Both',\n  notification_email_2: client.notification_email_2 || '',\n  notification_email_3: client.notification_email_3 || '',\n  notification_sms_2: client.notification_sms_2 || '',\n  notification_sms_3: client.notification_sms_3 || '',\n  timezone: client.timezone || 'America/Chicago',\n  calendar_platform: client.calendar_platform || '',\n  crm_platform: client.crm_platform || '',\n  _client_found: true\n};"
+        },
+        "id": "node-parse-client-data",
+        "name": "Parse Client Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -160,
+          512
+        ]
+      },
+      {
+        "id": "node-gpt-analyze",
+        "name": "GPT: Analyze Call",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1,
+        "position": [
+          160,
+          512
+        ],
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-4O-MINI"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "You are a call analysis specialist for a premium HVAC AI receptionist service. Analyze the call transcript and extract ALL relevant data.\n\nReturn a JSON object with these fields:\n\nCALLER INFORMATION:\n- caller_name (string): Full name if provided, empty string if not\n- caller_phone (string): Phone number if stated, empty string if not\n- caller_address (string): Service address if provided, empty string if not\n- caller_sentiment (string): happy, neutral, frustrated, angry, anxious, grateful\n\nCALL CLASSIFICATION:\n- call_type (string): new_booking, reschedule, cancellation, emergency, callback, existing_customer, general_question, spam, transfer_request\n- service_requested (string): Specific service discussed\n- urgency (string): low, medium, high, emergency\n- job_type (string): Repair, Maintenance, Installation, Estimate, Emergency, Inspection, General, Other\n\nBOOKING DATA:\n- booking_attempted (boolean): Did the agent try to book?\n- booking_success (boolean): Was an appointment confirmed?\n- appointment_date (string): YYYY-MM-DD or empty string\n- appointment_time_window (string): morning or afternoon or empty string\n- job_type_booked (string): Service booked or empty string\n- reschedule_or_cancel (string): reschedule, cancel, or neither\n\nLEAD QUALIFICATION:\n- lead_score (integer 0-10): 0=spam, 1-3=low, 4-6=moderate, 7-8=high, 9-10=hot. Booking made=9-10. Booking attempted but failed=7-8.\n- is_hot_lead (boolean): true if lead_score >= 7\n- is_lead (boolean): true if any service need expressed\n\nADDITIONAL:\n- vulnerable_occupant (boolean): elderly, disabled, young children mentioned\n- transfer_attempted (boolean): Was transfer attempted?\n- transfer_success (boolean or null): true/false/null\n- summary (string): 1-3 sentence summary with outcome and action needed\n- notes (string): Important additional details\n\nReturn ONLY valid JSON. No markdown, no backticks.",
+                "role": "system"
+              },
+              {
+                "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}\n\nRepeat caller context:\n{{ $json._history_context || \"First-time caller\" }}\n\nPost-call analysis:\n{{ JSON.stringify($json.call_analysis || {}) }}"
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.2
+          }
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "ubVD6nIZ6FkIStS8",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// \u2500\u2500 Call Alert Email \u2014 Standard + Premium \u2500\u2500\n// Input: processed call data from GPT analysis\nconst d = $input.first().json;\nconst companyName = d.company_name || 'your company';\nconst callerName = d.caller_name || 'Unknown Caller';\nconst callerPhone = d.caller_phone || 'Not provided';\nconst serviceType = d.service_type || d.job_type || 'General Enquiry';\nconst urgency = d.urgency || 'Normal';\nconst address = d.caller_address || d.address || 'Not provided';\nconst summary = d.call_summary || d.ai_summary || '';\nconst callDuration = d.call_duration || '';\nconst callTime = d.call_time || new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });\nconst isLead = d.is_lead !== false;\n\n// Premium-only fields\nconst appointmentBooked = d.appointment_booked || false;\nconst appointmentTime = d.appointment_time || '';\nconst assignedTech = d.assigned_technician || '';\n\nconst urgencyColor = urgency.toLowerCase().includes('high') || urgency.toLowerCase().includes('emergency') ? '#EF4444' : urgency.toLowerCase().includes('medium') ? '#F59E0B' : '#10B981';\nconst badge = isLead ? 'New Lead' : 'Call Handled';\n\nconst ICON_URL = 'https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png';\nconst LOGO = `<table cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 auto\"><tr><td style=\"vertical-align:middle;padding-right:10px\"><img src=\"${ICON_URL}\" alt=\"\" width=\"36\" height=\"36\" style=\"display:block;border:0\"></td><td style=\"vertical-align:middle;text-align:left\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"text-align:left;padding:0\"><div style=\"font-family:Inter,-apple-system,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1;text-align:left\">Syntharra</div></td></tr><tr><td style=\"text-align:left;padding:3px 0 0 0\"><div style=\"font-family:Inter,-apple-system,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1;text-align:left\">Global AI Solutions</div></td></tr></table></td></tr></table>`;\nconst FOOTER = `<tr><td style=\"padding:20px;text-align:center\"><a href=\"https://www.syntharra.com\" style=\"color:#6C63FF;font-size:13px;font-weight:600;text-decoration:none\">syntharra.com</a></td></tr><tr><td style=\"text-align:center;padding:0 0 16px\"><p style=\"color:#9CA3AF;font-size:11px;margin:0\">Syntharra AI Solutions</p></td></tr>`;\n\nconst appointmentBlock = appointmentBooked ? `\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;background-color:#ECFDF5;border-radius:10px;overflow:hidden\"><tr><td style=\"padding:18px 22px\">\n  <p style=\"font-size:12px;font-weight:700;color:#065F46;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 8px\">\\ud83d\\udcc5 Appointment Booked</p>\n  <p style=\"font-size:16px;font-weight:700;color:#065F46;margin:0\">${appointmentTime}</p>\n  ${assignedTech ? `<p style=\"font-size:13px;color:#047857;margin:4px 0 0\">Assigned to: ${assignedTech}</p>` : ''}\n</td></tr></table>` : '';\n\nconst emailHtml = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap\" rel=\"stylesheet\"></head>\n<body style=\"margin:0;padding:0;background-color:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#F7F7FB;padding:40px 16px\"><tr><td align=\"center\">\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:580px;width:100%\">\n<tr><td style=\"padding:0 0 24px;text-align:center\">${LOGO}</td></tr>\n<tr><td style=\"background-color:#ffffff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)\">\n<div style=\"height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)\"></div>\n<div style=\"padding:32px 36px\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:16px\"><tr><td><span style=\"display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6C63FF;background-color:#F0EEFF;padding:4px 12px;border-radius:20px\">${badge}</span></td></tr></table>\n<h1 style=\"color:#1A1A2E;font-size:24px;font-weight:700;margin:0 0 6px;line-height:1.3\">${isLead ? 'New Lead Captured' : 'Call Handled'}${appointmentBooked ? ' & Booked' : ''}</h1>\n<p style=\"color:#6B7280;font-size:14px;line-height:1.6;margin:0 0 24px\">Your AI Receptionist just handled a call for ${companyName}.</p>\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden\">\n<tr><td style=\"padding:14px 20px;border-bottom:1px solid #E5E7EB;background-color:#FAFAFA;font-size:12px;font-weight:700;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase\" colspan=\"2\">Call Details</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Caller</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${callerName}</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Phone</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${callerPhone}</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Service</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${serviceType}</td></tr>\n<tr><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Urgency</td><td style=\"padding:12px 20px;border-bottom:1px solid #E5E7EB;background-color:#ffffff;text-align:right;font-weight:600;color:${urgencyColor};font-size:14px\">${urgency}</td></tr>\n<tr><td style=\"padding:12px 20px;background-color:#ffffff;color:#1A1A2E;font-size:14px\">Address</td><td style=\"padding:12px 20px;background-color:#ffffff;text-align:right;font-weight:600;color:#1A1A2E;font-size:14px\">${address}</td></tr>\n</table>\n${appointmentBlock}\n${summary ? `<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:24px;background-color:#F9F9FC;border-radius:10px\"><tr><td style=\"padding:16px 20px\">\n  <p style=\"font-size:12px;font-weight:700;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 8px\">AI Summary</p>\n  <p style=\"font-size:14px;color:#1A1A2E;line-height:1.6;margin:0\">${summary}</p>\n</td></tr></table>` : ''}\n<p style=\"text-align:center;font-size:13px;color:#9CA3AF;margin:0\">Call handled at ${callTime}${callDuration ? ` \\u2014 Duration: ${callDuration}` : ''}</p>\n</div></td></tr>\n${FOOTER}\n</table></td></tr></table></body></html>`;\n\nconst emailSubject = `\\ud83d\\udcde ${isLead ? 'New Lead' : 'Call'}: ${callerName} \\u2014 ${serviceType} | ${companyName}`;\n\nreturn [{ json: { ...d, emailHtml, email_subject: emailSubject } }];\n"
+        },
+        "id": "node-parse-call-data",
+        "name": "Parse Call Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          512
+        ]
+      },
+      {
+        "id": "node-log-to-supabase",
+        "name": "Log Call to Supabase",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          800,
+          512
+        ],
+        "parameters": {
+          "jsCode": "const d = $input.first().json;\n\nconst body = {\n  agent_id: d.agent_id || '',\n  call_id: d.call_id || '',\n  company_name: d.company_name || '',\n  call_tier: 'premium',\n  duration_seconds: d.duration_seconds || 0,\n  call_status: d.disconnection_reason || 'completed',\n  call_successful: d.booking_success || d.is_lead || false,\n  summary: d.summary || '',\n  caller_name: d.caller_name || '',\n  caller_phone: d.caller_phone || '',\n  caller_address: d.caller_address || '',\n  caller_sentiment: d.caller_sentiment || '',\n  lead_score: d.lead_score || 0,\n  is_lead: d.is_lead || false,\n  is_hot_lead: d.is_hot_lead || false,\n  job_type: d.job_type || '',\n  urgency: d.urgency || '',\n  vulnerable_occupant: d.vulnerable_occupant || false,\n  notes: d.notes || '',\n  service_requested: d.service_requested || '',\n  booking_attempted: d.booking_attempted || false,\n  booking_success: d.booking_success || false,\n  appointment_date: d.appointment_date || null,\n  appointment_time: d.appointment_time_window || '',\n  job_type_booked: d.job_type_booked || '',\n  reschedule_requested: d.reschedule_or_cancel === 'reschedule',\n  cancellation_requested: d.reschedule_or_cancel === 'cancel',\n  call_type: d.call_type || '',\n  transfer_attempted: d.transfer_attempted || false,\n  transfer_success: d.transfer_success === true ? true : d.transfer_success === false ? false : null,\n  from_number: d.from_number || '',\n  notification_type: d.notification_type || '',\n  notification_priority: d.notification_priority || '',\n  is_repeat_caller: d.is_repeat_caller || false,\n  repeat_call_count: d.repeat_call_count || 0\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log',\n  headers: {\n    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n    'Content-Type': 'application/json',\n    'Prefer': 'return=representation'\n  },\n  body: body,\n  json: true\n});\n\n// Pass through all original data plus the Supabase response\nreturn { ...d, _supabase_logged: true, _supabase_id: Array.isArray(response) && response[0] ? response[0].id : null };"
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Should we send notifications?\nconst data = $('Parse Call Data').first().json;\nconst shouldNotify = data.should_notify || false;\nconst notificationType = data.notification_type || 'unknown';\nconst leadEmail = data.lead_email || '';\n\nreturn {\n  should_notify: shouldNotify && leadEmail,\n  notification_type: notificationType,\n  ...data\n};"
+        },
+        "id": "node-route-notifications",
+        "name": "Route Notifications",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1440,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "should-notify",
+                "leftValue": "={{ $json.should_notify }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ]
+          }
+        },
+        "id": "node-should-notify",
+        "name": "Should Notify?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1680,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.first().json;\nconst emailHtml = d.email_html || '';\nconst emailSubject = d.email_subject || 'New Call Alert';\nconst leadEmail = d.lead_email || '';\nconst email2 = d.notification_email_2 || '';\nconst email3 = d.notification_email_3 || '';\n\nif (!leadEmail || !emailHtml) {\n  console.log('[EMAIL] No email or HTML \u2014 skipping');\n  return { ...d, _email_sent: false, _reason: 'No email address or HTML' };\n}\n\n// Build recipient list\nconst recipients = [leadEmail];\nif (email2) recipients.push(email2);\nif (email3) recipients.push(email3);\n\nconst SMTP2GO_KEY = 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E';\n\nif (!SMTP2GO_KEY) {\n  console.log('[EMAIL] SMTP2GO_API_KEY not set \u2014 logging only');\n  console.log(`[EMAIL] Would send to: ${recipients.join(', ')}`);\n  console.log(`[EMAIL] Subject: ${emailSubject}`);\n  return { ...d, _email_sent: false, _reason: 'SMTP2GO_API_KEY not configured' };\n}\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: SMTP2GO_KEY,\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: recipients,\n      subject: emailSubject,\n      html_body: emailHtml\n    },\n    json: true\n  });\n  \n  console.log(`[EMAIL] Sent to ${recipients.join(', ')}: ${emailSubject}`);\n  return { ...d, _email_sent: true, _email_recipients: recipients };\n} catch (e) {\n  console.log('[EMAIL] Send failed:', e.message);\n  return { ...d, _email_sent: false, _reason: e.message };\n}"
+        },
+        "id": "node-placeholder-email",
+        "name": "Send Client Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.first().json;\nconst smsText = d.sms_text || '';\nconst leadPhone = d.lead_phone || '';\nconst sms2 = d.notification_sms_2 || '';\nconst sms3 = d.notification_sms_3 || '';\n\nif (!leadPhone || !smsText) {\n  console.log('[SMS] No phone or text \u2014 skipping');\n  return { ...d, _sms_sent: false, _reason: 'No phone number or text' };\n}\n\n// Build recipient list\nconst recipients = [leadPhone];\nif (sms2) recipients.push(sms2);\nif (sms3) recipients.push(sms3);\n\nconst TELNYX_KEY = $vars.TELNYX_API_KEY || '';\nconst TELNYX_FROM = $vars.TELNYX_FROM_NUMBER || '';\n\n// \u2500\u2500 SMS DISABLED UNTIL TELNYX IS CONFIGURED \u2500\u2500\n// When ready: set TELNYX_API_KEY and TELNYX_FROM_NUMBER in n8n Variables\nconst SMS_ENABLED = false; // \u2190 Change to true when Telnyx is ready\n\nif (!SMS_ENABLED || !TELNYX_KEY || !TELNYX_FROM) {\n  console.log(`[SMS] Disabled or not configured \u2014 would send to: ${recipients.join(', ')}`);\n  console.log(`[SMS] Text: ${smsText.substring(0, 100)}`);\n  return { ...d, _sms_sent: false, _reason: 'SMS disabled \u2014 awaiting Telnyx configuration' };\n}\n\n// Send to each recipient\nlet sentCount = 0;\nfor (const phone of recipients) {\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.telnyx.com/v2/messages',\n      headers: {\n        'Authorization': 'Bearer ' + TELNYX_KEY,\n        'Content-Type': 'application/json'\n      },\n      body: {\n        from: TELNYX_FROM,\n        to: phone,\n        text: smsText\n      },\n      json: true\n    });\n    sentCount++;\n  } catch (e) {\n    console.log(`[SMS] Failed to send to ${phone}:`, e.message);\n  }\n}\n\nconsole.log(`[SMS] Sent ${sentCount}/${recipients.length} messages`);\nreturn { ...d, _sms_sent: sentCount > 0, _sms_count: sentCount };"
+        },
+        "id": "node-placeholder-sms",
+        "name": "Send Client SMS",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          500
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.first().json;\nconst companyName = d.company_name || '';\nconst callerName = d.caller_name || 'Unknown';\nconst notificationType = d.notification_type || 'unknown';\nconst summary = d.summary || '';\nconst callId = d.call_id || '';\n\nconst SMTP2GO_KEY = 'api-0BE30DA64A074BC79F28BE6AEDC9DB9E';\nconst internalEmail = 'admin@syntharra.com'; // Change to support@syntharra.com at go-live\n\nconst subject = `[${notificationType.toUpperCase()}] ${callerName} \u2014 ${companyName} | Call ${callId}`;\nconst html = `<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h3 style=\"color:#6C63FF\">${notificationType.replace(/_/g,' ').toUpperCase()} \u2014 ${companyName}</h3>\n<p><strong>Caller:</strong> ${callerName}</p>\n<p><strong>Type:</strong> ${notificationType}</p>\n<p><strong>Summary:</strong> ${summary}</p>\n<p><strong>Call ID:</strong> ${callId}</p>\n<p style=\"color:#999;font-size:12px\">Syntharra AI Premium \u2014 Internal Notification</p>\n</div>`;\n\nif (!SMTP2GO_KEY) {\n  console.log(`[INTERNAL] ${subject}`);\n  return { ...d, _internal_sent: false, _reason: 'SMTP2GO_API_KEY not configured' };\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.smtp2go.com/v3/email/send',\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      api_key: SMTP2GO_KEY,\n      sender: 'Syntharra AI <noreply@syntharra.com>',\n      to: [internalEmail],\n      subject: subject,\n      html_body: html\n    },\n    json: true\n  });\n  return { ...d, _internal_sent: true };\n} catch (e) {\n  console.log('[INTERNAL] Send failed:', e.message);\n  return { ...d, _internal_sent: false, _reason: e.message };\n}"
+        },
+        "id": "node-internal-notify",
+        "name": "Internal Notification",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          700
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Log non-notifiable calls\nconst data = $('Parse Call Data').first().json;\nconsole.log(`[PREMIUM] No notification: type=${data.notification_type}, score=${data.lead_score}, call_id=${data.call_id}`);\nreturn { logged: true, notification_type: data.notification_type, call_id: data.call_id };"
+        },
+        "id": "node-log-no-notify",
+        "name": "Log: No Notification",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1920,
+          900
+        ]
+      },
+      {
+        "id": "a2391bc9-0c2f-4917-97b0-b6c91e94064d",
+        "name": "Check Repeat Caller",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          0,
+          512
+        ],
+        "parameters": {
+          "jsCode": "const d = $input.first().json;\nconst fromNumber = d.from_number || '';\nconst agentId = d.agent_id || '';\n\nif (!fromNumber || !agentId) {\n  return { ...d, _repeat_caller: false, _call_history: [] };\n}\n\n// Query Supabase for previous calls from this number to this agent's company\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_premium_call_log?from_number=eq.' + encodeURIComponent(fromNumber) + '&agent_id=eq.' + agentId + '&order=created_at.desc&limit=5&select=call_id,caller_name,service_requested,call_type,booking_success,appointment_date,created_at,summary',\n    headers: {\n      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg',\n      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg'\n    },\n    json: true\n  });\n\n  if (Array.isArray(response) && response.length > 0) {\n    const lastCall = response[0];\n    const callCount = response.length;\n    \n    // Build caller history context for GPT\n    let historyContext = `REPEAT CALLER DETECTED \u2014 ${callCount} previous call(s) from this number.\\n`;\n    historyContext += `Last call: ${lastCall.created_at ? new Date(lastCall.created_at).toLocaleDateString() : 'unknown'}\\n`;\n    if (lastCall.caller_name) historyContext += `Known name: ${lastCall.caller_name}\\n`;\n    if (lastCall.service_requested) historyContext += `Last service: ${lastCall.service_requested}\\n`;\n    if (lastCall.booking_success) historyContext += `Had a booking: Yes (${lastCall.appointment_date || 'date unknown'})\\n`;\n    if (lastCall.summary) historyContext += `Last call summary: ${lastCall.summary}\\n`;\n    \n    return {\n      ...d,\n      _repeat_caller: true,\n      _call_count: callCount,\n      _last_caller_name: lastCall.caller_name || '',\n      _last_service: lastCall.service_requested || '',\n      _last_call_date: lastCall.created_at || '',\n      _last_booking: lastCall.booking_success || false,\n      _call_history: response,\n      _history_context: historyContext\n    };\n  }\n} catch (e) {\n  console.log('Repeat caller check failed:', e.message);\n}\n\nreturn { ...d, _repeat_caller: false, _call_history: [] };"
+        }
+      }
+    ],
+    "connections": {
+      "Retell Premium Webhook": {
+        "main": [
+          [
+            {
+              "node": "Filter: call_analyzed Only",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter: call_analyzed Only": {
+        "main": [
+          [
+            {
+              "node": "Extract Call Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Call Data": {
+        "main": [
+          [
+            {
+              "node": "Look Up Client",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Look Up Client": {
+        "main": [
+          [
+            {
+              "node": "Parse Client Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Client Data": {
+        "main": [
+          [
+            {
+              "node": "Check Repeat Caller",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT: Analyze Call": {
+        "main": [
+          [
+            {
+              "node": "Parse Call Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Call Data": {
+        "main": [
+          [
+            {
+              "node": "Log Call to Supabase",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Call to Supabase": {
+        "main": [
+          [
+            {
+              "node": "Route Notifications",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Notifications": {
+        "main": [
+          [
+            {
+              "node": "Should Notify?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Should Notify?": {
+        "main": [
+          [
+            {
+              "node": "Send Client Email",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send Client SMS",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Internal Notification",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log: No Notification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Repeat Caller": {
+        "main": [
+          [
+            {
+              "node": "GPT: Analyze Call",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-28T22:59:19.559Z",
+        "id": 762,
+        "workflowId": "UhxfrDaEeYUk4jAD",
+        "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-28T22:59:54.169Z",
+        "id": 778,
+        "workflowId": "UhxfrDaEeYUk4jAD",
+        "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T15:48:49.515Z",
+        "id": 808,
+        "workflowId": "UhxfrDaEeYUk4jAD",
+        "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+        "event": "activated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-28T22:59:19.459Z",
+        "id": 761,
+        "workflowId": "UhxfrDaEeYUk4jAD",
+        "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-28T22:59:54.066Z",
+        "id": 777,
+        "workflowId": "UhxfrDaEeYUk4jAD",
+        "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      },
+      {
+        "createdAt": "2026-03-29T15:48:49.276Z",
+        "id": 807,
+        "workflowId": "UhxfrDaEeYUk4jAD",
+        "versionId": "a48c450f-0455-4a72-b5c8-e1c75990c83b",
+        "event": "deactivated",
+        "userId": "59bc3c32-fc3d-4e66-a2a8-5439f05606b7"
+      }
+    ]
+  }
+}
