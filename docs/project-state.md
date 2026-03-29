@@ -1,3 +1,4 @@
+<!-- Last updated: Added solutions@syntharra.com and sales@syntharra.com email addresses, signatures, and profile pictures -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
@@ -57,6 +58,8 @@ Final versions in `brand-assets/email-signature/`:
 | `onboarding@syntharra.com` | Onboarding notifications (internal) | Stripe Workflow, HVAC Standard Onboarding, HVAC Premium Onboarding |
 | `noreply@syntharra.com` | Sender address for automated emails | All SMTP2GO outbound emails |
 | `info@syntharra.com` | General enquiries, public-facing contact | Google Workspace footer (appended to all outgoing emails) |
+| `solutions@syntharra.com` | Solutions enquiries, client solutions contact | Available for solutions-related outreach |
+| `sales@syntharra.com` | Sales enquiries, inbound sales contact | Available for sales-related outreach |
 | `daniel@syntharra.com` | Founder personal email | **NEVER** in any workflows or customer-facing content |
 
 ### n8n Workflow Email Mapping
