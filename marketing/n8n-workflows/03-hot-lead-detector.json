@@ -1,0 +1,163 @@
+{
+  "name": "Syntharra - Hot Lead Detector",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "syntharra-demo-click",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Demo Click Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "syntharra-demo-click"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [460, 160]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ml.* FROM marketing_leads ml JOIN email_events ev ON ev.lead_id = ml.id WHERE ev.utm_code = '{{ $json.body.utm_code }}' AND ml.video_clicked_at IS NULL LIMIT 1;",
+        "options": {}
+      },
+      "id": "node-lookup-lead",
+      "name": "Lookup Lead by UTM",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 340],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "id": "cond-found",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-found",
+      "name": "Lead Found & Not Yet Alerted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 340]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "marketing_leads",
+        "filters": {
+          "conditions": [
+            { "keyName": "id", "condition": "eq", "keyValue": "={{ $json.id }}" }
+          ]
+        },
+        "dataToSend": "defineBelow",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "status", "fieldValue": "clicked" },
+            { "fieldId": "video_clicked_at", "fieldValue": "={{ new Date().toISOString() }}" }
+          ]
+        }
+      },
+      "id": "node-update-clicked",
+      "name": "Mark as Clicked",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 240],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO email_events (lead_id, event_type, email_number, utm_code) VALUES ('{{ $('Lookup Lead by UTM').item.json.id }}', 'clicked', 1, '{{ $('Demo Click Webhook').item.json.body.utm_code }}');",
+        "options": {}
+      },
+      "id": "node-log-click",
+      "name": "Log Click Event",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 420],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase - Syntharra"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "solutions@syntharra.com",
+        "fromName": "Syntharra Alerts",
+        "toEmail": "admin@syntharra.com",
+        "subject": "🔥 HOT LEAD: {{ $('Lookup Lead by UTM').item.json.business_name }} just watched your demo",
+        "emailType": "html",
+        "message": "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='margin:0;padding:0;background:#F7F7FB;font-family:Inter,Arial,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:32px 16px;'><tr><td align='center'><table width='560' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;'><tr><td style='background:#6C63FF;padding:24px 32px;'><span style='color:#ffffff;font-size:22px;'>🔥 Hot Lead Alert</span></td></tr><tr><td style='padding:32px;'><h2 style='color:#1A1A2E;margin:0 0 24px;font-size:20px;'>{{ $('Lookup Lead by UTM').item.json.business_name }}</h2><table style='width:100%;border-collapse:collapse;'><tr><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#4A4A6A;font-size:14px;width:40%;'>Business</td><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px;font-weight:600;'>{{ $('Lookup Lead by UTM').item.json.business_name }}</td></tr><tr><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#4A4A6A;font-size:14px;'>Location</td><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px;font-weight:600;'>{{ $('Lookup Lead by UTM').item.json.city }}, {{ $('Lookup Lead by UTM').item.json.state }}</td></tr><tr><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#4A4A6A;font-size:14px;'>Phone</td><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px;font-weight:600;'>{{ $('Lookup Lead by UTM').item.json.phone }}</td></tr><tr><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#4A4A6A;font-size:14px;'>Email</td><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px;font-weight:600;'>{{ $('Lookup Lead by UTM').item.json.email }}</td></tr><tr><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#4A4A6A;font-size:14px;'>Rating</td><td style='padding:8px 0;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px;font-weight:600;'>{{ $('Lookup Lead by UTM').item.json.rating }}⭐ ({{ $('Lookup Lead by UTM').item.json.review_count }} reviews)</td></tr><tr><td style='padding:8px 0;color:#4A4A6A;font-size:14px;'>Clicked at</td><td style='padding:8px 0;color:#1A1A2E;font-size:14px;font-weight:600;'>{{ new Date().toLocaleString('en-US', {timeZone:'America/Chicago'}) }} CT</td></tr></table><br><table cellpadding='0' cellspacing='0' style='margin-top:24px;'><tr><td style='background:#6C63FF;border-radius:8px;padding:14px 28px;'><a href='https://cal.com/syntharra/demo' style='color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;'>Book them now →</a></td></tr></table></td></tr></table></td></tr></table></body></html>",
+        "options": {}
+      },
+      "id": "node-hot-lead-alert",
+      "name": "Send Hot Lead Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1120, 300],
+      "credentials": {
+        "smtp": {
+          "name": "SMTP2GO - Syntharra"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Demo Click Webhook": {
+      "main": [
+        [
+          { "node": "Respond 200", "type": "main", "index": 0 },
+          { "node": "Lookup Lead by UTM", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Lookup Lead by UTM": {
+      "main": [[{ "node": "Lead Found & Not Yet Alerted?", "type": "main", "index": 0 }]]
+    },
+    "Lead Found & Not Yet Alerted?": {
+      "main": [
+        [
+          { "node": "Mark as Clicked", "type": "main", "index": 0 },
+          { "node": "Log Click Event", "type": "main", "index": 0 },
+          { "node": "Send Hot Lead Alert", "type": "main", "index": 0 }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "meta": { "templateCredsSetupCompleted": true },
+  "pinData": {}
+}
