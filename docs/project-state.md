@@ -428,7 +428,7 @@ Populate with all keys before first client onboarding.
 - **Status: PAUSED** — Railway service sleeping to prevent pre-launch alert spam
 - 10 monitor systems, 70+ individual checks
 - Monitors: Retell, n8n, Supabase, Stripe, Jotform, Pipeline (E2E), CRM/Calendar, Infrastructure, Client Health, Revenue
-- SMS alerts via Telnyx (not Twilio), email via SMTP2GO, daily digest at 8am CT
+- SMS alerts via Telnyx (not Twilio), email via SMTP2GO, daily digest at 8am GMT (Europe/London)
 
 **Pre-launch pauses applied (2026-03-30):**
 - Zero-call business hours alert: `PRE_LAUNCH_MODE = true` in retell.js — SET TO false AT GO-LIVE
