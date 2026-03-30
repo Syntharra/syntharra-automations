@@ -388,6 +388,37 @@ Discount codes doc: `docs/discount-codes.md`
 
 ---
 
+
+## Session: 2026-03-30 — Skill Library Built
+
+### 9 Claude Skills Created
+All skills live in `syntharra-automations/skills/`. Each skill contains:
+- Full operational reference for that domain
+- Canonical `syntharra_vault` access snippet (REST + JS patterns, full service_name/key_type table)
+- Auto-update rule (update only on fundamental changes — new IDs, new tables, new credentials)
+
+| Skill | Path | Domain |
+|---|---|---|
+| `syntharra-website` | `skills/syntharra-website/SKILL.md` | Website editing, brand, file map, email templates |
+| `hvac-standard` | `skills/hvac-standard/SKILL.md` | Standard pipeline, onboarding, Jotform, Supabase, Stripe |
+| `hvac-premium` | `skills/hvac-premium/SKILL.md` | Premium pipeline, OAuth, premium Supabase columns |
+| `syntharra-infrastructure` | `skills/syntharra-infrastructure/SKILL.md` | Railway, n8n, all services and workflow IDs |
+| `syntharra-marketing` | `skills/syntharra-marketing/SKILL.md` | Lead gen, VSL, demo page, blog, Google Ads |
+| `syntharra-ops` | `skills/syntharra-ops/SKILL.md` | Session rules, GitHub push, ops monitor, signatures |
+| `syntharra-retell` | `skills/syntharra-retell/SKILL.md` | Retell agents, prompts, flows, publishing, API |
+| `syntharra-email` | `skills/syntharra-email/SKILL.md` | SMTP2GO, email templates, address routing, signatures |
+| `syntharra-stripe` | `skills/syntharra-stripe/SKILL.md` | Products, prices, coupons, webhooks, live mode checklist |
+
+### Key Rules Established
+- Client agents are NOT listed in skills — query Supabase (`hvac_standard_agent.agent_id`)
+- Arctic Breeze = test agent only, not a real client
+- All credentials via `syntharra_vault` table only — never in skill files, GitHub, or memory
+- Auto-update rule = fundamental changes only (new IDs, new tables, credentials) — not routine work
+
+### syntharra_vault Table
+Added to Supabase. Full service_name/key_type map documented in every skill.
+Populate with all keys before first client onboarding.
+
 ## Latest Session: March 29, 2026
 
 ### Ops Monitor v2.0 — LIVE
