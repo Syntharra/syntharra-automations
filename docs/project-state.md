@@ -1,8 +1,8 @@
-<!-- Last updated: Added solutions@syntharra.com and sales@syntharra.com email addresses, signatures, and profile pictures -->
+<!-- Last updated: 2026-03-30 — Checkout page: Enterprise card added, frosted violet theme, aligned dividers, setup fee redesign, std-plus callout banner, dot-grid background, SVG logo -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
-> Last updated: 2026-03-28.
+> Last updated: 2026-03-30.
 >
 > **RULE FOR ALL CLAUDE SESSIONS:**
 > 1. READ this file + `syntharra-website/CLAUDE.md` at the start of every chat
@@ -430,3 +430,36 @@ Discount codes doc: `docs/discount-codes.md`
 - **alertManager crash pattern** — if alertManager.js throws during monitor execution, the entire monitor silently returns without updating statusStore (healthy stays null). Always check alertManager for SMTP/transport errors first when a monitor shows null.
 - **Railway build cache** — env var changes don't always trigger redeploy. Sometimes need a new git commit to bust cache and force fresh build.
 - **Duplicate const declarations** — careful with str_replace edits that prepend to existing method bodies; always verify full method contents before and after edits.
+
+---
+
+## Checkout Page (syntharra-checkout — Railway)
+
+| Item | Value |
+|---|---|
+| URL | checkout.syntharra.com (custom domain via Railway + Fastly CDN) |
+| Repo | `Syntharra/syntharra-checkout` |
+| Served from | `public/index.html` (NOT root index.html — Railway serves `/public`) |
+| Server | `server.js` — Express, `app.use(express.static('public'))` |
+| Railway service ID | `e3df3e6d-6824-498f-bb4a-fdb6598f7638` |
+| Railway environment ID | `5303bcf8-43a4-4a95-8e0c-75909094e02e` |
+
+### Current state (as of 2026-03-30)
+- **3 plans**: Standard, Premium (Most Popular), Enterprise/Custom Build
+- **Enterprise card**: Frosted violet theme (`#F0F0FF` bg, `#C8C2FF` border, purple accents) — `mailto:sales@syntharra.com` CTA
+- **Setup fee**: Redesigned as a clean pill row (Setup fee label | strikethrough | discounted price)
+- **"Everything in Standard, plus"**: Replaced with a visual callout banner with icon
+- **Divider alignment**: All 3 cards aligned via consistent structure — enterprise minutes pill has `margin-top:14px` nudge
+- **Background**: Subtle dot-grid pattern on page body
+- **Premium card**: Linear gradient (`#7B72FF → #5A52E0`) for depth
+- **Logo**: Inline SVG (4 ascending bars, `#6C63FF`) matching syntharra.com exactly
+- **Fonts**: DM Serif Display + DM Sans (Google Fonts)
+
+### CRITICAL deployment note
+Railway does NOT auto-deploy on GitHub push — must trigger manually via Railway API:
+```
+POST https://backboard.railway.com/graphql/v2
+mutation { serviceInstanceRedeploy(serviceId: "e3df3e6d...", environmentId: "5303bcf8...") }
+```
+Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
+
