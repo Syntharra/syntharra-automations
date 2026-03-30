@@ -182,7 +182,7 @@ Checkout URL: `checkout.syntharra.com`
 ## SMTP2GO (Email)
 
 All cold outreach and automated emails via SMTP2GO:
-- API Key: `api-0BE30DA64A074BC79F28BE6AEDC9DB9E`
+- API Key: `{{SMTP2GO_API_KEY}}`
 - n8n credential: `"SMTP2GO - Syntharra"`
 - Sender: `noreply@syntharra.com`
 
