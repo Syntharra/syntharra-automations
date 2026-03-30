@@ -90,6 +90,57 @@ mutation { sleepApplication(serviceId: "7ce0f943-5216-4a16-8aeb-794cc7cc1e65", s
 
 ---
 
+## 🚀 Go-Live Checklist (run when Dan says "go live")
+
+When Dan confirms go-live, execute ALL of the following in order:
+
+### 1. Unpause Ops Monitor (Railway)
+```
+POST https://backboard.railway.com/graphql/v2
+Authorization: Bearer {{RAILWAY_TOKEN}}
+mutation { sleepApplication(serviceId: "7ce0f943-5216-4a16-8aeb-794cc7cc1e65", sleep: false) }
+```
+
+### 2. Re-enable Zero-Call Detection (retell.js)
+In `syntharra-ops-monitor/src/monitors/retell.js`:
+- Find: `const PRE_LAUNCH_MODE = true;`
+- Change to: `const PRE_LAUNCH_MODE = false;`
+- Push to GitHub → Railway auto-deploys
+
+### 3. Stripe Live Mode Cutover
+Full checklist in `syntharra-stripe` skill:
+- Activate Stripe account → switch to live mode
+- Recreate all products, prices, coupons (same names, IDs will change)
+- Recreate webhook in live mode → update Railway env `STRIPE_SECRET_KEY` to `sk_live_`
+- Update n8n webhook signing secret
+
+### 4. Telnyx SMS Enable
+- Set `SMS_ENABLED=true` in Railway env for n8n
+- Confirm Telnyx toll-free number active and AI evaluation approved
+
+### 5. WhatsApp Business (if resolved)
+- Verify business number is active and approved
+- Connect to Meta Business Manager
+
+### 6. Confirm all n8n workflows are Active (not paused)
+- Check Railway n8n dashboard — all 15 active workflows should be ON
+- Auto-Enable MCP workflow `AU8DD5r6i6SlYFnb` should be running
+
+### 7. Marketing System Go-Live
+- Run SQL in Supabase (lead gen schema)
+- Import lead sourcer, email sequence, hot-lead detector workflows
+- Add credentials (Supabase + SMTP2GO) in n8n
+- Obtain Google Places API key → configure Cal.com
+- Enable workflows
+
+### 8. Final Smoke Test
+- Place test call to Arctic Breeze +1 (812) 994-4371
+- Submit a test Jotform Standard submission
+- Verify Stripe webhook fires correctly
+- Check ops monitor dashboard shows all green
+
+---
+
 ## Admin Dashboard
 
 - Live at `syntharra.com/dashboard.html?agent_id=X` (also accessible at root dashboard URL)
