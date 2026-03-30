@@ -24,10 +24,7 @@ description: >
 | Conversation Flow | `conversation_flow_34d169608460` |
 | Retell API Key | `{{RETELL_API_KEY}}` |
 
-**NEVER use old agent ID `d180e1bd` — deleted. Always use `agent_4afbfdb3fcb1ba9569353af28d`.**
 
-### Conversation Flow Nodes (12 total)
-`greeting` → `identify_call` → `nonemergency_leadcapture` → `verify_emergency` → `callback` → `existing_customer` → `general_questions` → `spam_robocall` → `Transfer Call` → `transfer_failed` → `Ending` → `End Call`
 
 ### Demo Agents (must always stay published)
 | Name | Agent ID |
@@ -171,10 +168,10 @@ description: >
 
 ## Demo Call Instructions
 
-To record a demo call as the Arctic Breeze agent:
+Arctic Breeze is the **test agent only** — used for demos and VSL recording, not a real client.
 - Call: `+1 (812) 994-4371`
 - Persona: "Mike Henderson"
-- This is used for VSL Scene 3
+- Used for VSL Scene 3
 
 ---
 
