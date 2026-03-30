@@ -133,12 +133,17 @@ h2 { color:#1A1A2E; font-size:22px; margin:0 0 8px; }
 p { color:#6B7280; font-size:15px; line-height:1.6; }
 .success { color:#10B981; }
 .error { color:#EF4444; }
-.logo { display:block; margin:0 auto 24px; }
 .btn { display:inline-block; background:#6C63FF; color:#fff; padding:12px 32px; border-radius:8px; text-decoration:none; font-weight:600; font-size:15px; border:none; cursor:pointer; }
 input { width:100%; padding:12px; border:1px solid #E5E7EB; border-radius:8px; font-size:14px; margin:8px 0 16px; box-sizing:border-box; }
 label { color:#1A1A2E; font-size:14px; font-weight:600; }
 </style></head><body>
-<img src="https://i.postimg.cc/zBSrKLDb/company-logo-link.png" alt="Syntharra" width="160" class="logo">
+<table cellpadding="0" cellspacing="0" style="margin:0 auto 24px"><tr>
+  <td style="vertical-align:middle;padding-right:10px"><img src="https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png" alt="" width="36" height="36" style="display:block;border:0"></td>
+  <td style="vertical-align:middle;text-align:left"><table cellpadding="0" cellspacing="0" border="0">
+    <tr><td style="text-align:left;padding:0"><div style="font-family:Inter,-apple-system,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1">Syntharra</div></td></tr>
+    <tr><td style="text-align:left;padding:3px 0 0 0"><div style="font-family:Inter,-apple-system,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1">Global AI Solutions</div></td></tr>
+  </table></td>
+</tr></table>
 <div class="card"><div class="accent"></div><div class="content">${content}</div></div>
 <p style="text-align:center;color:#9CA3AF;font-size:12px;margin-top:20px">support@syntharra.com | www.syntharra.com</p>
 </body></html>`;

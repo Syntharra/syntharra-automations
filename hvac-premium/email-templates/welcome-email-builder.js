@@ -18,7 +18,8 @@ const muted = '#6B7280';
 const border = '#E5E7EB';
 const green = '#10B981';
 const amber = '#F59E0B';
-const logo = 'https://i.postimg.cc/zBSrKLDb/company-logo-link.png';
+const ICON_URL = 'https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png';
+const LOGO = `<table cellpadding="0" cellspacing="0" style="margin:0 auto"><tr><td style="vertical-align:middle;padding-right:10px"><img src="${ICON_URL}" alt="" width="36" height="36" style="display:block;border:0"></td><td style="vertical-align:middle;text-align:left"><table cellpadding="0" cellspacing="0" border="0"><tr><td style="text-align:left;padding:0"><div style="font-family:Inter,-apple-system,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1;text-align:left">Syntharra</div></td></tr><tr><td style="text-align:left;padding:3px 0 0 0"><div style="font-family:Inter,-apple-system,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1;text-align:left">Global AI Solutions</div></td></tr></table></td></tr></table>`;
 
 const hasCalendar = calendarPlatform && calendarPlatform !== 'None';
 const hasCRM = crmPlatform && crmPlatform !== 'None';
@@ -68,7 +69,7 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewp
 <tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 <tr><td style="padding:0 0 24px;text-align:center;">
-  <img src="${logo}" alt="Syntharra" width="160" style="display:block;margin:0 auto;">
+  ${LOGO}
 </td></tr>
 <tr><td style="background:${card};border-radius:12px;border:1px solid ${border};overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
 <div style="height:3px;background:linear-gradient(90deg,${v},#8B7FFF);"></div>
