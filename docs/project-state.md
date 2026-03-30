@@ -428,7 +428,7 @@ Populate with all keys before first client onboarding.
 - **Status: PAUSED** — Railway service sleeping to prevent pre-launch alert spam
 - 10 monitor systems, 70+ individual checks
 - Monitors: Retell, n8n, Supabase, Stripe, Jotform, Pipeline (E2E), CRM/Calendar, Infrastructure, Client Health, Revenue
-- SMS alerts via Telnyx (not Twilio), email via SMTP2GO, daily digest at 8am GMT (Europe/London)
+- SMS alerts via Telnyx (not Twilio), email via SMTP2GO, daily digest at 6am GMT (Europe/London)
 
 **Pre-launch pauses applied (2026-03-30):**
 - Zero-call business hours alert: `PRE_LAUNCH_MODE = true` in retell.js — SET TO false AT GO-LIVE
@@ -550,3 +550,24 @@ Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 | Jotform | n8n.syntharra.com/webhook/jotform-hvac-onboarding | n8n.syntharra.com/webhook/jotform-hvac-onboarding |
 | Retell | Any n8n cloud webhook URLs | n8n.syntharra.com equivalents |
 
+
+
+## Admin Dashboard (updated 2026-03-30)
+- Live at `https://admin.syntharra.com` (Railway — Express server, basic auth)
+- Custom domain: `admin.syntharra.com` configured in Railway
+- Password: `admin` / `Syntharra2026!` (set via Railway env vars ADMIN_USER / ADMIN_PASS)
+- Repo: `Syntharra/syntharra-admin` — service ID `6a542e9d-9dff-4968-b908-6077e12ba96b`
+- Features: KPI cards, system status, live clock, trade/plan tabs, search bar, quick links
+- Sections: Overview, Clients (Standard/Premium grouped + search + trade tabs), Call Logs, Billing, Form Submissions, AI Agents, Ops Monitor, System Health, Marketing Pipeline, Settings, AI Assistant
+- AI Assistant: Groq-powered (llama-3.3-70b-versatile, free tier) — proxied via /api/ai on server.js
+  - Full Syntharra knowledge base embedded in server.js system prompt
+  - Live dashboard context (clients, calls, billing) injected per request
+  - Activation: add GROQ_API_KEY to Railway env vars (get free key at console.groq.com)
+  - Health endpoint: GET /api/health → returns {status, ai_configured, ts}
+- All times display in Europe/London (GMT) timezone
+- Wired to live Supabase data (anon key in frontend, no service role exposed)
+- Jotform forms fetched live (Standard: 260795139953066, Premium: 260819259556671)
+- Marketing pipeline from Supabase website_leads table
+- Favicons: favicon.svg + favicon-white.svg served from /public/
+- noindex/nofollow meta tag (prevents search engine indexing)
+- Latest commit: fda12d38
