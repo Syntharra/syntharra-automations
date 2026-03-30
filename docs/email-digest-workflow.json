@@ -681,6 +681,194 @@
       "parameters": {
         "jsCode": "\nconst items = $input.all();\nlet totalSaved = 0;\nconst inboxResults = [];\n\nfor (const item of items) {\n  const d = item.json;\n  totalSaved += d.saved || 0;\n  inboxResults.push({ inbox: d.inbox, label: d.label, saved: d.saved || 0, error: d.error || null });\n}\n\nconst digestDate = items[0]?.json?.digestDate || new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });\nconst gmtTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });\n\nconsole.log(`[Email Digest] ${digestDate} complete \u2014 ${totalSaved} important emails saved across ${inboxResults.filter(r => r.saved > 0).length} inboxes`);\n\nreturn [{ json: {\n  status: 'complete',\n  digestDate,\n  completedAt: new Date().toISOString(),\n  totalEmailsSaved: totalSaved,\n  inboxResults\n} }];\n"
       }
+    },
+    {
+      "name": "Gmail \u2014 Feedback",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        1100
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail OAuth2 \u2014 Feedback Inbox"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates newer_than:1d",
+          "readStatus": "both"
+        }
+      }
+    },
+    {
+      "name": "Prepare \u2014 Feedback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        1100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate; const msgs = $input.all(); if (!msgs || !msgs.length) { return [{ json: { skip: true, label: 'Feedback', address: 'feedback@syntharra.com', digestDate: d, emails: [] } }]; } const emails = msgs.map(function(item) { const m = item.json; let frm = ''; if (m.from && m.from.value && m.from.value[0]) { frm = m.from.value[0].name ? m.from.value[0].name + ' <' + m.from.value[0].address + '>' : m.from.value[0].address; } else if (m.headers && m.headers.from) { frm = m.headers.from; } return { id: m.id || '', threadId: m.threadId || '', from: frm, subject: m.subject || (m.headers && m.headers.subject) || '(no subject)', date: m.date || '', snippet: (m.snippet || '').substring(0, 500) }; }).filter(function(e) { return e.id; }); if (!emails.length) { return [{ json: { skip: true, label: 'Feedback', address: 'feedback@syntharra.com', digestDate: d, emails: [] } }]; } const prompt = 'Inbox: Feedback (feedback@syntharra.com)\\n\\nEmails:\\n' + JSON.stringify(emails) + '\\n\\nEXCLUDE automated tool emails (GitHub/Stripe/n8n/Railway/Supabase/Jotform system emails), newsletters, mass marketing, no-reply senders, social digests. INCLUDE only real humans writing to us.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nIf all automated return {\"emails\":[]}.'; return [{ json: { skip: false, label: 'Feedback', address: 'feedback@syntharra.com', digestDate: d, groqPrompt: prompt } }];"
+      }
+    },
+    {
+      "name": "Groq \u2014 Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1220,
+        1100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Groq API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra. ONLY return valid JSON."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.groqPrompt }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "name": "Save \u2014 Feedback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        1100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate; const prep = $('Prepare \u2014 Feedback').first().json; if (prep.skip) { return [{ json: { saved: 0, label: 'Feedback', digestDate: d } }]; } let cl = []; try { const r = $input.item.json; const c = r && r.choices && r.choices[0] ? r.choices[0].message.content : ''; cl = JSON.parse(typeof c === 'string' ? c : '{}').emails || []; } catch(e) { return [{ json: { saved: 0, error: e.message, label: 'Feedback', digestDate: d } }]; } if (!cl.length) { return [{ json: { saved: 0, label: 'Feedback', digestDate: d } }]; } const SB = 'https://hgheyqwnrcvwtgngqdnq.supabase.co'; const K = $env.SUPABASE_SERVICE_ROLE_KEY || ''; const addr = 'feedback@syntharra.com'; await fetch(SB + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr), { method: 'DELETE', headers: { apikey: K, Authorization: 'Bearer ' + K } }); const recs = cl.filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); }).map(function(e) { let rx = null; try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {} return { digest_date: d, inbox_address: addr, inbox_label: 'Feedback', email_id: String(e.id), thread_id: e.threadId || null, from_address: (e.from || '').substring(0,500), subject: (e.subject || '(no subject)').substring(0,500), snippet: (e.snippet || '').substring(0,500), ai_summary: (e.summary || '').substring(0,500), importance: e.importance, category: e.category || 'general', action_required: !!e.action_required, flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null, received_at: rx }; }); if (!recs.length) { return [{ json: { saved: 0, label: 'Feedback', digestDate: d } }]; } const res = await fetch(SB + '/rest/v1/email_digest', { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify(recs) }); return [{ json: { saved: recs.length, label: 'Feedback', digestDate: d, ok: res.ok } }];"
+      }
+    },
+    {
+      "name": "Gmail \u2014 Onboarding",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        1260
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "name": "Gmail OAuth2 \u2014 Onboarding Inbox"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates newer_than:1d",
+          "readStatus": "both"
+        }
+      }
+    },
+    {
+      "name": "Prepare \u2014 Onboarding",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        1260
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate; const msgs = $input.all(); if (!msgs || !msgs.length) { return [{ json: { skip: true, label: 'Onboarding', address: 'onboarding@syntharra.com', digestDate: d, emails: [] } }]; } const emails = msgs.map(function(item) { const m = item.json; let frm = ''; if (m.from && m.from.value && m.from.value[0]) { frm = m.from.value[0].name ? m.from.value[0].name + ' <' + m.from.value[0].address + '>' : m.from.value[0].address; } else if (m.headers && m.headers.from) { frm = m.headers.from; } return { id: m.id || '', threadId: m.threadId || '', from: frm, subject: m.subject || (m.headers && m.headers.subject) || '(no subject)', date: m.date || '', snippet: (m.snippet || '').substring(0, 500) }; }).filter(function(e) { return e.id; }); if (!emails.length) { return [{ json: { skip: true, label: 'Onboarding', address: 'onboarding@syntharra.com', digestDate: d, emails: [] } }]; } const prompt = 'Inbox: Onboarding (onboarding@syntharra.com)\\n\\nEmails:\\n' + JSON.stringify(emails) + '\\n\\nEXCLUDE automated tool emails (GitHub/Stripe/n8n/Railway/Supabase/Jotform system emails), newsletters, mass marketing, no-reply senders, social digests. INCLUDE only real humans writing to us.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nIf all automated return {\"emails\":[]}.'; return [{ json: { skip: false, label: 'Onboarding', address: 'onboarding@syntharra.com', digestDate: d, groqPrompt: prompt } }];"
+      }
+    },
+    {
+      "name": "Groq \u2014 Onboarding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1220,
+        1260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Groq API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra. ONLY return valid JSON."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.groqPrompt }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "name": "Save \u2014 Onboarding",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        1260
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate; const prep = $('Prepare \u2014 Onboarding').first().json; if (prep.skip) { return [{ json: { saved: 0, label: 'Onboarding', digestDate: d } }]; } let cl = []; try { const r = $input.item.json; const c = r && r.choices && r.choices[0] ? r.choices[0].message.content : ''; cl = JSON.parse(typeof c === 'string' ? c : '{}').emails || []; } catch(e) { return [{ json: { saved: 0, error: e.message, label: 'Onboarding', digestDate: d } }]; } if (!cl.length) { return [{ json: { saved: 0, label: 'Onboarding', digestDate: d } }]; } const SB = 'https://hgheyqwnrcvwtgngqdnq.supabase.co'; const K = $env.SUPABASE_SERVICE_ROLE_KEY || ''; const addr = 'onboarding@syntharra.com'; await fetch(SB + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr), { method: 'DELETE', headers: { apikey: K, Authorization: 'Bearer ' + K } }); const recs = cl.filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); }).map(function(e) { let rx = null; try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {} return { digest_date: d, inbox_address: addr, inbox_label: 'Onboarding', email_id: String(e.id), thread_id: e.threadId || null, from_address: (e.from || '').substring(0,500), subject: (e.subject || '(no subject)').substring(0,500), snippet: (e.snippet || '').substring(0,500), ai_summary: (e.summary || '').substring(0,500), importance: e.importance, category: e.category || 'general', action_required: !!e.action_required, flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null, received_at: rx }; }); if (!recs.length) { return [{ json: { saved: 0, label: 'Onboarding', digestDate: d } }]; } const res = await fetch(SB + '/rest/v1/email_digest', { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify(recs) }); return [{ json: { saved: recs.length, label: 'Onboarding', digestDate: d, ok: res.ok } }];"
+      }
     }
   ],
   "connections": {
@@ -741,6 +929,16 @@
           },
           {
             "node": "Gmail \u2014 Careers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Onboarding",
             "type": "main",
             "index": 0
           }
@@ -1049,6 +1247,72 @@
         [
           {
             "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Prepare \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare \u2014 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Prepare \u2014 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare \u2014 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Onboarding",
             "type": "main",
             "index": 0
           }
