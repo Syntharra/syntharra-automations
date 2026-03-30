@@ -9,6 +9,12 @@ description: >
   service IDs, API tokens, webhook URLs, or any infrastructure-level task across Syntharra's stack.
 ---
 
+> **Keys note:** Real API keys/tokens are stored in Claude project memory and injected at runtime.
+> GitHub-hosted copies of this skill use `{{PLACEHOLDER}}` names. Claude always has the real values in memory.
+> Key map: `{{GITHUB_TOKEN}}` = ghp_rJrp..., `{{N8N_API_KEY}}` = eyJhbGci...NqU, `{{RAILWAY_TOKEN}}` = 1eb854a8...,
+> `{{RETELL_API_KEY}}` = key_0157d9..., `{{JOTFORM_API_KEY}}` = 18907cfb..., `{{SMTP2GO_API_KEY}}` = api-0BE3...,
+> `{{STRIPE_WEBHOOK_SECRET}}` = whsec_D7eM...
+
 # Syntharra Infrastructure — Full Reference
 
 ---
