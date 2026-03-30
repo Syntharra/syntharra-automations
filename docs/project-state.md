@@ -1,6 +1,7 @@
 <!-- Last updated: 2026-03-30 -->
 <!-- Session: Onboarding Pack build — see session log 2026-03-30-onboarding-pack.md -->
 
+<!-- Last updated: 2026-03-30 (session 4) — Call processor Internal Notification rewired: now runs after Supabase log on every call, fires alert to alerts@syntharra.com only on 7 error conditions (SYSTEM_ERROR, CALL_STATUS_ERROR, TRANSFER_FAILED, TRANSFER_UNSUCCESSFUL, ABNORMAL_ENDING, CLIENT_NOT_FOUND, CALL_TOO_SHORT, GEOCODE_ERROR, GPT_ANALYSIS_FAILED). Silent on normal calls. Both STD + PREM updated and activated.
 <!-- Last updated: 2026-03-30 (session 3) — alerts@syntharra.com added: Railway ALERT_EMAIL_TO updated, alertManager.js fallback updated, email skill + project-state updated. Signature file already existed from prior session.
 <!-- Last updated: 2026-03-30 — Email Intelligence system COMPLETE: n8n 32-node workflow (Groq AI, 7 Gmail inboxes, idempotent Supabase saves), email_digest table SQL, admin dashboard email.html polished (Gmail deep links, next-run countdown, Groq setup guide), alerts@ signature created. Workflow file: docs/email-digest-workflow.json. -->
 # Syntharra — Project State (Master Reference)
@@ -83,8 +84,8 @@ Final versions in `brand-assets/email-signature/`:
 | HVAC Std Onboarding (`k0KeQxWb3j3BbQEk`) | `onboarding@` | `support@` |
 | HVAC Prem Onboarding (`KXDSMVKSf59tAtal`) | `onboarding@` | `support@` |
 | Stripe Workflow (`ydzfhitWiF5wNzEy`) | `onboarding@` | `support@` |
-| HVAC Std Call Processor (`OyDCyiOjG0twguXq`) | `admin@` | — |
-| HVAC Prem Call Processor (`UhxfrDaEeYUk4jAD`) | `admin@` | `support@` |
+| HVAC Std Call Processor (`Kg576YtPM9yEacKn`) | `alerts@` (errors only) | — |
+| HVAC Prem Call Processor (`STQ4Gt3rH8ptlvMi`) | `alerts@` (errors only) | `support@` |
 | Scenario Test Runner (`94QmMVGdEDl2S9MF`) | `admin@` | — |
 | Usage Alert Monitor (`lQsYJWQeP5YPikam`) | `admin@` | `support@` |
 | Monthly Minutes Calculator (`9SuchBjqhFmLbH8o`) | — | `support@` |
