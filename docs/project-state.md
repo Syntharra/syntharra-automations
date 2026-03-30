@@ -1,8 +1,8 @@
-<!-- Last updated: 2026-03-30 (late) — Admin dashboard live data wired, E2E cleanup workflow created, E2E test skill built, test data cleared, alertManager reverted -->
+<!-- Last updated: 2026-03-30 (final) — E2E skill complete rewrite; AI Assistant in admin dashboard — Admin dashboard live data wired, E2E cleanup workflow created, E2E test skill built, test data cleared, alertManager reverted -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
-> Last updated: 2026-03-30 (late) — Admin dashboard wired to live Supabase data; E2E cleanup workflow created (ID: URbQPNQP26OIdYMo, webhook: /e2e-test-cleanup, 5-min delay); E2E test skill added at skills/e2e-test/SKILL.md; e2e-test.py updated to use delayed cleanup + Railway n8n URLs; 3 test Premium clients deleted from Supabase; alertManager.js reverted (ALERTS_PAUSED removed); ALERTS_PAUSED Railway env var deleted.
+> Last updated: 2026-03-30 (final) — E2E skill fully rebuilt (14 phases, all tables/fields/emails/workflows); AI Assistant added to admin dashboard (Claude-powered, live context); admin dashboard SHA: d753064c — Admin dashboard wired to live Supabase data; E2E cleanup workflow created (ID: URbQPNQP26OIdYMo, webhook: /e2e-test-cleanup, 5-min delay); E2E test skill added at skills/e2e-test/SKILL.md; e2e-test.py updated to use delayed cleanup + Railway n8n URLs; 3 test Premium clients deleted from Supabase; alertManager.js reverted (ALERTS_PAUSED removed); ALERTS_PAUSED Railway env var deleted.
 >
 > **RULE FOR ALL CLAUDE SESSIONS:**
 > 1. READ this file + `syntharra-website/CLAUDE.md` at the start of every chat
