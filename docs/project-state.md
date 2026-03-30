@@ -1,3 +1,6 @@
+<!-- Last updated: 2026-03-30 -->
+<!-- Session: Onboarding Pack build — see session log 2026-03-30-onboarding-pack.md -->
+
 <!-- Last updated: 2026-03-30 — Email Intelligence system COMPLETE: n8n 32-node workflow (Groq AI, 7 Gmail inboxes, idempotent Supabase saves), email_digest table SQL, admin dashboard email.html polished (Gmail deep links, next-run countdown, Groq setup guide), alerts@ signature created. Workflow file: docs/email-digest-workflow.json. -->
 # Syntharra — Project State (Master Reference)
 
