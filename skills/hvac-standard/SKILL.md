@@ -56,11 +56,11 @@ description: >
 
 | Workflow | ID |
 |---|---|
-| HVAC Std Onboarding | `k0KeQxWb3j3BbQEk` |
-| HVAC Std Call Processor | `OyDCyiOjG0twguXq` |
+| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` |
+| HVAC Std Call Processor | `Kg576YtPM9yEacKn` |
 
 - n8n instance: `https://n8n.syntharra.com`
-- Railway n8n API key: `{{N8N_API_KEY}}`
+- Railway n8n API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiZGU0MmJjZDAtNGU4ZC00ZDFmLWJlNDMtYzQzMDRjMjBjNjk1IiwiaWF0IjoxNzc0ODQ1ODc3fQ.SRjfEwRpZGBh5dnmNvp2PotTZ3e6OCejy2NFgM5uNqU`
 - **Always click Publish after any workflow edits**
 - n8n PUT payload: only `name`, `nodes`, `connections`, `settings` (only `executionOrder` from settings) — extra fields cause 400 errors
 - All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
@@ -81,7 +81,7 @@ description: >
 |---|---|
 | Form ID | `260795139953066` |
 | Webhook URL | `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding` |
-| API Key | `{{JOTFORM_API_KEY}}` (account: Blackmore_Daniel) |
+| API Key | `18907cfb3b4b3be3ac47994683148728` (account: Blackmore_Daniel) |
 
 **Use REST API directly** — do NOT use MCP OAuth connector (broken).
 
