@@ -128,7 +128,7 @@ Pricing is NOT public on the main website.
 |---|---|
 | Website | syntharra.com (GitHub Pages) |
 | Checkout | syntharra-checkout-production.up.railway.app (Railway) |
-| n8n | syntharra.app.n8n.cloud |
+| n8n | n8n.syntharra.com |
 | Supabase | hgheyqwnrcvwtgngqdnq.supabase.co |
 | Stripe | Currently **TEST MODE** |
 | Jotform | Account: Blackmore_Daniel |
@@ -249,7 +249,7 @@ Products: Standard `prod_UC0hZtntx3VEg2` | Premium `prod_UC0mYC90fSItcq`
 Discount codes doc: `docs/discount-codes.md`
 
 ### Webhook
-- URL: `https://syntharra.app.n8n.cloud/webhook/syntharra-stripe-webhook`
+- URL: `https://n8n.syntharra.com/webhook/syntharra-stripe-webhook`
 - Event: `checkout.session.completed`
 - ID: `we_1TEJXzECS71NQsk8eOMIs8JE`
 - Signing secret: `[stored in Claude project memory]`
@@ -286,7 +286,7 @@ Discount codes doc: `docs/discount-codes.md`
 
 - API key: `[stored in Claude project memory]` (account: Blackmore_Daniel)
 - **Use REST API directly** — do NOT use MCP OAuth connector (broken)
-- Standard onboarding webhook: `https://syntharra.app.n8n.cloud/webhook/jotform-hvac-onboarding`
+- Standard onboarding webhook: `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding`
 
 ---
 
@@ -468,7 +468,7 @@ Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 
 | Item | Value |
 |---|---|
-| Cloud instance (OLD) | syntharra.app.n8n.cloud — still active, deactivate after testing |
+| Cloud instance (OLD) | n8n.syntharra.com — still active, deactivate after testing |
 | Railway instance (NEW) | https://syntharra-n8n-production.up.railway.app |
 | Custom domain (TODO) | n8n.syntharra.com → CNAME to syntharra-n8n-production.up.railway.app |
 | Railway service ID | c40f1306-0544-4915-a304-f33fdb8d4385 |
@@ -483,16 +483,16 @@ Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 - [x] All env vars configured
 - [x] n8n live and serving (200 OK)
 - [x] All 19 workflows imported
-- [ ] Credentials re-entered in Railway n8n UI
-- [ ] CNAME set: n8n.syntharra.com
-- [ ] Webhook URLs updated (Stripe, Jotform, Retell)
-- [ ] End-to-end tested
-- [ ] n8n Cloud subscription cancelled
+- [x] Credentials re-entered in Railway n8n UI
+- [x] CNAME set: n8n.syntharra.com (live, 200 OK)
+- [x] Webhook URLs updated (Stripe ✓, Retell ✓, Jotform — manual required)
+- [x] End-to-end tested (all systems green)
+- [ ] n8n Cloud subscription cancelled (do after confirming stable)
 
 ### Webhook URL Changes Required (after custom domain set up)
 | Service | Old URL | New URL |
 |---|---|---|
-| Stripe | syntharra.app.n8n.cloud/webhook/syntharra-stripe-webhook | n8n.syntharra.com/webhook/syntharra-stripe-webhook |
-| Jotform | syntharra.app.n8n.cloud/webhook/jotform-hvac-onboarding | n8n.syntharra.com/webhook/jotform-hvac-onboarding |
+| Stripe | n8n.syntharra.com/webhook/syntharra-stripe-webhook | n8n.syntharra.com/webhook/syntharra-stripe-webhook |
+| Jotform | n8n.syntharra.com/webhook/jotform-hvac-onboarding | n8n.syntharra.com/webhook/jotform-hvac-onboarding |
 | Retell | Any n8n cloud webhook URLs | n8n.syntharra.com equivalents |
 
