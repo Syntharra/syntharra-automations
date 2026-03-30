@@ -251,3 +251,24 @@ Railway does NOT auto-deploy on GitHub push — trigger manually via Railway API
 - [ ] Switch Stripe TEST → LIVE
 - [ ] Write more SEO blog articles (follow `_template/BLOG_STANDARD.md`)
 - [ ] Create `og-image.png` for social share
+
+---
+
+## 🔄 Auto-Update Rule
+
+**Whenever you complete any task that touches this skill's domain, you MUST update this SKILL.md before the chat ends.**
+
+This includes:
+- New n8n workflow created or renamed → update the workflow table
+- New Supabase table or column added → update the tables section
+- New Jotform field added → update field mappings
+- API key or credential changed → update the keys section
+- New Retell agent created → update agent IDs
+- Stripe product/price/coupon added or changed → update Stripe section
+- New Railway service created → update infrastructure section
+- New website page created → update file map
+- Any webhook URL changed → update webhook URLs
+- Any new learnings or gotchas discovered → add to key rules/learnings
+
+**How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
+**GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
