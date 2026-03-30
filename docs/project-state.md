@@ -2,7 +2,7 @@
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
-> Last updated: 2026-03-30.
+> Last updated: 2026-03-30 (evening) — Railway n8n API key updated, Auto-Enable MCP workflow on Railway (AU8DD5r6i6SlYFnb).
 >
 > **RULE FOR ALL CLAUDE SESSIONS:**
 > 1. READ this file + `syntharra-website/CLAUDE.md` at the start of every chat
