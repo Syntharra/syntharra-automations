@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-03-30 (final) — E2E skill complete rewrite; AI Assistant in admin dashboard — Admin dashboard live data wired, E2E cleanup workflow created, E2E test skill built, test data cleared, alertManager reverted -->
+<!-- Last updated: 2026-03-30 — Email Intelligence system built: n8n 6am GMT workflow scans all @syntharra.com inboxes (support/sales/solutions/alerts/info/admin/careers), AI classifies emails, saves to Supabase email_digest table. New admin page email.html live at admin.syntharra.com/email.html. Syntharra-admin skill created. -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
