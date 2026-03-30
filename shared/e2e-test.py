@@ -1,7 +1,7 @@
 import urllib.request, urllib.error, json, time, urllib.parse
 
 # ── CREDENTIALS ───────────────────────────────────────────────────────────────
-N8N_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWJjM2MzMi1mYzNkLTRlNjYtYTJhOC01NDM5ZjA1NjA2YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiN2JjZTU4ZDAtYzgwYy00YTRjLWE2MzAtNTU0OTJjM2Q4MWZhIiwiaWF0IjoxNzc0NDAwNzY1fQ.NGQA3HMCAgYVbwYreM5GbQKjNTn9FsdgzsjHltvnxdI"
+N8N_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiZGU0MmJjZDAtNGU4ZC00ZDFmLWJlNDMtYzQzMDRjMjBjNjk1IiwiaWF0IjoxNzc0ODQ1ODc3fQ.SRjfEwRpZGBh5dnmNvp2PotTZ3e6OCejy2NFgM5uNqU"
 RETELL_KEY = "key_0157d9401f66cfa1b51fadc66445"
 SUPABASE   = "https://hgheyqwnrcvwtgngqdnq.supabase.co"
 SB_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
@@ -129,7 +129,7 @@ payload = {
 if IS_LIVE:
     payload["stripe_customer_id"] = STRIPE_CUSTOMER_ID
 
-status, _ = http("https://syntharra.app.n8n.cloud/webhook/jotform-hvac-onboarding", "POST", payload)
+status, _ = http("https://n8n.syntharra.com/webhook/jotform-hvac-onboarding", "POST", payload)
 check("Webhook accepted (HTTP 200)", status == 200, f"HTTP {status}")
 print("  Waiting 25s for full workflow execution...")
 time.sleep(25)
@@ -137,7 +137,7 @@ time.sleep(25)
 # ══════════════════════════════════════════════════════════════
 print("\n[2] N8N EXECUTION")
 # ══════════════════════════════════════════════════════════════
-_, execs = http("https://syntharra.app.n8n.cloud/api/v1/executions?workflowId=k0KeQxWb3j3BbQEk&limit=1",
+_, execs = http("https://n8n.syntharra.com/api/v1/executions?workflowId=k0KeQxWb3j3BbQEk&limit=1",
     headers={"X-N8N-API-KEY": N8N_KEY})
 latest = (execs.get('data') or [{}])[0]
 exec_status = latest.get('status', 'unknown')
@@ -208,7 +208,7 @@ if agent_id:
     agent = retell(f"get-agent/{agent_id}")
     check("Agent exists in Retell",          bool(agent.get('agent_id')),                           agent_id[-16:])
     check("Agent name = company name",       TEST_COMPANY in (agent.get('agent_name') or ''),       agent.get('agent_name'))
-    check("Webhook URL correct",             agent.get('webhook_url') == "https://syntharra.app.n8n.cloud/webhook/retell-hvac-webhook")
+    check("Webhook URL correct",             agent.get('webhook_url') == "https://n8n.syntharra.com/webhook/retell-hvac-webhook")
     check("Voice set",                       bool(agent.get('voice_id')),                           agent.get('voice_id'))
     check("Language multilingual",           agent.get('language') == 'multi',                      agent.get('language'))
     # LIVE MODE ONLY: phone number should be linked to agent
@@ -274,7 +274,7 @@ if agent_id:
             )
         }
     }
-    s, _ = http("https://syntharra.app.n8n.cloud/webhook/retell-hvac-webhook", "POST", fake_call)
+    s, _ = http("https://n8n.syntharra.com/webhook/retell-hvac-webhook", "POST", fake_call)
     check("Call processor webhook accepted", s == 200,                                              f"HTTP {s}")
     print("  Waiting 15s for GPT analysis...")
     time.sleep(15)
@@ -291,12 +291,12 @@ if agent_id:
     check("company_name in log",             call.get('company_name') == TEST_COMPANY,             call.get('company_name'))
 
     # Dedup check — send same call_id again, should not create a second row
-    http("https://syntharra.app.n8n.cloud/webhook/retell-hvac-webhook", "POST", fake_call)
+    http("https://n8n.syntharra.com/webhook/retell-hvac-webhook", "POST", fake_call)
     time.sleep(8)
     dup_rows = sb(f"hvac_call_log?call_id=eq.{fake_call_id}&select=*")
     check("Dedup — no duplicate row created", len(dup_rows) == 1,                                  f"{len(dup_rows)} row(s)")
 
-    _, cp = http("https://syntharra.app.n8n.cloud/api/v1/executions?workflowId=OyDCyiOjG0twguXq&limit=1",
+    _, cp = http("https://n8n.syntharra.com/api/v1/executions?workflowId=OyDCyiOjG0twguXq&limit=1",
         headers={"X-N8N-API-KEY": N8N_KEY})
     cp_exec = (cp.get('data') or [{}])[0]
     check("Call processor n8n execution OK", cp_exec.get('status') == 'success',
@@ -318,32 +318,26 @@ else:
         "Check inbox — will say 'no phone configured' which is correct in test mode")
 
 # ══════════════════════════════════════════════════════════════
-print("\n[8] CLEANUP")
+print("\n[8] CLEANUP — SCHEDULED (5 MINUTE DELAY)")
 # ══════════════════════════════════════════════════════════════
-http(f"{SUPABASE}/rest/v1/hvac_standard_agent?company_name=eq.{urllib.parse.quote(TEST_COMPANY)}",
-    "DELETE", None, {"apikey": SB_SVC, "Authorization": f"Bearer {SB_SVC}"})
-check("Supabase hvac_standard_agent deleted", True)
-
-for cid in cleanup['call_ids']:
-    http(f"{SUPABASE}/rest/v1/hvac_call_log?call_id=eq.{cid}",
-        "DELETE", None, {"apikey": SB_SVC, "Authorization": f"Bearer {SB_SVC}"})
-check("Supabase hvac_call_log deleted", True)
-
-for aid in cleanup['agent_ids']:
-    req_d = urllib.request.Request(f"https://api.retellai.com/delete-agent/{aid}",
-        headers={"Authorization": f"Bearer {RETELL_KEY}"}, method='DELETE')
-    try:
-        with urllib.request.urlopen(req_d) as r: s = r.status
-    except urllib.error.HTTPError as e: s = e.code
-    check(f"Retell agent deleted", s in [200,204], f"{aid[-16:]} HTTP {s}")
-
-for fid in cleanup['flow_ids']:
-    req_d = urllib.request.Request(f"https://api.retellai.com/delete-conversation-flow/{fid}",
-        headers={"Authorization": f"Bearer {RETELL_KEY}"}, method='DELETE')
-    try:
-        with urllib.request.urlopen(req_d) as r: s = r.status
-    except urllib.error.HTTPError as e: s = e.code
-    check(f"Retell flow deleted", s in [200,204], f"{fid[-16:]} HTTP {s}")
+# Triggers the n8n E2E cleanup workflow which waits 5 minutes before
+# deleting all test data. This gives you time to manually verify
+# Supabase, Retell, n8n, and emails before the data is wiped.
+# Webhook: https://n8n.syntharra.com/webhook/e2e-test-cleanup
+cleanup_payload = {
+    "company_name": TEST_COMPANY,
+    "agent_ids": cleanup["agent_ids"],
+    "flow_ids": cleanup["flow_ids"],
+}
+s, resp = http("https://n8n.syntharra.com/webhook/e2e-test-cleanup", "POST", cleanup_payload)
+if s == 200:
+    check("Cleanup scheduled (5 min delay)", True, "Data will be deleted in 5 minutes — verify now!")
+    print(f"  ⏱  You have 5 minutes to check Supabase, Retell, and emails before cleanup.")
+    print(f"  Company: {TEST_COMPANY}")
+    print(f"  Agent IDs: {cleanup['agent_ids']}")
+    print(f"  Flow IDs: {cleanup['flow_ids']}")
+else:
+    check("Cleanup scheduled (5 min delay)", False, f"HTTP {s} — cleanup webhook failed, delete manually")
 
 # ══════════════════════════════════════════════════════════════
 total  = len(results)
