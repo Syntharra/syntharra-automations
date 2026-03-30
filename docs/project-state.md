@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-03-30 — Email Intelligence system built: n8n 6am GMT workflow scans all @syntharra.com inboxes (support/sales/solutions/alerts/info/admin/careers), AI classifies emails, saves to Supabase email_digest table. New admin page email.html live at admin.syntharra.com/email.html. Syntharra-admin skill created. -->
+<!-- Last updated: 2026-03-30 — Email Intelligence system COMPLETE: n8n 32-node workflow (Groq AI, 7 Gmail inboxes, idempotent Supabase saves), email_digest table SQL, admin dashboard email.html polished (Gmail deep links, next-run countdown, Groq setup guide), alerts@ signature created. Workflow file: docs/email-digest-workflow.json. -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
@@ -194,6 +194,7 @@ Pricing is NOT public on the main website.
 | Website Lead → Free Report | `ykaZkQXWO2zEJCdu` | Lead Gen |
 | Nightly GitHub Backup | `EAHgqAfQoCDumvPU` | Ops |
 | Send Welcome Email (manual) | `Rd5HiN7v2SRwNmiY` | Backup |
+| Email Digest (daily 6am GMT) | Import from `docs/email-digest-workflow.json` | Ops |
 
 ### Inactive (confirm with Dan before deleting)
 | Integration Hub | `8WYFy093XA6UKB7L` | Inactive |
