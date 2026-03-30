@@ -2,21 +2,16 @@
 // Syntharra Premium — Welcome Email Builder v2
 // Based on: hvac-standard Build Welcome Email HTML node
 //
-// KEY CHANGE: This email must ONLY fire AFTER both calendar
-// AND CRM integrations are confirmed connected in Supabase.
-// Gate condition (check before sending):
-//   calendar_status = 'active' AND crm_status = 'active'
-//   (or whichever integrations the client has configured)
-//
-// Workflow order:
+// WORKFLOW ORDER:
 //   1. Jotform → Parse → Supabase → Build Agent → Publish Agent
-//   2. Send Integration Setup Emails (calendar OAuth + CRM OAuth)
-//   3. OAuth callback sets calendar_status/crm_status = 'active' in Supabase
-//   4. Webhook/poll triggers THIS email once both statuses = active
+//   2. Send this Welcome Email (agent goes live immediately)
+//   3. Send Integration Setup Emails (calendar + CRM OAuth) in parallel
+//   This ensures the client's AI is live and answering calls even if
+//   integrations take time or have issues to resolve.
 //
 // Additions vs Standard:
-//   - ⭐ PREMIUM badge (light purple, not dark)
-//   - Integration status section (light theme, green "Connected" badges)
+//   - ⭐ PREMIUM badge (light purple)
+//   - Integration status section (light theme, "Instructions sent" badges)
 //   - WhatsApp support block (commented out — enable when number is ready)
 // ============================================================
 
@@ -167,15 +162,15 @@ const qrTableRows = [
   return `<tr><td style="padding:9px 6px;font-size:12px;color:#c4c0ff;font-weight:600;width:44%;font-family:Helvetica,Arial,sans-serif;${border}">${s}</td><td style="padding:9px 6px;font-size:12px;color:#ffffff;font-family:Helvetica,Arial,sans-serif;${border}">${a}</td></tr>`;
 }).join('');
 
-// ── Integration section — LIGHT THEME, generic, green "Connected" badges ──
-// NOTE: This email only sends AFTER integrations are connected (workflow gated)
+// ── Integration section — LIGHT THEME, "Instructions sent" badges ──
+// Sent alongside welcome email — integrations connect after OAuth
 let integrationRows = '';
 if (hasCal) {
   integrationRows += `<tr>
     <td style="padding:11px 16px;border-bottom:1px solid #f3f4f6">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td style="font-size:13px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif">📅 ${calPlatform}</td>
-        <td align="right"><span style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#065f46;font-family:Helvetica,Arial,sans-serif">✓ Connected</span></td>
+        <td align="right"><span style="background:#f3f0ff;border:1px solid #d4d0ff;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#6C63FF;font-family:Helvetica,Arial,sans-serif">Instructions sent</span></td>
       </tr></table>
     </td>
   </tr>`;
@@ -185,7 +180,7 @@ if (hasCRM) {
     <td style="padding:11px 16px">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td style="font-size:13px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif">🔧 ${crmPlatform}</td>
-        <td align="right"><span style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#065f46;font-family:Helvetica,Arial,sans-serif">✓ Connected</span></td>
+        <td align="right"><span style="background:#f3f0ff;border:1px solid #d4d0ff;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#6C63FF;font-family:Helvetica,Arial,sans-serif">Instructions sent</span></td>
       </tr></table>
     </td>
   </tr>`;
@@ -194,11 +189,11 @@ if (hasCRM) {
 const integrationSection = (hasCal || hasCRM) ? `
 ${DIV}
 <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 40px">
-  ${sectionHeader('⚡', 'Your Premium Integrations', 'Calendar &amp; CRM connections confirmed and active')}
+  ${sectionHeader('⚡', 'Your Premium Integrations', 'Setup instructions have been sent to your inbox separately')}
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
     ${integrationRows}
   </table>
-  <p style="margin:10px 0 0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif">Your AI will now check real availability and log jobs automatically after every call.</p>
+  <p style="margin:10px 0 0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif">Follow the steps in that email to connect your calendar and CRM. Your AI is already live and capturing all caller details in the meantime.</p>
 </td></tr>` : '';
 
 // ── WhatsApp section (COMMENTED OUT — enable when number is ready) ─────────
