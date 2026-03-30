@@ -118,7 +118,7 @@ def build_email(data, is_premium=False):
     plan_label = 'Syntharra Premium AI Receptionist' if is_premium else 'Syntharra AI Receptionist'
 
     # ── Premium integration section — LIGHT THEME, generic language ──
-    # NOTE: This email only sends AFTER integrations are connected (workflow gated)
+    # Sends with welcome email — integrations connect separately via OAuth
     integration_section = ''
     if is_premium:
         int_items = ''
@@ -127,7 +127,7 @@ def build_email(data, is_premium=False):
           <td style="padding:11px 16px;border-bottom:1px solid #f3f0ff">
             <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
               <td style="font-size:13px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif">📅 {cal_platform}</td>
-              <td align="right"><span style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#065f46;font-family:Helvetica,Arial,sans-serif">✓ Connected</span></td>
+              <td align="right"><span style="background:#f3f0ff;border:1px solid #d4d0ff;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#6C63FF;font-family:Helvetica,Arial,sans-serif">Instructions sent</span></td>
             </tr></table>
           </td>
         </tr>'''
@@ -136,7 +136,7 @@ def build_email(data, is_premium=False):
           <td style="padding:11px 16px">
             <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
               <td style="font-size:13px;font-weight:600;color:#111827;font-family:Helvetica,Arial,sans-serif">🔧 {crm_platform}</td>
-              <td align="right"><span style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#065f46;font-family:Helvetica,Arial,sans-serif">✓ Connected</span></td>
+              <td align="right"><span style="background:#f3f0ff;border:1px solid #d4d0ff;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#6C63FF;font-family:Helvetica,Arial,sans-serif">Instructions sent</span></td>
             </tr></table>
           </td>
         </tr>'''
@@ -144,11 +144,11 @@ def build_email(data, is_premium=False):
         integration_section = f'''
 {DIV.replace('<table ', '<tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 40px"><table ')}
 <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 40px">
-  {section_header('⚡', 'Your Premium Integrations', 'Calendar &amp; CRM are connected and active')}
+  {section_header('⚡', 'Your Premium Integrations', 'Setup instructions sent to your inbox separately')}
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
     {int_items}
   </table>
-  <p style="margin:10px 0 0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif;">Your AI will now check real availability and log jobs automatically.</p>
+  <p style="margin:10px 0 0;font-size:12px;color:#9ca3af;font-family:Helvetica,Arial,sans-serif;">Follow the steps in that email to connect your calendar and CRM. Your AI is already live and capturing all caller details in the meantime.</p>
 </td></tr>'''
 
     html = f'''<!DOCTYPE html>
