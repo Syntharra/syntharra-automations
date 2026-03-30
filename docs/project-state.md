@@ -2,7 +2,7 @@
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
-> Last updated: 2026-03-30 (final) — E2E skill fully rebuilt (14 phases, all tables/fields/emails/workflows); AI Assistant added to admin dashboard (Claude-powered, live context); admin dashboard SHA: d753064c — Admin dashboard wired to live Supabase data; E2E cleanup workflow created (ID: URbQPNQP26OIdYMo, webhook: /e2e-test-cleanup, 5-min delay); E2E test skill added at skills/e2e-test/SKILL.md; e2e-test.py updated to use delayed cleanup + Railway n8n URLs; 3 test Premium clients deleted from Supabase; alertManager.js reverted (ALERTS_PAUSED removed); ALERTS_PAUSED Railway env var deleted.
+> Last updated: 2026-03-30 (session 2) — Ops monitor efficiency pass: zero-call alert paused (PRE_LAUNCH_MODE), email check switched to SMTP2GO public status API (0 emails/month), daily digest crash fixed (nodemailer → REST), pipeline agent check reads statusStore not Retell API, jotform orphan check bulk-fetches (40 queries → 2), SSL loop removed from infrastructure. Full go-live checklist stored in syntharra-ops SKILL.md.
 >
 > **RULE FOR ALL CLAUDE SESSIONS:**
 > 1. READ this file + `syntharra-website/CLAUDE.md` at the start of every chat
@@ -421,17 +421,28 @@ Populate with all keys before first client onboarding.
 
 ## Latest Session: March 29, 2026
 
-### Ops Monitor v2.0 — LIVE
+### Ops Monitor v2.0 — PAUSED (pre-launch)
 - Deployed: syntharra-ops-monitor-production.up.railway.app
 - GitHub: Syntharra/syntharra-ops-monitor
 - Railway service ID: 7ce0f943-5216-4a16-8aeb-794cc7cc1e65
+- **Status: PAUSED** — Railway service sleeping to prevent pre-launch alert spam
 - 10 monitor systems, 70+ individual checks
 - Monitors: Retell, n8n, Supabase, Stripe, Jotform, Pipeline (E2E), CRM/Calendar, Infrastructure, Client Health, Revenue
 - SMS alerts via Telnyx (not Twilio), email via SMTP2GO, daily digest at 8am CT
-- Retell publish finding: is_published is NOT a health indicator — agents work immediately after creation, no publish step needed for onboarding pipeline
-- Cleaned: 4 Polar Peak test rows from hvac_standard_agent, Jotform v2 reference removed
-- Stripe key fixed: sk_test_ (was pk_test_), Twilio env vars removed, Telnyx placeholders added
-- Railway API token saved for direct service management
+
+**Pre-launch pauses applied (2026-03-30):**
+- Zero-call business hours alert: `PRE_LAUNCH_MODE = true` in retell.js — SET TO false AT GO-LIVE
+- Railway service itself sleeping — unpause at go-live via Railway GraphQL mutation
+
+**Efficiency fixes applied (2026-03-30):**
+- email.js: replaced test-email-send with SMTP2GO public status API (smtp2gostatus.com) — 0 emails/month vs 1,440
+  - Root cause: sending-only API key has no stats endpoint permissions — status page is the correct approach
+- alertManager.js: sendDailyDigest() rewritten to use SMTP2GO REST (was calling this.transporter.sendMail — nodemailer never initialised — daily digest was silently crashing every morning)
+- pipeline.js: agent reachability check now reads from statusStore.get('retell') instead of re-calling Retell API per client every 15 min
+- jotform.js: orphan detection now bulk-fetches all Supabase company/email names once, compares in memory — was firing up to 40 individual Supabase queries per run, now always 2
+- infrastructure.js: removed redundant SSL loop — SSL health now inferred from HTTPS endpoint check results already collected (was making 3 duplicate HEAD requests every 5 min)
+
+**Go-live checklist stored in:** syntharra-ops SKILL.md
 
 
 ## Session: 2026-03-29 — Ops Monitor Fixes & Dashboard Redesign
