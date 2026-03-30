@@ -23,7 +23,7 @@ description: >
 | HVAC Prem Dispatcher | `73Y0MHVBu05bIm5p` | 4 nodes — Google Cal + Jobber |
 
 - n8n instance: `https://n8n.syntharra.com`
-- Railway n8n API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiZGU0MmJjZDAtNGU4ZC00ZDFmLWJlNDMtYzQzMDRjMjBjNjk1IiwiaWF0IjoxNzc0ODQ1ODc3fQ.SRjfEwRpZGBh5dnmNvp2PotTZ3e6OCejy2NFgM5uNqU`
+- Railway n8n API key: `{{N8N_API_KEY — query syntharra_vault}}`
 - **Always click Publish after any workflow edits**
 - All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
 
@@ -34,7 +34,7 @@ description: >
 | Item | Value |
 |---|---|
 | Form ID | `260819259556671` |
-| API Key | `18907cfb3b4b3be3ac47994683148728` (account: Blackmore_Daniel) |
+| API Key | `{{JOTFORM_API_KEY — query syntharra_vault}}` (account: Blackmore_Daniel) |
 
 **Use REST API directly** — do NOT use MCP OAuth connector (broken).
 
@@ -188,3 +188,50 @@ This includes:
 
 **How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
 **GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
+
+---
+
+## 🔑 Credential Access — Supabase Vault
+
+**NEVER store API keys in skill files, project memory, or anywhere else.**
+
+All Syntharra credentials are stored in the `syntharra_vault` table in Supabase.
+
+**To retrieve a key:**
+1. Query `https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/syntharra_vault?service_name=eq.{SERVICE_NAME}&select=key_value`
+2. Use the **service role key** from Supabase Project Settings → API
+3. Filter by `service_name` to get the `key_value`
+
+```python
+import requests
+
+SB_URL = "https://hgheyqwnrcvwtgngqdnq.supabase.co"
+# Get service role key from Supabase Project Settings → API
+
+def get_key(service_name, sb_service_role_key):
+    r = requests.get(
+        f"{SB_URL}/rest/v1/syntharra_vault",
+        params={"service_name": f"eq.{service_name}", "select": "key_value"},
+        headers={
+            "apikey": sb_service_role_key,
+            "Authorization": f"Bearer {sb_service_role_key}"
+        }
+    )
+    return r.json()[0]["key_value"]
+
+# Example:
+# retell_key = get_key("retell")
+# n8n_key    = get_key("n8n_railway")
+# github_token = get_key("github")
+```
+
+**Known service_name values** (populate before use):
+- `retell` — Retell AI API key
+- `n8n_railway` — Railway n8n API key
+- `github` — GitHub personal access token
+- `jotform` — Jotform API key
+- `smtp2go` — SMTP2GO API key
+- `railway` — Railway GraphQL API token
+- `stripe_webhook_secret` — Stripe webhook signing secret
+- `supabase_service_role` — Supabase service role key (for non-vault queries)
+- `telnyx` — Telnyx API key (when active)
