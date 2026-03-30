@@ -187,33 +187,17 @@ def build():
     # ═══════════════════════════════════════════
     # COVER
     # ═══════════════════════════════════════════
-    story.append(sp(14))
+    story.append(sp(12))
 
-    # Logo — real PNG from disk
-    logo_path = '/home/claude/syntharra-logo.png'
-    logo_img = Image(logo_path, width=52, height=52)
-
-    logo_name_tbl = Table([
-        [
-            logo_img,
-            [
-                Paragraph('Syntharra', S('ln', 'Helvetica-Bold', 22, DARK, leading=24)),
-                Paragraph('GLOBAL AI SOLUTIONS', S('ls', 'Helvetica-Bold', 8, PURPLE, leading=10)),
-            ]
-        ]
-    ], colWidths=[18*mm, COL_W - 18*mm])
-    logo_name_tbl.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('LEFTPADDING', (0,0), (-1,-1), 0),
-        ('RIGHTPADDING', (0,0), (-1,-1), 0),
-        ('TOPPADDING', (0,0), (-1,-1), 0),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
-    ]))
-
-    cover_logo = Table([[logo_name_tbl]], colWidths=[COL_W])
+    # Full horizontal logo (email-logo.png = 400x80) — centred on cover
+    # Scale to fit nicely: render at 200x40mm equivalent
+    logo_path = '/home/claude/syntharra-full-logo.png'
+    # 400x80 px → render at 160x32 pt (clean proportional size)
+    logo_img = Image(logo_path, width=160, height=32)
+    cover_logo = Table([[logo_img]], colWidths=[COL_W])
     cover_logo.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 0),
         ('BOTTOMPADDING', (0,0), (-1,-1), 0),
     ]))
@@ -662,38 +646,32 @@ def build():
     story.append(sp(3))
 
     # ── Calendar Integration ──
-    story.append(KeepTogether([
-        Paragraph('Calendar Integration', S_H2),
-        Paragraph('Once connected, your AI checks your calendar in real time before confirming appointment '
+    story.append(Paragraph('Calendar Integration', S_H2))
+    story.append(Paragraph('Once connected, your AI checks your calendar in real time before confirming appointment '
                   'slots. Bookings are added automatically. Works with Google Calendar, Outlook, and any '
-                  'CalDAV-compatible calendar.', S_BODY),
-        sp(2),
-        step_row(1, 'Check your inbox', 'Look for the Syntharra integration setup email — it contains a one-click authorisation link for your calendar.'),
-    ]))
+                  'CalDAV-compatible calendar.', S_BODY))
+    story.append(sp(2))
+    story.append(step_row(1, 'Check your inbox', 'Look for the Syntharra integration setup email — it contains a one-click authorisation link for your calendar.'))
     story.append(step_row(2, 'Click Authorise Calendar', 'Log in to the Google, Microsoft, or calendar account you want to use for bookings.'))
     story.append(step_row(3, 'Grant permissions', 'Allow Syntharra to view and create calendar events. Read/write to your calendar only — no other data is accessed.'))
     story.append(step_row(4, 'Done', 'Your AI will now check your real availability and book appointments directly into your calendar.'))
     story.append(sp(3))
 
     # ── CRM Integration ──
-    story.append(KeepTogether([
-        Paragraph('CRM Integration', S_H2),
-        Paragraph('Supported platforms: Jobber, ServiceTitan, HouseCall Pro, FieldEdge, and others. '
-                  'New callers are automatically created as customers and job requests are logged — no manual entry.', S_BODY),
-        sp(2),
-        step_row(1, 'Check your inbox', 'The same integration setup email contains your CRM authorisation link or API key request.'),
-    ]))
+    story.append(Paragraph('CRM Integration', S_H2))
+    story.append(Paragraph('Supported platforms: Jobber, ServiceTitan, HouseCall Pro, FieldEdge, and others. '
+                  'New callers are automatically created as customers and job requests are logged — no manual entry.', S_BODY))
+    story.append(sp(2))
+    story.append(step_row(1, 'Check your inbox', 'The same integration setup email contains your CRM authorisation link or API key request.'))
     story.append(step_row(2, 'Authorise or provide API key', 'Most CRMs use one-click OAuth — click Authorise and log in. Some platforms require an API key instead (see below).'))
     story.append(step_row(3, 'Grant permissions', 'Allow Syntharra to create clients and jobs. No billing or financial data is accessed.'))
     story.append(step_row(4, 'Done', 'Every call that generates a lead will automatically create a record in your CRM.'))
     story.append(sp(3))
 
     # ── API key sub-section ──
-    story.append(KeepTogether([
-        Paragraph('Finding Your CRM API Key', S('h2sub', 'Helvetica-Bold', 10, DARK, leading=14, sa=2)),
-        Paragraph('Some CRM platforms require an API key rather than OAuth. Here\'s where to find it:', S_BODY),
-        sp(2),
-    ]))
+    story.append(Paragraph('Finding Your CRM API Key', S('h2sub', 'Helvetica-Bold', 11, PURPLE, leading=16, sa=2)))
+    story.append(Paragraph('Some CRM platforms require an API key rather than OAuth. Here\'s where to find it:', S_BODY))
+    story.append(sp(2))
 
     crm_keys = [
         ('Jobber', 'Settings → Integrations → API → Create API Key. Select Read/Write scope.'),
@@ -717,8 +695,10 @@ def build():
         Paragraph('Premium clients benefit from intelligent repeat caller detection. When a customer calls more '
                   'than once, your AI recognises them by phone number, greets them by name, and references '
                   'their call history for a personalised experience.', S_BODY),
-        sp(4),
+        sp(2),
     ]))
+
+    story.append(PageBreak())
 
     # ═══════════════════════════════════════════
     # SECTION 9 — SUPPORT
