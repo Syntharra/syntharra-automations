@@ -497,6 +497,7 @@ Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 - [x] Webhook URLs updated (Stripe ✓, Retell ✓, Jotform — manual required)
 - [x] End-to-end tested (all systems green)
 - [ ] n8n Cloud subscription cancelled (do after confirming stable)
+- [ ] **Unpause syntharra-ops-monitor on Railway** (paused 2026-03-30 to stop test-mode alert spam — use sleepApplication: false via Railway GraphQL API, serviceId: 7ce0f943-5216-4a16-8aeb-794cc7cc1e65)
 
 ### Webhook URL Changes Required (after custom domain set up)
 | Service | Old URL | New URL |
