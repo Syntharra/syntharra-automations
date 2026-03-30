@@ -18,12 +18,12 @@ description: >
 
 | Workflow | ID | Detail |
 |---|---|---|
-| HVAC Prem Onboarding | `KXDSMVKSf59tAtal` | 13 nodes, 17 PCA, 4 tools |
-| HVAC Prem Call Processor | `UhxfrDaEeYUk4jAD` | 15 nodes, repeat caller detection |
-| HVAC Prem Dispatcher | `kVKyPQO7cXKUJFbW` | 4 nodes — Google Cal + Jobber |
+| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | 13 nodes, 17 PCA, 4 tools |
+| HVAC Prem Call Processor | `STQ4Gt3rH8ptlvMi` | 15 nodes, repeat caller detection |
+| HVAC Prem Dispatcher | `73Y0MHVBu05bIm5p` | 4 nodes — Google Cal + Jobber |
 
 - n8n instance: `https://n8n.syntharra.com`
-- Railway n8n API key: `{{N8N_API_KEY}}`
+- Railway n8n API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiZGU0MmJjZDAtNGU4ZC00ZDFmLWJlNDMtYzQzMDRjMjBjNjk1IiwiaWF0IjoxNzc0ODQ1ODc3fQ.SRjfEwRpZGBh5dnmNvp2PotTZ3e6OCejy2NFgM5uNqU`
 - **Always click Publish after any workflow edits**
 - All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
 
@@ -34,7 +34,7 @@ description: >
 | Item | Value |
 |---|---|
 | Form ID | `260819259556671` |
-| API Key | `{{JOTFORM_API_KEY}}` (account: Blackmore_Daniel) |
+| API Key | `18907cfb3b4b3be3ac47994683148728` (account: Blackmore_Daniel) |
 
 **Use REST API directly** — do NOT use MCP OAuth connector (broken).
 
@@ -60,6 +60,19 @@ description: >
 | `overage_charges` | Usage overage tracking |
 
 - Supabase URL: `hgheyqwnrcvwtgngqdnq.supabase.co`
+
+### `hvac_premium_agent` additional columns (superset of standard)
+- `crm_platform` — e.g. `"Jobber"`
+- `crm_status` — `"pending"` → `"active"` after OAuth
+- `calendar_platform` — e.g. `"Google Calendar"`
+- `calendar_status` — `"pending"` → `"active"` after OAuth
+- `booking_buffer_minutes` — int, default 30
+- `default_appointment_duration` — int, default 60
+- `booking_advance_days` — int, default 14
+- `booking_confirmation_method` — `"email"` or `"sms"`
+- `crm_access_token`, `crm_refresh_token`, `crm_token_expiry`
+- `calendar_access_token`, `calendar_refresh_token`, `calendar_token_expiry`
+
 
 ---
 
