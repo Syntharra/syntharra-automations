@@ -1,0 +1,176 @@
+{
+  "name": "Daily Email Digest — 6am GMT",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6,
+              "triggerAtMinute": 0,
+              "timezone": "Europe/London"
+            }
+          ]
+        }
+      },
+      "id": "trigger-node",
+      "name": "Daily 6am GMT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define the inboxes to scan\n// daniel@ is excluded — that is Dan's personal inbox, no automation\nconst inboxes = [\n  { address: 'support@syntharra.com',    label: 'Support',    priority: 'high',   icon: '🎧' },\n  { address: 'sales@syntharra.com',       label: 'Sales',      priority: 'high',   icon: '💼' },\n  { address: 'info@syntharra.com',        label: 'Info',       priority: 'medium', icon: 'ℹ️' },\n  { address: 'solutions@syntharra.com',   label: 'Solutions',  priority: 'high',   icon: '🔧' },\n  { address: 'alerts@syntharra.com',      label: 'Alerts',     priority: 'high',   icon: '🔔' },\n  { address: 'admin@syntharra.com',       label: 'Admin',      priority: 'medium', icon: '⚙️' },\n  { address: 'careers@syntharra.com',     label: 'Careers',    priority: 'medium', icon: '💼' }\n];\n\nreturn inboxes.map(inbox => ({ json: inbox }));"
+      },
+      "id": "define-inboxes",
+      "name": "Define Inboxes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "message",
+        "operation": "getAll",
+        "userId": "={{ $json.address }}",
+        "returnAll": false,
+        "limit": 50,
+        "filters": {
+          "q": "is:unread newer_than:1d -category:promotions -category:social -category:updates -category:forums"
+        },
+        "options": {
+          "format": "full",
+          "fields": "id,threadId,payload,internalDate,labelIds,snippet"
+        }
+      },
+      "id": "gmail-fetch",
+      "name": "Fetch Unread Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [640, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and clean email data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const msg = item.json;\n  if (!msg || !msg.id || msg.error) continue;\n\n  // Extract headers\n  const headers = msg.payload?.headers || [];\n  const getHeader = (name) => headers.find(h => h.name?.toLowerCase() === name.toLowerCase())?.value || '';\n\n  const subject  = getHeader('Subject')   || '(no subject)';\n  const from     = getHeader('From')       || 'Unknown';\n  const to       = getHeader('To')         || '';\n  const date     = getHeader('Date')       || '';\n  const replyTo  = getHeader('Reply-To')   || from;\n\n  // Get body snippet\n  const snippet = msg.snippet || '';\n\n  // Determine which inbox this came from (look at 'To' field)\n  const toAddr = to.toLowerCase();\n  let inboxLabel = 'Unknown';\n  let inboxAddress = toAddr;\n  const inboxMap = {\n    'support': 'Support',\n    'sales': 'Sales',\n    'info': 'Info',\n    'solutions': 'Solutions',\n    'alerts': 'Alerts',\n    'admin': 'Admin',\n    'careers': 'Careers'\n  };\n  for (const [key, val] of Object.entries(inboxMap)) {\n    if (toAddr.includes(key + '@syntharra')) { inboxLabel = val; inboxAddress = key + '@syntharra.com'; break; }\n  }\n\n  // Get the parent inbox info from earlier in the chain\n  const parentAddress = $('Define Inboxes').item?.json?.address || '';\n  if (inboxAddress === 'unknown' && parentAddress) {\n    inboxAddress = parentAddress;\n    for (const [key, val] of Object.entries(inboxMap)) {\n      if (parentAddress.includes(key)) { inboxLabel = val; break; }\n    }\n  }\n\n  results.push({\n    email_id: msg.id,\n    thread_id: msg.threadId,\n    inbox_address: inboxAddress || parentAddress,\n    inbox_label: inboxLabel,\n    subject: subject.substring(0, 300),\n    from_address: from.substring(0, 200),\n    snippet: snippet.substring(0, 500),\n    received_at: msg.internalDate ? new Date(parseInt(msg.internalDate)).toISOString() : new Date().toISOString(),\n    label_ids: (msg.labelIds || []).join(','),\n    is_unread: (msg.labelIds || []).includes('UNREAD')\n  });\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "id": "extract-emails",
+      "name": "Extract Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if there are any emails to process\nconst items = $input.all();\nconst emails = items.filter(i => i.json && i.json.email_id);\n\nif (emails.length === 0) {\n  // No emails — still write a digest record showing all-clear\n  return [{ json: { skip: true, count: 0 } }];\n}\n\n// Group by inbox\nconst grouped = {};\nfor (const item of emails) {\n  const addr = item.json.inbox_address || 'unknown';\n  if (!grouped[addr]) grouped[addr] = [];\n  grouped[addr].push(item.json);\n}\n\n// Pass each inbox group forward for AI classification\nconst output = [];\nfor (const [addr, msgs] of Object.entries(grouped)) {\n  output.push({ json: { inbox_address: addr, emails: msgs, count: msgs.length } });\n}\n\nreturn output;"
+      },
+      "id": "group-by-inbox",
+      "name": "Group By Inbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build AI prompt for email importance classification\nconst inbox = $json.inbox_address || 'unknown';\nconst emails = $json.emails || [];\nconst count = emails.length;\n\nif ($json.skip) {\n  return [{ json: { skip: true } }];\n}\n\n// Format emails for AI\nconst emailList = emails.map((e, i) => {\n  return `Email ${i+1}:\n  From: ${e.from_address}\n  Subject: ${e.subject}\n  Preview: ${e.snippet}`;\n}).join('\\n\\n');\n\nconst prompt = `You are reviewing emails received at ${inbox} for an AI Solutions company called Syntharra.\nSyntharra sells AI Phone Receptionists to trade businesses (HVAC, plumbing, electrical, etc.) in the USA.\n\nReview these ${count} unread emails and classify each one. \n\nFor each email, output ONLY a JSON array (no other text) with this structure:\n[\n  {\n    \"index\": 1,\n    \"importance\": \"high\" | \"medium\" | \"low\" | \"ignore\",\n    \"category\": \"client_enquiry\" | \"sales_lead\" | \"job_application\" | \"support_request\" | \"partnership\" | \"complaint\" | \"invoice\" | \"automated\" | \"spam\" | \"other\",\n    \"action_required\": true | false,\n    \"summary\": \"One sentence summary of what this email is about and what action if any is needed\",\n    \"flag\": null | \"urgent\" | \"opportunity\" | \"hire\"\n  }\n]\n\nIMPORTANCE RULES (be generous — when in doubt, mark higher importance):\n- \"high\": Real person emailing about business — enquiries, sales, support issues, complaints, partnerships, job applications from candidates who look qualified\n- \"medium\": Could be relevant — newsletters from key vendors, invoices, automated alerts that may need attention\n- \"low\": Automated reports, notifications, system emails that are informational only\n- \"ignore\": Clear promotional spam, marketing blasts, mass newsletters, automated receipts with no action needed\n\nNEVER mark as \"ignore\" anything that looks like a real human emailing us directly.\n\nEmails to classify:\n${emailList}`;\n\nreturn [{ json: { inbox_address: inbox, prompt, email_data: emails, count } }];"
+      },
+      "id": "build-ai-prompt",
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama-3.3-70b-versatile"
+            },
+            {
+              "name": "max_tokens",
+              "value": "1500"
+            },
+            {
+              "name": "temperature",
+              "value": "0.1"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\":\"user\",\"content\":{{ $json.prompt | toJsonString }}}]"
+            }
+          ]
+        }
+      },
+      "id": "groq-classify",
+      "name": "AI Classify Emails",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1520, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI classification and merge with email data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const { inbox_address, email_data, count } = item.json;\n  if (item.json.skip) continue;\n\n  // Parse Groq response\n  let classifications = [];\n  try {\n    const content = item.json.choices?.[0]?.message?.content || '[]';\n    // Strip any markdown code fences\n    const clean = content.replace(/```json|```/g, '').trim();\n    classifications = JSON.parse(clean);\n  } catch (e) {\n    // If parsing fails, mark everything as medium/other\n    classifications = (email_data || []).map((_, i) => ({\n      index: i + 1,\n      importance: 'medium',\n      category: 'other',\n      action_required: true,\n      summary: 'Could not classify — manual review needed',\n      flag: null\n    }));\n  }\n\n  // Merge classifications with email data\n  for (const cls of classifications) {\n    const emailIdx = cls.index - 1;\n    const emailData = (email_data || [])[emailIdx] || {};\n\n    // Skip emails marked as ignore\n    if (cls.importance === 'ignore') continue;\n\n    results.push({\n      inbox_address: inbox_address,\n      inbox_label: emailData.inbox_label || inbox_address.split('@')[0],\n      email_id: emailData.email_id || null,\n      thread_id: emailData.thread_id || null,\n      from_address: emailData.from_address || '',\n      subject: emailData.subject || '(no subject)',\n      snippet: emailData.snippet || '',\n      received_at: emailData.received_at || new Date().toISOString(),\n      importance: cls.importance || 'medium',\n      category: cls.category || 'other',\n      action_required: cls.action_required === true,\n      ai_summary: cls.summary || '',\n      flag: cls.flag || null,\n      digest_date: new Date().toISOString().split('T')[0],\n      created_at: new Date().toISOString()\n    });\n  }\n}\n\n// If no important emails, return a no-op\nif (results.length === 0) {\n  return [{ json: { no_important_emails: true } }];\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "id": "parse-classifications",
+      "name": "Parse Classifications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// First, clear today's digest records (so re-runs are idempotent)\n// Then insert fresh records\nconst items = $input.all();\nconst validItems = items.filter(i => i.json && !i.json.no_important_emails && i.json.inbox_address);\n\nif (validItems.length === 0) {\n  return [{ json: { inserted: 0, message: 'No important emails to save' } }];\n}\n\nconst today = new Date().toISOString().split('T')[0];\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;\n\nif (!SERVICE_ROLE_KEY) {\n  throw new Error('SUPABASE_SERVICE_ROLE_KEY not set in environment variables');\n}\n\n// Clear today's records first\nawait fetch(`${SUPABASE_URL}/rest/v1/email_digest?digest_date=eq.${today}`, {\n  method: 'DELETE',\n  headers: {\n    'apikey': SERVICE_ROLE_KEY,\n    'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,\n    'Content-Type': 'application/json'\n  }\n});\n\n// Insert new records\nconst records = validItems.map(i => i.json);\nconst response = await fetch(`${SUPABASE_URL}/rest/v1/email_digest`, {\n  method: 'POST',\n  headers: {\n    'apikey': SERVICE_ROLE_KEY,\n    'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,\n    'Content-Type': 'application/json',\n    'Prefer': 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nif (!response.ok) {\n  const err = await response.text();\n  throw new Error(`Supabase insert failed: ${err}`);\n}\n\nreturn [{ json: { inserted: records.length, digest_date: today, message: `Saved ${records.length} important emails to digest` } }];"
+      },
+      "id": "save-to-supabase",
+      "name": "Save Digest to Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1960, 300]
+    }
+  ],
+  "connections": {
+    "Daily 6am GMT": {
+      "main": [[{ "node": "Define Inboxes", "type": "main", "index": 0 }]]
+    },
+    "Define Inboxes": {
+      "main": [[{ "node": "Fetch Unread Emails", "type": "main", "index": 0 }]]
+    },
+    "Fetch Unread Emails": {
+      "main": [[{ "node": "Extract Email Data", "type": "main", "index": 0 }]]
+    },
+    "Extract Email Data": {
+      "main": [[{ "node": "Group By Inbox", "type": "main", "index": 0 }]]
+    },
+    "Group By Inbox": {
+      "main": [[{ "node": "Build AI Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build AI Prompt": {
+      "main": [[{ "node": "AI Classify Emails", "type": "main", "index": 0 }]]
+    },
+    "AI Classify Emails": {
+      "main": [[{ "node": "Parse Classifications", "type": "main", "index": 0 }]]
+    },
+    "Parse Classifications": {
+      "main": [[{ "node": "Save Digest to Supabase", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
