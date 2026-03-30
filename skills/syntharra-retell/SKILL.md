@@ -22,20 +22,22 @@ description: >
 
 ---
 
-## Test & Demo Agents
+## Agent Registry
 
-> No real client agents yet — these are all test/demo agents used for development and VSL recording.
+Client agents are **not listed here** — they live in Supabase.
 
-| Agent | ID | Phone | Transfer | Purpose |
-|---|---|---|---|---|
-| Arctic Breeze HVAC | `agent_4afbfdb3fcb1ba9569353af28d` | `+18129944371` | `+18563630633` | **Test agent** — demos + VSL |
-| Jake | `agent_b9d169e5290c609a8734e0bb45` | — | — | Demo agent |
-| Sophie | `agent_2723c07c83f65c71afd06e1d50` | — | — | Demo agent |
+To look up any client's agent: query `hvac_standard_agent` (Standard) or `hvac_premium_agent` (Premium), filter by `company_name` or `agent_id`.
 
-**All 3 must always stay published.**
+### Demo / Test Agents
+These 3 are the only agents hardcoded here because they're system-level, not client data:
+
+| Agent | ID | Purpose |
+|---|---|---|
+| Arctic Breeze HVAC | `agent_4afbfdb3fcb1ba9569353af28d` | Test agent — demos + VSL recording |
+| Jake | `agent_b9d169e5290c609a8734e0bb45` | Demo agent — must stay published |
+| Sophie | `agent_2723c07c83f65c71afd06e1d50` | Demo agent — must stay published |
+
 **Never reference old agent ID `d180e1bd` — deleted.**
-
-When real clients are onboarded, their agent IDs are stored in `hvac_standard_agent.agent_id` in Supabase — add them here at that point.
 
 ---
 
