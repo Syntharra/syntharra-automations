@@ -655,36 +655,63 @@ def build():
         ('TOPPADDING', (0,0), (-1,-1), 5), ('BOTTOMPADDING', (0,0), (-1,-1), 5),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
     ]))
-    story.append(KeepTogether([
-        prem_note, sp(3),
-        Paragraph('Premium clients connect their calendar and CRM so that job bookings and customer details '
-                  'flow directly into your systems — no manual data entry required.', S_BODY),
-        sp(3),
-    ]))
+    story.append(prem_note)
+    story.append(sp(3))
+    story.append(Paragraph('Premium clients connect their calendar and CRM so that job bookings and customer '
+                  'details flow directly into your systems — no manual data entry required.', S_BODY))
+    story.append(sp(3))
 
+    # ── Calendar Integration ──
     story.append(KeepTogether([
-        Paragraph('Google Calendar Integration', S_H2),
-        Paragraph('Once connected, your AI checks your Google Calendar in real time before confirming '
-                  'appointment slots. Bookings are added automatically.', S_BODY),
+        Paragraph('Calendar Integration', S_H2),
+        Paragraph('Once connected, your AI checks your calendar in real time before confirming appointment '
+                  'slots. Bookings are added automatically. Works with Google Calendar, Outlook, and any '
+                  'CalDAV-compatible calendar.', S_BODY),
         sp(2),
-        step_row(1, 'Receive the integration setup email', 'A separate email with a one-click authorisation link is sent shortly after your welcome email.'),
-        step_row(2, 'Click Authorise', 'Log in to the Google account you want to use for bookings.'),
-        step_row(3, 'Grant permissions', 'Allow Syntharra to view and create calendar events. Read/write to your calendar only — no other Google data is accessed.'),
-        step_row(4, 'Done', 'Your AI will now check your real availability and book appointments directly into your calendar.'),
-        sp(3),
+        step_row(1, 'Check your inbox', 'Look for the Syntharra integration setup email — it contains a one-click authorisation link for your calendar.'),
     ]))
+    story.append(step_row(2, 'Click Authorise Calendar', 'Log in to the Google, Microsoft, or calendar account you want to use for bookings.'))
+    story.append(step_row(3, 'Grant permissions', 'Allow Syntharra to view and create calendar events. Read/write to your calendar only — no other data is accessed.'))
+    story.append(step_row(4, 'Done', 'Your AI will now check your real availability and book appointments directly into your calendar.'))
+    story.append(sp(3))
 
+    # ── CRM Integration ──
     story.append(KeepTogether([
-        Paragraph('CRM Integration (Jobber & others)', S_H2),
-        Paragraph('New callers are automatically created as customers and job requests are logged in your CRM.', S_BODY),
+        Paragraph('CRM Integration', S_H2),
+        Paragraph('Supported platforms: Jobber, ServiceTitan, HouseCall Pro, FieldEdge, and others. '
+                  'New callers are automatically created as customers and job requests are logged — no manual entry.', S_BODY),
         sp(2),
-        step_row(1, 'Receive the integration setup email', 'Same email as above — contains authorisation links for both calendar and CRM.'),
-        step_row(2, 'Click Authorise for your CRM', 'Click the Jobber (or other CRM) link and log in to your account.'),
-        step_row(3, 'Grant permissions', 'Authorise Syntharra to create clients and jobs. No billing or financial data is accessed.'),
-        step_row(4, 'Done', 'Every call that generates a lead will automatically create a record in your CRM.'),
-        sp(3),
+        step_row(1, 'Check your inbox', 'The same integration setup email contains your CRM authorisation link or API key request.'),
+    ]))
+    story.append(step_row(2, 'Authorise or provide API key', 'Most CRMs use one-click OAuth — click Authorise and log in. Some platforms require an API key instead (see below).'))
+    story.append(step_row(3, 'Grant permissions', 'Allow Syntharra to create clients and jobs. No billing or financial data is accessed.'))
+    story.append(step_row(4, 'Done', 'Every call that generates a lead will automatically create a record in your CRM.'))
+    story.append(sp(3))
+
+    # ── API key sub-section ──
+    story.append(KeepTogether([
+        Paragraph('Finding Your CRM API Key', S('h2sub', 'Helvetica-Bold', 10, DARK, leading=14, sa=2)),
+        Paragraph('Some CRM platforms require an API key rather than OAuth. Here\'s where to find it:', S_BODY),
+        sp(2),
     ]))
 
+    crm_keys = [
+        ('Jobber', 'Settings → Integrations → API → Create API Key. Select Read/Write scope.'),
+        ('ServiceTitan', 'Settings → Integrations → API Access → Generate Key. You\'ll need your Tenant ID too.'),
+        ('HouseCall Pro', 'Settings → Integrations → API → your API token is listed there.'),
+        ('FieldEdge', 'Admin Panel → Settings → API → Generate New Token.'),
+        ('Any other CRM', 'Look for Settings → Integrations → API or Developer Settings. If you can\'t find it, contact your CRM support — they can generate one in minutes.'),
+    ]
+    for crm, instruction in crm_keys:
+        story.append(KeepTogether([
+            Paragraph(f'<b>{crm}</b>', S('crmk', 'Helvetica-Bold', 10, DARK, leading=14, sa=1)),
+            Paragraph(instruction, S_BODY),
+            HR(BORDER, 0.3),
+        ]))
+
+    story.append(sp(3))
+
+    # ── Repeat Caller Recognition ──
     story.append(KeepTogether([
         Paragraph('Repeat Caller Recognition', S_H2),
         Paragraph('Premium clients benefit from intelligent repeat caller detection. When a customer calls more '
@@ -692,8 +719,6 @@ def build():
                   'their call history for a personalised experience.', S_BODY),
         sp(4),
     ]))
-
-    story.append(PageBreak())
 
     # ═══════════════════════════════════════════
     # SECTION 9 — SUPPORT
