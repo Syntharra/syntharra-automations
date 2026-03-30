@@ -1,0 +1,511 @@
+{
+  "name": "Email Digest \u2014 Daily 6am GMT",
+  "nodes": [
+    {
+      "id": "node-schedule",
+      "name": "Every Day at 6am GMT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        },
+        "timezone": "Europe/London"
+      }
+    },
+    {
+      "id": "node-context",
+      "name": "Set Run Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst now = new Date();\n// Get today's date in GMT (YYYY-MM-DD)\nconst gmtDate = now.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });\n\n// Compute 'since' = yesterday midnight GMT (to catch all emails from yesterday through now)\nconst sinceDate = new Date(now);\nsinceDate.setDate(sinceDate.getDate() - 1);\nsinceDate.setHours(0, 0, 0, 0);\nconst sinceISO = sinceDate.toISOString();\n\nconst inboxes = [\n  { address: 'support@syntharra.com',   label: 'Support',   priority: 'high'   },\n  { address: 'sales@syntharra.com',      label: 'Sales',     priority: 'high'   },\n  { address: 'solutions@syntharra.com',  label: 'Solutions', priority: 'high'   },\n  { address: 'alerts@syntharra.com',     label: 'Alerts',    priority: 'high'   },\n  { address: 'info@syntharra.com',       label: 'Info',      priority: 'medium' },\n  { address: 'admin@syntharra.com',      label: 'Admin',     priority: 'medium' },\n  { address: 'careers@syntharra.com',    label: 'Careers',   priority: 'medium' }\n];\n\nreturn inboxes.map(inbox => ({\n  json: {\n    digest_date: gmtDate,\n    since_iso: sinceISO,\n    inbox_address: inbox.address,\n    inbox_label: inbox.label,\n    inbox_priority: inbox.priority\n  }\n}));\n"
+      }
+    },
+    {
+      "id": "node-gmail",
+      "name": "Fetch Gmail Inbox",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 25,
+        "filters": {
+          "q": "=after:{{ $json.since_iso.split('T')[0].replace(/-/g, '/') }} -label:spam -label:promotional -category:promotions -category:social is:unread OR (is:read newer_than:1d)",
+          "labelIds": [
+            "INBOX"
+          ]
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{ $json.inbox_address }}",
+          "name": "Gmail \u2014 {{ $json.inbox_label }}"
+        }
+      }
+    },
+    {
+      "id": "node-prep",
+      "name": "Prepare Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\n// Get context from previous items\nconst inbox_address = $('Set Run Context').item.json.inbox_address;\nconst inbox_label = $('Set Run Context').item.json.inbox_label;\nconst digest_date = $('Set Run Context').item.json.digest_date;\nconst inbox_priority = $('Set Run Context').item.json.inbox_priority;\n\nconst emails = $input.all();\n\nif (!emails || emails.length === 0) {\n  return [{ json: {\n    inbox_address, inbox_label, digest_date, inbox_priority,\n    emails: [], email_count: 0, has_emails: false\n  }}];\n}\n\nconst prepared = emails.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const getHeader = (name) => {\n    const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());\n    return h?.value || '';\n  };\n\n  return {\n    gmail_id: msg.id,\n    thread_id: msg.threadId,\n    from_address: getHeader('From'),\n    subject: getHeader('Subject') || '(no subject)',\n    date_header: getHeader('Date'),\n    snippet: msg.snippet ? msg.snippet.substring(0, 500) : '',\n    label_ids: msg.labelIds || []\n  };\n}).filter(e => e.gmail_id);\n\nreturn [{ json: {\n  inbox_address, inbox_label, digest_date, inbox_priority,\n  emails: prepared, email_count: prepared.length, has_emails: prepared.length > 0\n}}];\n"
+      }
+    },
+    {
+      "id": "node-has-emails",
+      "name": "Has Emails?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.has_emails }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-ai",
+      "name": "AI \u2014 Classify Emails",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.7,
+      "position": [
+        1340,
+        220
+      ],
+      "parameters": {
+        "resource": "chat",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini",
+          "cachedResultUrl": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company providing AI Phone Receptionists to trade businesses.\n\nYou are scanning the {{ $('Prepare Email Data').item.json.inbox_label }} inbox ({{ $('Prepare Email Data').item.json.inbox_address }}).\n\nCOMPANY CONTEXT:\n- Syntharra sells AI phone receptionist subscriptions to HVAC, plumbing, electrical businesses\n- Key emails to prioritise: potential client enquiries, existing client support, job applications, partner/vendor proposals, billing issues, complaints\n- Automatically IGNORE / mark low importance: newsletters, mass marketing emails, automated notifications from SaaS tools, GitHub notifications, promotional offers, no-reply emails, spam, social media digests, Google Workspace notifications\n\nEMAILS TO CLASSIFY:\n{{ JSON.stringify($('Prepare Email Data').item.json.emails, null, 2) }}\n\nFor each email, classify it and return a JSON array. If an email is clearly promotional/automated/spam/newsletter \u2014 DO NOT include it at all (omit entirely). Only include emails where a human actually wrote to us.\n\nFor each email you include, provide EXACTLY this JSON structure:\n{\n  \"gmail_id\": \"<id from input>\",\n  \"thread_id\": \"<thread_id from input>\",\n  \"from_address\": \"<from_address from input>\",\n  \"subject\": \"<subject from input>\",\n  \"snippet\": \"<snippet from input, max 400 chars>\",\n  \"received_at\": \"<date_header from input as ISO string or null>\",\n  \"ai_summary\": \"<1 concise sentence: who is writing and what they need>\",\n  \"importance\": \"high|medium|low\",\n  \"category\": \"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\n  \"action_required\": true|false,\n  \"flag\": \"urgent|opportunity|hire|null\"\n}\n\nImportance rules:\n- high: potential new client, existing client with issue, urgent complaint, time-sensitive\n- medium: job application, general business enquiry, partnership proposal\n- low: informational, cold outreach with low intent, general info requests\n\nRespond ONLY with a valid JSON array. No preamble, no markdown, no explanation.",
+              "role": "user"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 4000
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-key",
+          "name": "OpenAI \u2014 Syntharra"
+        }
+      }
+    },
+    {
+      "id": "node-parse",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        220
+      ],
+      "parameters": {
+        "jsCode": "\nconst inbox_address = $('Prepare Email Data').item.json.inbox_address;\nconst inbox_label   = $('Prepare Email Data').item.json.inbox_label;\nconst digest_date   = $('Prepare Email Data').item.json.digest_date;\n\nconst aiResponse = $input.item.json.message?.content || $input.item.json.choices?.[0]?.message?.content || '';\n\nlet parsed = [];\ntry {\n  // Strip any markdown code fences\n  const clean = aiResponse.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  parsed = JSON.parse(clean);\n  if (!Array.isArray(parsed)) parsed = [parsed];\n} catch (e) {\n  // If JSON fails, return empty (don't crash the whole run)\n  console.error('AI parse failed:', e.message, 'Response was:', aiResponse.substring(0, 200));\n  return [{ json: { records: [], inbox_address, inbox_label, digest_date, parse_error: e.message } }];\n}\n\n// Filter out low importance emails and build Supabase records\nconst records = parsed\n  .filter(e => e && e.gmail_id && e.importance !== 'low')\n  .map(e => ({\n    digest_date,\n    inbox_address,\n    inbox_label,\n    email_id:       e.gmail_id,\n    thread_id:      e.thread_id || null,\n    from_address:   e.from_address || '',\n    subject:        (e.subject || '(no subject)').substring(0, 500),\n    snippet:        (e.snippet || '').substring(0, 500),\n    ai_summary:     (e.ai_summary || '').substring(0, 500),\n    importance:     ['high','medium','low'].includes(e.importance) ? e.importance : 'medium',\n    category:       e.category || 'general',\n    action_required: !!e.action_required,\n    flag:           ['urgent','opportunity','hire'].includes(e.flag) ? e.flag : null,\n    received_at:    e.received_at || null\n  }));\n\nreturn [{ json: { records, inbox_address, inbox_label, digest_date, count: records.length } }];\n"
+      }
+    },
+    {
+      "id": "node-has-records",
+      "name": "Has Records?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-delete",
+      "name": "Clear Existing Digest",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        160
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "delete",
+        "tableId": "email_digest",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "digest_date",
+              "keyValue": "={{ $('Parse AI Response').item.json.digest_date }}"
+            },
+            {
+              "keyName": "inbox_address",
+              "keyValue": "={{ $('Parse AI Response').item.json.inbox_address }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-key",
+          "name": "Supabase \u2014 Syntharra"
+        }
+      }
+    },
+    {
+      "id": "node-split",
+      "name": "Split Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        160
+      ],
+      "parameters": {
+        "jsCode": "\nconst { records } = $input.item.json;\nif (!records || records.length === 0) return [];\nreturn records.map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "node-insert",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        160
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "create",
+        "tableId": "email_digest",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "digest_date",
+              "fieldValue": "={{ $json.digest_date }}"
+            },
+            {
+              "fieldId": "inbox_address",
+              "fieldValue": "={{ $json.inbox_address }}"
+            },
+            {
+              "fieldId": "inbox_label",
+              "fieldValue": "={{ $json.inbox_label }}"
+            },
+            {
+              "fieldId": "email_id",
+              "fieldValue": "={{ $json.email_id }}"
+            },
+            {
+              "fieldId": "thread_id",
+              "fieldValue": "={{ $json.thread_id }}"
+            },
+            {
+              "fieldId": "from_address",
+              "fieldValue": "={{ $json.from_address }}"
+            },
+            {
+              "fieldId": "subject",
+              "fieldValue": "={{ $json.subject }}"
+            },
+            {
+              "fieldId": "snippet",
+              "fieldValue": "={{ $json.snippet }}"
+            },
+            {
+              "fieldId": "ai_summary",
+              "fieldValue": "={{ $json.ai_summary }}"
+            },
+            {
+              "fieldId": "importance",
+              "fieldValue": "={{ $json.importance }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            },
+            {
+              "fieldId": "action_required",
+              "fieldValue": "={{ $json.action_required }}"
+            },
+            {
+              "fieldId": "flag",
+              "fieldValue": "={{ $json.flag }}"
+            },
+            {
+              "fieldId": "received_at",
+              "fieldValue": "={{ $json.received_at }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-key",
+          "name": "Supabase \u2014 Syntharra"
+        }
+      }
+    },
+    {
+      "id": "node-merge",
+      "name": "Aggregate All Results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2660,
+        300
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "all_items",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-summary",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\n// Build a human-readable summary of the entire run\nconst items = $input.all();\nlet totalSaved = 0;\nlet inboxesWithContent = 0;\nlet highPriority = 0;\nlet actionRequired = 0;\n\nconst inboxSummaries = [];\n\n// This node collects summary from all paths that fed into it\n// We'll build from what was inserted\nfor (const item of items) {\n  const d = item.json;\n  if (d.inbox_address && d.subject) {\n    // This is an inserted record\n    totalSaved++;\n    if (d.importance === 'high') highPriority++;\n    if (d.action_required) actionRequired++;\n  }\n}\n\nconst digest_date = new Date().toLocaleDateString('en-GB', {\n  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',\n  timeZone: 'Europe/London'\n});\n\nreturn [{\n  json: {\n    digest_date,\n    total_saved: totalSaved,\n    high_priority: highPriority,\n    action_required: actionRequired,\n    run_completed_at: new Date().toISOString(),\n    status: 'completed'\n  }\n}];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Every Day at 6am GMT": {
+      "main": [
+        [
+          {
+            "node": "Set Run Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Run Context": {
+      "main": [
+        [
+          {
+            "node": "Fetch Gmail Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Gmail Inbox": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Data": {
+      "main": [
+        [
+          {
+            "node": "Has Emails?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Emails?": {
+      "main": [
+        [
+          {
+            "node": "AI \u2014 Classify Emails",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate All Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI \u2014 Classify Emails": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Has Records?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Records?": {
+      "main": [
+        [
+          {
+            "node": "Clear Existing Digest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate All Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Existing Digest": {
+      "main": [
+        [
+          {
+            "node": "Split Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Records": {
+      "main": [
+        [
+          {
+            "node": "Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Aggregate All Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate All Results": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
