@@ -35,6 +35,7 @@ description: >
 | `support@syntharra.com` | Customer-facing support | Website footer, FAQ, billing emails, legal pages |
 | `onboarding@syntharra.com` | Internal onboarding notifications | Stripe workflow, HVAC Std Onboarding, HVAC Prem Onboarding |
 | `admin@syntharra.com` | Internal ops notifications | Call processor, scenario test reports, contract notices |
+| `alerts@syntharra.com` | Ops & system alerts, internal monitoring | Ops monitor, Railway alerts, infrastructure notifications |
 | `feedback@syntharra.com` | Customer feedback | Website footer |
 | `careers@syntharra.com` | Job applications | Careers page |
 | `info@syntharra.com` | General public enquiries | Google Workspace footer |
@@ -149,6 +150,7 @@ All 7 branded HTML signatures in `syntharra-automations/brand-assets/email-signa
 | `syntharra-signature-PASTE-THIS.html` | Daniel Blackmore | Founder & CEO |
 | `syntharra-signature-support.html` | Syntharra Support | Customer Support |
 | `syntharra-signature-admin.html` | Syntharra Admin | Administration |
+| `syntharra-signature-alerts.html` | Syntharra Alerts | System Alerts & Notifications |
 | `syntharra-signature-onboarding.html` | Syntharra Onboarding | Client Onboarding |
 | `syntharra-signature-feedback.html` | Syntharra Feedback | Feedback & Enquiries |
 | `syntharra-signature-careers.html` | Syntharra Careers | Careers & Opportunities |
