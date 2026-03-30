@@ -76,7 +76,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 support"
+          "name": "Gmail OAuth2 \u2014 Support Inbox"
         }
       }
     },
@@ -110,7 +110,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 sales"
+          "name": "Gmail OAuth2 \u2014 Sales Inbox"
         }
       }
     },
@@ -144,7 +144,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 solutions"
+          "name": "Gmail OAuth2 \u2014 Solutions Inbox"
         }
       }
     },
@@ -178,7 +178,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 alerts"
+          "name": "Gmail OAuth2 \u2014 Alerts Inbox"
         }
       }
     },
@@ -212,7 +212,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 info"
+          "name": "Gmail OAuth2 \u2014 Info Inbox"
         }
       }
     },
@@ -246,7 +246,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 admin"
+          "name": "Gmail OAuth2 \u2014 Admin Inbox"
         }
       }
     },
@@ -280,7 +280,7 @@
       "credentials": {
         "gmailOAuth2": {
           "id": "",
-          "name": "Gmail OAuth2 \u2014 careers"
+          "name": "Gmail OAuth2 \u2014 Careers Inbox"
         }
       }
     },
