@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-03-30 — Checkout page: Enterprise card added, frosted violet theme, aligned dividers, setup fee redesign, std-plus callout banner, dot-grid background, SVG logo -->
+<!-- Last updated: 2026-03-30 — Email logo standardised, Auto-MCP workflow created, Supabase test data cleared, frosted violet theme, aligned dividers, setup fee redesign, std-plus callout banner, dot-grid background, SVG logo -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
@@ -37,6 +37,15 @@
 - NEVER use emoji as substitute for logo anywhere
 
 ### Email templates
+ALL Syntharra emails must be **LIGHT THEME**
+
+### Approved email logo block (use in ALL email templates)
+```
+const ICON_URL = 'https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png';
+const LOGO = `<table cellpadding="0" cellspacing="0" style="margin:0 auto"><tr><td style="vertical-align:middle;padding-right:10px"><img src="${ICON_URL}" alt="" width="36" height="36" style="display:block;border:0"></td><td style="vertical-align:middle;text-align:left"><table cellpadding="0" cellspacing="0" border="0"><tr><td style="text-align:left;padding:0"><div style="font-family:Inter,-apple-system,sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px;color:#0f0f1a;line-height:1;text-align:left">Syntharra</div></td></tr><tr><td style="text-align:left;padding:3px 0 0 0"><div style="font-family:Inter,-apple-system,sans-serif;font-size:7.5px;font-weight:600;letter-spacing:1.2px;color:#6C63FF;text-transform:uppercase;line-height:1;text-align:left">Global AI Solutions</div></td></tr></table></td></tr></table>`;
+```
+Inject via: `<tr><td style="padding:0 0 24px;text-align:center">${LOGO}</td></tr>` — NEVER use flat PNG images for email logo.
+
 ALL Syntharra emails must be **LIGHT THEME**: white (#fff) cards, grey (#F7F7FB) outer bg, dark text (#1A1A2E), purple (#6C63FF) accents. NEVER dark-theme emails — let client email apps handle dark mode. Applies to every n8n email template: welcome, reports, scores, onboarding, invoices.
 
 ### Email signature
