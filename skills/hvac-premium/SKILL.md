@@ -23,7 +23,7 @@ description: >
 | HVAC Prem Dispatcher | `kVKyPQO7cXKUJFbW` | 4 nodes — Google Cal + Jobber |
 
 - n8n instance: `https://n8n.syntharra.com`
-- Railway n8n API key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiZGU0MmJjZDAtNGU4ZC00ZDFmLWJlNDMtYzQzMDRjMjBjNjk1IiwiaWF0IjoxNzc0ODQ1ODc3fQ.SRjfEwRpZGBh5dnmNvp2PotTZ3e6OCejy2NFgM5uNqU`
+- Railway n8n API key: `{{N8N_API_KEY}}`
 - **Always click Publish after any workflow edits**
 - All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
 
@@ -34,7 +34,7 @@ description: >
 | Item | Value |
 |---|---|
 | Form ID | `260819259556671` |
-| API Key | `18907cfb3b4b3be3ac47994683148728` (account: Blackmore_Daniel) |
+| API Key | `{{JOTFORM_API_KEY}}` (account: Blackmore_Daniel) |
 
 **Use REST API directly** — do NOT use MCP OAuth connector (broken).
 
@@ -113,7 +113,7 @@ Annual = 2 months free.
 
 ## Retell Agents
 
-Same Retell API key and rules as Standard: `key_0157d9401f66cfa1b51fadc66445`
+Same Retell API key and rules as Standard: `{{RETELL_API_KEY}}`
 - **NEVER delete or recreate a Retell agent**
 - **Always publish after any agent update**: `POST https://api.retellai.com/publish-agent/{agent_id}`
 - Prompt architecture: master base prompt + company info block + call type nodes
