@@ -463,3 +463,36 @@ mutation { serviceInstanceRedeploy(serviceId: "e3df3e6d...", environmentId: "530
 ```
 Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 
+
+## n8n
+
+| Item | Value |
+|---|---|
+| Cloud instance (OLD) | syntharra.app.n8n.cloud — still active, deactivate after testing |
+| Railway instance (NEW) | https://syntharra-n8n-production.up.railway.app |
+| Custom domain (TODO) | n8n.syntharra.com → CNAME to syntharra-n8n-production.up.railway.app |
+| Railway service ID | c40f1306-0544-4915-a304-f33fdb8d4385 |
+| Postgres service ID | 97e13df6-6a68-435e-95db-47fd03c10fe3 |
+| Redis service ID | 9285c656-12b4-44f5-8338-9b569c5e42dc |
+| Image | n8nio/n8n:latest (direct Docker image, no Dockerfile) |
+| Workflows | 19 imported (all active on cloud, inactive on Railway until credentials re-entered) |
+
+### Migration Status
+- [x] Railway Pro plan active
+- [x] n8n + Postgres + Redis services created
+- [x] All env vars configured
+- [x] n8n live and serving (200 OK)
+- [x] All 19 workflows imported
+- [ ] Credentials re-entered in Railway n8n UI
+- [ ] CNAME set: n8n.syntharra.com
+- [ ] Webhook URLs updated (Stripe, Jotform, Retell)
+- [ ] End-to-end tested
+- [ ] n8n Cloud subscription cancelled
+
+### Webhook URL Changes Required (after custom domain set up)
+| Service | Old URL | New URL |
+|---|---|---|
+| Stripe | syntharra.app.n8n.cloud/webhook/syntharra-stripe-webhook | n8n.syntharra.com/webhook/syntharra-stripe-webhook |
+| Jotform | syntharra.app.n8n.cloud/webhook/jotform-hvac-onboarding | n8n.syntharra.com/webhook/jotform-hvac-onboarding |
+| Retell | Any n8n cloud webhook URLs | n8n.syntharra.com equivalents |
+
