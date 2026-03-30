@@ -208,3 +208,50 @@ This includes:
 
 **How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
 **GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
+
+---
+
+## 🔑 Credential Access — Supabase Vault
+
+**NEVER store API keys in skill files, project memory, or anywhere else.**
+
+All Syntharra credentials are stored in the `syntharra_vault` table in Supabase.
+
+**To retrieve a key:**
+1. Query `https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/syntharra_vault?service_name=eq.{SERVICE_NAME}&select=key_value`
+2. Use the **service role key** from Supabase Project Settings → API
+3. Filter by `service_name` to get the `key_value`
+
+```python
+import requests
+
+SB_URL = "https://hgheyqwnrcvwtgngqdnq.supabase.co"
+# Get service role key from Supabase Project Settings → API
+
+def get_key(service_name, sb_service_role_key):
+    r = requests.get(
+        f"{SB_URL}/rest/v1/syntharra_vault",
+        params={"service_name": f"eq.{service_name}", "select": "key_value"},
+        headers={
+            "apikey": sb_service_role_key,
+            "Authorization": f"Bearer {sb_service_role_key}"
+        }
+    )
+    return r.json()[0]["key_value"]
+
+# Example:
+# retell_key = get_key("retell")
+# n8n_key    = get_key("n8n_railway")
+# github_token = get_key("github")
+```
+
+**Known service_name values** (populate before use):
+- `retell` — Retell AI API key
+- `n8n_railway` — Railway n8n API key
+- `github` — GitHub personal access token
+- `jotform` — Jotform API key
+- `smtp2go` — SMTP2GO API key
+- `railway` — Railway GraphQL API token
+- `stripe_webhook_secret` — Stripe webhook signing secret
+- `supabase_service_role` — Supabase service role key (for non-vault queries)
+- `telnyx` — Telnyx API key (when active)
