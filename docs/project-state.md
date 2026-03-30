@@ -1,6 +1,7 @@
 <!-- Last updated: 2026-03-30 -->
 <!-- Session: Onboarding Pack build — see session log 2026-03-30-onboarding-pack.md -->
 
+<!-- Last updated: 2026-03-30 (session 3) — alerts@syntharra.com added: Railway ALERT_EMAIL_TO updated, alertManager.js fallback updated, email skill + project-state updated. Signature file already existed from prior session.
 <!-- Last updated: 2026-03-30 — Email Intelligence system COMPLETE: n8n 32-node workflow (Groq AI, 7 Gmail inboxes, idempotent Supabase saves), email_digest table SQL, admin dashboard email.html polished (Gmail deep links, next-run countdown, Groq setup guide), alerts@ signature created. Workflow file: docs/email-digest-workflow.json. -->
 # Syntharra — Project State (Master Reference)
 
@@ -67,6 +68,7 @@ Final versions in `brand-assets/email-signature/`:
 | `feedback@syntharra.com` | Customer feedback channel | Website footer (all pages) |
 | `careers@syntharra.com` | Job applications | Careers page |
 | `admin@syntharra.com` | Internal admin, contract notices | Service agreement, call processor notifications, scenario test reports |
+| `alerts@syntharra.com` | Ops & system alerts, internal monitoring notifications | Ops monitor (all tiers: warning/critical), Railway alerts, infrastructure notifications |
 | `onboarding@syntharra.com` | Onboarding notifications (internal) | Stripe Workflow, HVAC Standard Onboarding, HVAC Premium Onboarding |
 | `noreply@syntharra.com` | Sender address for automated emails | All SMTP2GO outbound emails |
 | `info@syntharra.com` | General enquiries, public-facing contact | Google Workspace footer (appended to all outgoing emails) |
