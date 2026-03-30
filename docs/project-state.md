@@ -226,6 +226,7 @@ Trigger: `checkout.session.completed` → Extract Session Data (JS, builds email
 | `billing_cycles` | Billing cycle records |
 | `overage_charges` | Usage overage tracking |
 | `website_leads` | Website demo leads (written via anon key, no webhook) |
+| `syntharra_vault` | **All API keys and credentials** — query by `service_name`, retrieve `key_value` |
 
 ---
 
@@ -354,8 +355,9 @@ Discount codes doc: `docs/discount-codes.md`
 
 ## API Keys Reference
 
-> All sensitive keys are stored in Claude project memory and injected at runtime.
-> They are NOT committed to GitHub. This table shows where each key lives.
+> **ALL credentials are stored in `syntharra_vault` Supabase table.**
+> Query by `service_name` → retrieve `key_value`. Use service role key from Supabase Project Settings → API.
+> NEVER store keys in skill files, session logs, project memory, or anywhere else.
 
 | Service | Storage Location |
 |---|---|
