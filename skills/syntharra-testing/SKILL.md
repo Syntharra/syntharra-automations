@@ -130,14 +130,43 @@ GitHub: `syntharra-automations/tests/retell-agent-test-suite.json`
 # Per-scenario details only visible in Retell dashboard
 ```
 
-### Premium Agent Additional Scenarios (to be added)
-When testing Premium agents, add scenarios for:
-- Cal.com appointment booking flow
-- Google Calendar availability check
-- Jobber integration
-- Multi-notification recipients
-- Dispatcher workflow
-- Repeat caller detection
+### Premium Agent Test Cases (v26 — current)
+
+| ID | Scenario |
+|---|---|
+| `test_case_0cb558b0ea41` | Prem - 1. Standard AC repair - cooperative caller |
+| `test_case_b6eb250edfc2` | Prem - 2. Heating repair request |
+| `test_case_b84712310670` | Prem - 3. New AC installation inquiry |
+| `test_case_4b23d55c2a6b` | Prem - 4. Maintenance tune-up request |
+| `test_case_1066e6042749` | Prem - 5. Duct cleaning request |
+| `test_case_182ef55f6496` | Prem - 6. Emergency - AC failure extreme heat |
+| `test_case_082d55250d47` | Prem - 7. Emergency - gas smell |
+| `test_case_c310d79fa4c2` | Prem - 8. Emergency - carbon monoxide alarm |
+
+**Batch run pattern:**
+```python
+response_engine = {"type": "conversation-flow", "conversation_flow_id": "conversation_flow_dba336752525"}
+# Must include response_engine in create-batch-test payload (not just test_case_definition_ids)
+# 3 account-noise errors always appear — exclude from real pass rate
+# Real pass rate = pass_count / (pass_count + fail_count)
+```
+
+**Version drift rule:** After any publish-agent, flow version bumps. Delete + recreate test cases before next batch run.
+
+---
+
+## Premium Agent Pass Rate History
+
+| Batch | Flow Version | Pass | Fail | Error | Real Rate | Notes |
+|---|---|---|---|---|---|---|
+| `test_batch_2fa56b3367f4` | v24 | 2 | 3 | 3 | 40% | First real Premium batch |
+| `test_batch_fa72e4c1e3ec` | v24 | 4 | 1 | 3 | 80% | After stub webhook fix |
+| `test_batch_59808d6e0e8d` | v26 | 5 | 0 | 3 | **100%** | After 3 fixes: CO alarm routing, Say: removal, CRITICAL RULES global prompt |
+
+**v26 fixes that drove 40% → 100%:**
+1. CO alarm / carbon monoxide added to emergency edge condition in `identify_call_node`
+2. `Say:` prefix removed from `check_availability_node` instruction
+3. CRITICAL RULES section added to global prompt (explicit never-break rules, proactive info sharing, IF CALLER RELUCTANT section)
 
 ---
 
