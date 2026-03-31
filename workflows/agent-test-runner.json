@@ -1,0 +1,399 @@
+{
+  "name": "SYNTHARRA_AGENT_TEST_RUNNER",
+  "nodes": [
+    {
+      "id": "n-webhook",
+      "name": "Webhook: Start Test Run",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agent-test-runner",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "id": "n-init",
+      "name": "Init: Setup Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const b = $input.first().json.body || $input.first().json;\nconst agentType = b.agent_type || 'standard';\nconst agentPrompt = b.agent_prompt || '';\nconst runLabel = b.run_label || ('Test Run ' + new Date().toLocaleDateString('en-GB'));\nconst runId = 'run_' + Date.now();\nconst filterGroups = b.groups || ['all'];\nreturn [{ json: { runId, agentType, agentPrompt, runLabel, filterGroups, startedAt: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "n-load-scenarios",
+      "name": "Load: Scenarios from GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        640,
+        300
+      ],
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/tests/agent-test-scenarios.json",
+        "method": "GET"
+      }
+    },
+    {
+      "id": "n-filter",
+      "name": "Filter: By Agent Type and Groups",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const run = $('n-init').first().json;\nconst raw = $input.first().json;\nlet scenarios = Array.isArray(raw) ? raw : JSON.parse(raw);\n// Filter premium-only scenarios\nif (run.agentType === 'standard') {\n  scenarios = scenarios.filter(s => !s.premiumOnly);\n}\n// Filter by groups if specified\nif (run.filterGroups && !run.filterGroups.includes('all')) {\n  scenarios = scenarios.filter(s => run.filterGroups.includes(s.group));\n}\n// Return as array items for batch processing\nreturn scenarios.map(s => ({ json: { ...run, scenario: s } }));"
+      }
+    },
+    {
+      "id": "n-simulate-caller",
+      "name": "Groq: Simulate Caller Turn 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1080,
+        300
+      ],
+      "parameters": {
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GROQ_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 150, messages: [ { role: 'system', content: $json.scenario.callerPrompt + ' Keep each response to 1-3 sentences. Be natural. This is an HVAC company phone call.' }, { role: 'user', content: 'The HVAC receptionist answers the phone and says: \"Thank you for calling, this is ' + ($json.agentType === 'premium' ? 'your company' : 'Arctic Breeze HVAC') + ', how can I help you today?\" Respond as the caller now.' } ] }) }}"
+      }
+    },
+    {
+      "id": "n-agent-response",
+      "name": "Claude: Agent Responds",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, system: $json.scenario.agentPrompt || 'You are an HVAC receptionist AI. Follow your prompt exactly.', messages: [ { role: 'user', content: $('n-simulate-caller').first().json.choices[0].message.content } ] }) }}"
+      }
+    },
+    {
+      "id": "n-groq-turn2",
+      "name": "Groq: Caller Turn 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1520,
+        200
+      ],
+      "parameters": {
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.GROQ_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 150, messages: [ { role: 'system', content: $json.scenario.callerPrompt + ' Keep responses to 1-3 sentences.' }, { role: 'user', content: 'Caller said: ' + $('n-simulate-caller').first().json.choices[0].message.content }, { role: 'assistant', content: 'I said that.' }, { role: 'user', content: 'Agent responded: ' + $('n-agent-response').first().json.content[0].text + '. Continue the conversation as the caller.' } ] }) }}"
+      }
+    },
+    {
+      "id": "n-agent-turn2",
+      "name": "Claude: Agent Turn 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1520,
+        400
+      ],
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 300, system: $json.scenario.agentPrompt || 'You are an HVAC receptionist AI.', messages: [ { role: 'user', content: $('n-simulate-caller').first().json.choices[0].message.content }, { role: 'assistant', content: $('n-agent-response').first().json.content[0].text }, { role: 'user', content: $('n-groq-turn2').first().json.choices[0].message.content } ] }) }}"
+      }
+    },
+    {
+      "id": "n-evaluate",
+      "name": "Claude: Evaluate Full Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1740,
+        300
+      ],
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 600, system: 'You are a strict QA evaluator for an HVAC AI receptionist. Evaluate the conversation transcript against the expected behaviour. Respond ONLY with valid JSON in this exact format: {\"pass\": true/false, \"score\": 0-100, \"severity\": \"PASS\"|\"LOW\"|\"MEDIUM\"|\"HIGH\"|\"CRITICAL\", \"issues\": [\"issue description\"], \"fix_needed\": \"specific prompt change needed or empty string if pass\", \"root_cause\": \"root cause if fail or empty string\"}. Be strict. A pass means the agent did EXACTLY what was expected.', messages: [{ role: 'user', content: 'SCENARIO: ' + $json.scenario.name + '\\n\\nEXPECTED BEHAVIOUR: ' + $json.scenario.expectedBehaviour + '\\n\\nCONVERSATION TRANSCRIPT:\\nCaller: ' + $('n-simulate-caller').first().json.choices[0].message.content + '\\nAgent: ' + $('n-agent-response').first().json.content[0].text + '\\nCaller: ' + $('n-groq-turn2').first().json.choices[0].message.content + '\\nAgent: ' + $('n-agent-turn2').first().json.content[0].text + '\\n\\nEvaluate this conversation.' }] }) }}"
+      }
+    },
+    {
+      "id": "n-parse-result",
+      "name": "Parse: Evaluation Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const evalRaw = $('n-evaluate').first().json.content[0].text;\nlet evaluation;\ntry {\n  const clean = evalRaw.replace(/```json|```/g, '').trim();\n  evaluation = JSON.parse(clean);\n} catch(e) {\n  evaluation = { pass: false, score: 0, severity: 'HIGH', issues: ['Evaluator parse error'], fix_needed: 'Check evaluator response', root_cause: 'Parse error' };\n}\nconst item = $json;\nreturn [{ json: {\n  run_id: item.runId,\n  agent_type: item.agentType,\n  run_label: item.runLabel,\n  scenario_id: item.scenario.id,\n  scenario_name: item.scenario.name,\n  scenario_group: item.scenario.group,\n  pass: evaluation.pass,\n  score: evaluation.score,\n  severity: evaluation.severity,\n  issues: JSON.stringify(evaluation.issues || []),\n  fix_needed: evaluation.fix_needed || '',\n  root_cause: evaluation.root_cause || '',\n  caller_turn1: $('n-simulate-caller').first().json.choices[0].message.content,\n  agent_turn1: $('n-agent-response').first().json.content[0].text,\n  caller_turn2: $('n-groq-turn2').first().json.choices[0].message.content,\n  agent_turn2: $('n-agent-turn2').first().json.content[0].text,\n  tested_at: new Date().toISOString()\n} }];"
+      }
+    },
+    {
+      "id": "n-log-supabase",
+      "name": "Supabase: Log Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2180,
+        300
+      ],
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/agent_test_results",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}"
+      }
+    }
+  ],
+  "connections": {
+    "n-webhook": {
+      "main": [
+        [
+          {
+            "node": "n-init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-init": {
+      "main": [
+        [
+          {
+            "node": "n-load-scenarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-load-scenarios": {
+      "main": [
+        [
+          {
+            "node": "n-filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-filter": {
+      "main": [
+        [
+          {
+            "node": "n-simulate-caller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-simulate-caller": {
+      "main": [
+        [
+          {
+            "node": "n-agent-response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-agent-response": {
+      "main": [
+        [
+          {
+            "node": "n-groq-turn2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "n-agent-turn2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-groq-turn2": {
+      "main": [
+        [
+          {
+            "node": "n-evaluate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-agent-turn2": {
+      "main": [
+        [
+          {
+            "node": "n-evaluate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-evaluate": {
+      "main": [
+        [
+          {
+            "node": "n-parse-result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n-parse-result": {
+      "main": [
+        [
+          {
+            "node": "n-log-supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
