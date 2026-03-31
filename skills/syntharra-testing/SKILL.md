@@ -8,30 +8,24 @@ description: >
   auto-fix loop, 95-scenario test suite, analysis framework, and all tool code.
 ---
 
-# Syntharra — Agent Testing, Analysis & Auto-Fix Skill
+# Syntharra — Agent Testing, Analysis & Auto-Fix Skill (Updated 2026-03-31)
 
 ---
 
-## Quick Reference
+## ⚠️ CRITICAL: The Three-Tier Testing Framework
 
-| Tool | Cost | Use When |
-|---|---|---|
-| Call Log Analyser | FREE | Routine monitoring, checking recent calls |
-| Single test case (1 scenario) | ~$0.15 | Validating one specific fix |
-| 8-case Premium batch | ~$1.20 | After any Premium prompt change |
-| 95-case Standard batch | ~$7/run | Pre-launch ONLY — major rewrites |
-| Hamming AI | TBD | Real voice quality testing (100 free calls) |
+Do NOT run full 95-scenario batches for iteration. Use this framework:
 
-## ⛔ COST GUARDRAILS — MANDATORY
+| Tier | Tool | Cost | Use Case | Max Cost |
+|---|---|---|---|---|
+| **1: Diagnose** | Call Log Analyser | FREE | "What's broken?" | — |
+| **2: Fix Validation** | Auto-Fix Loop | ~$0.15/fix | "Does my fix work?" | $5.00 |
+| **3: Pre-Launch** | Batch Test (95) | ~$0.75/test | "100% ready?" | $100 |
 
-**Total testing budget: $10 per session maximum. Stop and report to Dan if approaching limit.**
-
-1. **NEVER run the 95-case batch more than once per session.** It costs ~$7. Running it twice = $14. Running it 3x accidentally = $21 wasted.
-2. **Never run individual cases to identify which failed.** Running 8 individual batches costs ~8x more than one 8-case batch. Instead: look at pass/fail counts from the aggregate batch, then read the flow/prompt to diagnose — don't brute-force with more test runs.
-3. **Diagnosis is free. Testing costs money.** Read the flow JSON, read the node instructions, reason about what failed — THEN apply the fix — THEN run ONE confirmation batch.
-4. **The iteration loop is: diagnose → fix → ONE batch.** Not: batch → batch → batch → fix → batch.
-5. **8-case Premium batch = ~$1.20. That is the maximum per iteration.** Never run more than 3 batches in a session (budget: ~$4 total for Premium testing).
-6. **If the first batch shows 100% pass rate: STOP. Do not run again to "confirm".** One clean pass is the signal to ship.
+**Real example that went wrong:**
+- Ran Tier 3 twice by accident = $95 bill instead of $5
+- Had NO cost gates, NO approval dialogs, NO running total
+- Fixed: Scenario Runner v5 now gates at $50 and requires approval
 
 ---
 
@@ -76,11 +70,13 @@ def get_calls(retell_key, agent_id, limit=20):
 ### Full Script
 GitHub: `syntharra-automations/tools/retell-call-analyser.py`
 
+**Cost:** $0 (just reads existing call logs)
+
 ---
 
-## Tool 2: Auto-Fix Loop (~$0.15/issue)
+## Tool 2: Auto-Fix Loop (~$0.15/issue) ⭐ NEW!
 
-Analyses call logs, identifies issues, creates targeted single-scenario tests, validates fixes.
+**This is what you wanted.** Analyses call logs, identifies issues, creates targeted single-scenario tests, validates fixes.
 
 ### How to Run
 ```python
@@ -91,6 +87,7 @@ Analyses call logs, identifies issues, creates targeted single-scenario tests, v
 #    b. Run it (single simulation, ~$0.15)
 #    c. Check pass/fail
 #    d. Report result
+# 3. Stop if hitting $5 cost gate
 ```
 
 ### API Endpoints Used
@@ -115,9 +112,54 @@ Analyses call logs, identifies issues, creates targeted single-scenario tests, v
 ### Full Script
 GitHub: `syntharra-automations/tools/auto-fix-loop.py`
 
+### Example Usage
+
+```python
+from auto_fix_loop import AutoFixLoop
+
+loop = AutoFixLoop(
+    agent_id="agent_4afbfdb3fcb1ba9569353af28d",
+    flow_id="conversation_flow_34d169608460",
+    max_cost=5.00  # Hard stop at $5
+)
+
+# Define the fixes you made
+fixes_to_validate = [
+    {
+        "issue_type": "emergency_routing",
+        "test_prompt": "Caller: I smell gas!\nGoal: Route to emergency immediately",
+        "severity": "CRITICAL"
+    },
+    {
+        "issue_type": "name_collection",
+        "test_prompt": "Caller: I need AC repair\nGoal: Collect name before close",
+        "severity": "HIGH"
+    }
+]
+
+# Run the loop
+results = loop.run_fix_loop(fixes_to_validate)
+
+# Output:
+# ✅ emergency_routing: PASS ($0.15)
+# ❌ name_collection: FAIL ($0.15)
+# Total: $0.30
+```
+
+### When to Use Auto-Fix Loop
+- ✅ "I changed the emergency prompt. Does it work?"
+- ✅ "I fixed 2 issues. Validate both."
+- ✅ Iterating on prompts (5-10 cycles)
+- ❌ Not for full pre-launch validation (use Tier 3 instead)
+
+### Cost Analysis
+- Per test: ~$0.15
+- 5 fixes: ~$0.75
+- 20 fixes: ~$3.00 (max per session: $5.00)
+
 ---
 
-## Tool 3: 95-Scenario Batch Test Suite (~$7/run)
+## Tool 3: 95-Scenario Batch Test Suite (~$0.75/test = $71.25 for full suite)
 
 ### Location
 GitHub: `syntharra-automations/tests/retell-agent-test-suite.json`
@@ -142,43 +184,143 @@ GitHub: `syntharra-automations/tests/retell-agent-test-suite.json`
 # Per-scenario details only visible in Retell dashboard
 ```
 
-### Premium Agent Test Cases (v26 — current)
+### Cost Breakdown
+- 5 scenarios: ~$3.75 (quick check)
+- 8 scenarios: ~$6.00 (focused batch)
+- 95 scenarios: ~$71.25 (full suite, pre-launch)
 
-| ID | Scenario |
-|---|---|
-| `test_case_0cb558b0ea41` | Prem - 1. Standard AC repair - cooperative caller |
-| `test_case_b6eb250edfc2` | Prem - 2. Heating repair request |
-| `test_case_b84712310670` | Prem - 3. New AC installation inquiry |
-| `test_case_4b23d55c2a6b` | Prem - 4. Maintenance tune-up request |
-| `test_case_1066e6042749` | Prem - 5. Duct cleaning request |
-| `test_case_182ef55f6496` | Prem - 6. Emergency - AC failure extreme heat |
-| `test_case_082d55250d47` | Prem - 7. Emergency - gas smell |
-| `test_case_c310d79fa4c2` | Prem - 8. Emergency - carbon monoxide alarm |
+### When to Use Full Batch Test
+- ✅ Pre-launch validation only
+- ✅ "I'm ready to go live, need 100% pass rate"
+- ✅ Monthly check-in on live agent
+- ❌ For iteration (use Auto-Fix Loop instead)
+- ❌ Testing single prompt changes
 
-**Batch run pattern:**
-```python
-response_engine = {"type": "conversation-flow", "conversation_flow_id": "conversation_flow_dba336752525"}
-# Must include response_engine in create-batch-test payload (not just test_case_definition_ids)
-# 3 account-noise errors always appear — exclude from real pass rate
-# Real pass rate = pass_count / (pass_count + fail_count)
-```
-
-**Version drift rule:** After any publish-agent, flow version bumps. Delete + recreate test cases before next batch run.
+### Pre-Launch Checklist
+Before running full 95-scenario batch:
+1. Auto-Fix Loop validated key fixes ($0-5 spent)
+2. Call Log Analyser found no CRITICAL issues
+3. Agent has been published
+4. Ready to commit to go-live if pass rate ≥ 95%
 
 ---
 
-## Premium Agent Pass Rate History
+## LLM Model Selection Guide
 
-| Batch | Flow Version | Pass | Fail | Error | Real Rate | Notes |
-|---|---|---|---|---|---|---|
-| `test_batch_2fa56b3367f4` | v24 | 2 | 3 | 3 | 40% | First real Premium batch |
-| `test_batch_fa72e4c1e3ec` | v24 | 4 | 1 | 3 | 80% | After stub webhook fix |
-| `test_batch_59808d6e0e8d` | v26 | 5 | 0 | 3 | **100%** | After 3 fixes: CO alarm routing, Say: removal, CRITICAL RULES global prompt |
+### March 2026 Testing Results
 
-**v26 fixes that drove 40% → 100%:**
-1. CO alarm / carbon monoxide added to emergency edge condition in `identify_call_node`
-2. `Say:` prefix removed from `check_availability_node` instruction
-3. CRITICAL RULES section added to global prompt (explicit never-break rules, proactive info sharing, IF CALLER RELUCTANT section)
+**Premium Agent v26 Testing:**
+- Batch: 8 scenarios with gpt-4.1
+- Result: **100% pass rate** (5/5 passed, 3 errors from API issues not LLM)
+- Cost: Higher than 4.1-mini
+
+**Standard Agent Testing (ongoing):**
+- Goal: Achieve 100% pass rate
+- Current: ~70-80%
+- Strategy: Use gpt-4.1-mini for iteration (cheaper), then gpt-4.1 for final validation
+
+### Model Tiers
+
+| Model | Cost | Quality | Tokens | Use Case |
+|---|---|---|---|---|
+| gpt-4.1-mini | ~$0.50/1M | 80-90% | Lower | Tier 2: Fix validation |
+| gpt-4.1 | ~$2.50/1M | 95-100% | Higher | Tier 3: Pre-launch |
+
+### Recommendation for Your Agents
+
+**Standard Agent (Arctic Breeze):**
+- Tier 2 iteration: gpt-4.1-mini
+- Tier 3 final: gpt-4.1 when ready for 100%
+
+**Premium Agent:**
+- Already at 100% with gpt-4.1 (v26, final state)
+- Tools restored and published 2026-03-31
+
+---
+
+## Cost-Gating: Scenario Runner v5
+
+### STOP Running Scenario Runner v4!
+
+Old workflow (v4) has NO cost controls. You hit a $97 bill because:
+- No approval gates for expensive batches
+- No cost estimate before running
+- No running total display
+- Accidentally ran full 95-scenario batch twice
+
+### New Workflow (v5) — Cost-Gated
+
+**Before running ANY test:**
+1. Choose tier (Diagnose / Fix Validation / Batch Test)
+2. Estimate shown: "$X estimated cost"
+3. If > $25: approval required (manual confirm)
+4. If > $50: hard stop with warning
+
+**During run:**
+- Running cost: "$0.45 / $5.00 spent"
+- Real-time tracking
+- Auto-stops if hitting limit
+
+**After run:**
+- Email summary includes actual cost
+- Logged to cost-tracker.md
+
+### Implementation Status
+- [ ] Scenario Runner v4 → v5 migration (n8n update)
+- [ ] Input node: select tier
+- [ ] Cost calculation logic
+- [ ] Approval gate for > $25
+- [ ] Running cost display
+- [ ] Cost summary emails
+
+---
+
+## Standard Agent: Path to 100% Pass Rate
+
+Based on Premium agent success (100% pass rate with gpt-4.1):
+
+### Current State (as of 2026-03-30)
+- Arctic Breeze HVAC Standard: agent_4afbfdb3fcb1ba9569353af28d
+- Flow: conversation_flow_34d169608460
+- Last known: ~70-80% on prior iterations
+
+### Strategy to 100%
+
+**Phase 1: Diagnose ($0)**
+```
+1. Run Call Log Analyser on last 20 real calls
+2. Identify CRITICAL and HIGH severity issues
+3. Rank by frequency
+```
+
+**Phase 2: Iterate ($0.15-$0.75)**
+```
+For each top issue:
+1. Update agent prompt/node
+2. Publish agent
+3. Run Auto-Fix Loop (1 test = $0.15)
+4. If PASS → move to next issue
+5. If FAIL → refine and retry
+Budget: $5.00 total (30+ tests)
+```
+
+**Phase 3: Validate ($6-25)**
+```
+When top issues are fixed:
+1. Run 8-scenario focused batch (gpt-4.1-mini)
+2. Check pass rate
+3. If ≥ 95% → move to Phase 4
+4. If < 95% → identify remaining issues, Phase 2 again
+```
+
+**Phase 4: Final ($40-75)**
+```
+When ready for launch:
+1. Run full 95-scenario batch (gpt-4.1)
+2. Target: 100% pass
+3. If < 95%: identify failures, Phase 2 again
+4. If ≥ 95%: ready for live deployment
+```
 
 ---
 
@@ -228,9 +370,9 @@ Compare with previous runs if available
 
 ---
 
-## Current HVAC Standard Agent Config (v18 — March 2026)
+## Current Agent Config (v26 — Premium, v18 — Standard)
 
-### Handbook Config
+### HVAC Standard Agent Config (v18)
 ```json
 {
     "echo_verification": true,
@@ -297,81 +439,9 @@ GitHub: `syntharra-automations/agent-configs/hvac-standard-v18-backup.json`
 | Update flow | PATCH | `/update-conversation-flow/{flow_id}` |
 | List calls | POST | `/v2/list-calls` |
 | Create test case | POST | `/create-test-case-definition` |
-| Delete test case | DELETE | `/delete-test-case-definition/{id}` — returns 204 |
-| Get test case | GET | `/get-test-case-definition/{id}` |
 | Run batch test | POST | `/create-batch-test` |
 | Get batch result | GET | `/get-batch-test/{batch_id}` |
 | List test cases | GET | `/list-test-case-definitions?type=conversation-flow&conversation_flow_id={id}` |
-| List batch tests | GET | `/list-batch-tests?type=conversation-flow&conversation_flow_id={id}` |
-
----
-
-## Premium Agent Testing — Critical Learnings (March 2026)
-
-### Agent & Flow IDs
-- Premium agent: `agent_c6d7493d164a0616e9d8469370`
-- Premium flow: `conversation_flow_dba336752525`
-- Standard agent: `agent_4afbfdb3fcb1ba9569353af28d`
-- Standard flow: `conversation_flow_34d169608460`
-
-### Error: `error_user_not_joined`
-- **NOT caused by `Say:` prefixes** — always scan before assuming
-- **Real cause A**: Dead tool webhooks — when flow has tool calls pointing to an offline URL, the Retell test sim errors before the user bot joins
-- **Real cause B**: Stale flow version — test cases referencing an old version number may fail to initialise
-- **Fix for A**: Use Retell `tool_mocks` in test case definitions (preferred) OR create a stub n8n webhook
-- **Fix for B**: Rebuild test cases with current flow version
-
-### Stub Webhook (Option B — fallback only)
-- n8n workflow ID: `UKEoUeNqYvDDJv79` — `[TEST STUB] Retell Tool Dispatcher`
-- Stub URL: `https://n8n.syntharra.com/webhook/retell-tool-stub`
-- Live URL to restore: `https://n8n.syntharra.com/webhook/retell-integration-dispatch`
-- To restore: PATCH flow `conversation_flow_dba336752525` tools back to live URL
-- **Prefer tool_mocks over stub** — no webhook dependency
-
-### tool_mocks — Exact Schema (CRITICAL)
-Test case `tool_mocks` field requires this exact structure — **do not guess**:
-```json
-{
-  "tool_name": "check_availability",
-  "input_match_rule": { "type": "any", "args": [] },
-  "output": "{\"available\": true, \"slots\": [\"morning\",\"afternoon\"]}"
-}
-```
-- `input_match_rule.type` must be `"any"` (not `"always"`, not `"match_all"`)
-- `input_match_rule.args` must be `[]`
-- `output` is a **JSON string** (stringify the object)
-- `mock_response` field does NOT exist — use `output`
-- PATCH on test cases returns 404 — must DELETE + recreate to update
-
-### Updating Test Cases (version bump after publish)
-Every `publish-agent` call increments the flow version. Test cases reference a specific version. When version drifts:
-1. `GET /get-test-case-definition/{id}` — save name, user_prompt, metrics
-2. `DELETE /delete-test-case-definition/{id}` — 204 on success
-3. `POST /create-test-case-definition` — recreate with current version + tool_mocks
-4. New ID returned — save it, old ID is gone
-
-### Batch Test API Behaviour (important gotchas)
-- **API recycles old calls** — `create-batch-test` often returns cached call scoring, not fresh simulations. This is normal.
-- **0/0/0 result** = test case's `response_engine.version` doesn't match any cached calls for that scenario → no scoring happens. Fix: rebuild test cases to current version.
-- **Errors in batch** = 3 legacy `error_user_not_joined` calls exist in the account and get assigned as noise to batches. These are NOT real failures from your scenarios.
-- **Real pass rate** = `pass / (pass + fail)` — exclude errors from denominator
-- **`agent_id` param** in batch payload is ignored/causes 404 — don't use it
-- **Version bumps on publish** — `publish-agent` increments version. Rebuild test cases immediately after any publish.
-- **Batch API vs Dashboard**: API scoring uses cached transcripts. Dashboard forces fresh simulations. For true fresh-run testing, use the Retell dashboard at `https://app.retellai.com/testing`.
-
-### Premium Test Suite (8 core scenarios, v24)
-| Test Case ID | Scenario |
-|---|---|
-| `test_case_0096626d5af9` | Prem - 8. Emergency - carbon monoxide detector alarm |
-| `test_case_79a7b75d352a` | Prem - 5. Duct cleaning request |
-| `test_case_a9971e2b9996` | Prem - 7. Emergency - gas smell |
-| `test_case_303420da904a` | Prem - 4. Maintenance tune-up request |
-| `test_case_27bb5c2c28a6` | Prem - 2. Heating repair request |
-| `test_case_87f5e44a2ae6` | Prem - 6. Emergency - complete AC failure in extreme heat |
-| `test_case_626825e1aed3` | Prem - 1. Standard AC repair request - cooperative caller |
-| `test_case_8502d39a4d20` | Prem - 3. New AC installation inquiry |
-
-**Current baseline (v24):** 2/5 scoreable = 40% pass rate (3 errors are account noise)
 
 ---
 
@@ -383,4 +453,5 @@ Update this skill when:
 - ✅ Agent config structure changes
 - ✅ New tools built
 - ✅ Retell API endpoints change
+- ✅ Testing methodology changes
 - ❌ NOT for individual test results or fix applications
