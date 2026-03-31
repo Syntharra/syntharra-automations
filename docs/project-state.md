@@ -3,7 +3,7 @@
 
 <!-- Last updated: 2026-03-30 (session 4) — Call processor Internal Notification rewired: now runs after Supabase log on every call, fires alert to alerts@syntharra.com only on 7 error conditions (SYSTEM_ERROR, CALL_STATUS_ERROR, TRANSFER_FAILED, TRANSFER_UNSUCCESSFUL, ABNORMAL_ENDING, CLIENT_NOT_FOUND, CALL_TOO_SHORT, GEOCODE_ERROR, GPT_ANALYSIS_FAILED). Silent on normal calls. Both STD + PREM updated and activated.
 <!-- Last updated: 2026-03-30 (session 3) — alerts@syntharra.com added: Railway ALERT_EMAIL_TO updated, alertManager.js fallback updated, email skill + project-state updated. Signature file already existed from prior session.
-<!-- Last updated: 2026-03-30 — Email Intelligence system COMPLETE: n8n 32-node workflow (Groq AI, 7 Gmail inboxes, idempotent Supabase saves), email_digest table SQL, admin dashboard email.html polished (Gmail deep links, next-run countdown, Groq setup guide), alerts@ signature created. Workflow file: docs/email-digest-workflow.json. -->
+<!-- Last updated: 2026-03-31 — Email Digest LIVE: workflow 4aulrlX1v8AtWwvC running (9 inboxes, Groq AI, Supabase). N8N_EDITOR_BASE_URL added to Railway. All 22 n8n workflows tagged by category. -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
@@ -200,7 +200,7 @@ Pricing is NOT public on the main website.
 | Website Lead → Free Report | `ykaZkQXWO2zEJCdu` | Lead Gen |
 | Nightly GitHub Backup | `EAHgqAfQoCDumvPU` | Ops |
 | Send Welcome Email (manual) | `Rd5HiN7v2SRwNmiY` | Backup |
-| Email Digest (daily 6am GMT) | Import from `docs/email-digest-workflow.json` | Ops |
+| Email Digest (daily 6am GMT) | `4aulrlX1v8AtWwvC` | Email & Comms |
 
 ### Inactive (confirm with Dan before deleting)
 | Integration Hub | `8WYFy093XA6UKB7L` | Inactive |
