@@ -133,6 +133,20 @@ Same Retell API key and rules as Standard: `{{RETELL_API_KEY}}`
 - Dynamic variables: `{{agent_name}}`, `{{company_name}}`, `{{COMPANY_INFO_BLOCK}}`
 - **Use commas not dashes** in all prompts
 
+### Premium Agent & Flow IDs
+- Agent ID: `agent_c6d7493d164a0616e9d8469370`
+- Conversation flow ID: `conversation_flow_dba336752525`
+- Current flow version: **24** (as of March 2026)
+- Flow tools point to: `https://n8n.syntharra.com/webhook/retell-integration-dispatch` (live) or `https://n8n.syntharra.com/webhook/retell-tool-stub` (testing stub)
+
+### Language Setting
+- Premium agent language: `en-US` (Standard is `multi`)
+
+### Tool Stub Workflow (testing only)
+- n8n workflow: `[TEST STUB] Retell Tool Dispatcher` ID `UKEoUeNqYvDDJv79`
+- Stub URL: `https://n8n.syntharra.com/webhook/retell-tool-stub`
+- When testing is done: PATCH flow tools back to `https://n8n.syntharra.com/webhook/retell-integration-dispatch`
+
 ---
 
 ## Dashboard
