@@ -588,3 +588,29 @@ Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 - Workflow file: `syntharra-automations/blog/blog-auto-publisher.json`
 - First article live: https://syntharra.com/blog/hvac-after-hours-answering.html
 - To add more topics: INSERT into `blog_topics` with `status='queued'`
+
+
+## n8n Workflow Tags (added 2026-03-31)
+9 tags applied across all 23 active workflows. Filter by tag in n8n UI left sidebar.
+
+| Tag | ID | Workflows |
+|---|---|---|
+| HVAC Standard | 19YQ7quHM907cfex | Onboarding, Call Processor, Lead Report |
+| HVAC Premium | Eb4XKFHskbuD3gXT | Onboarding, Call Processor, Dispatcher |
+| Retell & Calls | JjYhOuIIp0gFr8Qq | Both call processors, Publish Agent |
+| Testing & QA | Du87oYr5lvuWOoT3 | Scenario Runner, Transcript Gen, Process Single, E2E Cleanup |
+| Email & Comms | KbkkTjDhj2TlVB4I | Email Digest, Welcome Email, Newsletter, Unsubscribe |
+| Marketing & Leads | tRRK7AmO0v6TDIQt | Free Report, AI Score, Newsletter, Lead Report |
+| Billing | AHi4xBZNzlUXe9nF | Stripe Workflow, Minutes Calculator, Usage Alerts |
+| Operations | TNhP9LhDssgIJ5Jk | GitHub Backup, Auto-Enable MCP, Usage Alerts, Publish Agent |
+| Blog & Content | 2A4WoDoHAcCcd0No | Blog Auto-Publisher |
+
+Note: n8n folder API not available in current Railway build version — tags are equivalent.
+3 inactive duplicates archived: S3vHBQopDiOssM7G, AZZguGm5ypF6e5m9, TZ4p1UyzTrCJPdKA
+
+## Blog Auto-Publisher (updated 2026-03-31)
+- Model: Groq `llama-3.3-70b-versatile` (free, key in vault as service_name='Groq')
+- n8n workflow ID: `j8hExewOREmRp3Oq` — ACTIVE, Mon/Wed/Fri 9AM
+- Supabase table: `blog_topics` — 40 topics queued, 1 published
+- First article live: https://syntharra.com/blog/hvac-after-hours-answering.html
+- Cost: $0/month
