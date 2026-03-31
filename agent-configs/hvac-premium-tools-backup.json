@@ -1,0 +1,152 @@
+[
+  {
+    "tool_id": "tool_check_availability_01",
+    "execution_message_description": "Checking the calendar for available times",
+    "timeout_ms": 10000,
+    "speak_after_execution": false,
+    "name": "check_availability",
+    "description": "Check calendar availability for a given date and time. Call this when the caller wants to book and you need to verify the slot is open.",
+    "type": "custom",
+    "speak_during_execution": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "requested_time": {
+          "type": "string",
+          "description": "Time in HH:MM (24hr) format"
+        },
+        "service_type": {
+          "type": "string",
+          "description": "Type of service requested"
+        },
+        "requested_date": {
+          "type": "string",
+          "description": "Date in YYYY-MM-DD format"
+        }
+      },
+      "required": [
+        "requested_date",
+        "requested_time"
+      ]
+    },
+    "url": "https://n8n.syntharra.com/webhook/check-availability"
+  },
+  {
+    "tool_id": "tool_book_appointment_01",
+    "execution_message_description": "Booking your appointment now",
+    "timeout_ms": 10000,
+    "speak_after_execution": false,
+    "name": "book_appointment",
+    "description": "Book a confirmed appointment after the caller has agreed to a date and time slot.",
+    "type": "custom",
+    "speak_during_execution": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "caller_name": {
+          "type": "string",
+          "description": "Full name of the caller"
+        },
+        "service_type": {
+          "type": "string",
+          "description": "Type of service requested"
+        },
+        "appointment_time": {
+          "type": "string",
+          "description": "Confirmed time in HH:MM (24hr)"
+        },
+        "caller_phone": {
+          "type": "string",
+          "description": "Best callback number"
+        },
+        "appointment_date": {
+          "type": "string",
+          "description": "Confirmed date in YYYY-MM-DD"
+        },
+        "service_address": {
+          "type": "string",
+          "description": "Full service address"
+        },
+        "email": {
+          "type": "string",
+          "description": "Caller email for confirmation, if provided"
+        }
+      },
+      "required": [
+        "caller_name",
+        "caller_phone",
+        "service_address",
+        "service_type",
+        "appointment_date",
+        "appointment_time"
+      ]
+    },
+    "url": "https://n8n.syntharra.com/webhook/book-appointment"
+  },
+  {
+    "tool_id": "tool_reschedule_appointment_01",
+    "execution_message_description": "Updating your appointment",
+    "timeout_ms": 10000,
+    "speak_after_execution": false,
+    "name": "reschedule_appointment",
+    "description": "Reschedule an existing appointment to a new date and time.",
+    "type": "custom",
+    "speak_during_execution": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "caller_name": {
+          "type": "string",
+          "description": "Full name of the caller"
+        },
+        "new_date": {
+          "type": "string",
+          "description": "Requested new date in YYYY-MM-DD"
+        },
+        "new_time": {
+          "type": "string",
+          "description": "Requested new time in HH:MM (24hr)"
+        },
+        "original_date": {
+          "type": "string",
+          "description": "Original appointment date in YYYY-MM-DD"
+        }
+      },
+      "required": [
+        "caller_name",
+        "original_date",
+        "new_date",
+        "new_time"
+      ]
+    },
+    "url": "https://n8n.syntharra.com/webhook/reschedule-appointment"
+  },
+  {
+    "tool_id": "tool_cancel_appointment_01",
+    "execution_message_description": "Cancelling your appointment",
+    "timeout_ms": 10000,
+    "speak_after_execution": false,
+    "name": "cancel_appointment",
+    "description": "Cancel an existing appointment for the caller.",
+    "type": "custom",
+    "speak_during_execution": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "caller_name": {
+          "type": "string",
+          "description": "Full name of the caller"
+        },
+        "appointment_date": {
+          "type": "string",
+          "description": "Date of appointment to cancel in YYYY-MM-DD"
+        }
+      },
+      "required": [
+        "caller_name",
+        "appointment_date"
+      ]
+    },
+    "url": "https://n8n.syntharra.com/webhook/cancel-appointment"
+  }
+]
