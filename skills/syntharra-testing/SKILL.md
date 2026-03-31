@@ -17,9 +17,21 @@ description: >
 | Tool | Cost | Use When |
 |---|---|---|
 | Call Log Analyser | FREE | Routine monitoring, checking recent calls |
-| Auto-Fix Loop | ~$0.15/issue | After changes, validating specific fixes |
-| Full Batch Test (95) | ~$7/run | Pre-launch, major prompt rewrites only |
+| Single test case (1 scenario) | ~$0.15 | Validating one specific fix |
+| 8-case Premium batch | ~$1.20 | After any Premium prompt change |
+| 95-case Standard batch | ~$7/run | Pre-launch ONLY — major rewrites |
 | Hamming AI | TBD | Real voice quality testing (100 free calls) |
+
+## ⛔ COST GUARDRAILS — MANDATORY
+
+**Total testing budget: $10 per session maximum. Stop and report to Dan if approaching limit.**
+
+1. **NEVER run the 95-case batch more than once per session.** It costs ~$7. Running it twice = $14. Running it 3x accidentally = $21 wasted.
+2. **Never run individual cases to identify which failed.** Running 8 individual batches costs ~8x more than one 8-case batch. Instead: look at pass/fail counts from the aggregate batch, then read the flow/prompt to diagnose — don't brute-force with more test runs.
+3. **Diagnosis is free. Testing costs money.** Read the flow JSON, read the node instructions, reason about what failed — THEN apply the fix — THEN run ONE confirmation batch.
+4. **The iteration loop is: diagnose → fix → ONE batch.** Not: batch → batch → batch → fix → batch.
+5. **8-case Premium batch = ~$1.20. That is the maximum per iteration.** Never run more than 3 batches in a session (budget: ~$4 total for Premium testing).
+6. **If the first batch shows 100% pass rate: STOP. Do not run again to "confirm".** One clean pass is the signal to ship.
 
 ---
 
