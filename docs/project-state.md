@@ -125,6 +125,27 @@ To apply: open HTML file in Chrome, Select All → Copy → paste into Gmail sig
 
 ---
 
+
+## Agent Testing System
+
+| Item | Value |
+|---|---|
+| Test Runner workflow | `3MMp9J8QN0YKgA6Q` (BROKEN — needs HTTP Request node rebuild) |
+| Fix Approver workflow | `ZAAtRETIIVZSMMDk` (BROKEN — needs HTTP Request node rebuild) |
+| Test Runner webhook | `POST https://n8n.syntharra.com/webhook/agent-test-runner` |
+| Fix Approver webhook | `POST https://n8n.syntharra.com/webhook/apply-agent-fix` |
+| Scenarios file | `tests/agent-test-scenarios.json` (95 scenarios) |
+| Supabase tables | `agent_test_results`, `agent_pending_fixes` |
+| Supabase views | `agent_test_run_summary`, `agent_pending_fixes_view` |
+| Admin dashboard | Agent Testing tab at `admin.syntharra.com` |
+| LLM for testing | Groq `llama-3.3-70b-versatile` (free) |
+| Agent for testing | Arctic Breeze `agent_4afbfdb3fcb1ba9569353af28d` |
+
+### Fix needed (do in Claude Code)
+Both n8n workflows use `fetch()` inside Code nodes which is blocked in n8n sandbox.
+Rebuild using HTTP Request nodes chained together.
+Use the prompt in `docs/claude-code-prompt-agent-testing.md`.
+
 ## Pricing
 
 | Plan | Monthly | Annual (2 months free) | Setup Fee | Minutes |
