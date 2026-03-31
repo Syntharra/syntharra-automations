@@ -684,3 +684,36 @@ Native n8n node. API on Starter plan. Full social scheduling built in.
 5. Create HVAC social accounts on all platforms
 6. Build n8n Loop 1 (content generation workflow) from spec in skill reference file
 7. Post first video — use Arctic Breeze demo call clip (+1 812 994 4371)
+
+
+---
+
+## Premium Agent Testing — Final State (2026-03-31)
+
+- **Flow:** `conversation_flow_dba336752525` — **v26** (published, live)
+- **Pass rate:** 100% (5/5 real, 3 account-noise errors — always present, always ignore)
+- **Batch ID (last clean run):** `test_batch_59808d6e0e8d`
+- **Live tools:** Restored — all 4 tools pointing to `https://n8n.syntharra.com/webhook/retell-integration-dispatch`
+- **Stub workflow** (`UKEoUeNqYvDDJv79`) still exists in n8n for future testing use
+
+### Premium Test Case IDs (v26 — current)
+| ID | Scenario |
+|---|---|
+| `test_case_0cb558b0ea41` | Prem-1 AC repair cooperative |
+| `test_case_b6eb250edfc2` | Prem-2 Heating repair |
+| `test_case_b84712310670` | Prem-3 New AC installation |
+| `test_case_4b23d55c2a6b` | Prem-4 Maintenance tune-up |
+| `test_case_1066e6042749` | Prem-5 Duct cleaning |
+| `test_case_182ef55f6496` | Prem-6 Emergency extreme heat |
+| `test_case_082d55250d47` | Prem-7 Emergency gas smell |
+| `test_case_c310d79fa4c2` | Prem-8 Emergency CO alarm |
+
+### v26 Prompt Fixes Applied
+1. `identify_call_node` emergency edge — added: carbon monoxide, CO alarm, CO detector, smoke smell, flooding
+2. `check_availability_node` — removed `Say:` prefix from instruction
+3. Global prompt — added: CRITICAL RULES, PROACTIVE INFORMATION SHARING, IF CALLER RELUCTANT sections
+
+### Batch Run Protocol (cost guardrails)
+- 8-case Premium batch = ~$1.20. Max 3 batches per session.
+- 95-case Standard batch = ~$7. Pre-launch only. Never run more than once per session.
+- Diagnose from flow JSON (free) before running any batch.
