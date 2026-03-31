@@ -578,3 +578,13 @@ Or wait ~2-3 min for Railway to pick up the push automatically (inconsistent).
 - Favicons: favicon.svg + favicon-white.svg served from /public/
 - noindex/nofollow meta tag (prevents search engine indexing)
 - Latest commit: fda12d38
+
+
+## Blog Auto-Publisher (added 2026-03-31)
+- n8n workflow ID: `j8hExewOREmRp3Oq` — ACTIVE
+- Schedule: Mon/Wed/Fri 9AM (`0 9 * * 1,3,5`)
+- Model: Groq `llama-3.3-70b-versatile` (free, existing key in vault)
+- Supabase table: `blog_topics` — 41 topics queued, 1 published
+- Workflow file: `syntharra-automations/blog/blog-auto-publisher.json`
+- First article live: https://syntharra.com/blog/hvac-after-hours-answering.html
+- To add more topics: INSERT into `blog_topics` with `status='queued'`
