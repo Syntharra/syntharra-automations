@@ -190,6 +190,65 @@ The test loop:
 
 ---
 
+## Claude Code Setup (One-Time)
+
+When setting up Claude Code for Syntharra, create `~/.claude.json` with these MCP servers.
+Get all key values from the Supabase vault first.
+
+```json
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest",
+               "--supabase-url", "https://hgheyqwnrcvwtgngqdnq.supabase.co",
+               "--supabase-key", "{{SUPABASE_SERVICE_ROLE_KEY}}"]
+    },
+    "n8n": {
+      "command": "npx",
+      "args": ["-y", "n8n-mcp-server"],
+      "env": {
+        "N8N_HOST": "https://n8n.syntharra.com",
+        "N8N_API_KEY": "{{N8N_API_KEY}}"
+      }
+    },
+    "railway": {
+      "command": "npx",
+      "args": ["-y", "@railway/mcp-server"],
+      "env": {
+        "RAILWAY_API_TOKEN": "{{RAILWAY_API_TOKEN}}"
+      }
+    },
+    "stripe": {
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp-server"],
+      "env": {
+        "STRIPE_SECRET_KEY": "{{STRIPE_SECRET_KEY}}"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{{GITHUB_TOKEN}}"
+      }
+    }
+  }
+}
+```
+
+Vault lookups for each key:
+- `SUPABASE_SERVICE_ROLE_KEY` → `service_name=Supabase, key_type=service_role_key`
+- `N8N_API_KEY` → `service_name=n8n Railway, key_type=api_key`
+- `RAILWAY_API_TOKEN` → `service_name=Railway, key_type=api_token`
+- `STRIPE_SECRET_KEY` → `service_name=Stripe, key_type=secret_key`
+- `GITHUB_TOKEN` → `service_name=GitHub, key_type=personal_access_token`
+
+Note: Jotform has no working MCP — use REST API directly with key from vault.
+Note: Groq has no MCP — use HTTP calls directly with key from vault.
+
+---
+
 ## Session End Checklist
 
 Before ending any session that changed something:
