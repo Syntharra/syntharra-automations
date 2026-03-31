@@ -256,9 +256,81 @@ GitHub: `syntharra-automations/agent-configs/hvac-standard-v18-backup.json`
 | Update flow | PATCH | `/update-conversation-flow/{flow_id}` |
 | List calls | POST | `/v2/list-calls` |
 | Create test case | POST | `/create-test-case-definition` |
+| Delete test case | DELETE | `/delete-test-case-definition/{id}` — returns 204 |
+| Get test case | GET | `/get-test-case-definition/{id}` |
 | Run batch test | POST | `/create-batch-test` |
 | Get batch result | GET | `/get-batch-test/{batch_id}` |
 | List test cases | GET | `/list-test-case-definitions?type=conversation-flow&conversation_flow_id={id}` |
+| List batch tests | GET | `/list-batch-tests?type=conversation-flow&conversation_flow_id={id}` |
+
+---
+
+## Premium Agent Testing — Critical Learnings (March 2026)
+
+### Agent & Flow IDs
+- Premium agent: `agent_c6d7493d164a0616e9d8469370`
+- Premium flow: `conversation_flow_dba336752525`
+- Standard agent: `agent_4afbfdb3fcb1ba9569353af28d`
+- Standard flow: `conversation_flow_34d169608460`
+
+### Error: `error_user_not_joined`
+- **NOT caused by `Say:` prefixes** — always scan before assuming
+- **Real cause A**: Dead tool webhooks — when flow has tool calls pointing to an offline URL, the Retell test sim errors before the user bot joins
+- **Real cause B**: Stale flow version — test cases referencing an old version number may fail to initialise
+- **Fix for A**: Use Retell `tool_mocks` in test case definitions (preferred) OR create a stub n8n webhook
+- **Fix for B**: Rebuild test cases with current flow version
+
+### Stub Webhook (Option B — fallback only)
+- n8n workflow ID: `UKEoUeNqYvDDJv79` — `[TEST STUB] Retell Tool Dispatcher`
+- Stub URL: `https://n8n.syntharra.com/webhook/retell-tool-stub`
+- Live URL to restore: `https://n8n.syntharra.com/webhook/retell-integration-dispatch`
+- To restore: PATCH flow `conversation_flow_dba336752525` tools back to live URL
+- **Prefer tool_mocks over stub** — no webhook dependency
+
+### tool_mocks — Exact Schema (CRITICAL)
+Test case `tool_mocks` field requires this exact structure — **do not guess**:
+```json
+{
+  "tool_name": "check_availability",
+  "input_match_rule": { "type": "any", "args": [] },
+  "output": "{\"available\": true, \"slots\": [\"morning\",\"afternoon\"]}"
+}
+```
+- `input_match_rule.type` must be `"any"` (not `"always"`, not `"match_all"`)
+- `input_match_rule.args` must be `[]`
+- `output` is a **JSON string** (stringify the object)
+- `mock_response` field does NOT exist — use `output`
+- PATCH on test cases returns 404 — must DELETE + recreate to update
+
+### Updating Test Cases (version bump after publish)
+Every `publish-agent` call increments the flow version. Test cases reference a specific version. When version drifts:
+1. `GET /get-test-case-definition/{id}` — save name, user_prompt, metrics
+2. `DELETE /delete-test-case-definition/{id}` — 204 on success
+3. `POST /create-test-case-definition` — recreate with current version + tool_mocks
+4. New ID returned — save it, old ID is gone
+
+### Batch Test API Behaviour (important gotchas)
+- **API recycles old calls** — `create-batch-test` often returns cached call scoring, not fresh simulations. This is normal.
+- **0/0/0 result** = test case's `response_engine.version` doesn't match any cached calls for that scenario → no scoring happens. Fix: rebuild test cases to current version.
+- **Errors in batch** = 3 legacy `error_user_not_joined` calls exist in the account and get assigned as noise to batches. These are NOT real failures from your scenarios.
+- **Real pass rate** = `pass / (pass + fail)` — exclude errors from denominator
+- **`agent_id` param** in batch payload is ignored/causes 404 — don't use it
+- **Version bumps on publish** — `publish-agent` increments version. Rebuild test cases immediately after any publish.
+- **Batch API vs Dashboard**: API scoring uses cached transcripts. Dashboard forces fresh simulations. For true fresh-run testing, use the Retell dashboard at `https://app.retellai.com/testing`.
+
+### Premium Test Suite (8 core scenarios, v24)
+| Test Case ID | Scenario |
+|---|---|
+| `test_case_0096626d5af9` | Prem - 8. Emergency - carbon monoxide detector alarm |
+| `test_case_79a7b75d352a` | Prem - 5. Duct cleaning request |
+| `test_case_a9971e2b9996` | Prem - 7. Emergency - gas smell |
+| `test_case_303420da904a` | Prem - 4. Maintenance tune-up request |
+| `test_case_27bb5c2c28a6` | Prem - 2. Heating repair request |
+| `test_case_87f5e44a2ae6` | Prem - 6. Emergency - complete AC failure in extreme heat |
+| `test_case_626825e1aed3` | Prem - 1. Standard AC repair request - cooperative caller |
+| `test_case_8502d39a4d20` | Prem - 3. New AC installation inquiry |
+
+**Current baseline (v24):** 2/5 scoreable = 40% pass rate (3 errors are account noise)
 
 ---
 
