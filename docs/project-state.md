@@ -614,3 +614,73 @@ Note: n8n folder API not available in current Railway build version — tags are
 - Supabase table: `blog_topics` — 40 topics queued, 1 published
 - First article live: https://syntharra.com/blog/hvac-after-hours-answering.html
 - Cost: $0/month
+
+
+## Session: 2026-03-31 — Social Media Lead Gen System Designed
+
+### Status: BUILT — PENDING LAUNCH
+Complete automated social media content marketing and lead generation system designed
+and documented. Skill file built and pushed to GitHub.
+
+**DO NOT LAUNCH until:**
+- [ ] Company registered (Ireland)
+- [ ] Telnyx SMS working (AI evaluation approval received)
+- [ ] Stripe live mode active
+- [ ] At least one test client onboarded successfully
+
+### What Was Built
+**Skill file:** `docs/skills/syntharra-social-leads/SKILL.md` + 5 reference files
+
+**Three-phase system:**
+- Phase 1 (organic only, ~$39/mo): Blotato + Claude API + Spur comment-to-DM + email lead magnet
+- Phase 2 (paid ads, ~$112/mo + ad spend): Meta ads, auto-boost, ad scale/pause engine, Facebook Lead Ads, retargeting
+- Phase 3 (multi-vertical, ~$154/mo): HVAC + Electrical + Plumbing, one n8n parameter change
+
+**Core tool stack:**
+- Blotato ($29 Starter → $97 Creator) — video creation + scheduling + posting + ElevenLabs voice included
+- Claude API — script generation, performance analysis, ad decisions
+- Spur (free) — comment-to-DM automation
+- Facebook Graph API + Meta Marketing API (free) — analytics + ad management
+- TikTok Business API (free) — analytics pull
+- All orchestrated via n8n (Railway, already running)
+- All data in Supabase (already running)
+
+**Five automation loops:**
+1. Weekly content generation (Monday 7am) — Claude → Blotato → schedule posts
+2. Organic performance feedback (Sunday 11pm) — pull metrics → Claude analysis → brief for next week
+3. Auto-boost winners (every 48hrs, Phase 2) — organic winners → Facebook ads automatically
+4. Ad scale/pause engine (every 24hrs, Phase 2) — Claude analyses each ad → SCALE/PAUSE/HOLD
+5. Revenue attribution + cross-platform learning (Monday 6am, Phase 2) — Stripe → UTM → content piece
+
+**Five lead capture mechanisms:**
+1. Comment-to-DM (Spur) — keyword "DEMO" triggers instant personalised DM
+2. Facebook Lead Ads (Phase 2) — in-platform form, n8n trigger, AI scoring
+3. Email lead magnet — "HVAC Owner's Call Audit" PDF, 3-email nurture sequence
+4. Retargeting audiences (Phase 2) — warm/hot/lookalike, refreshed weekly from Stripe
+5. Organic bio link — demo.html with UTM, existing hot lead detector handles
+
+**Account strategy:**
+- Phase 1: One account per platform, HVAC-specific bio
+- Phase 3: Sub-branded per vertical (@syntharraHVAC, @syntharraElectrical, @syntharraPlumbing)
+- NEVER use "Global AI Solutions" as social bio — too generic
+
+**Content volume Phase 1 (Blotato Starter, 1,250 credits/mo):**
+- 4–5 faceless videos/week + 2–3 static posts + unlimited text posts
+- ~60–70 total posts/month across 4 platforms (repurposed content)
+
+**Revenue attribution:** UTM → Supabase → Cal.com → Stripe → content piece
+Every paying client traced back to the exact video/post that generated them.
+
+### Key Decision: Blotato over Pictory
+Blotato ($29) replaces: Pictory ($25) + Buffer ($15) + ElevenLabs ($5) + Storyblocks ($15)
+= $60 savings/month. ElevenLabs voice included in Blotato at no extra cost.
+Native n8n node. API on Starter plan. Full social scheduling built in.
+
+### Next Steps When Ready to Launch
+1. Run Supabase SQL from skill reference file
+2. Add Blotato + Meta + TikTok + Spur vault entries
+3. Start Blotato free trial — test 3 HVAC videos manually
+4. Set up Spur comment-to-DM (1 hour, free)
+5. Create HVAC social accounts on all platforms
+6. Build n8n Loop 1 (content generation workflow) from spec in skill reference file
+7. Post first video — use Arctic Breeze demo call clip (+1 812 994 4371)
