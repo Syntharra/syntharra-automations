@@ -1,0 +1,558 @@
+{
+  "name": "Master Agent Self-Healing Loop",
+  "description": "Production self-healing system: Diagnose, validate, deploy, monitor - runs nightly at 2 AM ET",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "operator": "in",
+              "value": "2"
+            },
+            {
+              "field": "dayOfWeek",
+              "operator": "in",
+              "value": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "name": "Cron - 2 AM ET Daily",
+      "id": "cron_2am_et"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.syntharra.com/webhook/self-healing-diagnose",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "trigger_time",
+              "value": "{{ new Date().toISOString() }}"
+            },
+            {
+              "name": "environment",
+              "value": "production"
+            },
+            {
+              "name": "master_agent_id",
+              "value": "agent_4afbfdb3fcb1ba9569353af28d"
+            },
+            {
+              "name": "master_flow_id",
+              "value": "conversation_flow_34d169608460"
+            }
+          ]
+        },
+        "headerAuth": {
+          "type": "apiKey",
+          "credentials": "SyntharraAPIKey"
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ],
+      "name": "Execute Python - Diagnose",
+      "id": "diagnose_step"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "rules": [
+            {
+              "key": "diagnose_step.data.status",
+              "condition": "equals",
+              "value": "issues_detected"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ],
+      "name": "Check If Issues Detected",
+      "id": "check_issues"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.syntharra.com/webhook/self-healing-validate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "issues",
+              "value": "{{ JSON.stringify(diagnose_step.data.issues) }}"
+            },
+            {
+              "name": "master_flow",
+              "value": "{{ JSON.stringify(diagnose_step.data.master_flow) }}"
+            },
+            {
+              "name": "client_agents",
+              "value": "{{ JSON.stringify(diagnose_step.data.client_agents) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        200
+      ],
+      "name": "Execute Python - Validate",
+      "id": "validate_step"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "rules": [
+            {
+              "key": "validate_step.data.status",
+              "condition": "equals",
+              "value": "validation_passed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        200
+      ],
+      "name": "Check If Validation Passed",
+      "id": "check_validation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.syntharra.com/webhook/self-healing-deploy",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "master_flow",
+              "value": "{{ JSON.stringify(validate_step.data.master_flow) }}"
+            },
+            {
+              "name": "client_agents",
+              "value": "{{ JSON.stringify(validate_step.data.client_agents) }}"
+            },
+            {
+              "name": "version",
+              "value": "{{ validate_step.data.version }}"
+            },
+            {
+              "name": "backup_id",
+              "value": "{{ validate_step.data.backup_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1250,
+        200
+      ],
+      "name": "Execute Python - Deploy",
+      "id": "deploy_step"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "rules": [
+            {
+              "key": "deploy_step.data.status",
+              "condition": "equals",
+              "value": "deployment_success"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        200
+      ],
+      "name": "Check If Deployment Successful",
+      "id": "check_deploy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.syntharra.com/webhook/self-healing-monitor",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "deployed_agents",
+              "value": "{{ JSON.stringify(deploy_step.data.successful_agents) }}"
+            },
+            {
+              "name": "duration_mins",
+              "value": "60"
+            },
+            {
+              "name": "version",
+              "value": "{{ deploy_step.data.version }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1650,
+        200
+      ],
+      "name": "Execute Python - Monitor",
+      "id": "monitor_step"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $nodeUrl }}/webhook/send-alert",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "deployment_success"
+            },
+            {
+              "name": "severity",
+              "value": "INFO"
+            },
+            {
+              "name": "to",
+              "value": "admin@syntharra.com"
+            },
+            {
+              "name": "details",
+              "value": "{{ JSON.stringify({status: monitor_step.data.status, deployed: deploy_step.data.successful_agents.length, cost: deploy_step.data.cost, duration: deploy_step.data.duration_mins}) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1850,
+        200
+      ],
+      "name": "Send Success Alert",
+      "id": "alert_success"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $nodeUrl }}/webhook/send-alert",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "validation_failed"
+            },
+            {
+              "name": "severity",
+              "value": "HIGH"
+            },
+            {
+              "name": "to",
+              "value": "admin@syntharra.com"
+            },
+            {
+              "name": "details",
+              "value": "{{ JSON.stringify(validate_step.data.error_details) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1050,
+        400
+      ],
+      "name": "Alert - Validation Failed",
+      "id": "alert_validation_fail"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $nodeUrl }}/webhook/send-alert",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "deployment_failed"
+            },
+            {
+              "name": "severity",
+              "value": "HIGH"
+            },
+            {
+              "name": "to",
+              "value": "admin@syntharra.com"
+            },
+            {
+              "name": "details",
+              "value": "{{ JSON.stringify(deploy_step.data.error_details) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1450,
+        400
+      ],
+      "name": "Alert - Deployment Failed",
+      "id": "alert_deploy_fail"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $nodeUrl }}/webhook/send-alert",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "monitoring_failed"
+            },
+            {
+              "name": "severity",
+              "value": "CRITICAL"
+            },
+            {
+              "name": "to",
+              "value": "admin@syntharra.com"
+            },
+            {
+              "name": "details",
+              "value": "{{ JSON.stringify({status: monitor_step.data.status, rollback: monitor_step.data.rollback_executed, details: monitor_step.data.error_details}) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1650,
+        400
+      ],
+      "name": "Alert - Monitoring Failed",
+      "id": "alert_monitor_fail"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $nodeUrl }}/webhook/log-cycle",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cycle_timestamp",
+              "value": "{{ $now }}"
+            },
+            {
+              "name": "status",
+              "value": "{{ monitor_step.data.status }}"
+            },
+            {
+              "name": "issues_detected",
+              "value": "{{ diagnose_step.data.issues.length }}"
+            },
+            {
+              "name": "agents_deployed",
+              "value": "{{ deploy_step.data.successful_agents.length }}"
+            },
+            {
+              "name": "total_cost",
+              "value": "{{ deploy_step.data.cost }}"
+            },
+            {
+              "name": "duration_mins",
+              "value": "{{ deploy_step.data.duration_mins }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2000,
+        300
+      ],
+      "name": "Log Cycle to Supabase",
+      "id": "log_cycle"
+    }
+  ],
+  "connections": {
+    "cron_2am_et": {
+      "main": [
+        [
+          {
+            "node": "diagnose_step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "diagnose_step": {
+      "main": [
+        [
+          {
+            "node": "check_issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_issues": {
+      "main": [
+        [
+          {
+            "node": "validate_step",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "alert_validation_fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validate_step": {
+      "main": [
+        [
+          {
+            "node": "check_validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_validation": {
+      "main": [
+        [
+          {
+            "node": "deploy_step",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "alert_validation_fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deploy_step": {
+      "main": [
+        [
+          {
+            "node": "check_deploy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_deploy": {
+      "main": [
+        [
+          {
+            "node": "monitor_step",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "alert_deploy_fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "monitor_step": {
+      "main": [
+        [
+          {
+            "node": "alert_success",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "log_cycle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "alert_monitor_fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorHandler": {
+      "enabled": true,
+      "errorAction": "continue",
+      "notification": true,
+      "notificationTo": "admin@syntharra.com"
+    },
+    "timezone": "America/New_York"
+  },
+  "timezone": "America/New_York",
+  "notes": "Production self-healing loop - runs at 2 AM ET daily. Diagnose, validate, deploy, monitor. Auto-rollback on errors. Alerts on all outcomes."
+}
