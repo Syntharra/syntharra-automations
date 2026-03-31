@@ -172,6 +172,34 @@ Pricing is NOT public on the main website.
 - **Always publish after any agent update**: `POST https://api.retellai.com/publish-agent/{agent_id}` with Bearer auth (returns 200 empty body)
 - Demo agents must always stay published
 
+---
+
+## Testing & QA Status (Updated 2026-03-31)
+
+### Standard Agent (Arctic Breeze)
+- **Current:** v18, 44% success rate on 9 recent calls
+- **Phase 1:** ✅ Diagnostics complete (no critical transcript issues)
+- **Phase 2:** Ready to run (Auto-Fix Loop, ~$1-2 estimated)
+- **Phase 3:** Waiting for Phase 2 (8-scenario batch, $6)
+- **Phase 4:** Waiting for Phase 3 (95-scenario batch, $71)
+- **Goal:** 100% pass rate for live deployment
+- **Budget:** ~$80-85 for complete cycle
+- **LLM Model:** gpt-4.1-mini (iterate), gpt-4.1 (final)
+
+### Premium Agent (HVAC Premium)
+- **Current:** v26, 100% pass rate ✓
+- **Status:** PUBLISHED with corrected tool URLs
+- **Tools:** All 4 custom tools pointing to live webhooks
+- **Ready:** Yes, for use
+
+### Testing Framework (2026-03-31 Update)
+- **Tier 1 (Diagnose):** Call Log Analyser (FREE)
+- **Tier 2 (Fix Validation):** Auto-Fix Loop (~$0.15/fix, max $5/session) ← NEW
+- **Tier 3 (Pre-Launch):** Batch Test (5/8/95 scenarios, $0.75/test)
+- **Cost Controls:** Approval gates at $25, hard stops at $50/$100
+- **Tools:** `auto-fix-loop.py`, `scenario-runner-v5-cost-gating.md`, `cost-tracker.md`
+- **Docs:** `standard-agent-100-percent-plan.md` (4-phase path to 100%)
+
 ### HVAC Prompt Architecture
 - Master base prompt + company info block + call type nodes (service/repair, install/quote, existing customer, FAQ, emergency, live transfer)
 - Dynamic variables: `{{agent_name}}`, `{{company_name}}`, `{{COMPANY_INFO_BLOCK}}`
