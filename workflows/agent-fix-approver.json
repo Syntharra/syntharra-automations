@@ -1,0 +1,314 @@
+{
+  "name": "SYNTHARRA_FIX_APPROVER",
+  "nodes": [
+    {
+      "id": "fw-webhook",
+      "name": "Webhook: Apply Approved Fix",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "apply-agent-fix",
+        "responseMode": "lastNode"
+      }
+    },
+    {
+      "id": "fw-validate",
+      "name": "Validate: Fix Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const b = $input.first().json.body || $input.first().json;\nif (!b.fix_id || !b.agent_type || !b.approved_by) {\n  throw new Error('Missing required fields: fix_id, agent_type, approved_by');\n}\nreturn [{ json: b }];"
+      }
+    },
+    {
+      "id": "fw-get-fix",
+      "name": "Supabase: Get Fix Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        640,
+        300
+      ],
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/agent_pending_fixes?id=eq.{{$json.fix_id}}&select=*",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fw-get-agent",
+      "name": "Retell: Get Current Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        860,
+        300
+      ],
+      "parameters": {
+        "url": "=https://api.retellai.com/get-agent/{{$('fw-get-fix').first().json[0].agent_id}}",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.RETELL_API_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fw-apply-fix",
+      "name": "Claude: Apply Fix to Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1080,
+        300
+      ],
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{$env.ANTHROPIC_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 4000, system: 'You are a precise prompt editor. Apply ONLY the specified fix to the agent prompt. Do not change anything else. Return ONLY the complete updated prompt text, nothing else.', messages: [{ role: 'user', content: 'CURRENT PROMPT:\\n' + JSON.stringify($(\\'fw-get-agent\\').first().json) + '\\n\\nFIX TO APPLY: ' + $(\\'fw-get-fix\\').first().json[0].fix_description + '\\n\\nApply this fix and return the complete updated prompt.' }] }) }}"
+      }
+    },
+    {
+      "id": "fw-update-retell",
+      "name": "Retell: Update Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "url": "=https://api.retellai.com/update-agent/{{$('fw-get-fix').first().json[0].agent_id}}",
+        "method": "PATCH",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.RETELL_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ general_prompt: $('fw-apply-fix').first().json.content[0].text }) }}"
+      }
+    },
+    {
+      "id": "fw-publish",
+      "name": "Retell: Publish Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1520,
+        300
+      ],
+      "parameters": {
+        "url": "=https://api.retellai.com/publish-agent/{{$('fw-get-fix').first().json[0].agent_id}}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.RETELL_API_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fw-mark-applied",
+      "name": "Supabase: Mark Fix Applied",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1740,
+        300
+      ],
+      "parameters": {
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/agent_pending_fixes?id=eq.{{$('fw-validate').first().json.fix_id}}",
+        "method": "PATCH",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ status: 'applied', approved_by: $('fw-validate').first().json.approved_by, applied_at: new Date().toISOString() }) }}"
+      }
+    },
+    {
+      "id": "fw-respond",
+      "name": "Respond: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1960,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Fix applied and agent published successfully', fix_id: $('fw-validate').first().json.fix_id }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "fw-webhook": {
+      "main": [
+        [
+          {
+            "node": "fw-validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-validate": {
+      "main": [
+        [
+          {
+            "node": "fw-get-fix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-get-fix": {
+      "main": [
+        [
+          {
+            "node": "fw-get-agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-get-agent": {
+      "main": [
+        [
+          {
+            "node": "fw-apply-fix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-apply-fix": {
+      "main": [
+        [
+          {
+            "node": "fw-update-retell",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-update-retell": {
+      "main": [
+        [
+          {
+            "node": "fw-publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-publish": {
+      "main": [
+        [
+          {
+            "node": "fw-mark-applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fw-mark-applied": {
+      "main": [
+        [
+          {
+            "node": "fw-respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
