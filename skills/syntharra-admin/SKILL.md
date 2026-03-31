@@ -1,27 +1,25 @@
 ---
-name: syntharra-internal-admin
+name: syntharra-admin
 description: >
   Complete reference for all work on the Syntharra Internal Admin Dashboard at admin.syntharra.com.
-  ALWAYS load this skill when: editing index.html or server.js in the syntharra-admin repo, adding new
-  sections/pages, adding KPI stats, updating nav items, modifying data rendering (clients, calls,
-  billing, forms, agents), updating the AI assistant, editing the ops monitor, adding new Supabase
-  queries, changing the MRR chart, updating checklist items, adding new sections to the sidebar,
-  or deploying any change to admin.syntharra.com.
----
-
+  ALWAYS load this skill when: editing index.html or email.html in the syntharra-admin repo,
+  adding new sections or nav items, modifying Supabase data loading, adding KPI cards or stats,
+  updating the AI assistant, changing the ops monitor, modifying billing/clients/call logs views,
+  adding new features, fixing bugs, or deploying any changes. This skill contains the full
+  file structure, all section IDs, all JS functions, Supabase queries, design system, and
+  the exact push workflow for shipping changes.
 ---
 
 ## Session Rules (CRITICAL — Every Chat)
 
 At the **START** of every chat touching the admin dashboard:
-1. Fetch `public/index.html` from `Syntharra/syntharra-admin` GitHub repo to get current live version
-2. Note the current SHA — required for any push
-3. Also fetch `server.js` if server-side logic is changing
+1. Fetch `public/index.html` from `Syntharra/syntharra-admin` to get current live version + SHA
+2. Also fetch `server.js` if working on backend/AI assistant/auth
 
-At the **END** of every chat that changes anything:
-1. Push updated file(s) to `Syntharra/syntharra-admin` on GitHub
-2. Railway auto-deploys on push — live within ~60 seconds
-3. Verify at `https://admin.syntharra.com`
+At the **END** of every chat that changes the dashboard:
+1. Push updated file(s) to GitHub (see push pattern below)
+2. Railway auto-deploys from the `main` branch — changes go live in ~60 seconds
+3. Verify live at `https://admin.syntharra.com/`
 
 ---
 
@@ -30,482 +28,436 @@ At the **END** of every chat that changes anything:
 | Item | Value |
 |---|---|
 | Repo | `Syntharra/syntharra-admin` |
-| Files | `public/index.html` (main UI), `server.js` (Express + AI proxy), `package.json` |
-| Live URL | `https://admin.syntharra.com` |
-| Hosting | Railway (auto-deploys on git push) |
-| Auth | HTTP Basic Auth — `ADMIN_USER` / `ADMIN_PASS` env vars on Railway |
-| Default creds | `admin` / `syntharra2026` (Railway env vars override) |
-| index.html SHA | `b7a03e022446a8e15d5f567afcca934e3a5d107a` (update after every push) |
+| Live URL | `https://admin.syntharra.com/` |
+| Auth | HTTP Basic Auth — `ADMIN_USER` / `ADMIN_PASS` env vars in Railway |
+| Default credentials | `admin` / `syntharra2026` (change via Railway env) |
+| Hosting | Railway — auto-deploys from `main` branch |
+| Runtime | Node.js + Express (`server.js`) |
+| Frontend | Single-file vanilla JS — `public/index.html` |
+| Email page | `public/email.html` (Email Intelligence section) |
+| Current SHA (index.html) | `b7a03e022446a8e15d5f567afcca934e3a5d107a` |
 
 ---
 
-## Fetch & Push Pattern (Python)
+## Fetch Current File (Python)
 
 ```python
-import requests, base64, json
+import requests, base64
 
 GITHUB_TOKEN = "{{GITHUB_TOKEN}}"  # from syntharra_vault
 headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 
-# FETCH
-def fetch_file(path):
-    r = requests.get(
-        f"https://api.github.com/repos/Syntharra/syntharra-admin/contents/{path}",
-        headers=headers
-    ).json()
-    return base64.b64decode(r["content"]).decode(), r["sha"]
+r = requests.get(
+    "https://api.github.com/repos/Syntharra/syntharra-admin/contents/public/index.html",
+    headers=headers
+).json()
 
-# PUSH
-def push_file(path, new_content, sha, commit_msg):
-    r = requests.put(
-        f"https://api.github.com/repos/Syntharra/syntharra-admin/contents/{path}",
-        headers={**headers, "Content-Type": "application/json"},
-        data=json.dumps({
-            "message": commit_msg,
-            "content": base64.b64encode(new_content.encode()).decode(),
-            "sha": sha
-        })
-    )
+current_sha = r["sha"]
+content = base64.b64decode(r["content"]).decode()
+```
+
+---
+
+## Push Updated File (Python)
+
+```python
+import requests, base64, json
+
+GITHUB_TOKEN = "{{GITHUB_TOKEN}}"
+headers = {"Authorization": f"token {GITHUB_TOKEN}", "Content-Type": "application/json"}
+
+def push_file(new_content, current_sha, filepath, commit_msg):
+    url = f"https://api.github.com/repos/Syntharra/syntharra-admin/contents/{filepath}"
+    payload = {
+        "message": commit_msg,
+        "content": base64.b64encode(new_content.encode()).decode(),
+        "sha": current_sha
+    }
+    r = requests.put(url, headers=headers, data=json.dumps(payload))
     return r.json()
 
-# Usage:
-html, sha = fetch_file("public/index.html")
-# ... make edits using str.replace() ...
-push_file("public/index.html", updated_html, sha, "admin: add xyz feature")
+# Example:
+push_file(updated_html, current_sha, "public/index.html", "admin: add xyz feature")
 ```
 
-**Commit message convention:** lowercase, prefixed with `admin:` — e.g. `admin: add plumbing tab`, `admin: fix billing chart`
-
-**Edit method:** ALWAYS use Python `str.replace()` — never full rewrites. One targeted replacement per change.
+**Commit message prefix:** always `admin:` — e.g. `admin: add pipeline section`, `admin: fix billing query`
 
 ---
 
-## Tech Stack
+## Architecture Overview
 
-| Layer | Details |
-|---|---|
-| Frontend | Vanilla JS (ES5 style), no framework, no build step |
-| Backend | Node.js + Express (`server.js`) |
-| CSS | Single `<style>` block in `<head>` using CSS variables |
-| Charts | Chart.js 4.4.0 (CDN) |
-| Markdown | marked.js 9.1.6 (CDN — used in AI assistant) |
-| Fonts | Inter (Google Fonts) |
-| Database | Supabase (anon key, direct REST calls from browser) |
-| AI Assistant | Groq API via `/api/ai` proxy in server.js |
-| Forms data | Jotform REST API (direct from browser) |
-| Ops data | `syntharra-ops-monitor-production.up.railway.app` API |
-
----
-
-## Design System (CSS Variables)
-
-```css
---v:      #6C63FF   /* violet primary */
---vl:     #F0EFFB   /* violet light bg */
---vd:     #5550E8   /* violet dark (hover) */
---cyan:   #00D4FF   /* cyan accent */
---bg:     #F4F5F9   /* page background */
---surface:#fff       /* card/panel background */
---border: #E4E4EF   /* primary border */
---border2:#F0F0F8   /* subtle border */
---text:   #1A1A2E   /* primary text */
---text2:  #52526E   /* secondary text */
---text3:  #9090AA   /* muted text */
---text4:  #C0C0D8   /* very muted / labels */
---green:  #12B76A   /* success */
---gbg:    #ECFDF3   /* green bg */
---gtxt:   #027A48   /* green text */
---amber:  #F59E0B   /* warning */
---abg:    #FFFAEB   /* amber bg */
---atxt:   #B54708   /* amber text */
---red:    #F04438   /* error */
---rbg:    #FEF3F2   /* red bg */
---rtxt:   #B42318   /* red text */
---sw:     232px     /* sidebar width */
+```
+admin.syntharra.com
+    │
+    ├── server.js (Express, Railway)
+    │     ├── HTTP Basic Auth middleware
+    │     ├── POST /api/ai  → Groq LLM proxy (llama-3.3-70b-versatile)
+    │     ├── GET  /api/health
+    │     └── Static files from /public/
+    │
+    └── public/index.html (single-file SPA)
+          ├── CSS (~242 lines, one <style> block)
+          ├── HTML sections (one per nav item)
+          └── JS (~600 lines, vanilla, no frameworks)
+                ├── Supabase REST queries (anon key, client-side)
+                ├── Jotform REST API (via /api/jotform proxy or direct)
+                ├── Ops monitor data (from syntharra-ops-monitor endpoint)
+                └── AI Assistant (POST /api/ai)
 ```
 
-**Font:** `Inter` (Google Fonts)
-**Body:** `font-size: 14px`, `overflow-x: clip` (NEVER `overflow-x: hidden`)
+**Key principle:** Single-file, no build step, no frameworks. All CSS/HTML/JS in `index.html`.
+Always use `str.replace()` pattern for edits — never rewrite the whole file.
 
 ---
 
-## Sidebar Navigation — All Sections
+## Design System
 
-| Section ID | Nav Label | data-sec |
-|---|---|---|
-| `sec-overview` | Dashboard | `overview` |
-| `sec-clients` | Clients | `clients` |
-| `sec-calls` | Call Logs | `calls` |
-| `sec-billing` | Billing | `billing` |
-| `sec-forms` | Onboarding Forms | `forms` |
-| `sec-agents` | AI Agents | `agents` |
-| `sec-opsmonitor` | Ops Monitor | `opsmonitor` |
-| `sec-marketing` | Marketing Pipeline | `marketing` |
-| `sec-settings` | Settings | `settings` |
-| `sec-ai` | AI Assistant | `ai` |
-| `/email.html` | Email Intelligence | (separate page) |
+| Token | Value |
+|---|---|
+| `--v` | `#6C63FF` (violet primary) |
+| `--vl` | `#F0EFFB` (violet light bg) |
+| `--vd` | `#5550E8` (violet dark/hover) |
+| `--cyan` | `#00D4FF` |
+| `--bg` | `#F4F5F9` (page bg) |
+| `--surface` | `#fff` (card bg) |
+| `--border` | `#E4E4EF` |
+| `--border2` | `#F0F0F8` (subtle divider) |
+| `--text` | `#1A1A2E` |
+| `--text2` | `#52526E` |
+| `--text3` | `#9090AA` (muted) |
+| `--text4` | `#C0C0D8` (very muted) |
+| `--green` | `#12B76A` |
+| `--gbg` / `--gtxt` | `#ECFDF3` / `#027A48` |
+| `--amber` | `#F59E0B` |
+| `--abg` / `--atxt` | `#FFFAEB` / `#B54708` |
+| `--red` | `#F04438` |
+| `--rbg` / `--rtxt` | `#FEF3F2` / `#B42318` |
+| `--sw` | `232px` (sidebar width) |
 
-**Nav badges:**
-- `nav-clients-badge` — shows client count (violet)
-- `nav-forms-badge` — shows pending form count (amber)
-- `nav-alert-badge` — shows `!` when ops alerts exist (red)
-- `nav-email-badge` — email badge (violet)
-
-**To add a new nav section:**
-1. Add `.nav-item` div in sidebar with `data-sec="mysection"` and `onclick="nav('mysection',this)"`
-2. Add `<div class="section" id="sec-mysection">...</div>` in `.content`
-3. Add entry to `PAGE_TITLES` object in JS
+**Font:** `Inter` (400, 500, 600, 700) from Google Fonts. Body 14px.
+**Sidebar width:** 232px fixed, sticky.
+**Breakpoints:** 1100px (4-col → 2-col), 768px (mobile sidebar), 480px (compact stats)
 
 ---
 
-## HTML Key Element IDs
+## Navigation Sections
 
-### Topbar
-| ID | What it controls |
-|---|---|
-| `page-title` | Current page title in topbar |
-| `page-sub` | Page subtitle |
-| `sys-pill` | System status pill (green/amber/red) |
-| `sys-text` | Text inside status pill |
-| `clock-gmt` | GMT clock display |
+| Section ID | Nav label | data-sec | JS load function |
+|---|---|---|---|
+| `sec-overview` | Dashboard | `overview` | `renderOverview()` |
+| `sec-clients` | Clients | `clients` | `renderClients()` |
+| `sec-calls` | Call Logs | `calls` | `renderCallLogs()` |
+| `sec-billing` | Billing | `billing` | `renderBilling()` |
+| `sec-forms` | Onboarding Forms | `forms` | `renderForms()` |
+| `sec-agents` | AI Agents | `agents` | `renderAgents()` |
+| `sec-opsmonitor` | Ops Monitor | `opsmonitor` | `loadOpsData()` |
+| `sec-marketing` | Marketing Pipeline | `marketing` | `renderMarketing()` |
+| `sec-settings` | Settings | `settings` | (static HTML) |
+| `sec-ai` | AI Assistant | `ai` | `aiSend()` |
+| `/email.html` | Email Intelligence | (external link) | separate page |
 
-### Overview Section
-| ID | What it controls |
+Nav badges:
+- `nav-clients-badge` — client count (violet)
+- `nav-forms-badge` — pending forms (amber)
+- `nav-alert-badge` — ops alerts (red, shows `!`)
+- `nav-email-badge` — email count (violet)
+
+---
+
+## Key HTML Element IDs
+
+### Overview
+| ID | Content |
 |---|---|
-| `ov-clients` | Active clients count KPI |
-| `ov-clients-sub` | Clients KPI subtext |
-| `ov-mrr` | MRR KPI value |
-| `ov-mrr-sub` | MRR subtext |
-| `ov-calls` | Calls today KPI |
-| `ov-calls-sub` | Calls subtext |
-| `ov-hot` | Hot leads (7d) KPI |
+| `ov-clients` | Active clients count |
+| `ov-mrr` | Monthly revenue |
+| `ov-calls` | Calls today |
+| `ov-hot` | Hot leads (7d) |
 | `ov-calls-list` | Recent calls feed |
 | `ov-status-list` | System status mini-list |
 | `ov-minutes` | Minutes used progress bars |
-| `ov-actions-list` | Pending actions feed |
-| `ov-actions-badge` | Actions count badge |
-| `mrrChart` | Chart.js canvas for MRR chart |
+| `ov-actions-list` | Pending actions list |
+| `ov-actions-badge` | Action count badge |
+| `mrrChart` | Chart.js MRR canvas |
 
-### Clients Section
-| ID | What it controls |
+### Clients
+| ID | Content |
 |---|---|
-| `clients-count` | Total client count badge |
-| `client-search` | Search input |
 | `clients-tbody-std` | Standard clients table body |
 | `clients-tbody-prem` | Premium clients table body |
-| `clients-std-count` | Standard count label |
-| `clients-prem-count` | Premium count label |
+| `clients-std-count` | Standard client count badge |
+| `clients-prem-count` | Premium client count badge |
+| `clients-count` | Total count badge |
+| `client-search` | Search input |
 
-### Call Logs Section
-| ID | What it controls |
+### Calls
+| ID | Content |
 |---|---|
 | `calls-tbody` | Call logs table body |
-| `call-filter-pills` | Filter buttons container |
 
-### Billing Section
-| ID | What it controls |
+### Billing
+| ID | Content |
 |---|---|
 | `bill-mrr` | MRR value |
-| `bill-arr` | ARR value |
-| `bill-subs` | Active subscriptions count |
+| `bill-arr` | ARR projected |
+| `bill-subs` | Active subs count |
 | `billing-tbody` | Billing table body |
 
-### Other Sections
-| ID | What it controls |
+### AI Assistant
+| ID | Content |
 |---|---|
-| `forms-list` | Jotform submissions feed |
-| `forms-badge` | Forms status badge |
+| `ai-msgs` | Chat messages container |
+| `ai-input` | Textarea input |
+| `ai-send` | Send button |
+| `ai-chips` | Quick-prompt chips |
+
+### Ops Monitor
+| ID | Content |
+|---|---|
+| `om-systems` | Systems online count |
+| `om-alerts` | Active alerts count |
+| `om-mrr` | MRR display |
+| `om-calls24` | Calls in last 24h |
+| `om-systems-grid` | System health cards grid |
+| `om-alerts-list` | Alert log list |
+| `om-updated` | Last updated timestamp |
+
+### Marketing
+| ID | Content |
+|---|---|
+| `mkt-sourced` | Leads sourced count |
+| `mkt-emailed` | Emails sent count |
+| `mkt-hot` | Hot leads count |
+| `mkt-demos` | Demos booked count |
+| `mkt-pipeline` | Pipeline kanban board |
+
+### Global
+| ID | Content |
+|---|---|
+| `sys-pill` | Top-right system health pill (green/amber/red) |
+| `sys-text` | Text inside sys-pill |
+| `clock-gmt` | GMT clock display |
+| `page-title` | Top bar page title |
+| `page-sub` | Top bar subtitle |
 | `agents-grid` | AI agents card grid |
 | `agents-count` | Agent count badge |
-| `mkt-sourced` | Marketing leads sourced KPI |
-| `mkt-emailed` | Emails sent KPI |
-| `mkt-hot` | Hot leads KPI |
-| `mkt-demos` | Demos booked KPI |
-| `mkt-pipeline` | Lead pipeline board |
-| `om-systems` | Ops: systems online count |
-| `om-alerts` | Ops: alert count |
-| `om-mrr` | Ops: MRR display |
-| `om-calls24` | Ops: calls in last 24h |
-| `om-systems-grid` | Ops: system health cards |
-| `om-alerts-list` | Ops: alert log |
-| `om-updated` | Ops: last updated timestamp |
-| `ai-msgs` | AI chat messages container |
-| `ai-input` | AI chat textarea |
-| `ai-send` | AI send button |
+| `forms-list` | Jotform submissions list |
+| `forms-badge` | Forms count badge |
 
 ---
 
-## Data Sources
+## Supabase Connection (Client-Side JS)
 
-### Supabase (browser-side REST)
 ```javascript
 const SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1';
-const SB_KEY = 'eyJhbGci...'; // anon key — safe to expose client-side
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // anon key — safe client-side
 const SB_H   = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
 
 async function sbFetch(path) {
   const r = await fetch(SB_URL + path, { headers: SB_H });
-  return r.ok ? r.json() : [];
+  if (!r.ok) throw new Error('Supabase error: ' + r.status);
+  return r.json();
 }
 ```
 
-**Tables queried:**
-| Table | Used for |
-|---|---|
-| `hvac_standard_agent` | Standard client list, agent IDs |
-| `hvac_premium_agent` | Premium client list |
-| `hvac_call_log` | All call records (Standard) |
-| `hvac_premium_call_log` | Premium call records |
-| `client_subscriptions` | Subscription status + MRR |
-| `stripe_payment_data` | Stripe payment records |
-| `website_leads` | Marketing lead pipeline |
+### Common Queries Used
 
-### Jotform API (browser-side)
 ```javascript
-const JF_KEY = '18907cfb3b4b3be3ac47994683148728';
-// Standard form: 260795139953066
-// Premium form:  260819259556671
-fetch(`https://api.jotform.com/form/${formId}/submissions?apiKey=${JF_KEY}&limit=20&orderby=created_at,DESC`)
-```
+// All standard clients
+sbFetch('/hvac_standard_agent?select=*&order=created_at.desc')
 
-### Ops Monitor API (browser-side)
-```javascript
-const OPS_URL = 'https://syntharra-ops-monitor-production.up.railway.app';
-// Endpoints used: /api/status (health check data)
+// All premium clients
+sbFetch('/hvac_premium_agent?select=*&order=created_at.desc')
+
+// Recent calls (last 50, all clients)
+sbFetch('/hvac_call_log?select=*&order=created_at.desc&limit=50')
+
+// Subscriptions
+sbFetch('/client_subscriptions?select=*')
+
+// Stripe payments
+sbFetch('/stripe_payment_data?select=*&order=created_at.desc&limit=20')
+
+// Marketing leads
+sbFetch('/website_leads?select=*&order=created_at.desc&limit=100')
+
+// Billing cycles
+sbFetch('/billing_cycles?select=*&order=created_at.desc')
 ```
 
 ---
 
-## `loadLiveData()` — Main Data Load
+## All JavaScript Functions
 
-Called on page init. Fetches all data in parallel:
-```javascript
-const [stdAgents, premAgents, callLogs, subs, stripeData] = await Promise.all([...]);
-allClients = [...stdAgents (tier:'standard'), ...premAgents (tier:'premium')];
-```
+### Core / Navigation
+| Function | Purpose |
+|---|---|
+| `nav(id, el)` | Switch active section, update topbar title |
+| `toggleSidebar()` | Mobile sidebar open/close |
+| `closeSidebar()` | Close mobile sidebar |
+| `updateClock()` | Update GMT clock every second |
+| `sbFetch(path)` | Supabase REST helper |
 
-Then calls: `renderOverview()`, `renderClients()`, `renderCallLogs()`, `renderBilling()`, `renderAgents()`, `renderMarketing()`, `renderForms()`
+### Formatters
+| Function | Purpose |
+|---|---|
+| `fmtTime(d)` | Format ISO → time string (GMT) |
+| `fmtDate(d)` | Format ISO → "15 Jan 2026" |
+| `fmtDateShort(d)` | Format ISO → "Jan 2026" |
+| `fmtDur(s)` | Seconds → "2m 34s" |
+| `fmtPhone(p)` | Format US phone number |
+| `timeAgo(iso)` | ISO → "5m ago" |
+
+### Data Loading
+| Function | Purpose |
+|---|---|
+| `loadLiveData()` | Master loader — fetches all Supabase data, calls all render functions |
+| `loadOpsData(force)` | Fetch ops monitor health data (30s cache) |
+
+### Render Functions
+| Function | Purpose |
+|---|---|
+| `renderOverview(clients, calls, subs)` | Build overview KPIs, recent calls, minutes bars, status |
+| `renderClients(clients, subs)` | Build clients tables (Standard + Premium split) |
+| `renderClientGroups(clients, subs)` | Sub-render for client table rows |
+| `renderCallLogs(calls)` | Build call logs table |
+| `renderBilling(clients, subs, stripeData)` | Build billing KPIs and table |
+| `renderForms()` | Fetch + render Jotform submissions |
+| `renderAgents(clients)` | Build AI agent cards grid |
+| `renderMarketing()` | Fetch website_leads, build pipeline + KPIs |
+| `renderOpsKPIs(status, alerts)` | Build ops monitor KPI cells |
+| `renderOpsSystems(systems)` | Build system health cards |
+| `renderOpsAlerts(alerts)` | Build alert log rows |
+| `renderOvStatus(systems)` | Mini system status in overview |
+| `updateSysPill(healthy)` | Update top-right system health pill |
+
+### Interactions
+| Function | Purpose |
+|---|---|
+| `setTrade(trade, btn)` | Filter clients by trade tab |
+| `filterClients()` | Live search filter on client table |
+| `setCallFilter(f, btn)` | Filter calls by type (all/lead/emergency) |
+| `exportCallsCsv()` | Download current call logs as CSV |
+| `openClientModal(c)` | Open client detail modal |
+| `openNewClientModal()` | Link to Jotform onboarding |
+| `closeModal(e)` | Close modal on overlay click |
+| `startCountdown()` | Animate auto-refresh countdown bar |
+
+### AI Assistant
+| Function | Purpose |
+|---|---|
+| `buildLiveContext()` | Assemble live data summary string for AI system prompt |
+| `aiSend(override)` | Send message to /api/ai, render response |
+| `addAiMsg(role, text, isError)` | Append message bubble to chat |
+| `aiKeydown(e)` | Enter to send, Shift+Enter for newline |
+| `aiAutosize(el)` | Auto-resize textarea |
+| `aiChip(el)` | Send chip text as message |
+| `clearAiChat()` | Reset chat to welcome message |
 
 ---
 
-## Render Functions Map
+## AI Assistant (Backend)
 
-| Function | What it renders |
-|---|---|
-| `renderOverview(clients, calls, subs)` | 4 KPI cards, recent calls feed, system status, minutes bars, pending actions |
-| `renderClients(clients, subs)` | Standard + Premium client tables, nav badge |
-| `renderClientGroups(clients, subs)` | Inner table rows after filtering |
-| `renderCallLogs(calls)` | Call log table rows (respects `callFilter`) |
-| `renderBilling(clients, subs, stripeData)` | Billing KPIs + table |
-| `renderForms()` | Async — fetches Jotform submissions and renders feed |
-| `renderAgents(clients)` | Agent cards grid (client agents + demo agents) |
-| `renderMarketing()` | Marketing KPIs + lead pipeline board |
-| `loadOpsData(force)` | Async — fetches ops monitor, renders system health + alerts |
+- **Route:** `POST /api/ai` in `server.js`
+- **Model:** Groq `llama-3.3-70b-versatile` (free tier)
+- **Env var required:** `GROQ_API_KEY` in Railway
+- **System prompt includes:** Full Syntharra knowledge base (hardcoded in `server.js`) + live context string built by `buildLiveContext()` on the frontend
+- **If no GROQ_API_KEY:** Returns 503 with message to add it to Railway env
+- **Message history:** Sends last 20 messages for context
+- **Max tokens:** 1024
+
+To update AI knowledge base: edit the `SYNTHARRA_KNOWLEDGE` template literal in `server.js`.
 
 ---
 
 ## Badge CSS Classes
 
-| Class | Colour | Use for |
+| Class | Colour | Use |
 |---|---|---|
-| `.bg` | Green | Active, success, booked, provisioned |
-| `.bp` | Violet | Premium, new features |
-| `.ba` | Amber | Warning, pending, in-progress |
-| `.br` | Red | Error, blocked, emergency |
-| `.bgr` | Grey | Neutral, info, standard |
-| `.bb` | Blue | Info lead, general |
-
----
-
-## Call Type Map (notification_type → badge)
-```javascript
-const typeMap = {
-  booking_confirmed:   ['Booked',    'bg'],
-  emergency:           ['Emergency', 'br'],
-  hot_lead:            ['Hot Lead',  'ba'],
-  general_lead:        ['Lead',      'bb'],
-  info_only:           ['Info',      'bgr'],
-  spam:                ['Spam',      'bgr'],
-  callback_requested:  ['Callback',  'bp'],
-  existing_customer:   ['Existing',  'bgr'],
-  nonemergency_lead:   ['Lead',      'bb'],
-  booking_failed_lead: ['Lead',      'bb'],
-  follow_up_required:  ['Follow Up', 'ba'],
-};
-```
-
----
-
-## Helper Functions
-
-```javascript
-fmtTime(d)       // → "9:45 AM" (Europe/London)
-fmtDate(d)       // → "12 Mar 2026"
-fmtDateShort(d)  // → "Mar 2026"
-fmtDur(s)        // → "3m 22s"
-fmtPhone(p)      // → "(812) 994-4371"
-timeAgo(iso)     // → "5m ago"
-el(id)           // → document.getElementById(id)
-set(id, val)     // → el(id).textContent = val
-sbFetch(path)    // → Supabase REST GET
-```
-
----
-
-## Client Modal (`openClientModal(c)`)
-
-Opens a slide-up modal showing full client details:
-- Contact (phone, email, website, timezone)
-- Agent (agent_name, agent_id, plan, industry)
-- Business Details (services, hours, emergency, transfer phone)
-- Onboarding (created_at, stripe_customer_id, subscription_id, lead_email)
-- Link to client-facing dashboard: `syntharra.com/dashboard.html?agent_id=X`
-
----
-
-## AI Assistant (Section: `sec-ai`)
-
-**Frontend:** Chat UI with message history, typing indicator, quick-chips, markdown rendering (marked.js)
-
-**Backend:** `POST /api/ai` in `server.js`
-- Proxies to Groq API (`llama-3.3-70b-versatile`)
-- Requires `GROQ_API_KEY` env var on Railway
-- System prompt includes full `SYNTHARRA_KNOWLEDGE` block + live dashboard context passed as `liveContext`
-- `AI_HISTORY` array stores conversation (trimmed to last 20 messages)
-- If `GROQ_API_KEY` not set → returns 503 with clear message
-
-**To update AI knowledge base:** Edit `SYNTHARRA_KNOWLEDGE` const in `server.js`
-
-**AI chips** (quick prompts):
-```html
-<span class="ai-chip" onclick="aiChip(this)">How many clients do I have?</span>
-```
-To add new chips: add `.ai-chip` spans inside `#ai-chips`
-
----
-
-## Ops Monitor Section
-
-- Loads on first nav to `opsmonitor` section (`omLoaded` flag prevents double-load)
-- Auto-refreshes every 30 seconds (countdown bar at bottom of page)
-- `loadOpsData(force)` fetches from `OPS_URL/api/status`
-- Renders: systems grid, alert log, 4 KPI cells (systems online, alerts, MRR, calls 24h)
-- Topbar `sys-pill` reflects overall health (green/amber/red)
-
----
-
-## MRR Chart
-
-Chart.js line chart on the Overview page:
-- Canvas: `#mrrChart`
-- Data currently hardcoded: `[997, 1991, 3488, 4482]` for Jan–Apr (proj)
-- Labels: `['Jan','Feb','Mar','Apr (proj)']`
-- Update data when real Stripe MRR is live
-
----
-
-## Trade Tabs (Clients Section)
-
-Tabs: All | HVAC | Plumbing | Electrical | Other
-
-```javascript
-function setTrade(trade, btn) { ... filterClients(); }
-```
-
-Filtering uses `c.industry_type` field from agent table. "Other" = anything not HVAC/Plumbing/Electrical.
-
-To add a new trade tab:
-```html
-<button class="trade-tab" data-trade="Cleaning" onclick="setTrade('Cleaning',this)">Cleaning</button>
-```
-
----
-
-## server.js — Key Endpoints
-
-| Method + Path | What it does |
-|---|---|
-| `GET /` | Serves `public/index.html` |
-| `GET /email.html` | Serves `public/email.html` (Email Intelligence page) |
-| `POST /api/ai` | Groq AI proxy (requires `GROQ_API_KEY` env var) |
-| `GET /api/health` | Health check — returns `{status:'ok', ai_configured: bool}` |
-
-**Auth middleware:** All routes protected by HTTP Basic Auth using `ADMIN_USER` / `ADMIN_PASS` env vars.
-
----
-
-## Railway Environment Variables
-
-| Var | Value |
-|---|---|
-| `ADMIN_USER` | `admin` (or custom) |
-| `ADMIN_PASS` | `syntharra2026` (or custom) |
-| `GROQ_API_KEY` | Groq API key (stored in `syntharra_vault` as service_name='Groq') |
-| `PORT` | Set by Railway automatically |
+| `.bg` | Green | Active, success, live |
+| `.bp` | Violet | Plan badge, primary info |
+| `.ba` | Amber | Warning, pending, test mode |
+| `.br` | Red | Error, blocked, critical |
+| `.bgr` | Grey | Neutral count, default |
+| `.bb` | Blue | Info, secondary |
 
 ---
 
 ## Common Tasks
 
-### Add a new KPI card to Overview
-1. Add HTML `<div class="stat">...` in `#sec-overview .stats-grid`
-2. Give it an `id` (e.g. `ov-newmetric`)
-3. In `renderOverview()`, add: `set('ov-newmetric', value);`
+### Add a new nav section
+1. Add `.nav-item` div in sidebar with `data-sec="newsec"` and `onclick="nav('newsec',this)"`
+2. Add `<div class="section" id="sec-newsec">` in content area
+3. Add case in `nav()` function to set page title
+4. Add render call in `loadLiveData()` if data is needed
 
-### Add a new section
-1. Add `.nav-item` in sidebar with `data-sec="newsection"`
-2. Add `PAGE_TITLES['newsection'] = 'Title'` in JS
-3. Add `<div class="section" id="sec-newsection">...</div>` in `.content`
-4. Add a render function if it loads data
+### Add a new KPI stat card
+Follow the existing pattern:
+```html
+<div class="stat">
+  <div class="stat-accent" style="background:var(--cyan)"></div>
+  <div class="stat-label">Label</div>
+  <div class="stat-value" id="new-stat-id">—</div>
+  <div class="stat-sub">Subtitle text</div>
+</div>
+```
+Then set value in JS: `el('new-stat-id').textContent = value;`
 
-### Add a new trade tab
-1. Add `<button class="trade-tab" data-trade="X" onclick="setTrade('X',this)">X</button>`
-2. No JS changes needed — `filterClients()` uses `c.industry_type` automatically
+### Add a new table column
+1. Add `<th>` in thead
+2. Add `<td>` in the row-building loop in the relevant render function
+3. Add `class="hide-m"` for columns that should hide on mobile
 
-### Add a Supabase table query
-1. Add to `Promise.all([...])` in `loadLiveData()`
-2. Pass result to relevant render function
-3. Pattern: `sbFetch('/table_name?select=*&order=created_at.desc&limit=100')`
+### Add a checklist item
+```html
+<div class="cl-item"><span>⬜</span><span>Task description here</span></div>
+<!-- or: ✅ for complete -->
+```
 
-### Update the pending actions list
-- Actions are hardcoded in `renderOverview()` as the `actions` array
-- Update text/status/cls as items are completed or added
+### Update the AI knowledge base
+Edit the `SYNTHARRA_KNOWLEDGE` template literal in `server.js` and push.
 
-### Add AI quick-chips
-- Add `<span class="ai-chip" onclick="aiChip(this)">Your prompt here</span>` inside `#ai-chips`
+### Update the Stripe Go-Live checklist
+Edit the `.cl-item` divs inside `sec-billing` in `index.html`. Change `⬜` to `✅` as items complete.
 
-### Update AI knowledge base
-- Edit `SYNTHARRA_KNOWLEDGE` string in `server.js`
-- Push `server.js` to GitHub — Railway redeploys automatically
+### Update pending actions in Settings
+Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 
 ---
 
-## Key Gotchas
+## Key Patterns & Rules
 
-1. **Vanilla JS / ES5 style** — use `var`, `function`, not `const`/`let`/arrow functions at top level
-2. **Single `<style>` block** — all CSS lives in the one block in `<head>`. Never add a second `<style>` tag.
-3. **`overflow-x: clip`** on body — NEVER use `overflow-x: hidden`
-4. **Anon key is safe** — Supabase anon key in the HTML is fine; RLS controls access
-5. **Jotform API key** in HTML — intentional (read-only submissions API)
-6. **Railway redeploys automatically** on git push — no manual deploy needed
-7. **`email.html` is a separate page** — linked from sidebar as `<a href="/email.html">`, not a JS nav section
-8. **AI assistant uses Groq, not Claude** — the AI proxy at `/api/ai` calls Groq's `llama-3.3-70b-versatile`
-9. **Chart.js and marked.js from CDN** — both loaded via `<script src="https://cdnjs...">` at bottom of body
-10. **`allClients` state** includes both Standard + Premium merged — always check `c.tier` to distinguish
-11. **MRR chart data is currently hardcoded** — update when Stripe goes live
-12. **Client modal** uses `JSON.stringify(c)` inline — be careful with apostrophes in company names
+1. **Single `<style>` block** — all CSS stays in the one block at top of `<head>`. Never add a second.
+2. **`overflow-x:clip`** on body — never use `overflow:hidden` on html/body.
+3. **`var` not `const/let`** in render functions — dashboard JS uses function-scoped vars for compatibility.
+4. **`el(id)`** helper — shorthand for `document.getElementById(id)`.
+5. **Anon key is safe** — Supabase anon key is in client-side HTML. RLS controls data access.
+6. **No frameworks** — vanilla JS only. No React, Vue, jQuery.
+7. **Edit with str.replace** — never rewrite the whole file. Always fetch → str.replace → push.
+8. **Railway auto-deploys** — push to `main` → Railway detects change → deploys in ~60s.
+9. **One commit per feature** — prefix with `admin:` e.g. `admin: add revenue chart`.
+10. **`TZ = 'Europe/London'`** — all dates/times formatted in Dan's timezone (GMT/BST).
+
+---
+
+## Environment Variables (Railway)
+
+| Var | Value | Notes |
+|---|---|---|
+| `PORT` | Set by Railway | Auto |
+| `ADMIN_USER` | `admin` | Basic auth username |
+| `ADMIN_PASS` | `syntharra2026` | Change to something strong |
+| `GROQ_API_KEY` | `gsk_...` | Required for AI assistant — stored in syntharra_vault |
 
 ---
 
 ## Auto-Update Rule
 
-**After any change to index.html, update this SKILL.md before the chat ends:**
-- New section added → add to Sidebar Navigation table + HTML Key Element IDs
-- New data source added → update Data Sources section
-- New render function → add to Render Functions Map
-- SHA changed → update index.html SHA in Repo & Deployment table
-- New env var needed → add to Railway Environment Variables table
+**Whenever index.html or server.js changes, update this SKILL.md before chat ends:**
+- New section added → update Navigation Sections table + Element IDs
+- New function added → update JS Functions table
+- SHA changed after push → update Current SHA in Repo table
+- New env var → update Environment Variables table
+- Design token changed → update Design System table
 
-**How:** Fetch this file from `Syntharra/syntharra-automations`, apply changes, push back.
-SKILL.md path: `skills/admin-dashboard/SKILL.md` → **wait, this is for the INTERNAL admin at admin.syntharra.com**
-Store this skill at: `skills/syntharra-admin/SKILL.md` in `Syntharra/syntharra-automations`
+**How:** Fetch skill from `Syntharra/syntharra-automations/skills/admin-dashboard/SKILL.md`, apply changes, push back.
