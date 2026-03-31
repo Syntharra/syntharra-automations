@@ -251,3 +251,73 @@ Update this skill when:
 - ✅ Retell testing API endpoints change
 - ❌ Do NOT update for individual test run results (those are transient)
 - ❌ Do NOT update for individual fix applications (those go in session logs)
+
+---
+
+## Auto-Fix Loop
+
+The auto-fix loop is a script that automates issue detection and fix validation.
+
+**Location:** `syntharra-automations/tools/auto-fix-loop.py`
+**Cost:** ~$0.15 per issue tested (single simulation, not full batch)
+
+### How it works:
+1. Pulls last 20 calls from Retell API
+2. Scans every transcript for known issue patterns
+3. Groups issues by type and deduplicates
+4. For each testable issue, creates a single targeted simulation test
+5. Runs the test and checks pass/fail
+6. Reports which issues are fixed and which still need work
+
+### Issue patterns it detects:
+- Agent literally says "Say:" prefix
+- Agent asks 3+ questions in one turn
+- No summary readback before closing
+- Agent gives diagnostic/troubleshooting advice
+- Call marked unsuccessful
+- Negative caller sentiment
+
+### How to run it:
+In any Claude session, run:
+```python
+python3 /path/to/auto-fix-loop.py
+```
+Or ask Claude to "run the auto-fix loop" and it will pull the script from GitHub and execute it.
+
+### When to use it:
+- After making prompt or node changes — validate they work
+- After a client reports a bad call — diagnose the issue
+- Weekly quality check — run against recent calls
+- Before going live with a new client agent
+
+### When NOT to use it:
+- For routine monitoring — use the free call log analyser instead
+- For comprehensive testing — use the 95-scenario batch test ($7/run)
+- For real voice quality testing — use Hamming AI (real phone calls)
+
+---
+
+## Call Log Analyser
+
+The call log analyser pulls real call data and scans for issues at zero cost.
+
+**Location:** `syntharra-automations/tools/retell-call-analyser.py`
+**Cost:** Free (reads existing call data)
+
+### How to run:
+```python
+python3 retell_call_analyser.py --limit 50 --agent AGENT_ID
+```
+Or ask Claude to "analyse our recent calls" / "run the call log analyser".
+
+### What it checks:
+- Call success/failure status
+- User sentiment (negative/very negative)
+- Abnormal disconnections (agent_hangup, error)
+- Very short calls (<15s) or very long calls (>5min)
+- High token usage (>6000 avg per turn)
+- High latency (LLM p50 >1000ms)
+- Transcript patterns: diagnosis, pricing leaks, multi-questions, missing names, missing summaries
+
+### Output:
+Markdown report grouped by severity × frequency, with call quality stats.
