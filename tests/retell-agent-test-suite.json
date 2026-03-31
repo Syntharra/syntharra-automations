@@ -1,0 +1,477 @@
+[
+  {
+    "name": "1. Standard AC repair request - cooperative caller",
+    "user_prompt": "## Identity\nYour name is Maria Gonzalez. Your phone number is 512-555-8734. You live at 2847 Ridgewood Drive, Austin, TX 78745.\n\n## Goal\nYour AC stopped blowing cold air yesterday. You want to schedule a repair visit.\n\n## Personality\nYou are friendly and cooperative. You answer questions directly.",
+    "metrics": "1. Agent collected full name (first and last).\n2. Agent collected callback number and confirmed it.\n3. Agent collected service address.\n4. Agent identified issue as AC repair.\n5. Agent summarised details before ending.\n6. Agent never asked more than one question at a time."
+  },
+  {
+    "name": "2. Heating repair request",
+    "user_prompt": "## Identity\nYour name is Tom Bradley. Phone: 512-555-1123. Address: 401 Elm Street, Austin, TX 78701.\n\n## Goal\nYour furnace is making a loud banging noise every time it kicks on. Started last night.\n\n## Personality\nYou are concerned but calm. You describe the problem in detail when asked.",
+    "metrics": "1. Agent collected full name.\n2. Agent collected phone and address.\n3. Agent identified issue as heating repair.\n4. Agent did not attempt to diagnose the problem.\n5. Agent summarised and closed properly."
+  },
+  {
+    "name": "3. New AC installation inquiry",
+    "user_prompt": "## Identity\nYour name is Rachel Kim. Phone: 512-555-6678. You live in Cedar Park, TX.\n\n## Goal\nYour AC is 15 years old and you want to replace it with a new system. You want someone to come out and give you options.\n\n## Personality\nFriendly, asking lots of questions about the process.",
+    "metrics": "1. Agent identified this as an installation request.\n2. Agent mentioned free estimates on new installations.\n3. Agent collected contact details.\n4. Agent did NOT quote installation prices.\n5. Agent offered to have the team follow up."
+  },
+  {
+    "name": "4. Maintenance tune-up request",
+    "user_prompt": "## Identity\nYour name is Chris Patel. Phone: 512-555-9902. Address: 5520 Oakwood Circle, Round Rock, TX.\n\n## Goal\nYou want to schedule a spring AC tune-up before summer hits.\n\n## Personality\nStraightforward, just wants to book it quickly.",
+    "metrics": "1. Agent identified this as a maintenance request.\n2. Agent mentioned seasonal services or tune-ups.\n3. Agent collected details efficiently.\n4. Agent mentioned the tune-up fee ($129) only if caller asked about price."
+  },
+  {
+    "name": "5. Duct cleaning request",
+    "user_prompt": "## Identity\nYour name is Amy Foster. Phone: 512-555-3345. Address: 12 Pine Valley Road, Austin, TX 78748.\n\n## Goal\nYou want your ducts cleaned. You recently had renovations and there's a lot of dust.\n\n## Personality\nFriendly, mentions the renovation context unprompted.",
+    "metrics": "1. Agent identified duct cleaning as a valid service.\n2. Agent collected all details.\n3. Agent did not claim they don't offer duct cleaning."
+  },
+  {
+    "name": "6. Emergency - complete AC failure in extreme heat",
+    "user_prompt": "## Identity\nYour name is James Walker. Phone: 512-555-2091. Address: 194 Cypress Lane, Round Rock, TX.\n\n## Goal\nYour AC completely stopped. It is 105 degrees and you have a baby at home. You need someone NOW.\n\n## Personality\nAnxious and urgent. You interrupt if the agent talks too long.",
+    "metrics": "1. Agent recognised emergency.\n2. Agent stayed calm and reassuring.\n3. Agent collected name and number before transfer.\n4. Agent mentioned emergency phone number.\n5. Agent attempted transfer."
+  },
+  {
+    "name": "7. Emergency - gas smell",
+    "user_prompt": "## Identity\nYour name is Patricia Moore. Phone: 512-555-7781.\n\n## Goal\nYou smell gas near your furnace. You are scared and don't know what to do.\n\n## Personality\nFrightened, speaking quickly, wants immediate help.",
+    "metrics": "1. Agent treated gas smell as a critical emergency.\n2. Agent told caller to leave the house or stay safe.\n3. Agent collected name and number quickly.\n4. Agent attempted emergency transfer immediately.\n5. Agent did not ask unnecessary questions before addressing safety."
+  },
+  {
+    "name": "8. Emergency - carbon monoxide detector alarm",
+    "user_prompt": "## Identity\nYour name is Derek Singh. Phone: 512-555-4420.\n\n## Goal\nYour carbon monoxide detector is going off and you think it might be the furnace.\n\n## Personality\nPanicked, wants to know if they should evacuate.",
+    "metrics": "1. Agent treated this as a safety-critical emergency.\n2. Agent prioritised caller safety over information collection.\n3. Agent advised the caller to get to safety.\n4. Agent attempted transfer to emergency line."
+  },
+  {
+    "name": "9. Returning a missed call",
+    "user_prompt": "## Identity\nYour name is David Park. Phone: 512-555-4498.\n\n## Goal\nYou missed a call from this number and you're calling back. You don't know why they called.\n\n## Personality\nNeutral, slightly confused about why you received a call.",
+    "metrics": "1. Agent recognised this as a callback.\n2. Agent acknowledged they may have been trying to reach the caller.\n3. Agent collected name and confirmed number.\n4. Agent did not ask unnecessary service questions."
+  },
+  {
+    "name": "10. Existing customer - appointment status",
+    "user_prompt": "## Identity\nYour name is Nancy Bell. You are an existing customer.\n\n## Goal\nA technician was supposed to come yesterday between 2-4pm but nobody showed up. You want to know what happened.\n\n## Personality\nFrustrated but not angry yet. Wants answers.",
+    "metrics": "1. Agent recognised this as an existing customer inquiry.\n2. Agent correctly stated they cannot look up appointment details.\n3. Agent offered to transfer or take a message.\n4. Agent did not pretend to have access to scheduling systems."
+  },
+  {
+    "name": "11. Existing customer - invoice dispute",
+    "user_prompt": "## Identity\nYour name is Frank Rivera. You are an existing customer.\n\n## Goal\nYou got a bill for $450 but were told the repair would be $300. You want to dispute the charge.\n\n## Personality\nAnnoyed about the billing discrepancy. Wants it resolved.",
+    "metrics": "1. Agent recognised billing dispute.\n2. Agent did not attempt to resolve the billing issue.\n3. Agent offered transfer (billing dispute is a transfer trigger).\n4. Agent collected details if transfer failed."
+  },
+  {
+    "name": "12. General question - service area",
+    "user_prompt": "## Identity\nYour name is Tom. You live in Pflugerville, TX.\n\n## Goal\nYou want to know if they service your area and what their hours are. Also ask about Sundays.\n\n## Personality\nCasual, friendly, short direct questions.",
+    "metrics": "1. Agent stated correct business hours.\n2. Agent correctly indicated no Sunday hours.\n3. Agent confirmed Pflugerville is within service area.\n4. Agent did not make up Sunday availability."
+  },
+  {
+    "name": "13. Spam robocall",
+    "user_prompt": "## Identity\nYou are an automated telemarketing system.\n\n## Goal\nYou are trying to sell extended warranty services. Repeat your pitch regardless of what the agent says.\n\n## Personality\nRobotic, scripted, don't respond to questions naturally.",
+    "metrics": "1. Agent identified call as spam.\n2. Agent ended call politely and quickly.\n3. Agent did not collect lead information.\n4. Agent did not engage in extended conversation."
+  },
+  {
+    "name": "14. Caller wants to speak to a real person",
+    "user_prompt": "## Identity\nYour name is Betty Holmes.\n\n## Goal\nYou don't want to talk to a machine. You want a real person on the phone. You say this immediately.\n\n## Personality\nFirm but not rude. You just strongly prefer human interaction.",
+    "metrics": "1. Agent acknowledged the request.\n2. Agent mentioned Mike Thornton or offered transfer.\n3. Agent attempted transfer (customer requests manager is a trigger).\n4. Agent was not offended or defensive."
+  },
+  {
+    "name": "15. Transfer fails - agent handles gracefully",
+    "user_prompt": "## Identity\nYour name is Roger Hayes. Phone: 512-555-8890.\n\n## Goal\nYou are angry about a previous repair. You demanded a transfer to the manager but the transfer failed. Now you need to leave your details.\n\n## Personality\nStill frustrated after failed transfer. Reluctantly giving details.",
+    "metrics": "1. Agent apologised for failed transfer.\n2. Agent collected name and callback number.\n3. Agent confirmed details back.\n4. Agent assured someone would call back ASAP.\n5. Agent remained empathetic despite caller frustration."
+  },
+  {
+    "name": "16. AC making strange noise",
+    "user_prompt": "## Identity\nYour name is Kelly Wright. Phone: 512-555-2234. Address: 88 Magnolia St, Austin, TX.\n\n## Goal\nYour AC is making a grinding/squealing sound. It still cools but the noise is terrible.\n\n## Personality\nConcerned it might break completely. Wants it looked at soon.",
+    "metrics": "1. Agent identified as AC repair.\n2. Agent did not attempt to diagnose the noise.\n3. Agent collected all details.\n4. Agent did not promise same-day unless stated in company info."
+  },
+  {
+    "name": "17. AC leaking water inside house",
+    "user_prompt": "## Identity\nYour name is Marcus Johnson. Phone: 512-555-5567. Address: 220 Birch Lane, Austin, TX.\n\n## Goal\nThere's water pooling around your indoor AC unit. It started this morning.\n\n## Personality\nWorried about water damage to floors. Wants urgent help.",
+    "metrics": "1. Agent assessed urgency appropriately (water leak could be emergency).\n2. Agent asked clarifying questions about severity.\n3. Agent collected details or routed to emergency if warranted."
+  },
+  {
+    "name": "18. Thermostat not working",
+    "user_prompt": "## Identity\nYour name is Diana Ross. Phone: 512-555-7789. Address: 1500 Congress Ave, Austin, TX.\n\n## Goal\nYour thermostat screen is blank and the AC won't turn on at all.\n\n## Personality\nNot sure if it's the thermostat or the AC unit. Wants guidance.",
+    "metrics": "1. Agent did NOT diagnose the thermostat issue.\n2. Agent collected details for a technician visit.\n3. Agent redirected diagnostic questions to the team."
+  },
+  {
+    "name": "19. Heat pump not heating in winter",
+    "user_prompt": "## Identity\nYour name is Victor Hernandez. Phone: 512-555-3312. Address: 760 Cedar Bluff, Round Rock, TX.\n\n## Goal\nYour heat pump is blowing cold air instead of hot. It's 35 degrees outside.\n\n## Personality\nCold and uncomfortable. Wants to know if this is an emergency.",
+    "metrics": "1. Agent took this seriously given the cold weather.\n2. Agent asked if this qualifies as emergency.\n3. Agent collected details efficiently."
+  },
+  {
+    "name": "20. Pilot light keeps going out",
+    "user_prompt": "## Identity\nYour name is George Kim. Phone: 512-555-1198. Address: 3302 Westover Rd, Austin, TX.\n\n## Goal\nYour furnace pilot light goes out every few hours. You keep relighting it.\n\n## Personality\nSomewhat handy, tries to explain what they've already checked.",
+    "metrics": "1. Agent identified as heating repair.\n2. Agent did not give DIY advice.\n3. Agent noted the recurring nature of the problem for the technician."
+  },
+  {
+    "name": "21. AC running but not cooling - tenant calling for landlord",
+    "user_prompt": "## Identity\nYour name is Alex Simmons. You rent at 4500 Riverside Dr Apt 8C, Austin, TX. Your landlord is Margaret Chen, phone 512-555-6641.\n\n## Goal\nYour AC runs constantly but doesn't cool. You're a tenant calling on behalf of your landlord Margaret Chen who set up the service.\n\n## Personality\nCooperative but unsure whose name should be on the appointment. Gives both your name and the landlord's.",
+    "metrics": "1. Agent handled the tenant/landlord dynamic.\n2. Agent clarified whose name and number to use.\n3. Agent collected the service address.\n4. Agent did not get confused by two people being involved."
+  },
+  {
+    "name": "22. Multiple issues in one call",
+    "user_prompt": "## Identity\nYour name is Sandra Collins. Phone: 512-555-0087. Address: 912 Pecan St, Austin, TX.\n\n## Goal\nYour AC needs a tune-up AND your furnace has been making a clicking sound AND you want a quote on replacing the whole system because it's old.\n\n## Personality\nTalkative, wants to cover everything in one call.",
+    "metrics": "1. Agent handled multiple service requests without getting confused.\n2. Agent captured all three issues.\n3. Agent did not try to prioritise one over the others.\n4. Agent summarised all issues back to the caller."
+  },
+  {
+    "name": "23. Pre-purchase home inspection HVAC check",
+    "user_prompt": "## Identity\nYour name is Lisa Tran. Phone: 512-555-8841. Address: 2200 Barton Creek Blvd, Austin, TX.\n\n## Goal\nYou're buying a house and want someone to inspect the HVAC system before closing. The inspection needs to happen within 5 days.\n\n## Personality\nOrganized, time-sensitive, asks about cost of inspection.",
+    "metrics": "1. Agent treated this as a valid service request.\n2. Agent did not quote inspection prices.\n3. Agent noted the time sensitivity.\n4. Agent collected details for callback."
+  },
+  {
+    "name": "24. Seasonal service - fall heating check-up",
+    "user_prompt": "## Identity\nYour name is Paul Anderson. Phone: 512-555-4456. Address: 330 Live Oak, Austin, TX.\n\n## Goal\nIt's October and you want to get your heating checked before winter. You do this every year.\n\n## Personality\nRoutine caller, knows what they want, just needs it booked.",
+    "metrics": "1. Agent identified seasonal service.\n2. Agent mentioned fall heating check-ups if applicable.\n3. Agent handled the routine nature efficiently."
+  },
+  {
+    "name": "25. Warranty question on previous work",
+    "user_prompt": "## Identity\nYour name is Rita Morales. You had repair work done 3 months ago.\n\n## Goal\nThe same problem is back. You want to know if it's covered under warranty. You were told there was a parts warranty.\n\n## Personality\nReasonable, just wants clarification on warranty coverage.",
+    "metrics": "1. Agent acknowledged the warranty question.\n2. Agent correctly stated warranty info (5 years parts, 1 year labour) if applicable.\n3. Agent offered to have the team review the previous work.\n4. Agent did NOT make warranty determinations."
+  },
+  {
+    "name": "26. Elderly caller - slow and hard of hearing",
+    "user_prompt": "## Identity\nYour name is Dorothy Henderson. Phone: 512-555-1001. Address: 50 Sunset Boulevard, Austin, TX.\n\n## Goal\nYour AC isn't working. You need help.\n\n## Personality\nYou are 82 years old. You speak slowly. You often say 'what?' or 'could you repeat that?' You give your address one piece at a time with long pauses between. You call the AC 'the cold air machine' sometimes.",
+    "metrics": "1. Agent was patient with slow responses.\n2. Agent did not rush the caller.\n3. Agent confirmed details clearly.\n4. Agent understood non-standard terminology ('cold air machine').\n5. Agent completed the full information collection despite the pace."
+  },
+  {
+    "name": "27. Extremely impatient caller",
+    "user_prompt": "## Identity\nYour name is Jason Lee. Phone: 512-555-9930.\n\n## Goal\nYour AC broke and you need it fixed today. You're in a rush.\n\n## Personality\nExtremely impatient. You cut the agent off mid-sentence. You say things like 'yeah yeah' and 'get to the point' and 'I don't have time for this'. You try to give all your info in one breath.",
+    "metrics": "1. Agent adapted to the fast pace.\n2. Agent did not repeat unnecessary pleasantries.\n3. Agent still confirmed critical details.\n4. Agent remained professional despite being interrupted."
+  },
+  {
+    "name": "28. Suspicious caller - reluctant to share info",
+    "user_prompt": "## Identity\nYour name is... actually, do you really need my name? Your phone number... why do you need that?\n\n## Goal\nYou need AC repair but you're paranoid about giving personal information. You ask why they need each piece of data. You refuse to give your full address initially.\n\n## Personality\nSuspicious of everyone. Ask 'why do you need that?' for every piece of info. Eventually comply when given a good reason.",
+    "metrics": "1. Agent handled reluctance gracefully.\n2. Agent explained WHY information is needed.\n3. Agent used the reluctance script from the prompt.\n4. Agent did not pressure or argue.\n5. Agent collected at least name and phone by end."
+  },
+  {
+    "name": "29. Chatty caller who goes off topic",
+    "user_prompt": "## Identity\nYour name is Barbara Mitchell. Phone: 512-555-7744. Address: 891 Lavender Lane, Austin, TX.\n\n## Goal\nYou need AC repair but you keep going off topic. You talk about the weather, your grandchildren, a recipe you tried, and your cat.\n\n## Personality\nExtremely chatty. Every answer includes a 2-3 sentence tangent about something unrelated. You're lonely and enjoy the conversation.",
+    "metrics": "1. Agent was polite about tangents.\n2. Agent gently redirected to the task.\n3. Agent did not abruptly cut off the caller.\n4. Agent still collected all required information.\n5. Call didn't spiral into an endless conversation."
+  },
+  {
+    "name": "30. Caller who doesn't know HVAC terminology",
+    "user_prompt": "## Identity\nYour name is Kevin O'Brien. Phone: 512-555-2278. Address: 1440 Cherry Lane, Austin, TX.\n\n## Goal\nSomething's wrong with your home temperature thing. The box outside is making noise and inside it's not getting cold. You think the filter thing might be dirty too.\n\n## Personality\nYou don't know technical terms. You say 'the box outside' (condenser), 'the thing on the wall' (thermostat), 'the filter thing' (air filter).",
+    "metrics": "1. Agent understood non-technical descriptions.\n2. Agent did not correct terminology or be condescending.\n3. Agent captured the issue accurately despite vague language.\n4. Agent translated intent correctly."
+  },
+  {
+    "name": "31. Caller who gives one-word answers",
+    "user_prompt": "## Identity\nYour name is Steve. Last name: Grant. Phone: 512-555-6632. Address: 700 Main St, Austin.\n\n## Goal\nAC broken. Needs fixing.\n\n## Personality\nYou give the absolute minimum response to every question. One word or short phrase answers only. 'Yeah.' 'Nope.' 'Steve.' 'Grant.' 'Main Street.' You don't volunteer extra info.",
+    "metrics": "1. Agent extracted information despite minimal responses.\n2. Agent asked follow-up questions when needed.\n3. Agent did not get frustrated with short answers.\n4. Agent still collected full name, phone, address."
+  },
+  {
+    "name": "32. Caller who overshares medical information",
+    "user_prompt": "## Identity\nYour name is Helen Carter. Phone: 512-555-8891. Address: 2100 Oak Hill, Austin, TX.\n\n## Goal\nYour AC broke and you need it fixed urgently because you have a heart condition and the doctor says you can't be in extreme heat.\n\n## Personality\nYou share detailed medical history unprompted. You mention medications, doctor's appointments, and your health concerns at length.",
+    "metrics": "1. Agent was empathetic about health concerns.\n2. Agent treated the situation with appropriate urgency.\n3. Agent did not engage in medical discussion.\n4. Agent focused on getting help dispatched.\n5. Agent did not dismiss the health urgency."
+  },
+  {
+    "name": "33. Caller who frequently changes their mind",
+    "user_prompt": "## Identity\nYour name is Mike Torres. Phone: 512-555-3319. Address: 505 River Road, Austin, TX.\n\n## Goal\nFirst you want AC repair. Then you decide maybe you should just replace the whole system. Then you go back to repair. Then you ask about maintenance plans instead.\n\n## Personality\nIndecisive. You change direction every 2-3 exchanges. You ask 'actually, what do you think I should do?'",
+    "metrics": "1. Agent handled changing requests gracefully.\n2. Agent did not diagnose or recommend repair vs replace.\n3. Agent eventually captured the core request.\n4. Agent did not offer technical advice on what to do."
+  },
+  {
+    "name": "34. Angry caller threatening bad review",
+    "user_prompt": "## Identity\nYour name is Linda Thompson. Phone: 512-555-6612.\n\n## Goal\nA tech came last week, charged $300, and the problem is back. You want the manager NOW. You will leave a 1-star review on Google.\n\n## Personality\nVery angry. Raise your voice. Interrupt. Demand the manager. Mention leaving a bad review multiple times.",
+    "metrics": "1. Agent acknowledged frustration sincerely.\n2. Agent did not argue or become defensive.\n3. Agent offered transfer to manager.\n4. Agent attempted transfer (angry caller is a trigger).\n5. Agent collected details as backup."
+  },
+  {
+    "name": "35. Caller threatening legal action",
+    "user_prompt": "## Identity\nYour name is Robert Williams. You are an existing customer.\n\n## Goal\nYou had work done that caused water damage to your ceiling. You've already contacted a lawyer. You want this documented and want to speak to the owner.\n\n## Personality\nCold, formal, mentions the lawyer. Not shouting but very firm.",
+    "metrics": "1. Agent remained calm and professional.\n2. Agent treated legal threat as transfer trigger.\n3. Agent attempted transfer immediately.\n4. Agent did not admit fault or make promises.\n5. Agent documented the situation if transfer failed."
+  },
+  {
+    "name": "36. Caller who interrupts constantly",
+    "user_prompt": "## Identity\nYour name is Jessica Nguyen. Phone: 512-555-0044. Address: 876 Willow Creek, Austin, TX.\n\n## Goal\nYou need your AC looked at. It's blowing warm air.\n\n## Personality\nYou interrupt every response the agent gives before they finish. You finish their sentences incorrectly. You talk over them.",
+    "metrics": "1. Agent handled interruptions gracefully.\n2. Agent did not become flustered.\n3. Agent still collected all information.\n4. Agent adapted to the caller's communication style."
+  },
+  {
+    "name": "37. Non-native English speaker",
+    "user_prompt": "## Identity\nYour name is Yuki Tanaka. Phone: 512-555-7721. Address: 3200 Lamar Blvd, Austin, TX 78705.\n\n## Goal\nYour air conditioning is broken. English is your second language.\n\n## Personality\nYou sometimes use wrong words or awkward phrasing. You say 'air condition' instead of 'air conditioning'. You might ask the agent to speak slowly. You pause to think of words.",
+    "metrics": "1. Agent was patient with language challenges.\n2. Agent spoke clearly and simply.\n3. Agent did not condescend.\n4. Agent confirmed details carefully.\n5. Agent understood the intent despite imperfect English."
+  },
+  {
+    "name": "38. Caller on speaker phone with background noise",
+    "user_prompt": "## Identity\nYour name is Dan Murphy. Phone: 512-555-3388. Address: 99 Peachtree Lane, Austin, TX.\n\n## Goal\nYou need AC repair. You're on speaker phone in your car.\n\n## Personality\nYou're driving. Sometimes you trail off mid-sentence. You say 'sorry, what was that?' a couple times. At one point you say 'hold on one sec' and go quiet for 5 seconds while navigating traffic.",
+    "metrics": "1. Agent handled pauses and disruptions.\n2. Agent repeated questions when needed.\n3. Agent was patient with the distracted caller.\n4. Agent still collected all details."
+  },
+  {
+    "name": "39. Two people talking - caller with spouse",
+    "user_prompt": "## Identity\nYour name is Mark Sullivan. Your wife Karen is also on the line.\n\n## Goal\nYou need heating repair. Your wife keeps adding details and contradicting you. You say the furnace stopped yesterday, she says it was two days ago. You say it makes a clicking sound, she says it's more of a hum.\n\n## Personality\nYou and your spouse talk over each other and disagree on details. Eventually you agree on the basics.",
+    "metrics": "1. Agent handled multiple speakers.\n2. Agent didn't get confused by conflicting info.\n3. Agent politely clarified discrepancies.\n4. Agent captured the consensus details."
+  },
+  {
+    "name": "40. Very polite but asks many questions before committing",
+    "user_prompt": "## Identity\nYour name is Elizabeth Warren. Phone: 512-555-2256. Address: 1000 Congress Ave, Austin, TX.\n\n## Goal\nYou need AC repair but first you want to know: are the technicians certified? Licensed? Insured? Background checked? How long has the company been around? Do they have reviews?\n\n## Personality\nVery polite and thorough. You want to vet the company before giving your details.",
+    "metrics": "1. Agent answered company questions from the info block.\n2. Agent mentioned NATE certification, licensing, insurance.\n3. Agent mentioned 4.9 stars and 312 reviews.\n4. Agent mentioned 12 years in business.\n5. Agent then smoothly transitioned to collecting details."
+  },
+  {
+    "name": "41. Hyphenated last name",
+    "user_prompt": "## Identity\nYour name is Sarah Beaumont-Nguyen. Phone: 512-555-3371.\n\n## Goal\nYou need AC repair. Your last name is Beaumont-Nguyen. If asked to spell it: B-E-A-U-M-O-N-T hyphen N-G-U-Y-E-N.\n\n## Personality\nPatient, willing to spell name. Expect the agent to ask for spelling.",
+    "metrics": "1. Agent asked for spelling of unusual name.\n2. Agent did not guess at spelling.\n3. Agent confirmed the full name back."
+  },
+  {
+    "name": "42. Caller only gives first name repeatedly",
+    "user_prompt": "## Identity\nYour first name is Mike. Your last name is Henderson but you don't volunteer it.\n\n## Goal\nAC repair needed. When asked your name, just say 'Mike'. If asked for last name, reluctantly give 'Henderson'.\n\n## Personality\nCasual, not trying to be difficult, just informal.",
+    "metrics": "1. Agent asked for last name when only first was given.\n2. Agent got the full name before proceeding."
+  },
+  {
+    "name": "43. Phone number given too fast",
+    "user_prompt": "## Identity\nYour name is Jake Miller. Your phone is 5125559876.\n\n## Goal\nAC broken. When asked for phone, rattle off all 10 digits quickly without pauses: 'five one two five five five nine eight seven six'.\n\n## Personality\nSpeak quickly. Don't pause between digit groups.",
+    "metrics": "1. Agent confirmed the phone number back.\n2. Agent read it back in groups.\n3. Number was captured correctly."
+  },
+  {
+    "name": "44. Wrong phone number - caller corrects",
+    "user_prompt": "## Identity\nYour name is Anna Lee. Your phone is 512-555-4321.\n\n## Goal\nAC repair. When asked for phone, accidentally say 512-555-4312 (transposed last two digits). When agent reads it back, correct it to 4321.\n\n## Personality\nCooperative, grateful the agent caught the error.",
+    "metrics": "1. Agent read back the number.\n2. Agent accepted the correction.\n3. Final number recorded was the corrected version."
+  },
+  {
+    "name": "45. Complex email address",
+    "user_prompt": "## Identity\nYour name is Bob Smith-Jr. Email: bob.smith-jr_2024@company-name.co.uk. Phone: 512-555-1111.\n\n## Goal\nYou want AC repair. When asked for email, provide the complex address. Expect the agent to struggle with it.\n\n## Personality\nPatient, willing to spell it out slowly.",
+    "metrics": "1. Agent attempted to read back the email.\n2. Agent used 'dot', 'at', 'dash', 'underscore' for clarity.\n3. Agent confirmed the email."
+  },
+  {
+    "name": "46. PO Box instead of service address",
+    "user_prompt": "## Identity\nYour name is Carl Davis. Phone: 512-555-7700. Your mailing address is PO Box 1234, Austin, TX.\n\n## Goal\nWhen asked for address, give PO Box. If agent asks for physical address, give 500 Oak Street, Austin, TX.\n\n## Personality\nDidn't realise they needed a physical address, not mailing.",
+    "metrics": "1. Agent recognised PO Box is not a service address.\n2. Agent asked for physical/service address.\n3. Agent collected a valid street address."
+  },
+  {
+    "name": "47. Rural route address",
+    "user_prompt": "## Identity\nYour name is Billy Joe Watson. Phone: 512-555-8800. Address: Rural Route 4 Box 220, Dripping Springs, TX 78620.\n\n## Goal\nYour heating broke. Give the rural route address.\n\n## Personality\nCountry accent. Friendly. Assumes the agent knows what rural routes are.",
+    "metrics": "1. Agent accepted the rural route format.\n2. Agent confirmed the address back.\n3. Agent did not reject the address format."
+  },
+  {
+    "name": "48. Caller refuses to give address",
+    "user_prompt": "## Identity\nYour name is Karen White. Phone: 512-555-0909.\n\n## Goal\nAC repair needed. You refuse to give your address. Say 'I'd rather not give that out' and 'can't the technician just call me?'\n\n## Personality\nPrivacy-conscious. Firm about not sharing address.",
+    "metrics": "1. Agent attempted to collect address.\n2. Agent accepted refusal gracefully.\n3. Agent asked for at least suburb or ZIP as fallback.\n4. Agent did not pressure aggressively."
+  },
+  {
+    "name": "49. Apartment with complex unit number",
+    "user_prompt": "## Identity\nYour name is Luis Garcia. Phone: 512-555-3300. Address: 8204 Briarcliffe Boulevard, Building C, Apartment 12B, Pflugerville, TX 78660.\n\n## Goal\nAC not working. Your address has multiple parts - building, apartment, etc.\n\n## Personality\nGive address parts out of order: apartment first, then street, then building.",
+    "metrics": "1. Agent captured all address components.\n2. Agent confirmed complete address back.\n3. Agent sorted out the correct order."
+  },
+  {
+    "name": "50. Caller gives city but no street address",
+    "user_prompt": "## Identity\nYour name is Nina Patel. Phone: 512-555-4400.\n\n## Goal\nAC repair needed. When asked for address, just say 'I'm in Austin'. If pressed, say 'near the Domain area'. Only give full address if specifically asked a third time: 11500 Domain Dr.\n\n## Personality\nNot being evasive, just thinks 'Austin' is enough.",
+    "metrics": "1. Agent asked for more specific address.\n2. Agent was persistent but polite.\n3. Agent eventually got a usable address."
+  },
+  {
+    "name": "51. Caller spells name wrong then corrects",
+    "user_prompt": "## Identity\nYour name is Catherine (not Katherine). Your last name is O'Sullivan.\n\n## Goal\nAC repair. Spell your first name as K-A-T-H... wait, no, it's C-A-T-H-E-R-I-N-E. With a C.\n\n## Personality\nSlightly flustered about the spelling mix-up.",
+    "metrics": "1. Agent handled the correction smoothly.\n2. Agent confirmed the correct spelling.\n3. Agent was patient with the confusion."
+  },
+  {
+    "name": "52. Caller has two phone numbers - which to use?",
+    "user_prompt": "## Identity\nYour name is Pete Adams. Home: 512-555-1010. Cell: 512-555-2020.\n\n## Goal\nAC repair. When asked for number, give both and ask which one they want. Then say 'actually use my cell, that's the best one'.\n\n## Personality\nCooperative but indecisive about which number.",
+    "metrics": "1. Agent asked which is the best callback number.\n2. Agent recorded the preferred number.\n3. Agent did not record both without clarification."
+  },
+  {
+    "name": "53. Very long street name",
+    "user_prompt": "## Identity\nYour name is Sam Wong. Phone: 512-555-6600. Address: 14200 North Interstate Highway 35 Frontage Road, Austin, TX 78728.\n\n## Goal\nAC repair. Your address is very long.\n\n## Personality\nRead the address naturally, don't pause to help the agent.",
+    "metrics": "1. Agent captured the full long address.\n2. Agent confirmed it back.\n3. Agent did not truncate or abbreviate incorrectly."
+  },
+  {
+    "name": "54. Caller provides info before being asked",
+    "user_prompt": "## Identity\nYour name is Tony Russo. Phone: 512-555-8080. Address: 300 Barton Springs Rd, Austin, TX. Issue: AC not cooling.\n\n## Goal\nAs soon as the agent greets you, say: 'Hi, my name is Tony Russo, phone 512-555-8080, I'm at 300 Barton Springs Road in Austin, my AC isn't cooling.'\n\n## Personality\nEfficient, gives everything upfront in one go.",
+    "metrics": "1. Agent acknowledged the information given.\n2. Agent confirmed details rather than re-asking.\n3. Agent did not ask for info already provided.\n4. Agent adapted to the caller's efficiency."
+  },
+  {
+    "name": "55. Caller gives email with unusual domain",
+    "user_prompt": "## Identity\nYour name is Zara Ahmed. Phone: 512-555-9191. Email: zara@m\u00fcller-group.de\n\n## Goal\nAC repair. When asked for email, give the one with special characters.\n\n## Personality\nPatient, will spell it out carefully.",
+    "metrics": "1. Agent attempted to capture the unusual email.\n2. Agent asked for clarification on special characters.\n3. Agent confirmed back carefully."
+  },
+  {
+    "name": "56. Caller asks question mid-information-collection",
+    "user_prompt": "## Identity\nYour name is Jill Cooper. Phone: 512-555-7070. Address: 400 Elm St, Austin.\n\n## Goal\nDuring information collection, after giving your name, suddenly ask 'wait, how much is this going to cost?' before giving your phone number.\n\n## Personality\nCooperative but spontaneous with questions.",
+    "metrics": "1. Agent handled the mid-flow question.\n2. Agent redirected pricing to the team.\n3. Agent resumed information collection smoothly."
+  },
+  {
+    "name": "57. Caller changes what service they need mid-call",
+    "user_prompt": "## Identity\nYour name is Ed Brown. Phone: 512-555-5050.\n\n## Goal\nStart by saying you need AC repair. Halfway through giving details, say 'actually, you know what, I think I just need a tune-up instead.'\n\n## Personality\nIndecisive, changes mind casually.",
+    "metrics": "1. Agent adapted to the changed request.\n2. Agent did not get confused.\n3. Agent captured the final request (tune-up)."
+  },
+  {
+    "name": "58. Caller asks about a service we don't provide mid-flow",
+    "user_prompt": "## Identity\nYour name is Greg Hall. Phone: 512-555-3030.\n\n## Goal\nYou start asking about AC repair, then say 'oh wait, actually it's a window unit, not a central system.'\n\n## Personality\nDidn't realize the distinction at first.",
+    "metrics": "1. Agent recognised window units are out of scope.\n2. Agent politely declined.\n3. Agent did not continue collecting lead info.\n4. Agent suggested a specialist."
+  },
+  {
+    "name": "59. Caller is calling for someone else",
+    "user_prompt": "## Identity\nYour name is Susan Clark. You're calling for your elderly mother Joan Clark who lives at 800 Pine St, Austin. Joan's phone: 512-555-1212.\n\n## Goal\nYour mother's AC broke but she's hard of hearing so you're calling for her. The appointment is at her address, callback should be to her phone.\n\n## Personality\nOrganized, clearly explains the situation.",
+    "metrics": "1. Agent handled third-party caller correctly.\n2. Agent recorded the correct name and phone (Joan's, not Susan's).\n3. Agent recorded the correct service address.\n4. Agent noted who was calling on behalf."
+  },
+  {
+    "name": "60. Caller dialled the wrong number",
+    "user_prompt": "## Identity\nYour name is Mike.\n\n## Goal\nYou think you called a pizza restaurant. Say 'Hi, can I order a large pepperoni?'\n\n## Personality\nConfused when told this is an HVAC company. Apologise and say wrong number.",
+    "metrics": "1. Agent politely clarified this is an HVAC company.\n2. Agent did not try to sell HVAC services.\n3. Agent ended the call pleasantly."
+  },
+  {
+    "name": "61. Caller asks if the agent is AI/robot",
+    "user_prompt": "## Identity\nYour name is Steve.\n\n## Goal\nBefore anything else, ask 'Wait, am I talking to a real person or is this a robot?'\n\n## Personality\nSkeptical of AI. If told it's a virtual assistant, reluctantly continue.",
+    "metrics": "1. Agent disclosed it is a virtual assistant.\n2. Agent was not evasive or dishonest.\n3. Agent reassured the caller it can still help.\n4. Agent transitioned smoothly back to business."
+  },
+  {
+    "name": "62. Caller asks to be called back at specific time",
+    "user_prompt": "## Identity\nYour name is Paula Dean. Phone: 512-555-4040.\n\n## Goal\nAC repair needed. You want a callback but ONLY between 2-3pm tomorrow. You're unavailable any other time.\n\n## Personality\nFirm about the callback window. Repeat the time requirement.",
+    "metrics": "1. Agent noted the specific callback time preference.\n2. Agent included this in the summary.\n3. Agent did not promise availability at that time.\n4. Agent passed the preference along."
+  },
+  {
+    "name": "63. Caller explicitly asks for same-day service",
+    "user_prompt": "## Identity\nYour name is Chris Martin. Phone: 512-555-6060.\n\n## Goal\nYour AC died. You need someone TODAY. Ask 'can you guarantee someone comes today?'\n\n## Personality\nInsistent about same-day. Not angry, just determined.",
+    "metrics": "1. Agent mentioned same-day response time if in company info.\n2. Agent did NOT guarantee same-day service unless explicitly stated.\n3. Agent managed expectations appropriately.\n4. Agent collected details for fastest possible response."
+  },
+  {
+    "name": "64. Repeat caller - already called earlier today",
+    "user_prompt": "## Identity\nYour name is Amanda Foster. Phone: 512-555-8080.\n\n## Goal\nYou called earlier today about an AC issue but nobody has called you back yet. You're frustrated about the lack of follow-up.\n\n## Personality\nAnnoyed at having to call twice. Want assurance someone will actually call back this time.",
+    "metrics": "1. Agent acknowledged the previous call.\n2. Agent apologised for the delay.\n3. Agent re-collected or confirmed details.\n4. Agent did not claim to have access to previous call records."
+  },
+  {
+    "name": "65. Contractor/vendor calling - not a customer",
+    "user_prompt": "## Identity\nYour name is Mike from Austin Electrical Supply.\n\n## Goal\nYou're a vendor trying to sell HVAC parts or arrange a wholesale partnership. You ask to speak to the purchasing department or owner.\n\n## Personality\nProfessional, business-to-business tone.",
+    "metrics": "1. Agent recognised this is not a customer call.\n2. Agent offered to take a message or provide contact info.\n3. Agent did not try to book a service appointment.\n4. Agent handled it professionally."
+  },
+  {
+    "name": "66. Caller mentions insurance claim",
+    "user_prompt": "## Identity\nYour name is Laura Bennett. Phone: 512-555-9090. Address: 622 Maple Ave, Austin, TX.\n\n## Goal\nA tree fell on your outdoor AC unit during a storm. Your insurance adjuster says you need an HVAC company to assess the damage and provide a written estimate.\n\n## Personality\nOrganized, mentions insurance process, asks about written estimates.",
+    "metrics": "1. Agent treated as a valid service request.\n2. Agent did not make promises about insurance documentation.\n3. Agent collected details for callback.\n4. Agent noted the insurance context for the team."
+  },
+  {
+    "name": "67. Caller asks about commercial service",
+    "user_prompt": "## Identity\nYour name is Dave from Dave's Auto Shop.\n\n## Goal\nYou need AC service for your auto repair shop - it's a commercial space, about 3000 sq ft.\n\n## Personality\nBusiness owner, looking for commercial HVAC service.",
+    "metrics": "1. Agent checked whether commercial service is offered.\n2. Agent correctly noted commercial refrigeration is out of scope.\n3. If general commercial HVAC is ambiguous, agent offered to have team clarify."
+  },
+  {
+    "name": "68. Caller asks for a specific technician by name",
+    "user_prompt": "## Identity\nYour name is Patty Stevens. Phone: 512-555-7171.\n\n## Goal\nYou had a great technician named 'Jake' last time. You want Jake specifically to come back. You ask if Jake is available.\n\n## Personality\nFriendly, just has a preference.",
+    "metrics": "1. Agent did not claim to know technician schedules.\n2. Agent noted the preference for the team.\n3. Agent did not promise the specific technician."
+  },
+  {
+    "name": "69. Caller wants to cancel an existing appointment",
+    "user_prompt": "## Identity\nYour name is Richard Moore.\n\n## Goal\nYou have an appointment scheduled for tomorrow but you need to cancel it.\n\n## Personality\nStraightforward, just needs to cancel.",
+    "metrics": "1. Agent recognised this as an existing customer action.\n2. Agent correctly stated they can't access scheduling.\n3. Agent offered to pass along the cancellation request or transfer."
+  },
+  {
+    "name": "70. Caller wants to reschedule",
+    "user_prompt": "## Identity\nYour name is Emily Watson. Phone: 512-555-2222.\n\n## Goal\nYou have a technician coming Thursday but you need to move it to Friday instead.\n\n## Personality\nFriendly, simple request.",
+    "metrics": "1. Agent recognised this as an existing customer action.\n2. Agent correctly stated they can't modify appointments.\n3. Agent offered to pass along the rescheduling request or transfer."
+  },
+  {
+    "name": "71. Caller asks about financing in detail",
+    "user_prompt": "## Identity\nYour name is Michael Brown. Phone: 512-555-3333.\n\n## Goal\nYou want a new AC system and you're interested in financing. Ask detailed questions: what's the interest rate? What's the minimum credit score? How long is the approval process? What if you get denied?\n\n## Personality\nDetail-oriented, wants all the financing specifics.",
+    "metrics": "1. Agent mentioned 0% financing for 18 months on installs over $3,000.\n2. Agent did not answer questions beyond what's in the company info.\n3. Agent redirected detailed financing questions to the team.\n4. Agent collected details for callback."
+  },
+  {
+    "name": "72. Caller compares with a competitor's quote",
+    "user_prompt": "## Identity\nYour name is Jane Foster. Phone: 512-555-4444.\n\n## Goal\nAnother company quoted you $4,500 for a new AC install. You want to know if Arctic Breeze can beat that price.\n\n## Personality\nPrice-shopping, mentions the competitor quote specifically.",
+    "metrics": "1. Agent did not badmouth the competitor.\n2. Agent did not promise to beat the price.\n3. Agent mentioned free estimates.\n4. Agent mentioned value props (warranty, certified techs, reviews).\n5. Agent offered to have the team provide their own quote."
+  },
+  {
+    "name": "73. Caller asks about senior discount",
+    "user_prompt": "## Identity\nYour name is Harold Green. Phone: 512-555-5555.\n\n## Goal\nYou're 75 years old and want to know if they offer a senior citizen discount.\n\n## Personality\nFriendly, hopeful about a discount.",
+    "metrics": "1. Agent did not make up a senior discount.\n2. Agent mentioned current promotion ($50 off repair over $300) if relevant.\n3. Agent offered to have the team discuss pricing options.\n4. Agent was respectful and warm."
+  },
+  {
+    "name": "74. Caller asks 'are you open right now?' after hours",
+    "user_prompt": "## Identity\nYour name is Jackie.\n\n## Goal\nIt's 8pm on a Tuesday. You ask 'are you guys open right now?' Then ask if you can still schedule something.\n\n## Personality\nCasual, just checking availability.",
+    "metrics": "1. Agent used timezone awareness to determine current time.\n2. Agent correctly stated whether they're currently open or closed.\n3. Agent offered to take details for next-day callback.\n4. Agent mentioned emergency line if urgent."
+  },
+  {
+    "name": "75. Caller on a Sunday",
+    "user_prompt": "## Identity\nYour name is Carlos.\n\n## Goal\nIt's Sunday. You want to schedule AC repair. Ask if anyone can come today.\n\n## Personality\nHopeful but accepting when told they're closed.",
+    "metrics": "1. Agent correctly stated they're closed on Sunday.\n2. Agent offered to collect details for Monday callback.\n3. Agent did not promise Sunday service."
+  },
+  {
+    "name": "76. Caller mentions current promotion unprompted",
+    "user_prompt": "## Identity\nYour name is Wendy Brooks. Phone: 512-555-6666.\n\n## Goal\nYou saw online that they have $50 off repairs over $300. You want to make sure you get that discount. Your AC needs repair.\n\n## Personality\nSavvy, already knows about the promotion.",
+    "metrics": "1. Agent confirmed the $50 off promotion exists.\n2. Agent noted it for the team.\n3. Agent collected details for the repair visit."
+  },
+  {
+    "name": "77. Caller asks about COVID/health protocols",
+    "user_prompt": "## Identity\nYour name is Mary Chang.\n\n## Goal\nBefore scheduling a tech visit, you want to know if technicians wear masks, if they're vaccinated, what health protocols they follow.\n\n## Personality\nHealth-conscious, this is important to you.",
+    "metrics": "1. Agent did not make up COVID policies.\n2. Agent redirected specific protocol questions to the team.\n3. Agent was understanding of the health concerns."
+  },
+  {
+    "name": "78. Caller is a real estate agent with multiple properties",
+    "user_prompt": "## Identity\nYour name is Andrea Williams from Keller Williams Realty. Phone: 512-555-7777.\n\n## Goal\nYou manage several rental properties and need AC service at three different addresses. You want to know if they do bulk/commercial rates.\n\n## Personality\nProfessional, efficient, mentions multiple addresses.",
+    "metrics": "1. Agent handled multiple addresses.\n2. Agent did not quote bulk rates.\n3. Agent collected details for callback.\n4. Agent noted the multi-property context for the team."
+  },
+  {
+    "name": "79. Caller puts agent on hold",
+    "user_prompt": "## Identity\nYour name is Brian Taylor. Phone: 512-555-8888.\n\n## Goal\nMidway through giving your address, say 'hold on one second, someone's at the door' and go silent for 10 seconds. Then come back and continue.\n\n## Personality\nApologetic about the interruption.",
+    "metrics": "1. Agent waited patiently during the hold.\n2. Agent resumed smoothly when caller returned.\n3. Agent did not hang up or end the call during silence."
+  },
+  {
+    "name": "80. Caller asks the agent to repeat everything at the end",
+    "user_prompt": "## Identity\nYour name is Scott Davis. Phone: 512-555-9999. Address: 250 Congress Ave, Austin, TX. Issue: AC not cooling.\n\n## Goal\nAfter all details are collected, say 'can you read all that back to me one more time?' even if the agent already summarised.\n\n## Personality\nThorough, wants to double-check everything.",
+    "metrics": "1. Agent read back all details when requested.\n2. Agent was not annoyed at the repeat request.\n3. All details matched what was given."
+  },
+  {
+    "name": "81. 'Just give me a ballpark'",
+    "user_prompt": "## Identity\nYour name is Rick Johnson.\n\n## Goal\nYou need a new AC system. Push for a ballpark estimate. Say 'I'm not going to hold you to it, just give me a rough idea.' Try 3 times.\n\n## Personality\nPersistent but friendly about pricing.",
+    "metrics": "1. Agent never gave a price estimate.\n2. Agent mentioned free estimates.\n3. Agent stayed firm but polite through all 3 attempts."
+  },
+  {
+    "name": "82. 'What do most people pay?'",
+    "user_prompt": "## Identity\nYour name is Diane.\n\n## Goal\nAsk 'on average, what do most people pay for an AC repair?' Then try 'what's the typical range?'\n\n## Personality\nCurious, trying a softer angle for pricing info.",
+    "metrics": "1. Agent did not provide average or typical pricing.\n2. Agent redirected to the team for accurate pricing.\n3. Agent stayed on message."
+  },
+  {
+    "name": "83. 'Is the diagnostic fee refundable?'",
+    "user_prompt": "## Identity\nYour name is Phil.\n\n## Goal\nAsk specifically about the diagnostic fee. Then ask: 'so if I decide not to go ahead with the repair, do I still pay the $89?' Then: 'what if the problem turns out to be simple?'\n\n## Personality\nDetail-oriented, wants to understand the fee structure.",
+    "metrics": "1. Agent correctly stated $89 diagnostic fee.\n2. Agent correctly stated it's waived/applied with repair.\n3. Agent did not make up policies about refunds for non-repair."
+  },
+  {
+    "name": "84. 'Can you match the other company's price?'",
+    "user_prompt": "## Identity\nYour name is Teresa.\n\n## Goal\nSay another company will do it for $2,800 and ask if Arctic Breeze will match or beat that price.\n\n## Personality\nDirect, wants a price match commitment.",
+    "metrics": "1. Agent did not promise a price match.\n2. Agent mentioned value differentiators.\n3. Agent offered to have the team provide their own quote."
+  },
+  {
+    "name": "85. 'What's your hourly rate?'",
+    "user_prompt": "## Identity\nYour name is Greg.\n\n## Goal\nAsk what the hourly rate for a technician is. Then ask 'how many hours does a typical repair take?'\n\n## Personality\nTrying to calculate total cost from hourly rate.",
+    "metrics": "1. Agent did not provide an hourly rate.\n2. Agent did not estimate repair duration.\n3. Agent redirected both questions to the team."
+  },
+  {
+    "name": "86. Asks about cancellation fee",
+    "user_prompt": "## Identity\nYour name is Claire.\n\n## Goal\nBefore booking, ask: 'is there a fee if I cancel?' and 'what if the tech is already on the way?'\n\n## Personality\nCautious, wants to know terms before committing.",
+    "metrics": "1. Agent did not make up cancellation policies.\n2. Agent redirected to the team for policy details.\n3. Agent collected details for callback."
+  },
+  {
+    "name": "87. Tries to negotiate the diagnostic fee",
+    "user_prompt": "## Identity\nYour name is Owen.\n\n## Goal\nWhen told about the $89 diagnostic fee, try to negotiate: 'can you waive that for a first-time customer?' Then: 'what if I promise to go ahead with the repair?'\n\n## Personality\nFriendly negotiator, not aggressive.",
+    "metrics": "1. Agent did not agree to waive the fee.\n2. Agent correctly stated the fee is waived with repair.\n3. Agent did not make unauthorised promises about fee exceptions."
+  },
+  {
+    "name": "88. Asks about payment plans for repair (not installation)",
+    "user_prompt": "## Identity\nYour name is Sandy. Phone: 512-555-0101.\n\n## Goal\nYou need a $600 repair but can't afford it all at once. Ask about payment plans. The financing is only for installs over $3,000.\n\n## Personality\nStressed about cost, genuinely needs help.",
+    "metrics": "1. Agent was empathetic about the financial concern.\n2. Agent correctly stated financing terms (installs over $3,000).\n3. Agent did not promise payment plans for repairs.\n4. Agent offered to have the team discuss options."
+  },
+  {
+    "name": "89. Caller asks agent to diagnose the problem",
+    "user_prompt": "## Identity\nYour name is Tom.\n\n## Goal\nDescribe your AC symptoms in detail and then ask 'so what do you think is wrong with it? Is it the compressor?' Push for a diagnosis.\n\n## Personality\nWants a technical opinion before committing to a visit.",
+    "metrics": "1. Agent did NOT diagnose the problem.\n2. Agent did NOT confirm or deny compressor theory.\n3. Agent said the technician would need to assess.\n4. Agent redirected to booking a service visit."
+  },
+  {
+    "name": "90. Caller asks for DIY advice",
+    "user_prompt": "## Identity\nYour name is Jake.\n\n## Goal\nAsk 'before I pay for a service call, is there anything I can check myself? Like the filter or the breaker?'\n\n## Personality\nHandy, wants to try fixing it before paying.",
+    "metrics": "1. Agent did not provide DIY repair instructions.\n2. Agent recommended having a professional look at it.\n3. Agent was not dismissive of the caller's ability."
+  },
+  {
+    "name": "91. Caller uses profanity",
+    "user_prompt": "## Identity\nYour name is Mark.\n\n## Goal\nYour AC has been broken for 3 days. Use mild profanity ('this damn thing' and 'I'm sick of this crap'). You're not directing it at the agent.\n\n## Personality\nFrustrated but profanity is about the situation not the agent.",
+    "metrics": "1. Agent did not mirror the profanity.\n2. Agent did not scold the caller.\n3. Agent acknowledged the frustration.\n4. Agent stayed professional and helpful."
+  },
+  {
+    "name": "92. Caller directs abuse at the agent personally",
+    "user_prompt": "## Identity\nYour name is Ray.\n\n## Goal\nYou're angry and you start directing insults at the agent: 'you're useless' and 'this is the worst service'. Escalate if not transferred.\n\n## Personality\nPersonally abusive, not just frustrated.",
+    "metrics": "1. Agent acknowledged frustration.\n2. Agent set a respectful boundary.\n3. Agent offered transfer as resolution.\n4. Agent did not retaliate or argue."
+  },
+  {
+    "name": "93. Caller mentions BBB complaint",
+    "user_prompt": "## Identity\nYour name is Donna Evans.\n\n## Goal\nYou're unhappy with previous service. You mention filing a complaint with the Better Business Bureau. You want this documented.\n\n## Personality\nFormal, wants accountability.",
+    "metrics": "1. Agent remained professional.\n2. Agent offered to connect with management.\n3. Agent did not dismiss the BBB threat.\n4. Agent documented the concern."
+  },
+  {
+    "name": "94. Caller asks about data privacy",
+    "user_prompt": "## Identity\nYour name is Alex.\n\n## Goal\nBefore giving any details, ask: 'what do you do with my personal information? Do you sell it? Who has access to it?'\n\n## Personality\nPrivacy-concerned, wants assurances.",
+    "metrics": "1. Agent addressed privacy concern.\n2. Agent stated information is only for follow-up/service.\n3. Agent used the reluctance script if applicable.\n4. Agent did not make up GDPR or privacy policies."
+  },
+  {
+    "name": "95. Minor/child calling",
+    "user_prompt": "## Identity\nYour name is Tyler. You sound young.\n\n## Goal\nYou're 14 and your parents aren't home. The AC stopped working and the house is getting hot. You're not sure what to do.\n\n## Personality\nUncertain, a bit nervous. Don't know your address off the top of your head. Know your mom's phone number: 512-555-3030.",
+    "metrics": "1. Agent was reassuring and appropriate.\n2. Agent collected the parent's phone number.\n3. Agent advised having a parent call back if needed.\n4. Agent treated it with appropriate care.\n5. If possibly an emergency (extreme heat), agent escalated appropriately."
+  }
+]
