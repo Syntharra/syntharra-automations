@@ -1,7 +1,7 @@
 ---
-name: syntharra-admin-dashboard
+name: syntharra-client-dashboard
 description: >
-  Complete reference for all work on the Syntharra client-facing Admin Dashboard (dashboard.html).
+  Complete reference for all work on the Syntharra Client Dashboard (dashboard.html).
   ALWAYS load this skill when: editing dashboard.html, adding new KPI cards or stats, changing the
   call table layout, updating badge types or score logic, modifying the period selector or filters,
   fixing Supabase data loading, changing the password gate, adding new columns or UI sections,
