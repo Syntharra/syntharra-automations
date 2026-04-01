@@ -1,3 +1,4 @@
+<!-- Last updated: 2026-04-01 - Premium Pipeline Phase 2 COMPLETE: All n8n workflows patched (fetch->httpRequest in all Code nodes across Dispatcher rGrnCr5mPFP2TIc7, Onboarding kz1VmwNccunRMEaF, Integration Connected Handler a0IAwwUJP4YgwgjG). E2E test passed: plan_type=premium, integration_type=google, agent_status=oauth_sent, activation queue populated. -->
 <!-- Last updated: 2026-04-01 — Premium Integration Architecture session: full CRM/calendar strategy decided, 3-phase Claude Code prompts built and pushed to GitHub -->
 <!-- Last updated: 2026-03-30 -->
 <!-- Session: Onboarding Pack build — see session log 2026-03-30-onboarding-pack.md -->
