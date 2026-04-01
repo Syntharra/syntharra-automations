@@ -1,3 +1,4 @@
+<!-- Last updated: 2026-04-01 — Premium Integration Architecture session: full CRM/calendar strategy decided, 3-phase Claude Code prompts built and pushed to GitHub -->
 <!-- Last updated: 2026-03-30 -->
 <!-- Session: Onboarding Pack build — see session log 2026-03-30-onboarding-pack.md -->
 
@@ -448,9 +449,94 @@ Discount codes doc: `docs/discount-codes.md`
 - [ ] Telnyx SMS swap (awaiting AI evaluation approval)
 - [ ] Enable repeat caller detection
 - [ ] Build Premium pipeline
+- [ ] Run Phase 1 Claude Code prompt (Jotform S7, Google + Outlook OAuth, Google dispatcher, onboarding wiring)
+- [ ] Run Phase 2 Claude Code prompt (Jobber, Calendly, Acuity, HubSpot native integrations)
+- [ ] Run Phase 3 Claude Code prompt (auto-activation, You're Live email, token refresh, admin queue)
+- [ ] Apply for ServiceTitan developer access (in progress)
 
 
 ---
+
+
+---
+
+## Session: 2026-04-01 — Premium Integration Architecture
+
+### Decisions Made
+
+**Integration architecture — three types:**
+- **Type A** (Scheduling platforms, client OAuth): Calendly, Acuity Scheduling, HubSpot Meetings
+- **Type B** (FSM/CRM platforms, client OAuth): Jobber
+- **Type C** (Calendar direct, client OAuth): Google Calendar, Microsoft Outlook
+  - Apple Calendar / no system → redirect to Google Calendar setup
+
+**Cal.com rejected** — Platform API closed to new signups as of Dec 2025. Using direct Google/Outlook OAuth instead.
+
+**Confirmed OAuth integrations ready:**
+- Google Calendar ✅ OAuth app configured
+- Microsoft Outlook ✅ Azure OAuth app configured (resolved billing issue)
+- Calendly ✅ OAuth app configured
+- Jobber ✅ OAuth app configured
+- HubSpot ✅ OAuth app configured
+- ServiceTitan ⏳ Developer access application in progress
+
+**Decided against pivot to social media content** — existing product is nearly launch-ready, market is saturated, AI receptionist has stronger ROI story.
+
+**Semi-manual launch strategy confirmed:**
+- Phase 1-2 build all integrations
+- Phase 3 automates activation
+- Manual step (Dan reviewing) only until Phase 3 complete
+
+### Claude Code Prompts Built
+
+Three prompts created and pushed to GitHub:
+`syntharra-automations/docs/integration-prompts/`
+
+| File | Purpose |
+|---|---|
+| `phase-1-prompt.md` | Supabase schema, Jotform S7 rebuild, Google+Outlook OAuth routes, Google dispatcher, onboarding workflow wiring |
+| `phase-2-prompt.md` | Jobber, Calendly, Acuity, HubSpot OAuth routes + dispatchers + onboarding branches |
+| `phase-3-prompt.md` | Auto-activation, You're Live email, token refresh workflow, admin activation queue |
+
+### Jotform Section 7 — New Structure (to be built by Phase 1 prompt)
+
+New single question replaces split CRM/calendar questions:
+  "How do your technicians manage their schedule?"
+  Options: Google Calendar | Microsoft Outlook | Jobber | Calendly | Acuity | HubSpot | Apple Calendar | No system
+
+Routing:
+  Google → integration_type = "google"
+  Outlook → integration_type = "outlook"  
+  Jobber → integration_type = "jobber"
+  Calendly → integration_type = "calendly"
+  Acuity → integration_type = "acuity"
+  HubSpot → integration_type = "hubspot"
+  Apple / None → integration_type = "google" (redirected to Google Calendar setup)
+
+### New Supabase Columns (to be added by Phase 1)
+
+hvac_standard_agent new columns:
+  scheduling_platform, integration_type, integration_status, agent_status,
+  oauth_access_token, oauth_refresh_token, oauth_token_expiry,
+  google_calendar_id, outlook_calendar_id, bookable_job_types,
+  slot_duration_minutes, buffer_time_minutes, min_notice_hours,
+  booking_hours, booking_confirmation_method, cal_agreement
+
+New table: syntharra_activation_queue
+
+### New n8n Workflows (to be built)
+
+| Workflow | Purpose |
+|---|---|
+| Premium — Integration Connected Handler | Fires when client completes OAuth, notifies Dan, sends holding email |
+| Premium Dispatcher — Google Calendar | Checks availability + books via Google Calendar API |
+| Premium Dispatcher — Outlook | Checks availability + books via Microsoft Graph API |
+| Premium Dispatcher — Jobber | Checks Jobber schedule + creates job requests |
+| Premium Dispatcher — Calendly | Gets slots + generates single-use booking links |
+| Premium Dispatcher — Acuity | Checks Acuity availability + creates appointments |
+| Premium Dispatcher — HubSpot | Checks HubSpot meeting availability + books |
+| Premium — Send You're Live Email | Triggered on activation, sends polished live confirmation |
+| Premium — Daily Token Refresh | Runs 2am UTC, refreshes all expiring OAuth tokens |
 
 
 ## Session: 2026-03-30 — Skill Library Built
@@ -774,3 +860,4 @@ Native n8n node. API on Starter plan. Full social scheduling built in.
 - 8-case Premium batch = ~$1.20. Max 3 batches per session.
 - 95-case Standard batch = ~$7. Pre-launch only. Never run more than once per session.
 - Diagnose from flow JSON (free) before running any batch.
+
