@@ -35,7 +35,7 @@ At the **END** of every chat that changes the dashboard:
 | Runtime | Node.js + Express (`server.js`) |
 | Frontend | Single-file vanilla JS — `public/index.html` |
 | Email page | `public/email.html` (Email Intelligence section) |
-| Current SHA (index.html) | `b7a03e022446a8e15d5f567afcca934e3a5d107a` |
+| Current SHA (index.html) | `0a8774f66a08a204b662ce12bef96f9b793d63db` |
 
 ---
 
@@ -153,6 +153,7 @@ Always use `str.replace()` pattern for edits — never rewrite the whole file.
 | `sec-opsmonitor` | Ops Monitor | `opsmonitor` | `loadOpsData()` |
 | `sec-marketing` | Marketing Pipeline | `marketing` | `renderMarketing()` |
 | `sec-settings` | Settings | `settings` | (static HTML) |
+| `sec-testing` | Agent Testing | `testing` | `loadTestingData()` |
 | `sec-ai` | AI Assistant | `ai` | `aiSend()` |
 | `/email.html` | Email Intelligence | (external link) | separate page |
 
@@ -437,6 +438,7 @@ Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 8. **Railway auto-deploys** — push to `main` → Railway detects change → deploys in ~60s.
 9. **One commit per feature** — prefix with `admin:` e.g. `admin: add revenue chart`.
 10. **`TZ = 'Europe/London'`** — all dates/times formatted in Dan's timezone (GMT/BST).
+11. **CRITICAL: JS onclick string escaping** — When building HTML strings with inline onclick handlers inside single-quoted JS strings, use `'` (escaped quote) NOT `''` (two bare quotes). Two bare single quotes `''` inside a single-quoted string TERMINATES the string and creates a JS syntax error that breaks the ENTIRE script. Correct: `'onclick="fn('' + id + '')">` → produces `onclick="fn('ID')"`.
 
 ---
 
@@ -460,4 +462,4 @@ Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 - New env var → update Environment Variables table
 - Design token changed → update Design System table
 
-**How:** Fetch skill from `Syntharra/syntharra-automations/skills/admin-dashboard/SKILL.md`, apply changes, push back.
+**How:** Fetch skill from `Syntharra/syntharra-automations/skills/syntharra-admin/SKILL.md`, apply changes, push back.
