@@ -123,6 +123,12 @@ Syntharra is a global AI Solutions company that builds AI phone receptionists fo
 - After any workflow edit, always activate/publish it
 - n8n PUT endpoint only accepts: `name`, `nodes`, `connections`, `settings.executionOrder`
 - To activate a workflow: `POST /api/v1/workflows/{id}/activate`
+- **Webhook `responseMode: responseNode` requires a LINEAR chain** — wire as: Webhook → Respond Immediately → next node → ... Do NOT split into two branches from the Webhook; the non-Respond branch is orphaned and never executes.
+- **Split In Batches v3 output indices are reversed** — `output[0]` = done signal, `output[1]` = loop items. Always connect to output index 1 for the loop.
+- **HTTP Request node v4.2 wraps JSON array responses** — response is `{data: [...]}` not a raw array. In downstream Code nodes always check: `const items = Array.isArray(raw) ? raw : Array.isArray(raw.data) ? raw.data : [];`
+- **Code node `runOnceForEachItem` must return `{json: {...}}` directly** — NOT `[{json: {...}}]`. Wrapping in an array causes "A 'json' property isn't an object" error.
+- **Groq free tier limits: 30 RPM / 6000 TPM** for `llama-3.3-70b-versatile`. Add a Wait node (10 seconds) before the first Groq node in any batch loop to stay safely under limits.
+- **Cross-node references: use in HTTP Request expressions only** — `$('NodeName').item.json` is reliable in HTTP Request `jsonBody` fields. Inside Code nodes, only use `$input` or `$json` — cross-node refs are unreliable there.
 
 ### Retell
 - Never delete or recreate an agent — patch in place always
