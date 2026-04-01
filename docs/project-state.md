@@ -4,6 +4,7 @@
 <!-- Last updated: 2026-03-30 (session 4) — Call processor Internal Notification rewired: now runs after Supabase log on every call, fires alert to alerts@syntharra.com only on 7 error conditions (SYSTEM_ERROR, CALL_STATUS_ERROR, TRANSFER_FAILED, TRANSFER_UNSUCCESSFUL, ABNORMAL_ENDING, CLIENT_NOT_FOUND, CALL_TOO_SHORT, GEOCODE_ERROR, GPT_ANALYSIS_FAILED). Silent on normal calls. Both STD + PREM updated and activated.
 <!-- Last updated: 2026-03-30 (session 3) — alerts@syntharra.com added: Railway ALERT_EMAIL_TO updated, alertManager.js fallback updated, email skill + project-state updated. Signature file already existed from prior session.
 <!-- Last updated: 2026-03-31 — Email Digest LIVE: workflow 4aulrlX1v8AtWwvC running (9 inboxes, Groq AI, Supabase). N8N_EDITOR_BASE_URL added to Railway. All 22 n8n workflows tagged by category. -->
+<!-- Last updated: 2026-04-01 — Agent Testing System FIXED: both n8n workflows rebuilt with HTTP Request nodes (no fetch()). SYNTHARRA_AGENT_TEST_RUNNER (3MMp9J8QN0YKgA6Q) and SYNTHARRA_FIX_APPROVER (ZAAtRETIIVZSMMDk) now ACTIVE. Smoke test: 15/15 core_flow scenarios processed, 9 pending fixes generated. -->
 # Syntharra — Project State (Master Reference)
 
 > **This is the single source of truth for all Syntharra operational state.**
@@ -130,8 +131,8 @@ To apply: open HTML file in Chrome, Select All → Copy → paste into Gmail sig
 
 | Item | Value |
 |---|---|
-| Test Runner workflow | `3MMp9J8QN0YKgA6Q` (BROKEN — needs HTTP Request node rebuild) |
-| Fix Approver workflow | `ZAAtRETIIVZSMMDk` (BROKEN — needs HTTP Request node rebuild) |
+| Test Runner workflow | `3MMp9J8QN0YKgA6Q` (ACTIVE ✅ — 17 nodes, Split In Batches batchSize=1, 10s throttle) |
+| Fix Approver workflow | `ZAAtRETIIVZSMMDk` (ACTIVE ✅ — 9 nodes, HTTP Request nodes throughout) |
 | Test Runner webhook | `POST https://n8n.syntharra.com/webhook/agent-test-runner` |
 | Fix Approver webhook | `POST https://n8n.syntharra.com/webhook/apply-agent-fix` |
 | Scenarios file | `tests/agent-test-scenarios.json` (95 scenarios) |
@@ -141,10 +142,17 @@ To apply: open HTML file in Chrome, Select All → Copy → paste into Gmail sig
 | LLM for testing | Groq `llama-3.3-70b-versatile` (free) |
 | Agent for testing | Arctic Breeze `agent_4afbfdb3fcb1ba9569353af28d` |
 
-### Fix needed (do in Claude Code)
-Both n8n workflows use `fetch()` inside Code nodes which is blocked in n8n sandbox.
-Rebuild using HTTP Request nodes chained together.
-Use the prompt in `docs/claude-code-prompt-agent-testing.md`.
+### Architecture (Test Runner — 17 nodes)
+`Webhook → Respond Immediately → GET Scenarios → Filter Scenarios → Split In Batches (batchSize=1) → Wait (10s) → Groq Caller T1 → Groq Agent T1 → Groq Caller T2 → Groq Agent T2 → Groq Evaluate → Parse Eval → Save Test Result → Check If Failed → [TRUE: Groq Fix Suggestion → Save Pending Fix → loop-back] [FALSE: No Op → loop-back]`
+
+### Key implementation notes
+- Split In Batches v3: output[0]=done, output[1]=loop items (NOT the other way round)
+- 10s Wait between scenarios to stay under Groq 30 RPM / 6000 TPM free-tier limits
+- Webhook uses `responseMode: responseNode` — must be linear chain (Webhook → Respond → processing)
+- HTTP Request node v4.2 wraps JSON array responses as `{data:[...]}` — Filter Scenarios handles both formats
+- Cross-node refs (`$('Split In Batches').item.json`) work in HTTP Request jsonBody expressions
+- Code nodes: `runOnceForEachItem` returns `{json:{...}}` directly (not array-wrapped)
+- build scripts: `claude_code/build_wf1.py` (Test Runner), `claude_code/build_wf2.py` (Fix Approver)
 
 ## Pricing
 
