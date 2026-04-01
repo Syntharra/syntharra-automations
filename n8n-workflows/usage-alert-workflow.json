@@ -1,0 +1,349 @@
+{
+  "name": "Usage Alert Monitor (80% & 100% Warnings)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "daily_trigger",
+      "name": "Daily Check (9AM UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        400
+      ],
+      "notes": "Runs daily at 9AM UTC to check usage levels for all active subscriptions"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/stripe_payment_data?payment_status=eq.paid&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch_subscriptions",
+      "name": "Supabase: Fetch Active Subscriptions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        440,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-anon",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const payments = $input.first().json;\nif (!Array.isArray(payments) || payments.length === 0) return [];\n\nconst now = new Date();\nconst year = now.getUTCFullYear();\nconst month = now.getUTCMonth(); // 0-indexed\nconst billingMonth = `${year}-${String(month + 1).padStart(2, '0')}`;\nconst periodStart = new Date(Date.UTC(year, month, 1, 0, 0, 0)).toISOString();\n\nreturn payments.map(p => {\n  const planName = (p.plan_name || '').toLowerCase();\n  const isPremium = planName.includes('premium');\n  const includedMinutes = p.minutes ? parseInt(p.minutes) : (isPremium ? 1000 : 475);\n\n  return {\n    json: {\n      subscription_id: p.id,\n      agent_id: p.agent_id,\n      company_name: p.customer_name,\n      client_email: p.customer_email,\n      plan_type: isPremium ? 'premium' : 'standard',\n      included_minutes: includedMinutes,\n      billing_month: billingMonth,\n      period_start: periodStart\n    }\n  };\n});"
+      },
+      "id": "prepare_checks",
+      "name": "Prepare Subscription Checks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log?agent_id=eq.{{ $json.agent_id }}&call_timestamp=gte.{{ $json.period_start }}&select=duration_seconds",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch_current_usage",
+      "name": "Supabase: Fetch Current Month Usage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        920,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-anon",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const calls = $input.first().json;\nconst sub = $('Prepare Subscription Checks').item;\n\nconst callList = Array.isArray(calls) ? calls : [];\nconst totalSeconds = callList.reduce((sum, c) => sum + (c.duration_seconds || 0), 0);\nconst totalMinutes = Math.ceil(totalSeconds / 60);\nconst includedMinutes = sub.json.included_minutes;\nconst usagePercent = includedMinutes > 0 ? Math.round((totalMinutes / includedMinutes) * 100) : 0;\nconst remainingMinutes = Math.max(0, includedMinutes - totalMinutes);\n\nreturn [{\n  json: {\n    ...sub.json,\n    total_minutes: totalMinutes,\n    usage_percent: usagePercent,\n    remaining_minutes: remainingMinutes,\n    needs_80_alert: usagePercent >= 80 && usagePercent < 100,\n    needs_100_alert: usagePercent >= 100,\n    overage_minutes: Math.max(0, totalMinutes - includedMinutes)\n  }\n}];"
+      },
+      "id": "calc_usage_percent",
+      "name": "Calculate Usage %",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles?agent_id=eq.{{ $json.agent_id }}&billing_month=eq.{{ $json.billing_month }}&select=alert_80_sent,alert_100_sent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "check_alerts_sent",
+      "name": "Supabase: Check If Alerts Already Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1400,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-anon",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const alertData = $input.first().json;\nconst usageData = $('Calculate Usage %').item.json;\n\nconst existing = Array.isArray(alertData) ? alertData[0] : alertData;\nconst alert80Sent = existing?.alert_80_sent || false;\nconst alert100Sent = existing?.alert_100_sent || false;\n\n// Determine which alert to send (if any)\nlet alertType = null;\nif (usageData.needs_100_alert && !alert100Sent) {\n  alertType = '100';\n} else if (usageData.needs_80_alert && !alert80Sent) {\n  alertType = '80';\n}\n\nif (!alertType) return []; // No alert needed\n\nreturn [{\n  json: {\n    ...usageData,\n    alert_type: alertType,\n    alert_80_sent: alert80Sent,\n    alert_100_sent: alert100Sent\n  }\n}];"
+      },
+      "id": "determine_alert",
+      "name": "Determine Alert Needed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.client_email }}",
+        "subject": "={{ $json.alert_type === '100' ? '⚠️ Syntharra: You\\'ve exceeded your included minutes — ' : '⚡ Syntharra: 80% of included minutes used — ' }}{{ $json.company_name }}",
+        "message": "=<div style='margin:0;padding:0;background:#F7F7FB'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:24px 16px'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB'><tr><td style='background:{{ $json.alert_type === \"100\" ? \"linear-gradient(135deg,#c53030,#e53e3e)\" : \"linear-gradient(135deg,#dd6b20,#f6ad55)\" }};padding:28px 32px'><table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;margin-bottom:18px'><tr><td style='vertical-align:middle;padding-right:10px'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEA0lEQVR4nO2bPWwcRRTHfzPrs/HZJv5IghJHQhBZWBApBisFIONAgUSBlCJBIKooDUUqOtp0kahQCpqIKlKEFKUgUhoiBSoQCFlAJIMTRakiZHCEfeZy5nZeivXmNps7337Neu/jX93Ozb55//+8eTM7s6vICWfPiMSpf+GiUrZ8CcJaI3EJt4MtQTI3mjXxMLIWIjNjtomHkZUQqY3kTTyMtEIkvnm3iYeRVAid5KaikYfkPsUWoIjkfSTxLXLYFJl4M0QdEpEioNPIQ3Sf2wrQieR9RPE9URLsJuwoQCf3vo92HFoK0A3kfezEpakA3UTeRytOPZ8Dnpori9r7Y8+yevIjbk/tYw+C1GpsXbtK6e4djsSxE14fDGTrpj0svM2t145xPFj2wccsnz+Xzu4TQ6CovQ9QLqOMwa3XqRlD3RjcoSGeiWsnzLFjIsAY0BoHEKXQSqFFSN1hjyOgyL3fEirZ43yQa8/PAhqK0fujo6zNzLI08xJLh2f41XZ7PudC5IDxCe5/+hkyMcmcX7ayzNIXnzeubaEQQ+D5F7g3MclB1+V/Y3BFMDOzzB2Y5rbttgsRAYASwfjZXSnvWiuM7YZ1EcY/gFJPRmP42gbOnhEpxBDYTfS8ALnkgNmX+eX1BWpaewuXOyvUbn7LYh5tt4N1AYaHWT/9CS+Wy4z7ZXPzsPoXP936jWO2228H+wKU2SiVmDKGOoDrUnccSlP7qNpuOwqsCyCyPaVpBkQQx/EealzX3tF8HOSSBFWTjRel0j/JZYH+LJCFkfEJ7g8O8RBgs8KezQqTWdjNA6kFWDjO9ydOMT9QYr9SqEqFta++ZGnlD/sPMlkg9RB4Y5HnBocYARDBjI2x981F/kvvWj7Qad+wcF3c4NZUFttUeeHCRaVSR4ACpQJbUyrhNtVuoedngb4AkN9bmUWCzzl1BAjtk16zOiKNXJF4SybLc4HEr5kptL+PJwZjDG4oKYrCO9UR8f43BtfRDee1Rrbvf1xHBAkul7X2bATtJE24Qa6pF0LVKtXtExsnUFb3fz+sMmIMbsmr45/usLnZaLuywbBSaGeAwZDtsv97YwOjNY5/P0C93mgnKVKfDh88xMqJU6yPjnrOPnjA+pXLTK/9zSG/ztw8P7zzLiOO45G+d5fVry/xVtDOe+9z85Wj7AcQg/z8I/98d6NRZ7jMvyc/5PcD00yKwFaNrevfYP5c5tU4/oYjvWOOx7NCWICnkmA3zwjNuPXXAc0KuzEKWnFqGQHdJMJOXHYcAt0gQjsO/RzQrkInR0EU3yNFQCeKENXn2MSKvlCK21mxc0CRoyGJb4mSYBFFSOpT/7O5rBzp2Q8nw+jZT2fD6NmPp1uhqJ/PPwJ0VJJMh1QmBQAAAABJRU5ErkJggg==' width='36' height='36' alt='Syntharra' style='display:block;border:0;'/></td><td style='vertical-align:middle'><div style='font-family:Georgia,serif;font-size:20px;font-weight:normal;color:#ffffff;letter-spacing:0.5px;line-height:1.1'>Syntharra</div><div style='font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:bold;color:rgba(255,255,255,0.7);letter-spacing:3.5px;text-transform:uppercase;margin-top:3px'>Global AI Solutions</div></td></tr></table><h1 style='font-family:Georgia,serif;font-size:22px;font-weight:normal;color:#ffffff;margin:0'>{{ $json.alert_type === \"100\" ? \"⚠️ Minutes Limit Exceeded\" : \"⚡ 80% Usage Warning\" }}</h1><p style='font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);margin:4px 0 0'>{{ $json.company_name }} &nbsp;·&nbsp; {{ $json.billing_month || \"This month\" }}</p></td></tr><tr><td style='padding:28px 32px'><p style='font-family:Arial,sans-serif;font-size:14px;color:#4A4A6A;margin:0 0 16px'>Hi {{ $json.company_name }},</p>{{ $json.alert_type === \"100\" ? \"<p style='font-family:Arial,sans-serif;font-size:14px;color:#4A4A6A;margin:0 0 16px'>Your AI Receptionist has <strong style=\\\"color:#1A1A2E\\\">exceeded the \" + $json.included_minutes + \" minutes</strong> included in your <strong style=\\\"color:#1A1A2E\\\">\" + $json.plan_type + \" plan</strong> this month.</p><p style='font-family:Arial,sans-serif;font-size:14px;color:#4A4A6A;margin:0 0 16px'>You've used <strong style=\\\"color:#1A1A2E\\\">\" + $json.total_minutes + \" minutes</strong> — <strong style=\\\"color:#c53030\\\">\" + $json.overage_minutes + \" minutes over</strong> your limit.</p><div style='background:#FFF5F5;border:1px solid #FEB2B2;border-radius:8px;padding:14px;font-family:Arial,sans-serif;font-size:13px;color:#c53030;font-weight:700;margin-bottom:20px'>Additional minutes are billed at $0.25/min and invoiced at end of billing cycle.</div>\" : \"<p style='font-family:Arial,sans-serif;font-size:14px;color:#4A4A6A;margin:0 0 16px'>Your AI Receptionist has used <strong style=\\\"color:#1A1A2E\\\">\" + $json.total_minutes + \" of \" + $json.included_minutes + \" minutes</strong> (\" + $json.usage_percent + \"%) included in your <strong style=\\\"color:#1A1A2E\\\">\" + $json.plan_type + \" plan</strong> this month.</p><p style='font-family:Arial,sans-serif;font-size:14px;color:#4A4A6A;margin:0 0 16px'>You have approximately <strong style=\\\"color:#1A1A2E\\\">\" + $json.remaining_minutes + \" minutes remaining</strong>.</p>\" }}<div style='background:#F7F7FB;border:1px solid #E5E7EB;border-radius:8px;padding:14px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'><strong style='color:#1A1A2E'>Want more minutes?</strong> Upgrade to Premium (1,000 min/mo) for better value. Contact <a href='mailto:support@syntharra.com' style='color:#6C63FF;text-decoration:none'>support@syntharra.com</a>.</div></td></tr><tr><td style='border-top:1px solid #E5E7EB;padding:16px 32px;background:#F7F7FB;text-align:center'><p style='font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#8A8AA0;margin:0'>Questions? <a href='mailto:support@syntharra.com' style='color:#6C63FF;text-decoration:none'>support@syntharra.com</a> &nbsp;·&nbsp; <a href='https://www.syntharra.com' style='color:#6C63FF;text-decoration:none'>www.syntharra.com</a></p><p style='font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#8A8AA0;letter-spacing:1px;text-transform:uppercase;margin:6px 0 0'>AI Solutions for the Trade Industry</p></td></tr></table></td></tr></table></div>",
+        "options": {}
+      },
+      "id": "send_alert_email",
+      "name": "Gmail: Send Usage Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        400
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth",
+          "name": "Gmail OAuth2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/billing_cycles",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation,resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ agent_id: $json.agent_id, billing_month: $json.billing_month, period_start: $json.period_start, period_end: new Date(new Date($json.period_start).getFullYear(), new Date($json.period_start).getMonth() + 1, 1).toISOString(), included_minutes: $json.included_minutes, total_minutes: $json.total_minutes, [($json.alert_type === '80' ? 'alert_80_sent' : 'alert_100_sent')]: true }) }}",
+        "options": {}
+      },
+      "id": "mark_alert_sent",
+      "name": "Supabase: Mark Alert Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2120,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-anon",
+          "name": "Supabase Anon Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "daniel@syntharra.com",
+        "subject": "=[INTERNAL] Usage Alert — {{ $json.company_name }} at {{ $json.usage_percent }}%",
+        "message": "=<div style='margin:0;padding:0;background:#F7F7FB'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:24px 16px'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB'><tr><td style='background:linear-gradient(135deg,#1A1A2E,#2d2d5e);padding:28px 32px'><table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;margin-bottom:18px'><tr><td style='vertical-align:middle;padding-right:10px'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEA0lEQVR4nO2bPWwcRRTHfzPrs/HZJv5IghJHQhBZWBApBisFIONAgUSBlCJBIKooDUUqOtp0kahQCpqIKlKEFKUgUhoiBSoQCFlAJIMTRakiZHCEfeZy5nZeivXmNps7337Neu/jX93Ozb55//+8eTM7s6vICWfPiMSpf+GiUrZ8CcJaI3EJt4MtQTI3mjXxMLIWIjNjtomHkZUQqY3kTTyMtEIkvnm3iYeRVAid5KaikYfkPsUWoIjkfSTxLXLYFJl4M0QdEpEioNPIQ3Sf2wrQieR9RPE9URLsJuwoQCf3vo92HFoK0A3kfezEpakA3UTeRytOPZ8Dnpori9r7Y8+yevIjbk/tYw+C1GpsXbtK6e4djsSxE14fDGTrpj0svM2t145xPFj2wccsnz+Xzu4TQ6CovQ9QLqOMwa3XqRlD3RjcoSGeiWsnzLFjIsAY0BoHEKXQSqFFSN1hjyOgyL3fEirZ43yQa8/PAhqK0fujo6zNzLI08xJLh2f41XZ7PudC5IDxCe5/+hkyMcmcX7ayzNIXnzeubaEQQ+D5F7g3MclB1+V/Y3BFMDOzzB2Y5rbttgsRAYASwfjZXSnvWiuM7YZ1EcY/gFJPRmP42gbOnhEpxBDYTfS8ALnkgNmX+eX1BWpaewuXOyvUbn7LYh5tt4N1AYaHWT/9CS+Wy4z7ZXPzsPoXP936jWO2228H+wKU2SiVmDKGOoDrUnccSlP7qNpuOwqsCyCyPaVpBkQQx/EealzX3tF8HOSSBFWTjRel0j/JZYH+LJCFkfEJ7g8O8RBgs8KezQqTWdjNA6kFWDjO9ydOMT9QYr9SqEqFta++ZGnlD/sPMlkg9RB4Y5HnBocYARDBjI2x981F/kvvWj7Qad+wcF3c4NZUFttUeeHCRaVSR4ACpQJbUyrhNtVuoedngb4AkN9bmUWCzzl1BAjtk16zOiKNXJF4SybLc4HEr5kptL+PJwZjDG4oKYrCO9UR8f43BtfRDee1Rrbvf1xHBAkul7X2bATtJE24Qa6pF0LVKtXtExsnUFb3fz+sMmIMbsmr45/usLnZaLuywbBSaGeAwZDtsv97YwOjNY5/P0C93mgnKVKfDh88xMqJU6yPjnrOPnjA+pXLTK/9zSG/ztw8P7zzLiOO45G+d5fVry/xVtDOe+9z85Wj7AcQg/z8I/98d6NRZ7jMvyc/5PcD00yKwFaNrevfYP5c5tU4/oYjvWOOx7NCWICnkmA3zwjNuPXXAc0KuzEKWnFqGQHdJMJOXHYcAt0gQjsO/RzQrkInR0EU3yNFQCeKENXn2MSKvlCK21mxc0CRoyGJb4mSYBFFSOpT/7O5rBzp2Q8nw+jZT2fD6NmPp1uhqJ/PPwJ0VJJMh1QmBQAAAABJRU5ErkJggg==' width='36' height='36' alt='Syntharra' style='display:block;border:0;'/></td><td style='vertical-align:middle'><div style='font-family:Georgia,serif;font-size:20px;font-weight:normal;color:#ffffff;letter-spacing:0.5px;line-height:1.1'>Syntharra</div><div style='font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:bold;color:rgba(255,255,255,0.7);letter-spacing:3.5px;text-transform:uppercase;margin-top:3px'>Global AI Solutions</div></td></tr></table><h1 style='font-family:Georgia,serif;font-size:22px;font-weight:normal;color:#ffffff;margin:0;line-height:1.3'>[INTERNAL] Usage Alert</h1><p style='font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);margin:4px 0 0'>{{ $json.company_name }} at {{ $json.usage_percent }}%</p></td></tr><tr><td style='padding:28px 32px'><div style='background:rgba(108,99,255,0.08);border-left:3px solid #6C63FF;padding:8px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#6C63FF;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;border-radius:0 6px 6px 0'>Internal notification — daniel@syntharra.com only</div><table style='width:100%;border-collapse:collapse'><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;background:#F7F7FB;'>Company</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.company_name }}</td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;'>Plan</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.plan_type }}</td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;background:#F7F7FB;'>Usage</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.usage_percent }}%</td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;'>Minutes Used</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.total_minutes }} / {{ $json.included_minutes }}</td></tr>{{ $json.overage_minutes > 0 ? \"<tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#c53030;width:38%;background:#F7F7FB'>Overage</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#c53030;font-weight:700'>\" + $json.overage_minutes + \" min ($\" + (($json.overage_minutes * 25) / 100).toFixed(2) + \")</td></tr>\" : \"<tr><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#38a169;width:38%'>Remaining</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#38a169'>\" + $json.remaining_minutes + \" min</td></tr>\" }}</table></td></tr><tr><td style='border-top:1px solid #E5E7EB;padding:16px 32px;background:#F7F7FB;text-align:center'><p style='font-family:Arial,sans-serif;font-size:11px;color:#8A8AA0;margin:0'>Syntharra Internal &nbsp;·&nbsp; <a href='mailto:admin@syntharra.com' style='color:#6C63FF;text-decoration:none'>admin@syntharra.com</a></p></td></tr></table></td></tr></table></div>",
+        "options": {}
+      },
+      "id": "notify_internal",
+      "name": "Gmail: Notify You (Internal)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        600
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth",
+          "name": "Gmail OAuth2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Daily Check (9AM UTC)": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Fetch Active Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Fetch Active Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Prepare Subscription Checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Subscription Checks": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Fetch Current Month Usage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Fetch Current Month Usage": {
+      "main": [
+        [
+          {
+            "node": "Calculate Usage %",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Usage %": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Check If Alerts Already Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Check If Alerts Already Sent": {
+      "main": [
+        [
+          {
+            "node": "Determine Alert Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Alert Needed": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Send Usage Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail: Notify You (Internal)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Send Usage Alert": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Mark Alert Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
