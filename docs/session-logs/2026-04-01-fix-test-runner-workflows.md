@@ -6,7 +6,7 @@ Rebuilt both broken n8n workflows (SYNTHARRA_AGENT_TEST_RUNNER and SYNTHARRA_FIX
 
 ## Root cause (prior breakage)
 
-Both workflows used `fetch()` inside n8n Code nodes. Fetch is blocked in n8n’s sandbox environment — executions silently failed or errored out.
+Both workflows used `fetch()` inside n8n Code nodes. Fetch is blocked in n8n's sandbox environment — executions silently failed or errored out.
 
 ## Fixes applied
 
@@ -38,21 +38,21 @@ No debugging issues — deployed cleanly on first run.
 
 | scenario_id | scenario_name | pass | severity |
 |---|---|---|---|
-| 1 | Basic service request | ✅ | LOW |
-| 2 | Emergency - no heat in winter | ❌ | CRITICAL |
-| 3 | Quote request | ✅ | LOW |
-| 4 | Existing customer follow-up | ✅ | LOW |
-| 5 | FAQ - hours inquiry | ❌ | MEDIUM |
-| 6 | Request live person immediately | ❌ | CRITICAL |
-| 7 | AC making strange noise | ✅ | LOW |
-| 8 | Heating system not working | ❌ | MEDIUM |
-| 9 | Spam robocall | ❌ | CRITICAL |
-| 10 | Wrong number | ❌ | MEDIUM |
-| 11 | Maintenance request | ✅ | LOW |
-| 12 | No cooling with burning smell | ❌ | HIGH |
-| 13 | Callback requested | ❌ | MEDIUM |
-| 14 | Ductwork cleaning inquiry | ✅ | LOW |
-| 15 | End of call - caller decides to wait | ❌ | MEDIUM |
+| 1 | Basic service request | PASS | LOW |
+| 2 | Emergency - no heat in winter | FAIL | CRITICAL |
+| 3 | Quote request | PASS | LOW |
+| 4 | Existing customer follow-up | PASS | LOW |
+| 5 | FAQ - hours inquiry | FAIL | MEDIUM |
+| 6 | Request live person immediately | FAIL | CRITICAL |
+| 7 | AC making strange noise | PASS | LOW |
+| 8 | Heating system not working | FAIL | MEDIUM |
+| 9 | Spam robocall | FAIL | CRITICAL |
+| 10 | Wrong number | FAIL | MEDIUM |
+| 11 | Maintenance request | PASS | LOW |
+| 12 | No cooling with burning smell | FAIL | HIGH |
+| 13 | Callback requested | FAIL | MEDIUM |
+| 14 | Ductwork cleaning inquiry | PASS | LOW |
+| 15 | End of call - caller decides to wait | FAIL | MEDIUM |
 
 **Pass rate:** 6/15 (40%) — many failures relate to agent not reading back details or not handling edge cases. 9 pending fixes generated in `agent_pending_fixes`.
 
