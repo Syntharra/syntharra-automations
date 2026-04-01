@@ -111,7 +111,6 @@
     },
     {
       "parameters": {
-        "model": "gpt-4o-mini",
         "options": {
           "temperature": 0.2
         },
@@ -126,7 +125,8 @@
               "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}"
             }
           ]
-        }
+        },
+        "modelId": "gpt-4o-mini"
       },
       "id": "gpt_analyze_transcript",
       "name": "GPT: Analyze Transcript",
@@ -138,8 +138,8 @@
       ],
       "credentials": {
         "openAiApi": {
-          "id": "openai-key",
-          "name": "OpenAI API Key"
+          "id": "1uzBYwyR7Q7bdkZe",
+          "name": "OpenAi account"
         }
       }
     },
