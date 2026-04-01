@@ -1,0 +1,409 @@
+{
+  "name": "HVAC Call Processor - Retell Webhook (Supabase)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-hvac-webhook",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "retell_webhook",
+      "name": "Retell Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-event",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "call_analyzed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "filter_call_analyzed",
+      "name": "Filter: call_analyzed Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        496,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst call = body.call || body;\n\nreturn {\n  call_id: call.call_id || '',\n  agent_id: call.agent_id || '',\n  from_number: call.from_number || '',\n  to_number: call.to_number || '',\n  transcript: call.transcript || '',\n  duration_seconds: Math.round((call.end_timestamp - call.start_timestamp) / 1000) || 0,\n  disconnection_reason: call.disconnection_reason || '',\n  call_analysis: call.call_analysis || {},\n  call_timestamp: new Date().toISOString()\n};"
+      },
+      "id": "extract_call_data",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_standard_agent?agent_id=eq.{{ $json.agent_id }}&select=*",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase_lookup_client",
+      "name": "Supabase: Lookup Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        976,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-anon",
+          "name": "Supabase Anon Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Parse client data from Supabase lookup\nconst clients = $input.first().json;\nconst callData = $('Extract Call Data').first().json;\n\n// Supabase returns an array - get first match\nconst client = Array.isArray(clients) ? clients[0] : clients;\n\nif (!client || !client.company_name) {\n  // No client found for this agent_id\n  return {\n    ...callData,\n    client_found: false,\n    company_name: 'Unknown',\n    agent_name: 'Unknown',\n    lead_phone: '',\n    lead_email: '',\n    twilio_from: '',\n    timezone: 'America/Chicago'\n  };\n}\n\nreturn {\n  ...callData,\n  client_found: true,\n  company_name: client.company_name || '',\n  agent_name: client.agent_name || '',\n  lead_phone: client.lead_phone || '',\n  lead_email: client.lead_email || '',\n  twilio_from: client.twilio_from || client.twilio_number || '',\n  timezone: client.timezone || 'America/Chicago',\n  lead_contact_method: client.lead_contact_method || 'Both'\n};"
+      },
+      "id": "parse_client_data",
+      "name": "Parse Client Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0.2
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a lead qualification analyst for an HVAC company. Analyze the call transcript and return a JSON object with these fields:\n- lead_score (integer 1-10, where 10 = hot lead ready to buy)\n- is_hot_lead (boolean, true if lead_score >= 7)\n- caller_name (string)\n- caller_phone (string)\n- caller_address (string)\n- service_requested (string: Repair, Maintenance, Installation, Estimate, Emergency, General, Other)\n- summary (string: 1-2 sentence call summary)\n- urgency (string: Low, Medium, High, Emergency)\n- notes (string: any important details)\n\nReturn ONLY valid JSON, no markdown or explanation."
+            },
+            {
+              "role": "user",
+              "content": "=Transcript:\n{{ $json.transcript }}\n\nFrom number: {{ $json.from_number }}"
+            }
+          ]
+        }
+      },
+      "id": "gpt_analyze_transcript",
+      "name": "GPT: Analyze Transcript",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        400
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-key",
+          "name": "OpenAI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const gptResponse = $input.first().json;\nconst clientData = $('Parse Client Data').first().json;\n\nlet leadData = {};\ntry {\n  const text = gptResponse.message?.content || gptResponse.text || JSON.stringify(gptResponse);\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  leadData = jsonMatch ? JSON.parse(jsonMatch[0]) : {};\n} catch (e) {\n  leadData = { lead_score: 0, summary: 'Failed to parse GPT response', is_hot_lead: false };\n}\n\nreturn {\n  ...clientData,\n  ...leadData,\n  lead_score: leadData.lead_score || 0,\n  is_lead: (leadData.lead_score || 0) >= 6\n};"
+      },
+      "id": "parse_lead_data",
+      "name": "Parse Lead Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-lead-check",
+              "leftValue": "={{ $json.is_lead }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "is_lead_decision",
+      "name": "Is Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "from": "={{ $json.twilio_from }}",
+        "to": "={{ $json.lead_phone }}",
+        "message": "=🔥 New Lead Alert - {{ $json.company_name }}\n\nCaller: {{ $json.caller_name || 'Unknown' }}\nPhone: {{ $json.caller_phone || $json.from_number }}\nService: {{ $json.service_requested || 'General' }}\nUrgency: {{ $json.urgency || 'Medium' }}\nScore: {{ $json.lead_score }}/10\n\nSummary: {{ $json.summary }}"
+      },
+      "id": "twilio_send_sms",
+      "name": "Twilio: Send SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        300
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "twilio-creds",
+          "name": "Twilio API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "=New Lead Alert - {{ $json.caller_name || 'Unknown' }} - {{ $json.service_requested || 'Service' }} | {{ $json.company_name }}",
+        "message": "=<div style='margin:0;padding:0;background:#F7F7FB'><table width='100%' cellpadding='0' cellspacing='0' style='background:#F7F7FB;padding:24px 16px'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB'><tr><td style='background:linear-gradient(135deg,#1A1A2E,#2d2d5e);padding:28px 32px'><table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;margin-bottom:18px'><tr><td style='vertical-align:middle;padding-right:10px'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEA0lEQVR4nO2bPWwcRRTHfzPrs/HZJv5IghJHQhBZWBApBisFIONAgUSBlCJBIKooDUUqOtp0kahQCpqIKlKEFKUgUhoiBSoQCFlAJIMTRakiZHCEfeZy5nZeivXmNps7337Neu/jX93Ozb55//+8eTM7s6vICWfPiMSpf+GiUrZ8CcJaI3EJt4MtQTI3mjXxMLIWIjNjtomHkZUQqY3kTTyMtEIkvnm3iYeRVAid5KaikYfkPsUWoIjkfSTxLXLYFJl4M0QdEpEioNPIQ3Sf2wrQieR9RPE9URLsJuwoQCf3vo92HFoK0A3kfezEpakA3UTeRytOPZ8Dnpori9r7Y8+yevIjbk/tYw+C1GpsXbtK6e4djsSxE14fDGTrpj0svM2t145xPFj2wccsnz+Xzu4TQ6CovQ9QLqOMwa3XqRlD3RjcoSGeiWsnzLFjIsAY0BoHEKXQSqFFSN1hjyOgyL3fEirZ43yQa8/PAhqK0fujo6zNzLI08xJLh2f41XZ7PudC5IDxCe5/+hkyMcmcX7ayzNIXnzeubaEQQ+D5F7g3MclB1+V/Y3BFMDOzzB2Y5rbttgsRAYASwfjZXSnvWiuM7YZ1EcY/gFJPRmP42gbOnhEpxBDYTfS8ALnkgNmX+eX1BWpaewuXOyvUbn7LYh5tt4N1AYaHWT/9CS+Wy4z7ZXPzsPoXP936jWO2228H+wKU2SiVmDKGOoDrUnccSlP7qNpuOwqsCyCyPaVpBkQQx/EealzX3tF8HOSSBFWTjRel0j/JZYH+LJCFkfEJ7g8O8RBgs8KezQqTWdjNA6kFWDjO9ydOMT9QYr9SqEqFta++ZGnlD/sPMlkg9RB4Y5HnBocYARDBjI2x981F/kvvWj7Qad+wcF3c4NZUFttUeeHCRaVSR4ACpQJbUyrhNtVuoedngb4AkN9bmUWCzzl1BAjtk16zOiKNXJF4SybLc4HEr5kptL+PJwZjDG4oKYrCO9UR8f43BtfRDee1Rrbvf1xHBAkul7X2bATtJE24Qa6pF0LVKtXtExsnUFb3fz+sMmIMbsmr45/usLnZaLuywbBSaGeAwZDtsv97YwOjNY5/P0C93mgnKVKfDh88xMqJU6yPjnrOPnjA+pXLTK/9zSG/ztw8P7zzLiOO45G+d5fVry/xVtDOe+9z85Wj7AcQg/z8I/98d6NRZ7jMvyc/5PcD00yKwFaNrevfYP5c5tU4/oYjvWOOx7NCWICnkmA3zwjNuPXXAc0KuzEKWnFqGQHdJMJOXHYcAt0gQjsO/RzQrkInR0EU3yNFQCeKENXn2MSKvlCK21mxc0CRoyGJb4mSYBFFSOpT/7O5rBzp2Q8nw+jZT2fD6NmPp1uhqJ/PPwJ0VJJMh1QmBQAAAABJRU5ErkJggg==' width='36' height='36' alt='Syntharra' style='display:block;border:0;'/></td><td style='vertical-align:middle'><div style='font-family:Georgia,serif;font-size:20px;font-weight:normal;color:#ffffff;letter-spacing:0.5px;line-height:1.1'>Syntharra</div><div style='font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:bold;color:rgba(255,255,255,0.7);letter-spacing:3.5px;text-transform:uppercase;margin-top:3px'>Global AI Solutions</div></td></tr></table><h1 style='font-family:Georgia,serif;font-size:22px;font-weight:normal;color:#ffffff;margin:0;line-height:1.3'>🔥 New Lead Alert</h1><p style='font-family:Arial,Helvetica,sans-serif;font-size:13px;color:rgba(255,255,255,0.75);margin:4px 0 0'>{{ $json.company_name }} &nbsp;·&nbsp; Score: {{ $json.lead_score }}/10</p></td></tr><tr><td style='padding:28px 32px'><table style='width:100%;border-collapse:collapse;margin-bottom:20px'><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;background:#F7F7FB;'>Company</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.company_name }}</td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;'>Caller</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'><strong>{{ $json.caller_name || 'Unknown' }}</strong></td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;background:#F7F7FB;'>Phone</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'><a href='tel:{{ $json.caller_phone || $json.from_number }}' style='color:#6C63FF;text-decoration:none'>{{ $json.caller_phone || $json.from_number }}</a></td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;'>Address</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.caller_address || 'Not provided' }}</td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;background:#F7F7FB;'>Service</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.service_requested || 'General' }}</td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;'>Lead Score</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'><span style='font-weight:700;color:{{ $json.lead_score >= 8 ? \"#c53030\" : $json.lead_score >= 6 ? \"#dd6b20\" : \"#718096\" }}'>{{ $json.lead_score }}/10</span></td></tr><tr style='border-bottom:1px solid #E5E7EB'><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#1A1A2E;width:38%;background:#F7F7FB;'>Urgency</td><td style='padding:9px 12px;font-family:Arial,sans-serif;font-size:13px;color:#4A4A6A'>{{ $json.urgency || 'Medium' }}</td></tr></table><h2 style='font-family:Georgia,serif;font-size:17px;color:#1A1A2E;margin:0 0 8px'>Call Summary</h2><p style='font-family:Arial,sans-serif;font-size:14px;color:#4A4A6A;line-height:1.7;margin:0 0 16px'>{{ $json.summary }}</p><p style='font-family:Arial,sans-serif;font-size:11px;color:#8A8AA0;margin:0'>{{ $json.call_timestamp }} &nbsp;·&nbsp; Duration: {{ $json.duration_seconds }}s &nbsp;·&nbsp; Call ID: {{ $json.call_id }}</p></td></tr><tr><td style='border-top:1px solid #E5E7EB;padding:16px 32px;background:#F7F7FB;text-align:center'><p style='font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#8A8AA0;margin:0'>Questions? <a href='mailto:support@syntharra.com' style='color:#6C63FF;text-decoration:none'>support@syntharra.com</a> &nbsp;·&nbsp; <a href='https://www.syntharra.com' style='color:#6C63FF;text-decoration:none'>www.syntharra.com</a></p><p style='font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#8A8AA0;letter-spacing:1px;text-transform:uppercase;margin:6px 0 0'>AI Solutions for the Trade Industry</p></td></tr></table></td></tr></table></div>",
+        "options": {}
+      },
+      "id": "gmail_send_lead_email",
+      "name": "Gmail: Send Lead Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        500
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth",
+          "name": "Gmail OAuth2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/hvac_call_log",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNTIsImV4cCI6MjA4OTg3MTM1Mn0.dDzlIEgPvV2KVZOpCBYGbHJ2_LZnXoL6KKmQrAwfyL0"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { call_id: $json.call_id, agent_id: $json.agent_id, company_name: $json.company_name, caller_name: $json.caller_name || '', caller_phone: $json.caller_phone || $json.from_number || '', service_requested: $json.service_requested || '', lead_score: $json.lead_score || 0, urgency: $json.urgency || '', summary: $json.summary || '', is_lead: $json.is_lead || false, duration_seconds: $json.duration_seconds || 0 } }}",
+        "options": {}
+      },
+      "id": "supabase_log_call",
+      "name": "Supabase: Log Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2416,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-anon",
+          "name": "Supabase Anon Key"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return { message: `Non-lead call logged: ${$json.call_id}, score: ${$json.lead_score}` };"
+      },
+      "id": "log_non_lead",
+      "name": "Log Non-Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        700
+      ]
+    }
+  ],
+  "connections": {
+    "Retell Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter: call_analyzed Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: call_analyzed Only": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Lookup Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Lookup Client": {
+      "main": [
+        [
+          {
+            "node": "Parse Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Client Data": {
+      "main": [
+        [
+          {
+            "node": "GPT: Analyze Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT: Analyze Transcript": {
+      "main": [
+        [
+          {
+            "node": "Parse Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Is Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Lead?": {
+      "main": [
+        [
+          {
+            "node": "Twilio: Send SMS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail: Send Lead Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Supabase: Log Call",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Non-Lead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Supabase: Log Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
