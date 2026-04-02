@@ -35,15 +35,10 @@
   - Call Processor → log call note to client contact
 
 ## Dan Action Required
-- [ ] **Add `HUBSPOT_API_KEY` env var to n8n Railway service** (value from Supabase vault)
-  - Railway dashboard → syntharra-n8n service → Variables → add HUBSPOT_API_KEY
-- [ ] **Create deal pipeline in HubSpot UI**: CRM → Deals → Pipelines → Create pipeline
-  - Stages: Lead → Demo Booked → Paid Client → Active
-  - Then add `HUBSPOT_PIPELINE_ID` + 4 stage ID env vars to Railway n8n service
-- [ ] **Create 3 custom contact properties in HubSpot**: Settings → Properties → Contacts
-  - `plan_type` (single-line text)
-  - `stripe_customer_id` (single-line text)
-  - `retell_agent_id` (single-line text)
+- [ ] **Add `HUBSPOT_API_KEY` env var to n8n Railway service** (1 env var, 2 mins)
+  - Railway dashboard → Syntharra project → syntharra-n8n service → Variables
+  - Value: fetch from Supabase vault (service_name='HubSpot', key_type='api_key')
+  - Pipeline + stage IDs baked into workflows — no other env vars needed
 - [ ] **Pause syntharra-admin Railway service** manually in Railway dashboard
   - Railway → Syntharra project → syntharra-admin → Settings → Danger Zone → Suspend
 
