@@ -38,23 +38,39 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | Pre-launch status | `docs/context/LAUNCH.md` |
 
 ## Skill files — load by area of work
+> Skills marked ✅ are in /mnt/skills/user/ (loadable). Repo is the backup source of truth.
+> If a skill seems stale, check the "Last verified" date at top of the skill file.
+> syntharra-client-dashboard: in /mnt only — do NOT expect it in the repo skills/ folder.
 | Area | Skill |
 |---|---|
 | Admin dashboard | `syntharra-admin` |
+| Client dashboard | `syntharra-client-dashboard` |
 | Client dashboard | `syntharra-client-dashboard` |
 | Website | `syntharra-website` |
 | Retell / agents | `syntharra-retell` |
 | n8n / infra | `syntharra-infrastructure` |
 | Emails | `syntharra-email` |
 | Stripe | `syntharra-stripe` |
-| HVAC Standard | `hvac-standard` |
-| HVAC Premium | `hvac-premium` |
+| HVAC Standard agent/prompt | `e2e-hvac-standard` |
+| HVAC Premium agent/prompt | `e2e-hvac-premium` |
 | Ops / session rules | `syntharra-ops` |
 | Marketing | `syntharra-marketing` |
 | Artifacts / brand | `syntharra-artifacts` repo SKILL.md |
 | Brand / visual identity | `syntharra-brand` |
 | E2E test — Standard HVAC | `e2e-hvac-standard` |
 | E2E test — Premium HVAC | `e2e-hvac-premium` |
+
+
+## Tools — use these, don't build from scratch
+| Script | Location | When to use |
+|---|---|---|
+| Agent simulator | `tools/openai-agent-simulator.py` | Test agent behaviour across scenario groups |
+| Auto-fix loop | `tools/auto-fix-loop.py` | Targeted fix validation after prompt changes (~$0.15/test) |
+| Retell call analyser | `tools/retell-call-analyser.py` | Analyse real call transcripts for issues |
+| E2E test — Standard | `shared/e2e-test.py` | Full pipeline test before any deploy |
+| E2E test — Premium | `shared/e2e-test-premium.py` | Full Premium pipeline test |
+| Self-healing loop | `tools/self-healing-loop.py` | Automated fix → test → fix cycle |
+| Safety checks | `tools/safety-checks.py` | Pre-deploy safety validation |
 
 ## GitHub repos
 | Repo | Purpose |
