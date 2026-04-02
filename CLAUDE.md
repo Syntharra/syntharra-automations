@@ -39,10 +39,9 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | Pre-launch status | `docs/context/LAUNCH.md` |
 
 ## Skill files — load by area of work
-> Skills marked ✅ are in /mnt/skills/user/ (loadable). Repo is the backup source of truth.
+> Skills are stored as flat named files: `skills/{name}-SKILL.md` (e.g. `skills/syntharra-retell-SKILL.md`).
+> Download the raw file → filename is already correct → upload directly to Claude.ai project settings.
 > If a skill seems stale, check the "Last verified" date at top of the skill file.
-> syntharra-client-dashboard: in /mnt AND backed up to repo/skills/ — keep in sync.
-> syntharra-social-leads: in repo/skills/ only — upload to Claude.ai project to make loadable.
 | Area | Skill |
 |---|---|
 | Admin dashboard | `syntharra-admin` |
