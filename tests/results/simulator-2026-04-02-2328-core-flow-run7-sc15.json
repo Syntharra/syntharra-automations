@@ -1,0 +1,31 @@
+{
+  "run_label": "core-flow-run7-sc15",
+  "timestamp": "2026-04-02T23:28:13.937386+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 1,
+    "pass": 1,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0037,
+    "tokens": {
+      "prompt_tokens": 24083,
+      "completion_tokens": 148
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 1,
+      "criteria_total": 1,
+      "summary": "The agent acknowledged the caller's decision to wait gracefully without pushing for a callback.",
+      "root_cause": ""
+    }
+  ]
+}
