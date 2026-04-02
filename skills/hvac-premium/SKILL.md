@@ -10,6 +10,8 @@ description: >
   Premium email sequences, or the 4-step Premium onboarding email flow.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # HVAC Premium Pipeline — Full Reference
 
 ---
