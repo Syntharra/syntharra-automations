@@ -9,6 +9,8 @@ description: >
   service IDs, API tokens, webhook URLs, or any infrastructure-level task across Syntharra's stack.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 ---
 
 ## GitHub
