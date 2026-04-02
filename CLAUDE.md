@@ -43,6 +43,7 @@ failures_md = fetch("docs/FAILURES.md")
 | Infrastructure / Railway | `docs/context/INFRA.md` |
 | Artifacts / UI previews | `docs/context/ARTIFACTS.md` |
 | Pre-launch status | `docs/context/LAUNCH.md` |
+| HubSpot CRM | `docs/context/HUBSPOT.md` |
 
 ## Skill files — fetch from GitHub, never from /mnt
 > Skills live in `skills/{name}-SKILL.md` in this repo.
@@ -56,7 +57,8 @@ def load_skill(name):
 
 | Area | Skill name |
 |---|---|
-| Admin dashboard | `syntharra-admin` |
+| ~~Admin dashboard~~ | DEPRECATED — replaced by HubSpot |
+| HubSpot CRM | `syntharra-hubspot` |
 | Client dashboard | `syntharra-client-dashboard` |
 | Website | `syntharra-website` |
 | Retell / agents | `syntharra-retell` |
@@ -90,11 +92,19 @@ def load_skill(name):
 |---|---|
 | `syntharra-automations` | All ops code, skills, docs, n8n backups |
 | `syntharra-website` | syntharra.com (GitHub Pages) |
-| `syntharra-admin` | admin.syntharra.com (Railway) |
+| ~~`syntharra-admin`~~ | DEPRECATED — admin dashboard replaced by HubSpot |
 | `syntharra-checkout` | Stripe checkout server — `checkout.syntharra.com` |
 | `syntharra-oauth-server` | Premium OAuth — `auth.syntharra.com` |
 | `syntharra-ops-monitor` | 24/7 monitor (Railway, PAUSED) |
 | `syntharra-artifacts` | Claude chat artifact files |
+
+## CRM — HubSpot (replaced admin dashboard 2026-04-03)
+- URL: `https://app.hubspot.com`
+- API key: in `syntharra_vault` (service_name='HubSpot', key_type='api_key')
+- Base URL: `https://api.hubapi.com`
+- Pipeline stages: Lead → Demo Booked → Paid Client → Active
+- All n8n workflows push contact + deal data to HubSpot automatically
+- See `docs/context/HUBSPOT.md` for full integration reference
 
 ## Scaling Architecture
 - Each client gets their own Retell agent cloned via Retell API
