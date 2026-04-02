@@ -68,6 +68,14 @@ Sophie's actual behaviour on these scenarios was CORRECT.
 - [x] Updated CLAUDE.md to load FAILURES.md every session
 
 ## Dan Action Required (for full agentic setup)
+- [ ] Re-upload updated skills to Claude.ai project settings (repo versions are newer):
+  - 🔴 syntharra-admin (+137 lines: env vars, auto-update rules)
+  - 🔴 syntharra-ops (+132 lines: vault key list, auto-update rules)
+  - 🔴 ai-receptionist (+41 lines: Retell publish API, output checklist)
+  - 🟡 syntharra-infrastructure (+7 lines: correct GitHub API endpoint)
+  - 🟡 syntharra-retell, syntharra-stripe, syntharra-email, syntharra-brand, syntharra-website (+2-4 lines each: freshness dates)
+  - ➕ Upload new skills not yet in Claude.ai: hvac-standard, hvac-premium, syntharra-testing, syntharra-marketing-manager, syntharra-social-leads
+  HOW: Claude.ai → this project → top-right menu → Settings → scroll to Skills → remove old → upload new SKILL.md from repo
 - [ ] Upload to Claude.ai project settings: hvac-standard, hvac-premium, syntharra-testing, syntharra-marketing-manager, syntharra-social-leads
 - [ ] Move syntharra-checkout/env Stripe key to Railway env var before go-live
 
