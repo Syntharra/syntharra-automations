@@ -4,7 +4,7 @@
     "group": "core_flow",
     "name": "Basic service request",
     "callerPrompt": "You are calling an HVAC company. Your AC is not cooling. You are cooperative and provide your name (John Smith), phone (555-234-5678), address (123 Main St, Dallas TX) and email (john@email.com) when asked. Do not volunteer all info at once - respond naturally to questions.",
-    "expectedBehaviour": "Captures all 4 data points (name, phone, address, email), reads back details confirming all info, closes with scripted phrase 'I've scheduled a callback for you'. Email is optional but should be attempted.",
+    "expectedBehaviour": "Captures the 4 key data points: full name, callback phone number, service address (street + city, ZIP optional if not provided), and email. Reads back a summary of all collected info. Closes with scripted phrase 'I've scheduled a callback for you'. ZIP code is NOT a required separate data point \u2014 street address + city is sufficient. PASS if agent has name, phone, address, and attempted email collection.",
     "premiumOnly": false
   },
   {
