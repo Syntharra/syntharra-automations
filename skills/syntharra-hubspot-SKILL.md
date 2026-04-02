@@ -107,11 +107,11 @@ PUT https://api.hubapi.com/crm/v3/associations/notes/{{noteId}}/contacts/{{conta
 
 | Stage | ID |
 |---|---|
-| Lead | TBD |
-| Demo Booked | TBD |
-| Paid Client | TBD |
-| Active | TBD |
-| Pipeline ID | TBD |
+| Lead | `appointmentscheduled` |
+| Demo Booked | `qualifiedtobuy` |
+| Paid Client | `presentationscheduled` |
+| Active | `closedwon` |
+| Pipeline ID | `default` |
 
 ---
 
