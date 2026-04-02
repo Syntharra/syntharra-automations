@@ -1,44 +1,50 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — E2E 75/75, brand skill + master template complete
+> Last updated: 2026-04-02 — Brand skill + E2E skill complete, 75/75 E2E
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
-## E2E Test: 75/75 ✅  —  `python3 shared/e2e-test.py`
+## E2E Test: 75/75 ✅ — run anytime: `python3 shared/e2e-test.py`
 
-## Skills Installed (Dan to upload to Claude settings)
-- `syntharra-brand` — download: `skills/syntharra-brand/SKILL.md`
-- `e2e-hvac-standard` — download: `skills/e2e-hvac-standard/SKILL.md`
-> Both also available as downloadable files from this session
+## Completed This Session
+- E2E test: 75/75 all passing (timing bugs fixed, polling loops)
+- All notification fields fixed end-to-end (Parse → Merge → Supabase)
+- Conversation flow: 12 nodes locked as master template
+- syntharra-brand skill created from theme factory — pushed to skills/ + brand-assets/
+- e2e-hvac-standard skill created — pushed to skills/ + docs/
+- CLAUDE.md skill table updated with both new skills
+- Both skill files available for Dan to download + upload to Claude
+
+## Skills Available (upload to Claude settings)
+- `skills/syntharra-brand/SKILL.md` — brand standard
+- `skills/e2e-hvac-standard/SKILL.md` — E2E test reference
 
 ## GitHub Structure (key files)
 | Path | What it is |
 |---|---|
 | `shared/e2e-test.py` | E2E test — run this |
 | `docs/e2e-test-reference.md` | E2E quick-reference |
-| `skills/e2e-hvac-standard/SKILL.md` | E2E skill (install in Claude) |
-| `skills/syntharra-brand/SKILL.md` | Brand skill (install in Claude) |
-| `brand-assets/syntharra-brand-standard.md` | Brand theme — source of truth |
-| `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md` | Standard agent master template |
-| `retell-agents/archive/` | n8n node code snapshots (v5) |
-| `docs/context/` | AGENTS, WORKFLOWS, SUPABASE, INFRA, STRIPE, LAUNCH |
-| `syntharra-artifacts/brand/` | Brand files in artifacts repo |
+| `skills/e2e-hvac-standard/SKILL.md` | E2E skill |
+| `skills/syntharra-brand/SKILL.md` | Brand skill |
+| `brand-assets/SYNTHARRA-BRAND-STANDARD.md` | Brand standard (standalone ref) |
+| `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md` | 12-node master template |
+| `retell-agents/archive/` | n8n node code snapshots |
+| `docs/context/` | AGENTS, WORKFLOWS, SUPABASE, INFRA, STRIPE, ARTIFACTS, LAUNCH |
 
-## Open Action Items (needs Dan input)
-- [ ] Upload `syntharra-brand-SKILL.md` to Claude settings
-- [ ] Upload `e2e-hvac-standard-SKILL.md` to Claude settings
-- [ ] Phone +18129944371 UNASSIGNED in Retell — wire to Arctic Breeze agent
+## Open Action Items
+- [ ] Phone +18129944371 UNASSIGNED in Retell — wire to Arctic Breeze
 - [ ] Agent "Mia" (agent_f3b9ae34726aa973c7d0bd82b6) — keep or delete?
+- [ ] Dan to upload syntharra-brand + e2e-hvac-standard skills to Claude settings
 
 ## Blocked
-- Telnyx SMS — awaiting AI evaluation approval ($5 loaded)
+- Telnyx SMS — awaiting AI evaluation approval
 - Ops monitor — PAUSED, unpause at go-live
 
-## Next Session
+## Next Session — Start With
 1. "Start session" → fetch CLAUDE.md + TASKS.md
-2. Wire +18129944371 to Arctic Breeze
+2. Wire +18129944371 → Arctic Breeze agent
 3. Resolve Mia agent
-4. Confirm skills installed in Claude
+4. Confirm both new skills uploaded in Claude
 
 ## Go-Live Gate
 1. Stripe live mode → recreate products/prices/coupons
