@@ -1,40 +1,38 @@
-# Syntharra — Live Agent Backups
-> Last backed up: 2026-04-02
-> All files are live snapshots from Retell API. Do not edit manually — push via Retell API then back up.
+# retell-agents/
 
-## Live Agents
+This folder is the source of truth for all Syntharra Retell agents and conversation flows.
 
-| File | Agent ID | Name | Voice | Purpose |
-|---|---|---|---|---|
-| `hvac-standard-arctic-breeze_agent_4afbfdb3fcb1ba9569353af28d_LIVE.json` | `agent_4afbfdb3fcb1ba9569353af28d` | HVAC Standard | retell-Sloane | Arctic Breeze test client — Standard pipeline |
-| `hvac-premium-v7-frostking_agent_9822f440f5c3a13bc4d283ea90_LIVE.json` | `agent_9822f440f5c3a13bc4d283ea90` | V7 Premium FrostKing | retell-Nico | Premium test client — V7 most current |
-| `demo-male_agent_b9d169e5290c609a8734e0bb45_LIVE.json` | `agent_b9d169e5290c609a8734e0bb45` | Demo Agent (Male) | retell-Nico | Sales demo — must stay published |
-| `demo-female_agent_2723c07c83f65c71afd06e1d50_LIVE.json` | `agent_2723c07c83f65c71afd06e1d50` | Demo Agent (Female) | retell-Sloane | Sales demo — must stay published |
-| `conversation_flow_34d169608460_LIVE.json` | `conversation_flow_34d169608460` | Standard Flow | — | 14-node Standard conversation flow — Arctic Breeze |
+## Master Templates
 
-## Critical Rules
-- **NEVER delete or recreate a Retell agent** — agent_id is the foreign key across Retell, Supabase, call processor, and phone number
-- **ALWAYS publish after any agent update:** `POST https://api.retellai.com/publish-agent/{agent_id}`
-- After ANY change to an agent, back up the new JSON to this folder
-- Premium agent (V7 FrostKing) is the most current — this is the template for new Premium clients
+| File | Purpose |
+|---|---|
+| `HVAC-STANDARD-AGENT-TEMPLATE.md` | **← START HERE** Canonical Standard HVAC agent spec — 12 nodes, all Supabase fields, E2E assertions |
+| `hvac-standard-MASTER-TEMPLATE.json` | Lightweight JSON reference (node IDs + source workflow) |
 
-## Phone Numbers
-| Number | Agent | Status |
+## Live Agent Backups (do not edit — auto-backed up)
+
+| File | Agent | Notes |
 |---|---|---|
-| `+18129944371` | Arctic Breeze Standard | ⚠️ Shows UNASSIGNED in Retell — verify wired |
-| `+12292672271` | Unassigned | Demo line |
-| Transfer: `+18563630633` | — | Arctic Breeze transfer destination |
+| `hvac-standard-arctic-breeze_agent_4afbfdb3fcb1ba9569353af28d_LIVE.json` | Arctic Breeze HVAC Standard | Live test client — 14 nodes (has emergency_fallback + spanish_routing) |
+| `conversation_flow_34d169608460_LIVE.json` | Arctic Breeze conversation flow | Full 14-node flow backup |
+| `hvac-premium-v7-frostking_agent_9822f440f5c3a13bc4d283ea90_LIVE.json` | FrostKing Premium | Premium test client |
+| `demo-female_agent_2723c07c83f65c71afd06e1d50_LIVE.json` | Syntharra Demo (Sophie) | Sales demo — do not modify |
+| `demo-male_agent_b9d169e5290c609a8734e0bb45_LIVE.json` | Syntharra Demo (Jake) | Sales demo — do not modify |
 
-## How to restore an agent from backup
-```python
-import requests, json
-data = json.load(open("hvac-standard-arctic-breeze_agent_4afbfdb3fcb1ba9569353af28d_LIVE.json"))
-requests.patch(
-    f"https://api.retellai.com/update-agent/{data['agent_id']}",
-    headers={"Authorization": "Bearer key_0157d9401f66cfa1b51fadc66445"},
-    json={k: v for k, v in data.items() if k not in ["agent_id","last_modification_timestamp"]}
-)
-# Then always publish:
-requests.post(f"https://api.retellai.com/publish-agent/{data['agent_id']}",
-    headers={"Authorization": "Bearer key_0157d9401f66cfa1b51fadc66445"})
-```
+## Archive
+
+`archive/` — canonical JS node code from n8n, snapshotted at each major version.
+
+| File | Contents |
+|---|---|
+| `node-code-parse-jotform-v5.js` | Parse JotForm Data node (maps all 52 Jotform fields) |
+| `node-code-build-retell-prompt-v5.js` | Build Retell Prompt node (generates 12-node flow + agent config) |
+| `node-code-merge-llm-agent-v5.js` | Merge LLM & Agent Data node (Supabase payload assembly) |
+
+## Rules
+
+- **NEVER delete or recreate a live Retell agent** — agent_id is a foreign key across Retell, Supabase, n8n, and phone numbers
+- **ALWAYS publish after any agent update** — use n8n workflow `13cOIXxvj83NfDqQ` (Publish Retell Agent)
+- **New client agents** are created by n8n onboarding workflow `4Hx7aRdzMl5N0uJP` — they get the 12-node Standard template
+- **Arctic Breeze** (agent_4afbfdb3fcb1ba9569353af28d) is the live test client — has 2 extra nodes vs new clients (emergency_fallback, spanish_routing)
+- **To update the master template:** edit n8n workflow → run E2E test → re-export node code to archive/ → update HVAC-STANDARD-AGENT-TEMPLATE.md
