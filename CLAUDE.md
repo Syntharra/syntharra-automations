@@ -18,18 +18,24 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 3. ALL emails LIGHT THEME — white cards, #F7F7FB outer bg, #1A1A2E text, #6C63FF accent
 4. NEVER use `daniel@syntharra.com` in any workflow, email, or website
 5. NEVER use base64 SVG in emails — always hosted PNG
-6. Edit files with str.replace — never rewrite from scratch
+6. Edit files with str_replace — never rewrite from scratch
 7. ONE `<style>` block per HTML page, `overflow-x:clip` on body
 8. Push all changes to GitHub before chat ends
-9. Update relevant skill(s) after any verified work
+9. Update relevant skill(s) after any verified work — they auto-sync, no upload needed
 10. Update `docs/TASKS.md` at end of every chat
 
+## Session startup — always load these 3
+```python
+claude_md   = fetch("CLAUDE.md")
+tasks_md    = fetch("docs/TASKS.md")
+failures_md = fetch("docs/FAILURES.md")
+```
+
 ## Context files — load what you need
-| What you're working on | Files to fetch |
+| What you're working on | File to fetch |
 |---|---|
 | Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md` |
-| Self-improvement protocol | `docs/LEARNING.md` |
-| Architectural decisions (why things are built how they are) | `docs/DECISIONS.md` |
+| Architectural decisions | `docs/DECISIONS.md` |
 | Agents, calls, Retell | `docs/context/AGENTS.md` |
 | n8n workflows | `docs/context/WORKFLOWS.md` |
 | Stripe billing | `docs/context/STRIPE.md` |
@@ -38,9 +44,15 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | Artifacts / UI previews | `docs/context/ARTIFACTS.md` |
 | Pre-launch status | `docs/context/LAUNCH.md` |
 
-## Skill files — load by area of work
-> Stored as `skills/{name}-SKILL.md` in repo. Download raw → filename already correct → upload to Claude.ai project.
-> Check "Last verified" date at top of each skill if it seems stale.
+## Skill files — fetch from GitHub, never from /mnt
+> Skills live in `skills/{name}-SKILL.md` in this repo.
+> Fetch them directly — they are always current, no upload step needed.
+> Load only the skills relevant to the task. Never load all 16 at once.
+
+```python
+def load_skill(name):
+    return fetch(f"skills/{name}-SKILL.md")
+```
 
 | Area | Skill name |
 |---|---|
@@ -62,7 +74,6 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | AI receptionist (new verticals) | `ai-receptionist` |
 | Artifacts (React previews) | fetch `syntharra-artifacts/SKILL.md` directly |
 
-
 ## Tools — use these, don't build from scratch
 | Script | Location | When to use |
 |---|---|---|
@@ -80,8 +91,8 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | `syntharra-automations` | All ops code, skills, docs, n8n backups |
 | `syntharra-website` | syntharra.com (GitHub Pages) |
 | `syntharra-admin` | admin.syntharra.com (Railway) |
-| `syntharra-checkout` | Stripe checkout server (Railway) — `checkout.syntharra.com` |
-| `syntharra-oauth-server` | Premium OAuth — `auth.syntharra.com` (Google, Outlook, Calendly, Jobber, HubSpot) |
+| `syntharra-checkout` | Stripe checkout server — `checkout.syntharra.com` |
+| `syntharra-oauth-server` | Premium OAuth — `auth.syntharra.com` |
 | `syntharra-ops-monitor` | 24/7 monitor (Railway, PAUSED) |
 | `syntharra-artifacts` | Claude chat artifact files |
 
