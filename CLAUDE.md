@@ -51,6 +51,8 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | Ops / session rules | `syntharra-ops` |
 | Marketing | `syntharra-marketing` |
 | Artifacts / brand | `syntharra-artifacts` repo SKILL.md |
+| Brand / visual identity | `syntharra-brand` |
+| E2E test — Standard HVAC | `e2e-hvac-standard` |
 
 ## GitHub repos
 | Repo | Purpose |
