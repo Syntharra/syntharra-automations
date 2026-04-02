@@ -9,16 +9,15 @@
 ## Live Agents (5 unique)
 | Agent | ID | Purpose |
 |---|---|---|
-| HVAC Standard | `agent_4afbfdb3fcb1ba9569353af28d` | Arctic Breeze test client — Standard pipeline |
+| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | Standard pipeline template agent |
 | V7 Premium FrostKing HVAC | `agent_9822f440f5c3a13bc4d283ea90` | Premium test client agent |
-| Mia | `agent_f3b9ae34726aa973c7d0bd82b6` | Purpose TBC — confirm with Dan |
 | Syntharra Demo Agent (Female) | `agent_2723c07c83f65c71afd06e1d50` | Demo / sales use |
 | Syntharra Demo Agent (Male) | `agent_b9d169e5290c609a8734e0bb45` | Demo / sales use |
 
 ## Phone Numbers (Retell)
 | Number | Assigned Agent | Notes |
 |---|---|---|
-| `+18129944371` | UNASSIGNED ⚠️ | Arctic Breeze line — should be wired to HVAC Standard agent |
+| `+18129944371` | UNASSIGNED ⚠️ | Unassigned — wire to HVAC Standard template agent |
 | `+12292672271` | UNASSIGNED | Demo line (nickname: DEMO) |
 
 ⚠️ **Action needed:** `+18129944371` shows as unassigned in Retell. Verify it is correctly
@@ -26,7 +25,7 @@ wired to `agent_4afbfdb3fcb1ba9569353af28d` via Retell dashboard or API.
 
 ## Live Conversation Flow (Standard)
 - ID: `conversation_flow_34d169608460`
-- Agent: Arctic Breeze HVAC Standard
+- Agent: HVAC Standard Template
 - Nodes (12): greeting, identify_call, nonemergency_leadcapture, verify_emergency,
   callback, existing_customer, general_questions, spam_robocall,
   Transfer Call, transfer_failed, Ending, End Call
@@ -35,6 +34,7 @@ wired to `agent_4afbfdb3fcb1ba9569353af28d` via Retell dashboard or API.
 
 > Note: 50 total conversation flows exist in Retell — all others are old test/dev flows.
 > Only `conversation_flow_34d169608460` is wired to a live agent.
+> Mia agent DELETED 2026-04-02.
 
 ## Jotform Forms
 | Form | ID | Status |
