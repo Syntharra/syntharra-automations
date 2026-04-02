@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — Simulator running, loop fixes live, OpenAI in vault
+> Last updated: 2026-04-02 — Repo restructured: docs/ archived, FAILURES.md + LEARNING.md created
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -37,6 +37,12 @@ Sophie's actual behaviour on these scenarios was CORRECT.
 | HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🧪 Prompt fixes live |
 | Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
+
+## Completed This Session
+- [x] Archived 26 stale docs/ files → docs/archive/
+- [x] Created docs/FAILURES.md — agentic failure log
+- [x] Created docs/LEARNING.md — self-improvement protocol
+- [x] Updated CLAUDE.md to load FAILURES.md every session
 
 ## Open Action Items
 - [ ] Run core_flow group again (evaluator now fixed) — expect 80%+
