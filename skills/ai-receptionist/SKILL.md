@@ -9,6 +9,8 @@ description: >
   email templates, and a setup guide — all customized for the specified industry.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # AI Receptionist System — Multi-Industry Builder
 
 ## Production Architecture (2026)
