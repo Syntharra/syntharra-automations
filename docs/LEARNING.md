@@ -55,14 +55,15 @@ Test/Build → Failure Found → Root Cause → Fix → Skill Updated → FAILUR
   (admin-dashboard was deleted — was a mislabelled duplicate)
 - Transfer private repos or add collaborator access confirmed working ✅
 
-### 🔴 Structural Gap — Cannot Fix Without Platform Support
-- Skills in /mnt cannot be updated by Claude directly — only via Claude.ai project UI
-- This means: when I update a skill in the repo, the /mnt version goes stale until Dan re-uploads it
-- Workaround: I note "REPO UPDATED — re-upload to Claude.ai" in TASKS.md whenever I change a skill
-- Long-term fix: Anthropic adds a GitHub-sync for project skills (not available today)
+### ✅ Structural Gap — RESOLVED 2026-04-02
+- Skills previously required manual upload to Claude.ai project settings (/mnt/skills/user/)
+- Fixed: skills now fetched directly from GitHub at session start via API
+- /mnt skills are no longer used — repo is the single source of truth
+- Update a skill in GitHub → live immediately next session. Zero upload step.
 
-### The Self-Improvement Loop — Now Complete
+### The Self-Improvement Loop — Complete
 ```
-Session → Find mistake → Fix it → Log in FAILURES.md → Update skill → 
-Next session reads FAILURES.md → Same mistake never made again
+Session → Find mistake → Fix it → Log in FAILURES.md → Update skill in GitHub →
+Next session fetches skill from GitHub → Same mistake never made again
 ```
+No manual upload. No drift. Always current.
