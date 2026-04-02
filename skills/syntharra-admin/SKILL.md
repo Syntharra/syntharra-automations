@@ -35,7 +35,7 @@ At the **END** of every chat that changes the dashboard:
 | Runtime | Node.js + Express (`server.js`) |
 | Frontend | Single-file vanilla JS — `public/index.html` |
 | Email page | `public/email.html` (Email Intelligence section) |
-| Current SHA (index.html) | `0a8774f66a08a204b662ce12bef96f9b793d63db` |
+| Current SHA (index.html) | `cc4787174dfb6b6131916f3c423f8859d530c224` |
 
 ---
 
@@ -96,11 +96,11 @@ admin.syntharra.com
     │     └── Static files from /public/
     │
     └── public/index.html (single-file SPA)
-          ├── CSS (~242 lines, one <style> block)
+          ├── CSS (~250 lines, one <style> block)
           ├── HTML sections (one per nav item)
-          └── JS (~600 lines, vanilla, no frameworks)
+          └── JS (~1800 lines, vanilla, no frameworks)
                 ├── Supabase REST queries (anon key, client-side)
-                ├── Jotform REST API (via /api/jotform proxy or direct)
+                ├── Jotform REST API (direct, not via proxy — Jotform MCP connector is broken)
                 ├── Ops monitor data (from syntharra-ops-monitor endpoint)
                 └── AI Assistant (POST /api/ai)
 ```
@@ -153,7 +153,7 @@ Always use `str.replace()` pattern for edits — never rewrite the whole file.
 | `sec-opsmonitor` | Ops Monitor | `opsmonitor` | `loadOpsData()` |
 | `sec-marketing` | Marketing Pipeline | `marketing` | `renderMarketing()` |
 | `sec-settings` | Settings | `settings` | (static HTML) |
-| `sec-testing` | Agent Testing | `testing` | `loadTestingData()` |
+| `sec-testing` | System Testing | `testing` | `switchTestTab('infra')` on nav |
 | `sec-ai` | AI Assistant | `ai` | `aiSend()` |
 | `/email.html` | Email Intelligence | (external link) | separate page |
 
@@ -162,6 +162,101 @@ Nav badges:
 - `nav-forms-badge` — pending forms (amber)
 - `nav-alert-badge` — ops alerts (red, shows `!`)
 - `nav-email-badge` — email count (violet)
+
+---
+
+## System Testing Section (sec-testing)
+
+The Agent Scenario Testing sub-tab was **removed**. The section now has two sub-tabs only:
+
+### Sub-tabs
+| Tab ID | Panel ID | Function |
+|---|---|---|
+| `tab-infra` | `test-panel-infra` | `runHealthChecks()` |
+| `tab-e2e` | `test-panel-e2e` | `runE2ETests()` |
+
+### Tab switching
+```javascript
+switchTestTab('infra')  // default on nav
+switchTestTab('e2e')
+```
+`switchTestTab()` only iterates `['infra','e2e']` — agent tab removed.
+
+### Infrastructure Panel IDs
+| ID | Content |
+|---|---|
+| `run-health-btn` | Trigger button |
+| `infra-last-run` | Last run timestamp label |
+| `infra-summary-bar` | Hidden until first run — shows overall pass/fail counts |
+| `infra-summary-inner` | Inner div of summary bar (bg changes green/red) |
+| `infra-summary-text` | "All systems operational" or "X systems need attention" |
+| `infra-pulse` | Coloured dot indicator |
+| `infra-pass-count` | Number passed |
+| `infra-fail-count` | Number failed |
+| `infra-total-count` | Total checks |
+| `infra-grid` | System cards grid |
+
+### E2E Pipeline Panel IDs
+| ID | Content |
+|---|---|
+| `run-e2e-btn` | Trigger button |
+| `e2e-last-run` | Last run timestamp |
+| `e2e-summary-bar` | Hidden until run — pass/fail/skip counts |
+| `e2e-summary-text` | Run status summary |
+| `e2e-pass-count` | Passed count |
+| `e2e-fail-count` | Failed count |
+| `e2e-skip-count` | Skipped count |
+| `e2e-results-list` | Test row cards container |
+
+### HEALTH_CHECKS array (what gets tested)
+Defined as `var HEALTH_CHECKS = [...]` — systems tested:
+- **Supabase:** Connection, Call Log Table, Vault Accessible
+- **Retell:** Standard Agent, Demo Agent Jake, Demo Agent Sophie, Conversation Flow
+- **Stripe:** Checkout Server
+- **n8n:** Stripe Webhook, Jotform Webhook (test runner webhook removed)
+- **Jotform:** Standard Form, Premium Form
+- **Website:** syntharra.com, checkout.syntharra.com
+- **OAuth:** auth.syntharra.com
+
+> ⚠️ `agent_test_results` Supabase table check and n8n `agent-test-runner` webhook check were removed when Agent Scenario Testing was deprecated.
+
+### E2E_TESTS array (what gets tested)
+Defined as `var E2E_TESTS = [...]`:
+0. Standard Checkout Server — HEAD to checkout server health
+1. Standard Call Processing — POST to hvac-std-call-processor webhook
+2. Jotform Submission Flow — GET Standard form via Jotform API
+3. Premium Call Processing — POST to hvac-prem-call-processor webhook
+4. Weekly Report Trigger — skipped in auto-run (manual only)
+5. Minutes Calculator — checks billing_cycles table is accessible
+
+Results are saved to `e2e_test_results` Supabase table after 5s delay.
+Infra results saved to `infra_health_checks` Supabase table immediately after run.
+
+---
+
+## Removed: Agent Scenario Testing
+
+The following were **removed** and are no longer in the codebase. Do NOT attempt to reference or restore:
+
+**HTML removed:** Agent Tests tab, progress bar, pass-rate stats cards, run history cards, failed scenarios table, agent/group select dropdowns.
+
+**JS functions removed:**
+- `loadTestingData()` — polled `agent_test_run_summary` and `agent_pending_fixes`
+- `renderTestingStats()` — populated 4 KPI stat cards
+- `renderTestRuns()` — built run history list
+- `renderGroupBreakdown()` — built scenario group breakdown
+- `populateRunFilter()` — populated run filter dropdown
+- `renderFailedScenarios()` — built failed scenario table
+- `copyScenarioDetails()` — clipboard copy helper
+- `startTestRun()` — sent to n8n webhook `agent-test-runner`
+
+**Supabase tables no longer used (can be deleted):**
+- `agent_test_run_summary`
+- `agent_test_results`
+- `agent_pending_fixes`
+
+**n8n workflow no longer needed:**
+- Agent Test Runner webhook workflow
 
 ---
 
@@ -284,6 +379,12 @@ sbFetch('/website_leads?select=*&order=created_at.desc&limit=100')
 
 // Billing cycles
 sbFetch('/billing_cycles?select=*&order=created_at.desc')
+
+// E2E test results (write only, after runE2ETests)
+// POST /e2e_test_results
+
+// Infra health checks (write only, after runHealthChecks)
+// POST /infra_health_checks
 ```
 
 ---
@@ -331,6 +432,14 @@ sbFetch('/billing_cycles?select=*&order=created_at.desc')
 | `renderOpsAlerts(alerts)` | Build alert log rows |
 | `renderOvStatus(systems)` | Mini system status in overview |
 | `updateSysPill(healthy)` | Update top-right system health pill |
+
+### System Testing
+| Function | Purpose |
+|---|---|
+| `switchTestTab(tab)` | Toggle between 'infra' and 'e2e' panels |
+| `runHealthChecks()` | Run all HEALTH_CHECKS, call renderInfraResults() |
+| `renderInfraResults(results)` | Render system cards grid + update summary bar |
+| `runE2ETests()` | Run all E2E_TESTS sequentially, update row statuses |
 
 ### Interactions
 | Function | Purpose |
@@ -404,6 +513,18 @@ Follow the existing pattern:
 ```
 Then set value in JS: `el('new-stat-id').textContent = value;`
 
+### Add a new HEALTH_CHECK endpoint
+Add to the `HEALTH_CHECKS` array:
+```javascript
+{system:'SystemName', check:'Check Name', url:'https://endpoint.com/health', method:'GET', headers:{}}
+// or for authenticated endpoints:
+{system:'Supabase', check:'New Table', url:'https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/table_name?select=id&limit=1', method:'GET', headers:{apikey:SB_KEY, Authorization:'Bearer '+SB_KEY}}
+// Use HEAD method + mode:'no-cors' for endpoints that don't allow CORS GET
+```
+
+### Add a new E2E test
+Add to `E2E_TESTS` array and add a corresponding fetch call in `runE2ETests()` matching the index.
+
 ### Add a new table column
 1. Add `<th>` in thead
 2. Add `<td>` in the row-building loop in the relevant render function
@@ -438,7 +559,11 @@ Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 8. **Railway auto-deploys** — push to `main` → Railway detects change → deploys in ~60s.
 9. **One commit per feature** — prefix with `admin:` e.g. `admin: add revenue chart`.
 10. **`TZ = 'Europe/London'`** — all dates/times formatted in Dan's timezone (GMT/BST).
-11. **CRITICAL: JS onclick string escaping** — When building HTML strings with inline onclick handlers inside single-quoted JS strings, use `'` (escaped quote) NOT `''` (two bare quotes). Two bare single quotes `''` inside a single-quoted string TERMINATES the string and creates a JS syntax error that breaks the ENTIRE script. Correct: `'onclick="fn('' + id + '')">` → produces `onclick="fn('ID')"`.
+11. **CRITICAL: JS onclick string escaping** — When building HTML strings with inline onclick handlers inside single-quoted JS strings, use `\'` (escaped quote) NOT `''` (two bare single quotes). Two bare quotes inside a single-quoted string TERMINATE the string and create a JS syntax error that silently breaks the ENTIRE script. Correct pattern: `h += '<button onclick=\'fn(\'' + id + '\')\'>`.
+12. **File is large (~190KB).** Use positional searches (find exact boundary strings) for str.replace. When searching for function boundaries, use `content.find('  async function X(')` or `content.find('  function X(')`. Never assume two-newline patterns are unique — verify with positional search first.
+13. **str.replace requires exact character match.** Always copy the target string directly from the fetched file content — do not type from memory. Even one different whitespace character will cause the replace to silently fail.
+14. **Stage edits across multiple intermediate files** for large changes (v2.html → v3.html → v4.html). Verify each stage before proceeding.
+15. **Jotform MCP connector is broken** — always use Jotform REST API directly with API key `18907cfb3b4b3be3ac47994683148728`.
 
 ---
 
@@ -461,5 +586,6 @@ Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 - SHA changed after push → update Current SHA in Repo table
 - New env var → update Environment Variables table
 - Design token changed → update Design System table
+- Feature removed → add to appropriate "Removed" section
 
 **How:** Fetch skill from `Syntharra/syntharra-automations/skills/syntharra-admin/SKILL.md`, apply changes, push back.
