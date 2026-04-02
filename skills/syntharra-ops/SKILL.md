@@ -9,6 +9,8 @@ description: >
   the E2E test pipeline, or handling any operational/maintenance task that spans multiple systems.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 ---
 
 ## Session Rules (CRITICAL — Every Chat)
