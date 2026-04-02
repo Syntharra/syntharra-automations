@@ -63,6 +63,13 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | `syntharra-ops-monitor` | 24/7 monitor (Railway, PAUSED) |
 | `syntharra-artifacts` | Claude chat artifact files |
 
+## Scaling Architecture
+- Each client gets their own Retell agent cloned via Retell API
+- Triggered by Jotform submission → n8n onboarding workflow
+- Client config stored in `hvac_standard_agent` Supabase table (single table for Standard + Premium)
+- Current focus: HVAC contractors USA. Expansion: plumbing, electrical, cleaning — same system, one parameter change
+- SMS via Telnyx (pending approval). NOT Twilio.
+
 ## Brand tokens (quick reference)
 - Violet: `#6C63FF` | Cyan: `#00D4FF` | Dark: `#1A1A2E`
 - Font: DM Sans (UI) | Email font: Inter
