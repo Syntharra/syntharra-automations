@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Auto-Fix Loop — Diagnose and validate fixes without running full test suites.
@@ -19,7 +20,7 @@ import time
 from datetime import datetime, timedelta
 import sys
 
-RETELL_KEY = "key_0157d9401f66cfa1b51fadc66445"
+RETELL_KEY = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before running
 
 class AutoFixLoop:
     def __init__(self, agent_id, flow_id, max_cost=5.00):
