@@ -1,100 +1,146 @@
+---
+name: e2e-hvac-standard
+description: >
+  Full reference for running, debugging, and extending the Syntharra HVAC Standard E2E test.
+  ALWAYS load this skill when: running the Standard pipeline E2E test, debugging a failed E2E run,
+  adding a new field to the onboarding pipeline (Jotform, Supabase, or Retell), verifying a new
+  client was provisioned correctly, checking whether a recent n8n change broke onboarding, or any
+  task involving shared/e2e-test.py. The test covers the full pipeline: Jotform webhook → n8n
+  onboarding → Supabase → Retell agent + conversation flow → call processor → hvac_call_log.
+  Current status: 75/75 passing. Run with: python3 shared/e2e-test.py
+---
+
 # E2E Test — HVAC Standard Agent
 
-## When to Use This Skill
-Load this skill whenever:
-- Running an E2E test on the Standard HVAC pipeline
-- Debugging a failed E2E run
-- Adding new fields to the pipeline (Jotform → Supabase → Retell)
-- Checking that a recent n8n change didn't break onboarding
-- Verifying a new client was provisioned correctly
+> **Status: 75/75 ✅ — Verified 2026-04-02**
+> Run: `python3 shared/e2e-test.py`
+> Full docs: `docs/e2e-test-reference.md`
+> Master template: `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
 
 ---
 
-## What the E2E Test Covers
+## What It Tests
 
-The test validates the **complete Standard pipeline** end-to-end:
+Complete Standard pipeline end-to-end, 75 assertions across 7 phases:
 
-```
-Jotform webhook → n8n onboarding → Supabase row → Retell agent + flow → Call processor → hvac_call_log
-```
-
-**75 assertions across 7 phases:**
-- Phase 1: Jotform webhook accepted (HTTP 200)
-- Phase 2: n8n onboarding workflow executed successfully
-- Phase 3: Supabase — all 40+ fields populated correctly
-- Phase 4: Retell agent exists, published, correct voice/webhook/language
-- Phase 5: Conversation flow — 12 nodes, correct structure
-- Phase 6: Call processor — fake call logged, scored, deduplicated
-- Phase 7: Stripe gate behaviour in test mode
-
-Self-cleaning: auto-deletes test agent, flow, and Supabase row after 5 minutes.
-
----
-
-## How to Run
-
-```bash
-cd syntharra-automations
-python3 shared/e2e-test.py
-```
-
-**Requirements:** Python 3, no extra packages (stdlib only — urllib, json, time).
-
-**Expected output:**
-```
-RESULT: 75/75 passed  |  0 failed
-✅ ALL SYSTEMS GO — Full pipeline verified
-```
-
----
-
-## Test Data
-
-| Field | Value |
+| Phase | What's checked |
 |---|---|
-| Company | `Polar Peak HVAC {timestamp}` — unique per run |
-| AI Name | `Max` |
-| Phone | `+15125550199` |
-| Email | `daniel@syntharra.com` |
-| Timezone | `America/New_York` |
-| Voice | Male → `retell-Nico` |
+| 1 | Jotform webhook → HTTP 200 |
+| 2 | n8n onboarding workflow → `success` (polling, up to 45s) |
+| 3 | Supabase `hvac_standard_agent` — 40+ fields all populated |
+| 4 | Retell agent — exists, published, correct voice/webhook/language |
+| 5 | Conversation flow — exactly 12 nodes, correct structure |
+| 6 | Call processor — fake call logged + scored in `hvac_call_log` |
+| 7 | Stripe gate — Twilio correctly skipped in test mode |
+
+Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
 
 ---
 
-## Credentials (hardcoded in test file)
+## Key IDs
 
-All credentials are embedded directly in `shared/e2e-test.py`.
-Do not move them to vault — the test must run standalone.
+| Resource | ID |
+|---|---|
+| Onboarding workflow | `4Hx7aRdzMl5N0uJP` |
+| Call processor workflow | `Kg576YtPM9yEacKn` |
+| Cleanup workflow | `URbQPNQP26OIdYMo` |
+| Jotform Standard form | `260795139953066` |
+| Jotform webhook path | `/webhook/jotform-hvac-onboarding` |
+| Call processor webhook | `/webhook/hvac-std-call-processor` |
+| Cleanup webhook | `/webhook/e2e-test-cleanup` |
+
+---
+
+## Credentials (embedded in test file — do not move to vault)
 
 | Key | Ends in | Used for |
 |---|---|---|
-| `N8N_KEY` | `NqU` | n8n API — execution polling |
-| `RETELL_KEY` | `66445` | Retell — agent + flow verification |
+| `N8N_KEY` | `NqU` | n8n API execution polling |
+| `RETELL_KEY` | `66445` | Retell agent + flow verification |
 | `SB_ANON` | `yL0` | Supabase reads |
-| `SB_SVC` | `qsg` | Supabase deletes (cleanup) |
+| `SB_SVC` | `qsg` | Supabase deletes (cleanup only) |
 
 ---
 
-## Key IDs (never hardcode in test — always fetch dynamically)
+## Supabase Fields Asserted (Phase 3)
 
-| Resource | ID | Notes |
-|---|---|---|
-| Onboarding workflow | `4Hx7aRdzMl5N0uJP` | HVAC AI Receptionist - JotForm Onboarding |
-| Call processor workflow | `Kg576YtPM9yEacKn` | HVAC Call Processor - Retell Webhook |
-| Cleanup workflow | `URbQPNQP26OIdYMo` | E2E Test Cleanup — 5 Min Delayed Delete |
-| Jotform Standard form | `260795139953066` | Standard onboarding form |
-| Jotform webhook path | `/webhook/jotform-hvac-onboarding` | n8n endpoint |
-| Call processor webhook | `/webhook/hvac-std-call-processor` | n8n endpoint |
-| Cleanup webhook | `/webhook/e2e-test-cleanup` | n8n endpoint |
+All 40+ fields below are verified in the test. If you add a field to the pipeline, add it here and to the test payload + assertion.
+
+### Jotform → Column mapping
+
+| Column | Jotform key |
+|---|---|
+| `company_name` | `q4_hvacCompany` |
+| `owner_name` | `q54_ownerName` |
+| `client_email` | `q5_emailAddress` |
+| `company_phone` | `q6_mainCompany` |
+| `website` | `q7_companyWebsite` |
+| `years_in_business` | `q8_yearsIn` |
+| `timezone` | `q34_timezone` |
+| `agent_name` | `q10_aiAgent10` |
+| `custom_greeting` | `q38_customGreeting` |
+| `services_offered` | `q13_servicesOffered` |
+| `brands_serviced` | `q14_brandsequipmentServiced` |
+| `service_area` | `q16_primaryService` |
+| `service_area_radius` | `q40_serviceAreaRadius` |
+| `certifications` | `q29_certifications` |
+| `emergency_service` | `q20_247Emergency` |
+| `emergency_phone` | `q21_emergencyAfterhours` |
+| `business_hours` | `q17_businessHours` |
+| `pricing_policy` | `q42_pricingPolicy` |
+| `diagnostic_fee` | `q41_diagnosticFee` |
+| `financing_available` | `q25_financingAvailable` |
+| `warranty` | `q26_serviceWarranties` |
+| `payment_methods` | `q45_paymentMethods` |
+| `maintenance_plans` | `q46_maintenancePlans` |
+| `membership_program` | `q58_membershipProgramName` |
+| `lead_contact_method` | `q31_leadContact` |
+| `lead_phone` | `q32_leadNotification` |
+| `lead_email` | `q33_leadNotification33` |
+| `notification_email_2` | `q66_notifEmail2` |
+| `notification_email_3` | `q67_notifEmail3` |
+| `notification_sms_2` | `q64_notifSms2` |
+| `notification_sms_3` | `q65_notifSms3` |
+| `transfer_phone` | `q48_transferPhone` |
+| `transfer_triggers` | `q49_transferTriggers` |
+| `google_review_rating` | `q55_googleReviewRating` |
+| `google_review_count` | `q56_googleReviewCount` |
+| `unique_selling_points` | `q51_uniqueSellingPoints` |
+| `current_promotion` | `q52_currentPromotion` |
+| `do_not_service` | `q57_doNotServiceList` |
+| `additional_info` | `q37_additionalInfo` |
+| `agent_id` | Retell API response |
+| `conversation_flow_id` | Retell API response |
+
+---
+
+## Conversation Flow Spec (Phase 5)
+
+**Target: 12 nodes exactly**
+
+| # | Node ID | Name | Type |
+|---|---|---|---|
+| 1 | `node-greeting` | `greeting_node` | conversation |
+| 2 | `node-identify-call` | `identify_call_node` | conversation |
+| 3 | `node-leadcapture` | `nonemergency_leadcapture_node` | conversation |
+| 4 | `node-verify-emergency` | `verify_emergency_node` | conversation |
+| 5 | `node-existing-customer` | `existing_customer_node` | conversation |
+| 6 | `node-general-questions` | `general_questions_node` | conversation |
+| 7 | `node-callback` | `callback_node` | conversation |
+| 8 | `node-spam-robocall` | `spam_robocall_node` | conversation |
+| 9 | `node-transfer-call` | `Transfer Call` | transfer_call |
+| 10 | `node-transfer-failed` | `transfer_failed_node` | conversation |
+| 11 | `node-ending` | `Ending` | conversation |
+| 12 | `node-end-call` | `End Call` | end |
 
 ---
 
 ## Execution Polling Pattern
 
-The test polls n8n for execution results instead of sleeping:
+**Always poll — never flat sleep** for n8n execution checks:
 
 ```python
-for attempt in range(9):       # up to 45s
+for attempt in range(9):   # up to 45s
     time.sleep(5)
     _, execs = http(f".../executions?workflowId={WF_ID}&limit=3",
         headers={"X-N8N-API-KEY": N8N_KEY})
@@ -105,132 +151,19 @@ for attempt in range(9):       # up to 45s
         break
 ```
 
-This handles variable n8n execution times without brittle fixed sleeps.
-
 ---
 
-## Supabase Fields Verified (Phase 3)
+## Adding a New Field to the Pipeline
 
-Every field in the table below is asserted in the test. If you add a new field to the pipeline, add it here and to the test.
+When adding a new Jotform field that must reach Supabase:
 
-| Column | Jotform Field | Test Value |
-|---|---|---|
-| `company_name` | q4 | `Polar Peak HVAC {ts}` |
-| `owner_name` | q54 | `James Caldwell` |
-| `client_email` | q5 | `daniel@syntharra.com` |
-| `company_phone` | q6 | `+15125550199` |
-| `website` | q7 | `www.polarpeak.com` |
-| `years_in_business` | q8 | `8` |
-| `timezone` | q34 | `America/New_York` |
-| `agent_name` | q10 | `Max` |
-| `custom_greeting` | q38 | contains `Max` |
-| `services_offered` | q13 | comma-separated list |
-| `brands_serviced` | q14 | comma-separated list |
-| `service_area` | q16 | populated |
-| `service_area_radius` | q40 | `40 miles` |
-| `certifications` | q29 | comma-separated list |
-| `emergency_service` | q20 | `Yes` |
-| `emergency_phone` | q21 | `+15125550199` |
-| `business_hours` | q17 | populated |
-| `pricing_policy` | q42 | populated |
-| `diagnostic_fee` | q41 | populated |
-| `financing_available` | q25 | `Yes` |
-| `warranty` | q26 | `Yes` |
-| `payment_methods` | q45 | populated |
-| `maintenance_plans` | q46 | populated |
-| `membership_program` | q58 | `Peak Care Club` |
-| `lead_contact_method` | q31 | `Both` |
-| `lead_phone` | q32 | `+16316330713` |
-| `lead_email` | q33 | `daniel@syntharra.com` |
-| `notification_email_2` | q66 | `dispatcher@polarpeak.com` |
-| `notification_email_3` | q67 | `salesmanager@polarpeak.com` |
-| `notification_sms_2` | q64 | `+16316330714` |
-| `notification_sms_3` | q65 | `+16316330715` |
-| `transfer_phone` | q48 | `+15125550199` |
-| `transfer_triggers` | q49 | populated |
-| `google_review_rating` | q55 | `4.8` |
-| `google_review_count` | q56 | `527` |
-| `unique_selling_points` | q51 | populated |
-| `current_promotion` | q52 | populated |
-| `do_not_service` | q57 | populated |
-| `additional_info` | q37 | populated |
-| `agent_id` | Retell API | populated |
-| `conversation_flow_id` | Retell API | populated |
-
----
-
-## Retell Agent Assertions (Phase 4)
-
-| Check | Expected |
-|---|---|
-| Agent exists | `agent_id` returned from Retell |
-| Agent name | equals `TEST_AGENT` (`Max`) — AI receptionist name, not company |
-| Webhook URL | `https://n8n.syntharra.com/webhook/retell-hvac-webhook` |
-| Voice | `retell-Nico` (male) or `retell-Sloane` (female) |
-| Language | `multi` |
-
----
-
-## Conversation Flow Assertions (Phase 5)
-
-| Check | Expected |
-|---|---|
-| Node count | **12** |
-| flex_mode | `false` |
-| start_speaker | `agent` |
-| `node-greeting` | present |
-| `node-leadcapture` | present |
-| `node-verify-emergency` | present |
-| `node-callback` | present |
-| `node-spam-robocall` | present |
-| Greeting contains agent name | `Max` |
-| Global prompt contains company info | yes |
-| Agent published | HTTP 200 from Retell publish endpoint |
-
----
-
-## Call Processor Assertions (Phase 6)
-
-Sends a fake Retell post-call webhook and verifies n8n processes it correctly.
-
-| Check | Expected |
-|---|---|
-| Webhook accepted | HTTP 200 |
-| `hvac_call_log` row created | yes |
-| `caller_name` | `Daniel Blackmore` |
-| `caller_phone` | `631-633-0713` |
-| `service_requested` | not null/empty/Other |
-| `lead_score` | >= 6 |
-| `is_lead` | `true` |
-| `summary` | populated |
-| `company_name` | matches test company |
-| Dedup — no duplicate on re-send | 1 row only |
-| Call processor n8n execution | `success` |
-
----
-
-## Stripe Gate Assertions (Phase 7)
-
-| Mode | Check | Expected |
-|---|---|---|
-| TEST (default) | Twilio number NOT purchased | `twilio_number` null |
-| TEST (default) | Onboarding email sent | workflow status `success` |
-| LIVE | Twilio number purchased | `twilio_number` populated |
-
-To run in LIVE mode: set `STRIPE_CUSTOMER_ID = 'cus_xxxxx'` at top of test file.
-
----
-
-## Cleanup
-
-The test fires the E2E cleanup webhook at the end. The cleanup workflow:
-1. Waits 5 minutes (giving you time to manually inspect Supabase/Retell)
-2. Deletes the Supabase row from `hvac_standard_agent`
-3. Deletes the test Retell agent
-4. Deletes the test conversation flow
-5. Deletes the `hvac_call_log` test row
-
-**You have 5 minutes after the test completes to inspect data before it's wiped.**
+1. **Parse JotForm Data node** (n8n `4Hx7aRdzMl5N0uJP`) — add mapping: `new_field: clean(formData.qXX_fieldName)`
+2. **Build Retell Prompt extractedData** — add: `new_field: data.new_field || null`
+3. **Merge LLM & Agent Data node** — add: `new_field: ed.new_field || null`
+4. **E2E test payload** — add the Jotform field key + value
+5. **E2E test assertion** — add `check("new_field saved", row.get('new_field') == expected_value, ...)`
+6. **Run test** — verify 75+1/76 passing
+7. **Update this skill** + `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
 
 ---
 
@@ -238,14 +171,14 @@ The test fires the E2E cleanup webhook at the end. The cleanup workflow:
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Phase 2 fails (exec status unknown) | n8n slow to start | Increase polling attempts (default: 9×5s = 45s) |
-| Phase 3 field is null | Jotform field key wrong in test payload or Parse node | Check field key against Jotform form `260795139953066` |
-| Phase 5 wrong node count | Template changed in n8n | Check Build Retell Prompt node — should build 12 nodes |
-| Phase 6 call not logged | Call processor webhook path changed | Verify `/webhook/hvac-std-call-processor` is active |
-| Cleanup doesn't fire | Cleanup workflow paused | Unpause workflow `URbQPNQP26OIdYMo` in n8n |
+| Phase 2 fails (`exec status unknown`) | n8n slow | Increase polling attempts (9×5s = 45s default) |
+| Phase 3 field null | Wrong Jotform key in Parse node or test payload | Check key against Jotform form `260795139953066` |
+| Phase 5 wrong node count | Template changed in n8n | Check Build Retell Prompt node — must build 12 nodes |
+| Phase 6 call not logged | Call processor webhook path changed | Verify `/webhook/hvac-std-call-processor` active |
+| Cleanup doesn't fire | Cleanup workflow paused | Unpause `URbQPNQP26OIdYMo` in n8n |
 
 ---
 
 ## Credential Access Rule
-ALL Syntharra API keys are in Supabase `syntharra_vault`.
+ALL Syntharra API keys live in Supabase `syntharra_vault`.
 The E2E test embeds credentials directly for standalone operation — do not refactor to vault lookups.
