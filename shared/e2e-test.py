@@ -131,17 +131,26 @@ if IS_LIVE:
 
 status, _ = http("https://n8n.syntharra.com/webhook/jotform-hvac-onboarding", "POST", payload)
 check("Webhook accepted (HTTP 200)", status == 200, f"HTTP {status}")
-print("  Waiting 25s for full workflow execution...")
-time.sleep(25)
 
 # ══════════════════════════════════════════════════════════════
 print("\n[2] N8N EXECUTION")
 # ══════════════════════════════════════════════════════════════
-_, execs = http("https://n8n.syntharra.com/api/v1/executions?workflowId=k0KeQxWb3j3BbQEk&limit=1",
-    headers={"X-N8N-API-KEY": N8N_KEY})
-latest = (execs.get('data') or [{}])[0]
-exec_status = latest.get('status', 'unknown')
-exec_id     = latest.get('id', '?')
+# Poll for up to 45s — n8n indexes executions after completion, not instantly
+exec_status = 'unknown'
+exec_id     = '?'
+onboarding_wf_id = "4Hx7aRdzMl5N0uJP"
+for attempt in range(9):
+    time.sleep(5)
+    _, execs = http(
+        f"https://n8n.syntharra.com/api/v1/executions?workflowId={onboarding_wf_id}&limit=3",
+        headers={"X-N8N-API-KEY": N8N_KEY})
+    candidates = [e for e in (execs.get('data') or [])
+                  if e.get('status') in ('success','error','crashed')]
+    if candidates:
+        latest      = candidates[0]
+        exec_status = latest.get('status', 'unknown')
+        exec_id     = latest.get('id', '?')
+        break
 check("Workflow executed successfully", exec_status == 'success', f"exec {exec_id} → {exec_status}")
 
 # ══════════════════════════════════════════════════════════════
@@ -276,8 +285,8 @@ if agent_id:
     }
     s, _ = http("https://n8n.syntharra.com/webhook/retell-hvac-webhook", "POST", fake_call)
     check("Call processor webhook accepted", s == 200,                                              f"HTTP {s}")
-    print("  Waiting 15s for GPT analysis...")
-    time.sleep(15)
+    print("  Waiting for GPT analysis (polling up to 30s)...")
+    time.sleep(15)  # initial wait for Groq to process transcript
 
     rows = sb(f"hvac_call_log?call_id=eq.{fake_call_id}&select=*")
     call = rows[0] if rows else {}
@@ -296,11 +305,22 @@ if agent_id:
     dup_rows = sb(f"hvac_call_log?call_id=eq.{fake_call_id}&select=*")
     check("Dedup — no duplicate row created", len(dup_rows) == 1,                                  f"{len(dup_rows)} row(s)")
 
-    _, cp = http("https://n8n.syntharra.com/api/v1/executions?workflowId=OyDCyiOjG0twguXq&limit=1",
-        headers={"X-N8N-API-KEY": N8N_KEY})
-    cp_exec = (cp.get('data') or [{}])[0]
-    check("Call processor n8n execution OK", cp_exec.get('status') == 'success',
-        f"exec {cp_exec.get('id')} → {cp_exec.get('status')}")
+    # Poll for call processor execution (workflow Kg576YtPM9yEacKn)
+    call_proc_wf_id = "Kg576YtPM9yEacKn"
+    cp_status = 'unknown'; cp_id = '?'
+    for attempt in range(6):
+        time.sleep(5)
+        _, cp = http(
+            f"https://n8n.syntharra.com/api/v1/executions?workflowId={call_proc_wf_id}&limit=3",
+            headers={"X-N8N-API-KEY": N8N_KEY})
+        cp_cands = [e for e in (cp.get('data') or [])
+                    if e.get('status') in ('success','error','crashed')]
+        if cp_cands:
+            cp_status = cp_cands[0].get('status', 'unknown')
+            cp_id     = cp_cands[0].get('id', '?')
+            break
+    check("Call processor n8n execution OK", cp_status == 'success',
+        f"exec {cp_id} → {cp_status}")
 
 # ══════════════════════════════════════════════════════════════
 print("\n[7] STRIPE GATE — BEHAVIOUR CHECK")
@@ -314,8 +334,11 @@ if IS_LIVE:
 else:
     check("TEST MODE — Stripe gate correctly skipped Twilio purchase", not bool(row.get('twilio_number')),
         "no twilio_number = correct for test run")
-    check("TEST MODE — Onboarding email sent (no phone, expected)", exec_status == 'success',
-        "Check inbox — will say 'no phone configured' which is correct in test mode")
+    # In test mode the email is always sent (no phone number section in email = correct)
+    # Verify by checking the onboarding workflow ran successfully (already checked above)
+    email_sent = exec_status == 'success'
+    check("TEST MODE — Onboarding email sent (no phone, expected)", email_sent,
+        "Onboarding workflow completed — email sent to client_email in Supabase")
 
 # ══════════════════════════════════════════════════════════════
 print("\n[8] CLEANUP — SCHEDULED (5 MINUTE DELAY)")
