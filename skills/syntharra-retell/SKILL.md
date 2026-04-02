@@ -10,6 +10,8 @@ description: >
   Retell configuration — never rely on memory alone for agent IDs or API patterns.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # Syntharra — Retell AI Reference
 
 ---
