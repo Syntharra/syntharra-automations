@@ -1,0 +1,268 @@
+{
+  "run_label": "core-flow-run9",
+  "timestamp": "2026-04-02T23:24:42.039828+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 15,
+    "pass": 14,
+    "fail": 1,
+    "error": 0,
+    "pass_rate": 93.3,
+    "cost_usd": 0.0912,
+    "tokens": {
+      "prompt_tokens": 594311,
+      "completion_tokens": 3490
+    }
+  },
+  "failures": [
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent did not successfully transfer the caller or handle the situation gracefully after the transfer attempts.",
+      "root_cause": "The agent initiated transfers but did not provide a callback or alternative solution after the transfer attempts failed.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "Sure, let me connect you with Mike or one of the team right now. One moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Okay, thanks."
+        },
+        {
+          "role": "agent",
+          "text": "I'm just going to transfer you now, one moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Alright, I appreciate it."
+        },
+        {
+          "role": "agent",
+          "text": "[Transfer Call]"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "Sure, let me connect you with Mike or one of the team right now. One moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Okay, thank you."
+        },
+        {
+          "role": "agent",
+          "text": "I'm just going to transfer you now, one moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Alright, thanks for your help."
+        },
+        {
+          "role": "agent",
+          "text": "[Transfer Call]"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "Sure, let me connect you with Mike or one of the team right now. One moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Okay, thank you."
+        },
+        {
+          "role": "agent",
+          "text": "I'm just going to transfer you now, one moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Alright, I appreciate it."
+        },
+        {
+          "role": "agent",
+          "text": "[Transfer Call]"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "Sure, let me connect you with Mike or one of the team right now. One moment please."
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "All required data points were captured, details were read back, and a callback was scheduled.",
+      "root_cause": ""
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent identified the situation as an emergency, offered a live transfer, and handled the urgency appropriately.",
+      "root_cause": ""
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent successfully routed to the install/quote path, captured the necessary information, did not provide a price, and scheduled a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent successfully routed the call to the existing customer path and initiated a transfer.",
+      "root_cause": ""
+    },
+    {
+      "id": 5,
+      "name": "FAQ - hours inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 1,
+      "criteria_total": 1,
+      "summary": "The agent successfully answered the FAQ regarding business hours without collecting unnecessary lead information.",
+      "root_cause": ""
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent did not successfully transfer the caller or handle the situation gracefully after the transfer attempts.",
+      "root_cause": "The agent initiated transfers but did not provide a callback or alternative solution after the transfer attempts failed."
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "All required information was captured and confirmed without diagnosing the noise or treating it as an emergency.",
+      "root_cause": ""
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent effectively assessed urgency, captured necessary information, and initiated a transfer without diagnosing the furnace.",
+      "root_cause": ""
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The call was routed to the spam path and ended politely.",
+      "root_cause": ""
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent clarified the company type, helped redirect the caller, and did not attempt to capture a lead.",
+      "root_cause": ""
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "The agent successfully captured all required information and provided a summary before closing the call.",
+      "root_cause": ""
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent recognized the potential emergency, verified urgency, and offered a transfer option.",
+      "root_cause": ""
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent successfully captured minimal information and confirmed the callback without pressuring for more details.",
+      "root_cause": ""
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent answered the caller's questions and captured lead information for follow-up.",
+      "root_cause": ""
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 1,
+      "criteria_total": 1,
+      "summary": "The agent handled the end of the call gracefully and closed professionally.",
+      "root_cause": ""
+    }
+  ]
+}
