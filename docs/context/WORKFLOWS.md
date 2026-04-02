@@ -29,7 +29,7 @@
 | ID | Name | Description |
 |---|---|---|
 | `kz1VmwNccunRMEaF` | HVAC Prem Onboarding | Triggered by Jotform Premium submission. Creates Premium client record in Supabase, sends integration setup email with OAuth links for Google Calendar or Outlook. |
-| `STQ4Gt3rH8ptlvMi` | HVAC Premium Call Processor | Receives Retell post-call webhook for Premium clients. Parses transcript, detects repeat callers, scores lead, triggers dispatcher for booking actions, logs to hvac_call_log. |
+| `STQ4Gt3rH8ptlvMi` | HVAC Premium Call Processor | Receives Retell post-call webhook (`/webhook/retell-hvac-premium-webhook`) for Premium clients. Rebuilt 2026-04-02 from Standard base (fixed `filter` node crash). Parses transcript via GPT, flattens nested JSON response, scores lead, logs to hvac_call_log with call_tier=Premium. |
 | `73Y0MHVBu05bIm5p` | Premium Integration Dispatcher | Routes Premium call booking actions to the correct platform dispatcher (Google Calendar, Outlook, Calendly, Jobber, or HubSpot) based on client's connected integration. |
 | `rGrnCr5mPFP2TIc7` | Premium Dispatcher — Google Calendar | Handles get_slots and create_booking for Google Calendar. Fetches availability and creates events via Google Calendar API using stored OAuth tokens from vault. |
 | `La99yvfmWg6AuvM2` | Premium Dispatcher — Outlook | Handles get_slots, create_booking, cancel_booking for Outlook/Microsoft 365 via Microsoft Graph API. Refreshes tokens from vault on expiry. |
