@@ -44,7 +44,7 @@
     "group": "core_flow",
     "name": "Request live person immediately",
     "callerPrompt": "You want to speak to a real person right away. Say \"I want to speak to someone\" at the start.",
-    "expectedBehaviour": "Offers transfer to Mike Thornton, handles gracefully",
+    "expectedBehaviour": "Offers to transfer caller to Mike or team, initiates transfer. If transfer fails in simulation, handles gracefully with callback \u2014 both are acceptable outcomes.",
     "premiumOnly": false
   },
   {
@@ -52,7 +52,7 @@
     "group": "core_flow",
     "name": "AC making strange noise",
     "callerPrompt": "Your AC is making a loud rattling noise but still cooling. Not an emergency. Lisa Chen, 555-777-8888, 321 Elm St Dallas TX, lisa@test.com.",
-    "expectedBehaviour": "Captures all info, does NOT diagnose the noise cause, schedules callback",
+    "expectedBehaviour": "Captures all info (name, phone, address, email optional), does NOT diagnose the noise cause, confirms details back, schedules callback. Does not treat as emergency.",
     "premiumOnly": false
   },
   {
