@@ -1,0 +1,460 @@
+{
+  "run_label": "core-flow-run4",
+  "timestamp": "2026-04-02T22:48:34.038227+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 15,
+    "pass": 11,
+    "fail": 4,
+    "error": 0,
+    "pass_rate": 73.3,
+    "cost_usd": 0.0922,
+    "tokens": {
+      "prompt_tokens": 598793,
+      "completion_tokens": 3908
+    }
+  },
+  "failures": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 4,
+      "summary": "The agent captured the necessary details and confirmed them but did not schedule a callback.",
+      "root_cause": "The agent failed to schedule a callback despite capturing all required information.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my AC isn't cooling."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's not cooling at all."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No, I don't smell anything unusual and there's no water leaking."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's John Smith."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. What's the best callback number for you, John?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-234-5678."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, that's 555-234-5678, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, can I have the service address where the AC is located?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 123 Main St, Dallas TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area. Let me take your details and have our team confirm whether we can help you. \n\nJust to confirm, I have John Smith, callback number 555-234-5678, and the service address is 123 Main St, Dallas TX. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect \u2014 I've noted that down. Our team will contact you as soon as possible to confirm if we can assist you. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent failed to offer a live transfer despite recognizing the urgency of the situation.",
+      "root_cause": "The agent did not initiate a transfer to urgent help or offer to transfer the caller.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I have no heat in my house and it\u2019s freezing outside. I need help urgently."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's completely off. My parents are elderly, and it\u2019s really cold."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No burning or gas smells. No leaks either, just no heat at all."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Let me get your name and callback number first. What\u2019s your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Mike Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Mike. What\u2019s the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 555-111-2222."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-111-2222, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, can I have the service address where you need assistance?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a street address so our technician knows where to come \u2014 do you have a physical address for us?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Mike Johnson, callback number 555-111-2222, service address 456 Oak Ave, Dallas, TX, and you need help with no heat. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct. Thank you."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect \u2014 I'm flagging this as urgent. Someone from our team will be in touch shortly to assist you. Please stay safe! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 5,
+      "summary": "The agent did not route the call to the install/quote path as required.",
+      "root_cause": "The agent failed to initiate a transfer or schedule a callback for a quote request.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I'm looking for a quote for a new AC unit installation."
+        },
+        {
+          "role": "agent",
+          "text": "I'd be happy to help with that! Can you please tell me your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Sam Wilson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sam! What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-333-4444."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-333-4444, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the installation?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course, it's 789 Pine Rd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area. Let me take your details and have our team confirm whether we can help you. \n\nJust to confirm, I have Sam Wilson, callback number 555-333-4444, and the service address is 789 Pine Rd, Dallas, TX. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect \u2014 I've noted that down. Our team will reach out to confirm whether we can assist you with the installation. Thank you, Sam! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent did not transfer the caller or confirm the maintenance request properly.",
+      "root_cause": "The agent failed to initiate a transfer or confirm the scheduling of the maintenance request.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019d like to schedule annual AC maintenance before summer."
+        },
+        {
+          "role": "agent",
+          "text": "Great! I can help with that. May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Sarah Davis."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, thanks Sarah! What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-222-1111."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! Can you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 987 Cedar Blvd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area. Let me take your details and have our team confirm whether we can help you. \n\nJust to confirm, I have Sarah Davis, callback number 555-222-1111, and the service address is 987 Cedar Blvd, Dallas, TX. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect \u2014 I've noted your request. Our team will contact you shortly to confirm if we can assist you. Have a great day, Sarah! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 4,
+      "summary": "The agent captured the necessary details and confirmed them but did not schedule a callback.",
+      "root_cause": "The agent failed to schedule a callback despite capturing all required information."
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent failed to offer a live transfer despite recognizing the urgency of the situation.",
+      "root_cause": "The agent did not initiate a transfer to urgent help or offer to transfer the caller."
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 5,
+      "summary": "The agent did not route the call to the install/quote path as required.",
+      "root_cause": "The agent failed to initiate a transfer or schedule a callback for a quote request."
+    },
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent successfully captured the caller's information and indicated that someone would follow up.",
+      "root_cause": ""
+    },
+    {
+      "id": 5,
+      "name": "FAQ - hours inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent successfully answered the FAQ about hours of operation without collecting unnecessary lead information.",
+      "root_cause": ""
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent offered to transfer the caller and initiated a transfer, handling the failure gracefully with a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 6,
+      "criteria_total": 6,
+      "summary": "The agent successfully captured all necessary information, confirmed details, and scheduled a callback without diagnosing the issue or treating it as an emergency.",
+      "root_cause": ""
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "The agent effectively assessed urgency, captured necessary information, and did not diagnose the furnace issue.",
+      "root_cause": ""
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent correctly identified the spam call and ended the conversation politely.",
+      "root_cause": ""
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent correctly identified the wrong number and provided helpful redirection without attempting to capture a lead.",
+      "root_cause": ""
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent did not transfer the caller or confirm the maintenance request properly.",
+      "root_cause": "The agent failed to initiate a transfer or confirm the scheduling of the maintenance request."
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent recognized the urgency of the situation and initiated a transfer to the emergency line.",
+      "root_cause": ""
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent successfully captured the caller's information and confirmed the callback without pressuring for more details.",
+      "root_cause": ""
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "The agent effectively answered the inquiry, captured lead information, and confirmed details for follow-up.",
+      "root_cause": ""
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent handled the caller's decision to wait gracefully and closed the call professionally.",
+      "root_cause": ""
+    }
+  ]
+}
