@@ -56,7 +56,7 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | HVAC Premium agent/prompt | `e2e-hvac-premium` |
 | Ops / session rules | `syntharra-ops` |
 | Marketing | `syntharra-marketing` |
-| Artifacts / brand | `syntharra-artifacts` repo SKILL.md |
+| Artifacts (React previews) | fetch `syntharra-artifacts/SKILL.md` directly |
 | Brand / visual identity | `syntharra-brand` |
 | E2E test — Standard HVAC | `e2e-hvac-standard` |
 | E2E test — Premium HVAC | `e2e-hvac-premium` |
@@ -79,8 +79,8 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | `syntharra-automations` | All ops code, skills, docs, n8n backups |
 | `syntharra-website` | syntharra.com (GitHub Pages) |
 | `syntharra-admin` | admin.syntharra.com (Railway) |
-| `syntharra-checkout` | Stripe checkout server (Railway) |
-| `syntharra-oauth-server` | Premium OAuth (Railway) |
+| `syntharra-checkout` | Stripe checkout server (Railway) — `checkout.syntharra.com` |
+| `syntharra-oauth-server` | Premium OAuth — `auth.syntharra.com` (Google, Outlook, Calendly, Jobber, HubSpot) |
 | `syntharra-ops-monitor` | 24/7 monitor (Railway, PAUSED) |
 | `syntharra-artifacts` | Claude chat artifact files |
 
