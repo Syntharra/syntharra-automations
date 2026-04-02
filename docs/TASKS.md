@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — Skills audited, DECISIONS.md created, CLAUDE.md fixed, repo fully structured
+> Last updated: 2026-04-02 — Full repo audit: security fixes, skills synced, all 8 repos mapped
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -49,6 +49,14 @@ Sophie's actual behaviour on these scenarios was CORRECT.
 - [x] Added freshness dates to 11 repo skills missing them
 - [x] Backed up syntharra-client-dashboard from /mnt to repo
 - [x] Flagged: 5 repo skills not in /mnt (need uploading to Claude.ai project)
+- [x] Audited all 8 repos (previously only 2 visible)
+- [x] SECURITY: Removed hardcoded Retell key from 4 Python files (public repo)
+- [x] SECURITY: Removed Retell key from AGENTS.md (public repo)
+- [x] SECURITY: Removed Stripe webhook secret from STRIPE.md (public repo)
+- [x] SECURITY: Removed GitHub token from ops-monitor/CLAUDE.md
+- [x] Added service URLs to CLAUDE.md for all repos
+- [x] Added Security section to DECISIONS.md
+- [x] Backed up syntharra-client-dashboard to repo
 - [x] Created docs/FAILURES.md — agentic failure log
 - [x] Created docs/LEARNING.md — self-improvement protocol
 - [x] Updated CLAUDE.md to load FAILURES.md every session
@@ -60,6 +68,9 @@ Sophie's actual behaviour on these scenarios was CORRECT.
 - [ ] Wire +18129944371 to Standard Template agent
 - [ ] Live smoke test (Dan available ~2 days)
 - [ ] Update CLAUDE.md skill table with e2e-hvac-premium
+
+## Pre-Go-Live Security
+- [ ] Move `syntharra-checkout/env` sk_test_ key to Railway env vars before switching to sk_live_
 
 ## Blocked
 - Live smoke test — Dan unavailable ~2 days
