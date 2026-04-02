@@ -4,7 +4,7 @@
 > Keys: stored in syntharra_vault — never put raw values in this file
 
 ## Railway Project: "Syntharra"
-- API token: in `syntharra_vault` (service_name='Railway', key_type='api_token')
+- API token: in `syntharra_vault` (service_name='Railway', key_type='api_token') — active token begins `1eb854a8`
 - GraphQL API: `https://backboard.railway.com/graphql/v2`
 - Auto-deploy: all services deploy from `main` branch of their GitHub repo (~60s)
 
