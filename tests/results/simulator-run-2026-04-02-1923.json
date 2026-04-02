@@ -1,0 +1,1901 @@
+{
+  "run_label": "run-004a-core-flow",
+  "timestamp": "2026-04-02T19:23:06.263255",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 15,
+    "pass": 0,
+    "fail": 0,
+    "error": 15,
+    "pass_rate": 0.0,
+    "cost_usd": 0.0912,
+    "tokens": {
+      "prompt_tokens": 587484,
+      "completion_tokens": 5195
+    }
+  },
+  "group_breakdown": {
+    "core_flow": {
+      "pass": 0,
+      "fail": 0,
+      "error": 15
+    }
+  },
+  "failures": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 3 out of 4,\n  \"criteria\": [\n    {\"criterion\": \"Captures all 4 data points, reads back details, schedules callback\", \"result\": \"FAIL\", \"reason\": \"The agent did not sch",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my AC isn't cooling properly."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. Let me gather some details to assist you. What is your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's John Smith."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, John. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-234-5678."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-234-5678. Now, can you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Main St, Dallas TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a physical address for our technician. Do you have a street address for us?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 123 Main St, Dallas TX."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have 123 Main St, Dallas, TX. Now, what is your email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "My email is john@email.com."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, John. Just to confirm, I have your full name as John Smith, callback number 555-234-5678, service address 123 Main St, Dallas, TX, and your email john@email.com. You need assistance with your AC not cooling properly. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, John! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Identifies as emergency, offers live transfer, handles urgency appropriately\", \"result\": \"FAIL\", \"reason\": \"The agent d",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I need help. My heat is out and it's freezing outside. My elderly parents are home."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s completely off. No heat is coming through."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No, there's no smell or leaking. It's just not heating at all."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Mike Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Mike. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 555-111-2222."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-111-2222, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Mike. Now, can you provide the service address where the technician will be needed?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a street address so our technician knows where to come \u2014 do you have a physical address for us?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, I have Mike Johnson, callback number 555-111-2222, service address 456 Oak Ave, Dallas, TX, and you need help with no heat. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 3 out of 4,\n  \"criteria\": [\n    {\"criterion\": \"Routes to install/quote path, captures info, never gives price, schedules callback\", \"result\": \"FAIL\", \"reason\": \"The a",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I'm looking to get a quote for a new AC unit installation."
+        },
+        {
+          "role": "agent",
+          "text": "I'd be happy to help with that! Can you please provide me with your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Sam Wilson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sam! What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-333-4444."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-333-4444, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the installation?"
+        },
+        {
+          "role": "caller",
+          "text": "The service address is 789 Pine Rd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a physical address for our technician. Can you confirm the street address again?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 789 Pine Rd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for confirming, Sam. Just to clarify, is the ZIP code for that address 75201?"
+        },
+        {
+          "role": "caller",
+          "text": "No, the ZIP code is 75201."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that correction! Now, could you provide the best email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's sam@test.com."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! Just to confirm, I have Sam Wilson, callback number 555-333-4444, service address 789 Pine Rd, Dallas, TX 75201, and your email is sam@test.com. You need a quote for a new AC unit installation. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Routes to existing customer path, captures callback info\", \"result\": \"PASS\", \"reason\": \"The agent successfully identifi",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I need help. A technician visited three days ago, and the problem has come back."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. Can I have the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course, it's 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, can you please provide the service address where the technician visited?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, that's 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! Now, can you tell me what the issue is that you're experiencing again?"
+        },
+        {
+          "role": "caller",
+          "text": "The AC isn't cooling properly again. It worked for a couple of days after the visit."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, and you're experiencing AC cooling issues again. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "FAQ - hours inquiry",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Answers FAQ, does not unnecessarily collect lead info for simple FAQ\", \"result\": \"PASS\", \"reason\": \"The agent provided ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I just want to know your hours of operation."
+        },
+        {
+          "role": "agent",
+          "text": "Our business hours are Monday to Friday from 7 AM to 6 PM, and Saturday from 8 AM to 2 PM. Is there anything else I can assist you with?"
+        },
+        {
+          "role": "caller",
+          "text": "Do you work on Sundays?"
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry, but we are closed on Sundays. Is there anything else you would like to know?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s all. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Offers transfer to Mike Thornton, handles gracefully\", \"result\": \"FAIL\", \"reason\": \"The agent did not offer a transfer ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "I can transfer you to our team. Just a moment, please."
+        },
+        {
+          "role": "caller",
+          "text": "Okay, thank you."
+        },
+        {
+          "role": "agent",
+          "text": "I'm just going to transfer you now, one moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Sure, no problem."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry, I wasn't able to connect you right now. Can I get your name and callback number? I'll make sure someone reaches out to you as soon as possible."
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. Just to confirm, is that 555-1234?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. I'll pass that along to the team, and someone will be in touch with you shortly."
+        },
+        {
+          "role": "caller",
+          "text": "Thank you! I appreciate it."
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now."
+        },
+        {
+          "role": "agent",
+          "text": "Have a great day, take care! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 1 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Captures all info\", \"result\": \"PASS\", \"reason\": \"The agent successfully captured the caller's name, callback number, an",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. My AC is making a loud rattling noise but it\u2019s still cooling."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. Let me get some details to help you further. What is your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Lisa Chen."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Lisa. Can I have your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 555-777-8888."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-777-8888, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address where the AC is located?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 321 Elm St, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a physical address in Austin or the surrounding areas since that's our service area. Can you provide an address within that area?"
+        },
+        {
+          "role": "caller",
+          "text": "I'm sorry, but I\u2019m in Dallas. I thought you serviced here too."
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate you reaching out, but unfortunately, we only service Austin, TX, and the surrounding areas. I'd recommend reaching out to a local HVAC specialist in Dallas. Is there anything else I can help you with?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s all. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Lisa! If you need assistance in the future, feel free to reach out. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 2 out of 3,\n  \"criteria\": [\n    {\"criterion\": \"Assesses urgency\", \"result\": \"PASS\", \"reason\": \"The agent acknowledged the cold situation and confirmed the system was ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my furnace won\u2019t turn on. It's pretty cold in my house."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s completely off. I\u2019ve tried adjusting the thermostat but nothing happens."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No, I don\u2019t smell anything weird, and there\u2019s no leaking. Just no heat."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Tom Brown."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Tom. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-444-3333."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-444-3333, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, can I have the service address where the furnace is located?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 654 Maple Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, I have your address as 654 Maple Ave, Dallas, TX. Does that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! Lastly, is there anything else I should pass on to the team?"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 1 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Routes to spam path, ends call politely\", \"result\": \"FAIL\", \"reason\": \"The agent did not explicitly route the call to a",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Congratulations! You have been selected for an exclusive offer on solar panels."
+        },
+        {
+          "role": "agent",
+          "text": "This call appears to be a robocall or spam. If you have HVAC service needs, I'm happy to assist. Otherwise, thank you for your time. [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 1 out of 3,\n  \"criteria\": [\n    {\"criterion\": \"Clarifies it is HVAC company\", \"result\": \"PASS\", \"reason\": \"The agent correctly identified the company as Arctic Breeze",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Uh, hi. I think I dialed the wrong number. I was trying to reach a pizza place."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for letting me know! This is Arctic Breeze HVAC, so it seems you may have reached us by mistake. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Routes correctly, captures all info, reads back summary\", \"result\": \"PASS\", \"reason\": \"The agent successfully captured ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I\u2019d like to schedule annual AC maintenance before summer."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds great! Can I start by getting your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Sarah Davis."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sarah. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-222-1111."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-222-1111, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the maintenance?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 987 Cedar Blvd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, that's 987 Cedar Blvd, Dallas, TX. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Great! Is there anything else I should pass on to the team regarding your AC maintenance?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. Just the annual maintenance, please."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Sarah Davis, callback number 555-222-1111, service address 987 Cedar Blvd, Dallas, TX, and you need annual AC maintenance. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Treats as potential emergency, verifies urgency level, offers transfer option\", \"result\": \"FAIL\", \"reason\": \"The agent ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. My AC stopped working, and there's a burning smell coming from it. I'm really worried."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s not turning on at all."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, there's definitely a burning smell coming from the unit."
+        },
+        {
+          "role": "agent",
+          "text": "I need to collect some details to assist you. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. Now, can you provide the service address where the AC unit is located?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s right."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. I have your details: your name is Alex Johnson, callback number 555-123-4567, and the service address is 123 Maple Street, Springfield. You need help with your AC that's not working and has a burning smell. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 2 out of 3,\n  \"criteria\": [\n    {\"criterion\": \"Captures minimal info\", \"result\": \"PASS\", \"reason\": \"The agent captured the caller's name and phone number.\"},\n    {\"cr",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "I can't talk right now. Could I get a callback this afternoon?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. Can I get your name and the best number to reach you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Dave Wilson. My number is 555-666-7777."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Dave. Just to confirm, that's 555-666-7777. Is there anything specific you would like the team to assist you with when they call back?"
+        },
+        {
+          "role": "caller",
+          "text": "No specific issues. Just need some general HVAC information."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have noted that. I will pass along your request for a callback this afternoon. Thank you, Dave! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Answers general FAQ, captures lead info for follow-up\", \"result\": \"PASS\", \"reason\": \"The agent provided information abo",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m interested in your duct cleaning services. Can you tell me more about that?"
+        },
+        {
+          "role": "agent",
+          "text": "Absolutely! Our duct cleaning service helps improve air quality and system efficiency by removing dust and allergens from your ducts. Is there anything specific you\u2019d like to know, or would you like to schedule a service?"
+        },
+        {
+          "role": "caller",
+          "text": "That sounds good. How much does the service typically cost?"
+        },
+        {
+          "role": "agent",
+          "text": "Our team will go over all the pricing with you to provide the most accurate information. Let me grab your details so we can get that set up for you. What is the issue or service needed?"
+        },
+        {
+          "role": "caller",
+          "text": "I\u2019m looking for duct cleaning services. My name is Patricia Lee, and my address is 147 Birch Lane, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Patricia! Can I have your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, my number is 555-888-9999."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-888-9999, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Just to confirm, I have Patricia Lee, callback number 555-888-9999, and you need duct cleaning services at 147 Birch Lane, Dallas, TX. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s all for now. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Patricia! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Handles gracefully, does not pressure, closes professionally\", \"result\": \"PASS\", \"reason\": \"The agent acknowledged the ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I was looking into scheduling an HVAC service. But I think I\u2019ll wait a bit before booking."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. If you have any questions or need assistance later, feel free to reach out. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now. I\u2019ll call back later when I\u2019m ready. Thanks!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! Have a great day, and we look forward to hearing from you soon. [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 3 out of 4,\n  \"criteria\": [\n    {\"criterion\": \"Captures all 4 data points, reads back details, schedules callback\", \"result\": \"FAIL\", \"reason\": \"The agent did not sch",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my AC isn't cooling properly."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. Let me gather some details to assist you. What is your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's John Smith."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, John. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-234-5678."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-234-5678. Now, can you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Main St, Dallas TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a physical address for our technician. Do you have a street address for us?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 123 Main St, Dallas TX."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have 123 Main St, Dallas, TX. Now, what is your email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "My email is john@email.com."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, John. Just to confirm, I have your full name as John Smith, callback number 555-234-5678, service address 123 Main St, Dallas, TX, and your email john@email.com. You need assistance with your AC not cooling properly. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, John! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Identifies as emergency, offers live transfer, handles urgency appropriately\", \"result\": \"FAIL\", \"reason\": \"The agent d",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I need help. My heat is out and it's freezing outside. My elderly parents are home."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s completely off. No heat is coming through."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No, there's no smell or leaking. It's just not heating at all."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Mike Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Mike. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 555-111-2222."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-111-2222, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Mike. Now, can you provide the service address where the technician will be needed?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a street address so our technician knows where to come \u2014 do you have a physical address for us?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, I have Mike Johnson, callback number 555-111-2222, service address 456 Oak Ave, Dallas, TX, and you need help with no heat. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 3 out of 4,\n  \"criteria\": [\n    {\"criterion\": \"Routes to install/quote path, captures info, never gives price, schedules callback\", \"result\": \"FAIL\", \"reason\": \"The a",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I'm looking to get a quote for a new AC unit installation."
+        },
+        {
+          "role": "agent",
+          "text": "I'd be happy to help with that! Can you please provide me with your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Sam Wilson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sam! What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-333-4444."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-333-4444, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the installation?"
+        },
+        {
+          "role": "caller",
+          "text": "The service address is 789 Pine Rd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a physical address for our technician. Can you confirm the street address again?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 789 Pine Rd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for confirming, Sam. Just to clarify, is the ZIP code for that address 75201?"
+        },
+        {
+          "role": "caller",
+          "text": "No, the ZIP code is 75201."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that correction! Now, could you provide the best email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's sam@test.com."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! Just to confirm, I have Sam Wilson, callback number 555-333-4444, service address 789 Pine Rd, Dallas, TX 75201, and your email is sam@test.com. You need a quote for a new AC unit installation. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Routes to existing customer path, captures callback info\", \"result\": \"PASS\", \"reason\": \"The agent successfully identifi",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I need help. A technician visited three days ago, and the problem has come back."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. Can I have the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course, it's 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, can you please provide the service address where the technician visited?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, that's 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! Now, can you tell me what the issue is that you're experiencing again?"
+        },
+        {
+          "role": "caller",
+          "text": "The AC isn't cooling properly again. It worked for a couple of days after the visit."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, and you're experiencing AC cooling issues again. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "FAQ - hours inquiry",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Answers FAQ, does not unnecessarily collect lead info for simple FAQ\", \"result\": \"PASS\", \"reason\": \"The agent provided ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I just want to know your hours of operation."
+        },
+        {
+          "role": "agent",
+          "text": "Our business hours are Monday to Friday from 7 AM to 6 PM, and Saturday from 8 AM to 2 PM. Is there anything else I can assist you with?"
+        },
+        {
+          "role": "caller",
+          "text": "Do you work on Sundays?"
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry, but we are closed on Sundays. Is there anything else you would like to know?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s all. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Offers transfer to Mike Thornton, handles gracefully\", \"result\": \"FAIL\", \"reason\": \"The agent did not offer a transfer ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "I can transfer you to our team. Just a moment, please."
+        },
+        {
+          "role": "caller",
+          "text": "Okay, thank you."
+        },
+        {
+          "role": "agent",
+          "text": "I'm just going to transfer you now, one moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Sure, no problem."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry, I wasn't able to connect you right now. Can I get your name and callback number? I'll make sure someone reaches out to you as soon as possible."
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. Just to confirm, is that 555-1234?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. I'll pass that along to the team, and someone will be in touch with you shortly."
+        },
+        {
+          "role": "caller",
+          "text": "Thank you! I appreciate it."
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now."
+        },
+        {
+          "role": "agent",
+          "text": "Have a great day, take care! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 1 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Captures all info\", \"result\": \"PASS\", \"reason\": \"The agent successfully captured the caller's name, callback number, an",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. My AC is making a loud rattling noise but it\u2019s still cooling."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. Let me get some details to help you further. What is your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Lisa Chen."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Lisa. Can I have your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 555-777-8888."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-777-8888, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address where the AC is located?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 321 Elm St, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a physical address in Austin or the surrounding areas since that's our service area. Can you provide an address within that area?"
+        },
+        {
+          "role": "caller",
+          "text": "I'm sorry, but I\u2019m in Dallas. I thought you serviced here too."
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate you reaching out, but unfortunately, we only service Austin, TX, and the surrounding areas. I'd recommend reaching out to a local HVAC specialist in Dallas. Is there anything else I can help you with?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s all. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Lisa! If you need assistance in the future, feel free to reach out. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 2 out of 3,\n  \"criteria\": [\n    {\"criterion\": \"Assesses urgency\", \"result\": \"PASS\", \"reason\": \"The agent acknowledged the cold situation and confirmed the system was ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my furnace won\u2019t turn on. It's pretty cold in my house."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s completely off. I\u2019ve tried adjusting the thermostat but nothing happens."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No, I don\u2019t smell anything weird, and there\u2019s no leaking. Just no heat."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Tom Brown."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Tom. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-444-3333."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-444-3333, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, can I have the service address where the furnace is located?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 654 Maple Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, I have your address as 654 Maple Ave, Dallas, TX. Does that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! Lastly, is there anything else I should pass on to the team?"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 1 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Routes to spam path, ends call politely\", \"result\": \"FAIL\", \"reason\": \"The agent did not explicitly route the call to a",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Congratulations! You have been selected for an exclusive offer on solar panels."
+        },
+        {
+          "role": "agent",
+          "text": "This call appears to be a robocall or spam. If you have HVAC service needs, I'm happy to assist. Otherwise, thank you for your time. [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 1 out of 3,\n  \"criteria\": [\n    {\"criterion\": \"Clarifies it is HVAC company\", \"result\": \"PASS\", \"reason\": \"The agent correctly identified the company as Arctic Breeze",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Uh, hi. I think I dialed the wrong number. I was trying to reach a pizza place."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for letting me know! This is Arctic Breeze HVAC, so it seems you may have reached us by mistake. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Routes correctly, captures all info, reads back summary\", \"result\": \"PASS\", \"reason\": \"The agent successfully captured ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I\u2019d like to schedule annual AC maintenance before summer."
+        },
+        {
+          "role": "agent",
+          "text": "That sounds great! Can I start by getting your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Sarah Davis."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sarah. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-222-1111."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-222-1111, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the maintenance?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 987 Cedar Blvd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, that's 987 Cedar Blvd, Dallas, TX. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Great! Is there anything else I should pass on to the team regarding your AC maintenance?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. Just the annual maintenance, please."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Sarah Davis, callback number 555-222-1111, service address 987 Cedar Blvd, Dallas, TX, and you need annual AC maintenance. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Treats as potential emergency, verifies urgency level, offers transfer option\", \"result\": \"FAIL\", \"reason\": \"The agent ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. My AC stopped working, and there's a burning smell coming from it. I'm really worried."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s not turning on at all."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, there's definitely a burning smell coming from the unit."
+        },
+        {
+          "role": "agent",
+          "text": "I need to collect some details to assist you. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. Now, can you provide the service address where the AC unit is located?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s right."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. I have your details: your name is Alex Johnson, callback number 555-123-4567, and the service address is 123 Maple Street, Springfield. You need help with your AC that's not working and has a burning smell. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 2 out of 3,\n  \"criteria\": [\n    {\"criterion\": \"Captures minimal info\", \"result\": \"PASS\", \"reason\": \"The agent captured the caller's name and phone number.\"},\n    {\"cr",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "I can't talk right now. Could I get a callback this afternoon?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. Can I get your name and the best number to reach you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Dave Wilson. My number is 555-666-7777."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Dave. Just to confirm, that's 555-666-7777. Is there anything specific you would like the team to assist you with when they call back?"
+        },
+        {
+          "role": "caller",
+          "text": "No specific issues. Just need some general HVAC information."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have noted that. I will pass along your request for a callback this afternoon. Thank you, Dave! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 2 out of 2,\n  \"criteria\": [\n    {\"criterion\": \"Answers general FAQ, captures lead info for follow-up\", \"result\": \"PASS\", \"reason\": \"The agent provided information abo",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m interested in your duct cleaning services. Can you tell me more about that?"
+        },
+        {
+          "role": "agent",
+          "text": "Absolutely! Our duct cleaning service helps improve air quality and system efficiency by removing dust and allergens from your ducts. Is there anything specific you\u2019d like to know, or would you like to schedule a service?"
+        },
+        {
+          "role": "caller",
+          "text": "That sounds good. How much does the service typically cost?"
+        },
+        {
+          "role": "agent",
+          "text": "Our team will go over all the pricing with you to provide the most accurate information. Let me grab your details so we can get that set up for you. What is the issue or service needed?"
+        },
+        {
+          "role": "caller",
+          "text": "I\u2019m looking for duct cleaning services. My name is Patricia Lee, and my address is 147 Birch Lane, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Patricia! Can I have your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, my number is 555-888-9999."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-888-9999, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Just to confirm, I have Patricia Lee, callback number 555-888-9999, and you need duct cleaning services at 147 Birch Lane, Dallas, TX. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s all for now. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Patricia! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Handles gracefully, does not pressure, closes professionally\", \"result\": \"PASS\", \"reason\": \"The agent acknowledged the ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I was looking into scheduling an HVAC service. But I think I\u2019ll wait a bit before booking."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand. If you have any questions or need assistance later, feel free to reach out. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now. I\u2019ll call back later when I\u2019m ready. Thanks!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! Have a great day, and we look forward to hearing from you soon. [END CALL]"
+        }
+      ]
+    }
+  ]
+}
