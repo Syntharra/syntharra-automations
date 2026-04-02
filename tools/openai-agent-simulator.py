@@ -16,7 +16,7 @@ Groups: core_flow, personalities, info_collection, pricing_traps, edge_cases, bo
 import argparse, json, os, sys, time, requests, base64
 from datetime import datetime, timezone
 
-RETELL_KEY   = os.environ.get("RETELL_KEY", "key_0157d9401f66cfa1b51fadc66445")
+RETELL_KEY   = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before running
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 TESTING_FLOW = "conversation_flow_5b98b76c8ff4"
 OPENAI_URL   = "https://api.openai.com/v1/chat/completions"
