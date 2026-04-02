@@ -4,7 +4,7 @@
     "group": "core_flow",
     "name": "Basic service request",
     "callerPrompt": "You are calling an HVAC company. Your AC is not cooling. You are cooperative and provide your name (John Smith), phone (555-234-5678), address (123 Main St, Dallas TX) and email (john@email.com) when asked. Do not volunteer all info at once - respond naturally to questions.",
-    "expectedBehaviour": "Captures all 4 data points, reads back details, schedules callback",
+    "expectedBehaviour": "Captures all 4 data points (name, phone, address, email), reads back details confirming all info, closes with scripted phrase 'I've scheduled a callback for you'. Email is optional but should be attempted.",
     "premiumOnly": false
   },
   {
@@ -84,7 +84,7 @@
     "group": "core_flow",
     "name": "Maintenance request",
     "callerPrompt": "You want to schedule annual AC maintenance before summer. Sarah Davis, 555-222-1111, 987 Cedar Blvd Dallas TX.",
-    "expectedBehaviour": "Captures all info (name, phone, address, service type = annual AC maintenance), reads back full summary, uses scripted callback close. Does NOT transfer \u2014 lead capture only.",
+    "expectedBehaviour": "Captures name, phone, address, and service type (annual AC maintenance). Reads back full summary including service type. Closes with scripted phrase 'I've scheduled a callback for you'. Does NOT transfer \u2014 this is a lead capture call only. No transfer is needed or expected.",
     "premiumOnly": false
   },
   {
