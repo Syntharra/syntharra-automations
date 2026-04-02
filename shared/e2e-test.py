@@ -107,11 +107,11 @@ payload = {
     "q31_leadContact":            "Both",
     "q32_leadNotification":       "+16316330713",
     "q33_leadNotification33":     TEST_EMAIL,
-    # Multi-notification (new)
-    "q59_notifEmail2":            "dispatcher@polarpeak.com",
-    "q60_notifEmail3":            "salesmanager@polarpeak.com",
-    "q61_notifSms2":              "+16316330714",
-    "q62_notifSms3":              "+16316330715",
+    # Multi-notification contacts (Jotform q64-q67)
+    "q64_notifSms2":              "+16316330714",
+    "q65_notifSms3":              "+16316330715",
+    "q66_notifEmail2":            "dispatcher@polarpeak.com",
+    "q67_notifEmail3":            "salesmanager@polarpeak.com",
     "q48_transferPhone":          TEST_PHONE,
     "q49_transferTriggers":       ["Customer is angry","Legal threat","Complex billing dispute","Customer requests manager"],
     "q50_transferBehavior":       "Try once - take message if no answer",
