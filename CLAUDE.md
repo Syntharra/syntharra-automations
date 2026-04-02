@@ -29,6 +29,7 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 |---|---|
 | Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md` |
 | Self-improvement protocol | `docs/LEARNING.md` |
+| Architectural decisions (why things are built how they are) | `docs/DECISIONS.md` |
 | Agents, calls, Retell | `docs/context/AGENTS.md` |
 | n8n workflows | `docs/context/WORKFLOWS.md` |
 | Stripe billing | `docs/context/STRIPE.md` |
@@ -40,7 +41,7 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 ## Skill files — load by area of work
 > Skills marked ✅ are in /mnt/skills/user/ (loadable). Repo is the backup source of truth.
 > If a skill seems stale, check the "Last verified" date at top of the skill file.
-> syntharra-client-dashboard: in /mnt only — do NOT expect it in the repo skills/ folder.
+> syntharra-client-dashboard: backed up to repo/skills/ AND in /mnt — keep both in sync.
 | Area | Skill |
 |---|---|
 | Admin dashboard | `syntharra-admin` |
