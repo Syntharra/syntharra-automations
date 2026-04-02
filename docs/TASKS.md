@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — Full repo audit: security fixes, skills synced, all 8 repos mapped
+> Last updated: 2026-04-02 — Fully agentic setup complete. One structural gap remains (see LEARNING.md)
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -57,9 +57,19 @@ Sophie's actual behaviour on these scenarios was CORRECT.
 - [x] Added service URLs to CLAUDE.md for all repos
 - [x] Added Security section to DECISIONS.md
 - [x] Backed up syntharra-client-dashboard to repo
+- [x] Removed 3 duplicate skills (admin-dashboard, e2e-test, docs/skills/syntharra-social-leads misplaced)
+- [x] Removed stale n8n-backup-2026-03-28 (superseded by 03-30)
+- [x] Removed duplicate newsletter template (old n8n.cloud URL syntax)
+- [x] Removed 2 stale root-level docs
+- [x] Logged GitHub API endpoint mistake in FAILURES.md + infrastructure skill
+- [x] Updated LEARNING.md with full agentic status
 - [x] Created docs/FAILURES.md — agentic failure log
 - [x] Created docs/LEARNING.md — self-improvement protocol
 - [x] Updated CLAUDE.md to load FAILURES.md every session
+
+## Dan Action Required (for full agentic setup)
+- [ ] Upload to Claude.ai project settings: hvac-standard, hvac-premium, syntharra-testing, syntharra-marketing-manager, syntharra-social-leads
+- [ ] Move syntharra-checkout/env Stripe key to Railway env var before go-live
 
 ## Open Action Items
 - [ ] Run core_flow group again (evaluator now fixed) — expect 80%+
