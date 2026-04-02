@@ -16,9 +16,9 @@
 
 | ID | Name | Description |
 |---|---|---|
-| `xKD3ny6kfHL0HHXq` | Stripe Workflow | Listens for Stripe checkout.session.completed. Saves payment data to Supabase, sends branded welcome email to client, fires internal notification to onboarding@syntharra.com. |
-| `4Hx7aRdzMl5N0uJP` | HVAC AI Receptionist - JotForm Onboarding | Triggered by Jotform Standard submission. Creates client record in Supabase, provisions Retell agent, sends You're Live email, notifies onboarding@syntharra.com. |
-| `Kg576YtPM9yEacKn` | HVAC Call Processor - Retell Webhook | Receives Retell post-call webhook for Standard clients. Parses transcript, scores lead, geocodes address, logs to hvac_call_log, fires internal alert on errors only. |
+| `xKD3ny6kfHL0HHXq` | Stripe Workflow | Listens for Stripe checkout.session.completed. Saves payment data to Supabase, sends branded welcome email to client, fires internal notification to onboarding@syntharra.com. **→ HubSpot: upserts contact + creates deal at Paid Client stage.** |
+| `4Hx7aRdzMl5N0uJP` | HVAC AI Receptionist - JotForm Onboarding | Triggered by Jotform Standard submission. Creates client record in Supabase, provisions Retell agent, sends You're Live email, notifies onboarding@syntharra.com. **→ HubSpot: updates contact + creates deal at Active stage.** |
+| `Kg576YtPM9yEacKn` | HVAC Call Processor - Retell Webhook | Receives Retell post-call webhook for Standard clients. Parses transcript, scores lead, geocodes address, logs to hvac_call_log, fires internal alert on errors only. **→ HubSpot: logs call note to client contact.** |
 | `z1DNTjvTDAkExsX8` | Monthly Minutes Calculator & Overage Billing | Runs monthly per client. Calculates minutes used vs plan allowance, records billing cycle in Supabase, triggers overage charge if applicable. |
 | `Wa3pHRMwSjbZHqMC` | Usage Alert Monitor (80% & 100% Warnings) | Monitors all client minute usage daily. Sends 80% and 100% warning emails to clients and admin alerts to admin@syntharra.com. |
 | `iLPb6ByiytisqUJC` | HVAC Weekly Lead Report | Runs every Sunday at 6pm per-client timezone. Fetches week's call data and sends branded weekly lead report to each client. |
@@ -28,7 +28,7 @@
 
 | ID | Name | Description |
 |---|---|---|
-| `kz1VmwNccunRMEaF` | HVAC Prem Onboarding | Triggered by Jotform Premium submission. Creates Premium client record in Supabase, sends integration setup email with OAuth links for Google Calendar or Outlook. |
+| `kz1VmwNccunRMEaF` | HVAC Prem Onboarding | Triggered by Jotform Premium submission. Creates Premium client record in Supabase, sends integration setup email with OAuth links for Google Calendar or Outlook. **→ HubSpot: updates contact + creates deal at Active stage.** |
 | `STQ4Gt3rH8ptlvMi` | HVAC Premium Call Processor | Receives Retell post-call webhook (`/webhook/retell-hvac-premium-webhook`) for Premium clients. Rebuilt 2026-04-02 from Standard base (fixed `filter` node crash). Parses transcript via GPT, flattens nested JSON response, scores lead, logs to hvac_call_log with call_tier=Premium. |
 | `73Y0MHVBu05bIm5p` | Premium Integration Dispatcher | Routes Premium call booking actions to the correct platform dispatcher (Google Calendar, Outlook, Calendly, Jobber, or HubSpot) based on client's connected integration. |
 | `rGrnCr5mPFP2TIc7` | Premium Dispatcher — Google Calendar | Handles get_slots and create_booking for Google Calendar. Fetches availability and creates events via Google Calendar API using stored OAuth tokens from vault. |
@@ -59,7 +59,7 @@
 
 | ID | Name | Description |
 |---|---|---|
-| `QY1ZFtPJFsU5h6wQ` | Website Lead → AI Readiness Score Email | Triggered by website demo form submission. Scores the lead's AI readiness via Groq and sends a personalised AI readiness score email via SMTP2GO. |
+| `QY1ZFtPJFsU5h6wQ` | Website Lead → AI Readiness Score Email | Triggered by website demo form submission. Scores the lead's AI readiness via Groq and sends a personalised AI readiness score email via SMTP2GO. **→ HubSpot: upserts contact + creates deal at Lead stage.** |
 | `hFU0ZeHae7EttCDK` | Website Lead → Free Report Email | Triggered by website demo form submission. Sends a free HVAC AI guide PDF report to the lead via SMTP2GO. |
 | `6LXpGffcWSvL6RxW` | Weekly Newsletter - Syntharra | Sends the weekly Syntharra newsletter to all subscribed contacts on schedule. Pre-launch — subscriber list not yet active. |
 | `Eo8wwvZgeDm5gA9d` | Newsletter Unsubscribe Webhook | Webhook endpoint handling newsletter unsubscribe requests. Removes contact from mailing list in Supabase. |
