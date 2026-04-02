@@ -42,3 +42,13 @@
 
 ---
 > Add a row whenever a non-obvious decision is made. One line is enough.
+
+## Security
+
+| Date | Area | Decision | Reason |
+|------|------|----------|--------|
+| 2026-04-02 | Secrets | All API keys via `syntharra_vault` Supabase table, never hardcoded | Prevents exposure in public repos |
+| 2026-04-02 | Public repos | `syntharra-automations` + `syntharra-website` public; all others private | automations needs GitHub Pages; skills need public read; no secrets stored in these files |
+| 2026-04-02 | GitHub token | Stored in Claude project custom instructions only — never committed to any repo | Token has full org access; exposure = full infrastructure access |
+| 2026-04-02 | `syntharra-checkout/env` | Plain-text env file in repo — OK because repo is private; contains only sk_test_ key | Move to Railway env vars before go-live with sk_live_ |
+
