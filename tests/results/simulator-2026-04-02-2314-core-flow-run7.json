@@ -1,0 +1,300 @@
+{
+  "run_label": "core-flow-run7",
+  "timestamp": "2026-04-02T23:14:12.091464+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 15,
+    "pass": 13,
+    "fail": 2,
+    "error": 0,
+    "pass_rate": 86.7,
+    "cost_usd": 0.0821,
+    "tokens": {
+      "prompt_tokens": 533505,
+      "completion_tokens": 3505
+    }
+  },
+  "failures": [
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 1,
+      "criteria_total": 2,
+      "summary": "The agent captured callback information but did not route to the existing customer path.",
+      "root_cause": "The agent did not explicitly route the call to the existing customer path.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I had a technician come by three days ago, but the problem is back."
+        },
+        {
+          "role": "agent",
+          "text": "I\u2019m sorry to hear that! I can help you with that. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567. Can you please describe the issue you're experiencing?"
+        },
+        {
+          "role": "caller",
+          "text": "The system is not cooling properly again. It was working fine for a couple of days after the visit."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for the details, Alex. Just to confirm, can I have your service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "We'll need a street address so our technician knows where to come \u2014 do you have a physical address for us?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that. Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, and you need assistance with your cooling system. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect \u2014 I've scheduled a callback for you. Someone from our team will be in touch with you shortly. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 3,
+      "summary": "The agent did not successfully route the call to the appropriate team despite capturing all necessary information and reading back the summary.",
+      "root_cause": "The agent did not confirm a transfer to the team for the maintenance request.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019d like to schedule annual AC maintenance before summer."
+        },
+        {
+          "role": "agent",
+          "text": "Sure! I can help with that. May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Sarah Davis."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sarah. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-222-1111."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-222-1111. Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 987 Cedar Blvd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area, but let me pass your details to the team. \n\nJust to confirm, I have Sarah Davis, callback number 555-222-1111, service address 987 Cedar Blvd, and you need AC maintenance. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect \u2014 I've scheduled a callback for you. Someone from our team will be in touch with you shortly. Have a great day! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "All required data points were captured, details were read back, and a callback was scheduled.",
+      "root_cause": ""
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent identified the situation as an emergency, offered a live transfer, and handled the urgency appropriately.",
+      "root_cause": ""
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent successfully routed to the install/quote path, captured the necessary information, did not give a price, and scheduled a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 1,
+      "criteria_total": 2,
+      "summary": "The agent captured callback information but did not route to the existing customer path.",
+      "root_cause": "The agent did not explicitly route the call to the existing customer path."
+    },
+    {
+      "id": 5,
+      "name": "FAQ - hours inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 1,
+      "criteria_total": 1,
+      "summary": "The agent answered the FAQ about hours without collecting unnecessary lead information.",
+      "root_cause": ""
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent offered to transfer the caller and handled the failed transfer gracefully with a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "All required information was captured and confirmed without diagnosing the noise or treating it as an emergency.",
+      "root_cause": ""
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent assessed urgency, captured information, and initiated a transfer without diagnosing the furnace.",
+      "root_cause": ""
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The call was routed to a spam path and ended politely.",
+      "root_cause": ""
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent clarified the company type, helped redirect the caller, and did not attempt to capture a lead.",
+      "root_cause": ""
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 3,
+      "summary": "The agent did not successfully route the call to the appropriate team despite capturing all necessary information and reading back the summary.",
+      "root_cause": "The agent did not confirm a transfer to the team for the maintenance request."
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent recognized the potential emergency, verified urgency, and offered a transfer option.",
+      "root_cause": ""
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent captured minimal information, confirmed the callback, and did not pressure for more.",
+      "root_cause": ""
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent answered general FAQs and captured lead information for follow-up.",
+      "root_cause": ""
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 1,
+      "criteria_total": 1,
+      "summary": "The agent handled the call gracefully and closed professionally without pressure.",
+      "root_cause": ""
+    }
+  ]
+}
