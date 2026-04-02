@@ -274,3 +274,19 @@ This includes:
 
 **How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
 **GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
+
+## CRM — HubSpot (active since 2026-04-03)
+> HubSpot replaced the admin dashboard as Syntharra's CRM layer.
+> Load `skills/syntharra-hubspot-SKILL.md` for full API reference.
+
+- **All client records, deals, and sales pipeline live in HubSpot**
+- **All marketing leads flow into HubSpot** (website form → Lead stage)
+- **All paying clients auto-create in HubSpot** (Stripe → Paid Client stage)
+- **All onboarded clients auto-update in HubSpot** (Jotform → Active stage)
+- **All call activity is logged in HubSpot** (Retell post-call → contact note)
+- Supabase remains operational source of truth for Retell agent config + call logs
+- HubSpot is the sales, marketing, and client relationship layer
+- API key: `syntharra_vault` (service_name='HubSpot', key_type='api_key')
+- Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
+
+> After Jotform Standard onboarding completes and the agent goes live, the workflow updates the client contact and creates a deal at **Active** stage in HubSpot automatically.
