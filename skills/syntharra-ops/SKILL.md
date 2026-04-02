@@ -21,6 +21,75 @@ At the **END** of every chat that changes anything:
 1. Update `project-state.md` with what changed
 2. Push a session log to `docs/session-logs/` (what changed and why)
 3. Push all changes to GitHub before chat ends
+4. **Update any relevant skill(s)** — see Universal Skill-Update Rule below
+
+---
+
+## 📚 Universal Skill-Update Rule (ALL Syntharra Work)
+
+**Once any work is fully tested and verified, the relevant skill MUST be updated before the chat ends.**
+
+This applies to every skill across the entire Syntharra stack. If you touched it, you update it.
+
+### Which skill to update
+| Area of work | Skill to update |
+|---|---|
+| Admin dashboard (`index.html`, `server.js`) | `syntharra-admin` |
+| Client dashboard (`dashboard.html`) | `syntharra-client-dashboard` |
+| Website pages (`syntharra.com`) | `syntharra-website` |
+| n8n workflows, Railway, Supabase, infra | `syntharra-infrastructure` |
+| Retell agents, prompts, conversation flows | `syntharra-retell` |
+| HVAC Standard pipeline | `hvac-standard` |
+| HVAC Premium pipeline | `hvac-premium` |
+| Stripe, checkout server, billing | `syntharra-stripe` |
+| Email templates, SMTP2GO | `syntharra-email` |
+| Marketing, lead gen, VSL, demo page | `syntharra-marketing` |
+| Ops monitor, session logs, brand assets | `syntharra-ops` (this file) |
+
+### What to update in the skill
+- **New SHA** after any file push → update SHA in the skill's repo table
+- **New section/feature added** → document it (IDs, functions, behaviour)
+- **Feature removed** → add to a "Removed" section so future sessions don't try to restore it
+- **New gotcha or learning discovered** → add to Key Patterns / Key Learnings
+- **Workflow ID changed** → update workflow tables
+- **Credential or key changed** → update references (never store raw values — use placeholders)
+- **Config changed** → update config tables
+
+### How to update a skill
+```python
+import requests, base64, json
+
+GITHUB_TOKEN = "{{GITHUB_TOKEN}}"
+headers = {"Authorization": f"token {GITHUB_TOKEN}", "Content-Type": "application/json"}
+
+# 1. Fetch current file + SHA
+r = requests.get(
+    "https://api.github.com/repos/Syntharra/syntharra-automations/contents/skills/{SKILL_NAME}/SKILL.md",
+    headers=headers
+).json()
+sha = r["sha"]
+content = base64.b64decode(r["content"]).decode()
+
+# 2. Apply changes with str.replace()
+content = content.replace("old text", "new text")
+
+# 3. Push back
+payload = {
+    "message": "skill({SKILL_NAME}): describe what changed",
+    "content": base64.b64encode(content.encode()).decode(),
+    "sha": sha
+}
+requests.put(
+    "https://api.github.com/repos/Syntharra/syntharra-automations/contents/skills/{SKILL_NAME}/SKILL.md",
+    headers=headers, data=json.dumps(payload)
+)
+```
+
+### Skill commit message format
+`skill(skill-name): brief description` — e.g.:
+- `skill(syntharra-admin): remove agent scenario testing, add system testing docs`
+- `skill(hvac-standard): update Arctic Breeze agent ID after republish`
+- `skill(syntharra-stripe): add live mode cutover checklist item`
 
 ---
 
@@ -328,19 +397,15 @@ const stripeMonthly = await getVaultKey('Stripe', 'price_standard_monthly');
 
 ## 🔄 Auto-Update Rule
 
-**Whenever you complete any task that touches this skill's domain, you MUST update this SKILL.md before the chat ends.**
-
-This includes:
+**See Universal Skill-Update Rule above.** This ops skill covers:
 - New n8n workflow created or renamed → update the workflow table
 - New Supabase table or column added → update the tables section
-- New Jotform field added → update field mappings
-- API key or credential changed → update the keys section
+- API key or credential changed → update references (never raw values)
 - New Retell agent created → update agent IDs
 - Stripe product/price/coupon added or changed → update Stripe section
-- New Railway service created → update infrastructure section
-- New website page created → update file map
+- New Railway service → update infrastructure section
+- New website page → update file map
 - Any webhook URL changed → update webhook URLs
-- Any new learnings or gotchas discovered → add to key rules/learnings
+- Any new learnings or gotchas discovered → add to Key Operational Rules
 
-**How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
-**GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
+**How:** Fetch this file from GitHub, apply changes with `str.replace()`, push back using the pattern in the Universal Skill-Update Rule above.
