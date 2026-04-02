@@ -37,6 +37,7 @@ This applies to every skill across the entire Syntharra stack. If you touched it
 | Admin dashboard (`index.html`, `server.js`) | `syntharra-admin` |
 | Client dashboard (`dashboard.html`) | `syntharra-client-dashboard` |
 | Website pages (`syntharra.com`) | `syntharra-website` |
+| Claude chat artifacts (dashboards, emails, sales) | `syntharra-artifacts` repo SKILL.md |
 | n8n workflows, Railway, Supabase, infra | `syntharra-infrastructure` |
 | Retell agents, prompts, conversation flows | `syntharra-retell` |
 | HVAC Standard pipeline | `hvac-standard` |
@@ -275,6 +276,7 @@ Location: `syntharra-automations/brand-assets/`
 | Favicon (white) | `syntharra-website/favicon-white.svg` |
 | Email signatures | `brand-assets/email-signature/` |
 | Discount codes doc | `docs/discount-codes.md` |
+| Artifacts repo | `Syntharra/syntharra-artifacts` — sales, emails, dashboard, admin, website previews |
 
 ### Logo Variants
 - Default: bars purple, "Syntharra" purple, "AI SOLUTIONS" black
