@@ -35,7 +35,7 @@ At the **END** of every chat that changes the dashboard:
 | Runtime | Node.js + Express (`server.js`) |
 | Frontend | Single-file vanilla JS — `public/index.html` |
 | Email page | `public/email.html` (Email Intelligence section) |
-| Current SHA (index.html) | `cc4787174dfb6b6131916f3c423f8859d530c224` |
+| Current SHA (index.html) | fetch fresh at start of every chat — do not rely on cached SHA |
 
 ---
 
@@ -153,7 +153,7 @@ Always use `str.replace()` pattern for edits — never rewrite the whole file.
 | `sec-opsmonitor` | Ops Monitor | `opsmonitor` | `loadOpsData()` |
 | `sec-marketing` | Marketing Pipeline | `marketing` | `renderMarketing()` |
 | `sec-settings` | Settings | `settings` | (static HTML) |
-| `sec-testing` | System Testing | `testing` | `switchTestTab('infra')` on nav |
+| `sec-testing` | System Testing | `testing` | calls `switchTestTab('infra')` on nav load |
 | `sec-ai` | AI Assistant | `ai` | `aiSend()` |
 | `/email.html` | Email Intelligence | (external link) | separate page |
 
@@ -564,6 +564,11 @@ Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 13. **str.replace requires exact character match.** Always copy the target string directly from the fetched file content — do not type from memory. Even one different whitespace character will cause the replace to silently fail.
 14. **Stage edits across multiple intermediate files** for large changes (v2.html → v3.html → v4.html). Verify each stage before proceeding.
 15. **Jotform MCP connector is broken** — always use Jotform REST API directly with API key `18907cfb3b4b3be3ac47994683148728`.
+16. **Removing a feature? Document it explicitly.** Add a "Removed: [Feature Name]" section listing all deleted HTML, JS functions, and Supabase tables. Future sessions must not try to reference or restore deprecated code.
+17. **`async function` vs `function`** — the admin dashboard JS mixes sync and async functions. When searching for a function boundary use `content.find('  async function X(')` first, then fall back to `content.find('  function X(')`. Never assume.
+18. **Health check endpoints — use HEAD not POST for n8n webhooks.** POST triggers real workflow execution. HEAD just checks reachability. Always `method:'HEAD'` for n8n webhook health checks in HEALTH_CHECKS array.
+19. **`renderInfraResults()` now drives a summary bar** (`infra-summary-bar`) in addition to the card grid. It sets background colour (green/red), pulse dot, pass/fail counts, and summary text. When adding new health checks, no additional code is needed — the summary auto-calculates.
+20. **`runE2ETests()` saves results to `e2e_test_results` Supabase table** after a 5-second delay (to let all async fetches settle). Results include `test_run_id`, `test_name`, `status`, `duration_ms`, `error_message`.
 
 ---
 
@@ -580,12 +585,14 @@ Edit the `.feed-row` blocks inside the "Pending Actions" card in `sec-settings`.
 
 ## Auto-Update Rule
 
-**Whenever index.html or server.js changes, update this SKILL.md before chat ends:**
+**See Universal Skill-Update Rule in `syntharra-ops` skill.** This skill specifically tracks:
 - New section added → update Navigation Sections table + Element IDs
-- New function added → update JS Functions table
-- SHA changed after push → update Current SHA in Repo table
+- New JS function added → update JS Functions table
+- File pushed → note to always fetch fresh SHA at chat start
 - New env var → update Environment Variables table
 - Design token changed → update Design System table
-- Feature removed → add to appropriate "Removed" section
+- Feature removed → document in a "Removed" section (critical — prevents future sessions restoring deprecated features)
+- New pattern or gotcha → add to Key Patterns & Rules (numbered list)
 
-**How:** Fetch skill from `Syntharra/syntharra-automations/skills/syntharra-admin/SKILL.md`, apply changes, push back.
+**How:** At end of every chat that changes the admin dashboard, fetch `skills/syntharra-admin/SKILL.md` from `Syntharra/syntharra-automations`, apply changes with `str.replace()`, push back.
+**Commit format:** `skill(syntharra-admin): brief description of what changed`
