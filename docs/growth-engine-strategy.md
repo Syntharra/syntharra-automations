@@ -30,7 +30,7 @@ Syntharra has a fully built product (AI Receptionists for trade businesses), ope
 | 6 | **Google Ads** | 100–500 | $1,000–3,000/mo (high-intent keywords) | Instant | Very high | Low — landing pages built | **5** |
 | 7 | **LinkedIn Outreach** | 50–150 connections/week | Free–$100/mo (manual or tool) | 1 week | Low — 100 connections/week cap | Low (manual) to Medium (tool) | **7** |
 | 8 | **Affiliate / Referral** | Variable | Revenue share only | 1–3 months | Medium — relationship dependent | Low — page exists | **4** |
-| 9 | **Cold Calling** | 20–50 conversations/day | Free (Retell could auto-dial) | Same day | Low — time intensive | High if using AI voice | **3** |
+| 9 | **Cold Calling (targeted)** | 5–10 warm calls/day | Free | Same day | Low — time intensive | None — just call hot leads | **8** |
 | 10 | **AI Agent Multi-Channel** | Amplifier, not standalone | Included in stack | Depends on channels fed | Amplifier | High — n8n orchestration | **7** |
 
 ### Recommended Combination (Weeks 1–6)
@@ -69,14 +69,12 @@ The rules have changed significantly. Google, Yahoo, and Microsoft (as of May 20
 
 Buy 3–5 secondary domains for cold outreach. These isolate reputation risk from your primary domain.
 
-**Recommended domains to purchase:**
+**Recommended domains to purchase (2 to start — add more only when scaling past 200/day):**
 
 | Domain | Purpose | Estimated Cost |
 |---|---|---|
 | `getsyntharra.com` | Primary cold outreach | ~$12/year |
 | `trysyntharra.com` | Secondary cold outreach | ~$12/year |
-| `syntharra.io` | Tertiary/backup | ~$30/year |
-| `hellosyntharra.com` | Backup/rotation | ~$12/year |
 
 For each domain:
 1. Set up SPF, DKIM, DMARC (via Google Workspace or your DNS provider)
@@ -84,7 +82,7 @@ For each domain:
 3. Set DMARC policy to `p=none` initially (tighten to `p=quarantine` after 30 days)
 4. Point each domain to syntharra.com with a simple redirect (builds domain authority)
 
-This gives you **6–15 sending addresses** across multiple domains — enough to send 150–450 emails/day safely.
+This gives you **4–6 sending addresses** across 2 domains — enough to send 100–150 emails/day safely. Add a 3rd/4th domain later only if you need to scale past this.
 
 #### Sending Address Recommendation
 
@@ -139,19 +137,20 @@ Why Instantly over building it yourself in n8n:
 
 #### Volume Planning
 
-With 4 secondary domains × 2 inboxes each = 8 sending addresses:
-- Conservative: 8 × 25/day = **200 cold emails/day** (safe, sustainable)
-- Moderate: 8 × 35/day = **280 cold emails/day** (with good warmup)
-- Aggressive: 8 × 50/day = **400 cold emails/day** (only after 6+ weeks of clean sending)
+With 2 secondary domains × 2–3 inboxes each = 4–6 sending addresses:
+- Conservative: 5 × 25/day = **125 cold emails/day** (safe, sustainable)
+- Moderate: 5 × 35/day = **175 cold emails/day** (with good warmup)
+- Aggressive: 6 × 50/day = **300 cold emails/day** (only after 6+ weeks of clean sending)
 
-At 200/day × 22 business days = **4,400 emails/month** — more than enough to generate 10–50 meetings.
+At 125/day × 22 business days = **2,750 emails/month** — plenty to generate first clients.
 
 **Expected metrics (industry benchmarks 2026):**
 - Open rate: 45–60% (good subject lines)
 - Reply rate: 3–5% (personalized, problem-first)
 - Positive reply rate: 1–2%
 - Meeting booked rate: 0.5–1% of sends
-- At 4,400 sends/month: **22–44 meetings/month**
+- At 2,750 sends/month: **14–28 meetings/month**
+- **Plus 5–10 targeted cold calls/day to hot leads = additional 2–5 meetings/week**
 
 ---
 
@@ -518,6 +517,30 @@ I will build this in a separate session focused solely on the admin dashboard co
 
 ## 6. Phase 5 — Multi-Channel Expansion
 
+### Targeted Cold Calling (Ongoing from Week 2)
+
+**This is your secret weapon.** Unlike every other SaaS company doing cold email, you can demonstrate your product live on a phone call. No demo video, no landing page — just "let me transfer you to our AI right now."
+
+**Daily routine (30–60 min/day):**
+1. Open admin dashboard → Marketing → filter leads by status `hot` or `demo_visited`
+2. Call the top 5–10 leads (the ones who opened 2+ emails or clicked through)
+3. Script opening: "Hi {first_name}, it's Daniel from Syntharra. I noticed you checked out our AI receptionist demo — did you get a chance to call the demo line?"
+4. If they haven't: "Let me transfer you right now so you can hear it — takes 30 seconds." Transfer to +1 (812) 994-4371
+5. If they have: "Great — what did you think? I can have one set up for {business_name} by tomorrow."
+6. Log outcome in Supabase via dashboard (interested / not ready / booked / not interested)
+
+**Why this converts at 10–20% vs 1–2% for cold-cold calls:**
+- They already know who Syntharra is (they opened your emails)
+- The demo line does 80% of the selling for you
+- HVAC owners respect a founder who picks up the phone
+- You're calling 5–10 qualified leads, not 50 random businesses
+
+**Key rule:** Never cold call someone who hasn't engaged with at least one email first. That's what the email sequence is for — it warms them up so your call isn't truly cold.
+
+**n8n automation opportunity:** Build a daily digest workflow that emails you at 9am with the top 10 hot leads to call today, sorted by lead score. Include their name, business, city, and which emails they engaged with.
+
+---
+
 ### LinkedIn (Week 5)
 
 **Strategy:** Manual outreach to hot leads who engaged with emails but didn't book.
@@ -583,11 +606,11 @@ Once Syntharra has 5+ paying clients and proven conversion data:
 
 | Task | Owner | Tools | Success Metric |
 |---|---|---|---|
-| Purchase 4 secondary domains | Daniel | Namecheap/Cloudflare | 4 domains registered |
-| Set up SPF, DKIM, DMARC on each domain | Daniel | DNS provider | All pass MXToolbox check |
-| Create 2 mailboxes per domain (Google Workspace) | Daniel | Google Workspace | 8 sending addresses active |
+| Purchase 2 secondary domains | Daniel | Namecheap/Cloudflare | 2 domains registered |
+| Set up SPF, DKIM, DMARC on both domains | Daniel | DNS provider | Both pass MXToolbox check |
+| Create 2 mailboxes per domain | Daniel | Google Workspace or Instantly provisioning | 4 sending addresses active |
 | Sign up for Instantly.ai ($30/mo Growth plan) | Daniel | Instantly | Account active |
-| Connect all 8 inboxes to Instantly + start warmup | Daniel | Instantly | All 8 warming |
+| Connect all 4 inboxes to Instantly + start warmup | Daniel | Instantly | All 4 warming |
 | Run Supabase schema migration (new columns + tables) | Claude | Supabase | Tables created, RLS applied |
 | Complete Google Places lead sourcer n8n workflow | Claude | n8n | Workflow active, test run successful |
 | Source first batch: 500 HVAC leads (top 10 US cities) | Claude/n8n | Google Places API | 500 leads in `website_leads` |
@@ -655,15 +678,15 @@ Once Syntharra has 5+ paying clients and proven conversion data:
 
 ## 8. Immediate Next Steps (Do Today)
 
-1. **Buy 4 domains** (`getsyntharra.com`, `trysyntharra.com`, `syntharra.io`, `hellosyntharra.com`) — Namecheap or Cloudflare, ~$66 total/year
+1. **Buy 2 domains** (`getsyntharra.com`, `trysyntharra.com`) — Namecheap or Cloudflare, ~$24/year total
 
 2. **Sign up for Instantly.ai** ($30/mo Growth plan) — start the 14-day warmup process immediately. Every day of delay = one more day before you can send.
 
-3. **Set up Google Workspace on the first 2 domains** — create `daniel@getsyntharra.com` and `solutions@getsyntharra.com`, configure SPF/DKIM/DMARC. Connect to Instantly and start warmup.
+3. **Set up mailboxes on both domains** — create `daniel@getsyntharra.com` and `daniel@trysyntharra.com`, configure SPF/DKIM/DMARC. Connect to Instantly and start warmup.
 
 4. **Record the VSL Scene 3 demo call** — call +1 (812) 994-4371 as Mike Henderson. This has been blocking the VSL for weeks. 5 minutes of your time unblocks the biggest marketing asset.
 
-5. **Run the Supabase schema migration** — I can do this right now if you say go. The new columns and tables are defined above and won't affect existing data.
+5. **Say "go" and I'll run the Supabase schema migration** — the new columns and tables are defined above and won't affect existing data.
 
 ---
 
@@ -671,14 +694,14 @@ Once Syntharra has 5+ paying clients and proven conversion data:
 
 | Item | Monthly Cost | Notes |
 |---|---|---|
-| Instantly.ai | $30 | Growth plan — unlimited accounts + warmup |
-| 4 secondary domains | ~$6 (annualised) | $66/year total |
-| Google Workspace (4 domains × 2 inboxes) | ~$48 | $6/user/mo × 8 (or use existing) |
-| Email verification (ZeroBounce) | ~$20 | 2,000 credits/mo |
-| Google Places API | ~$50 | ~5,000 lookups/mo |
-| **Total new spend** | **~$154/mo** | Everything else already running |
+| Instantly.ai | $30 | Growth plan — unlimited accounts + warmup + basic verification |
+| 2 secondary domains | ~$2 (annualised) | ~$24/year total |
+| Google Places API | $0–17 | $200/mo free credit from Google covers early usage |
+| Email verification | $0 to start | Instantly includes basic verification; add ZeroBounce later at scale |
+| Cold calling | $0 | You have a phone + the leads already have phone numbers from Google Places |
+| **Total new spend** | **~$32/mo** | Everything else already running |
 
-For context: one Standard client ($497/mo) pays for the entire marketing engine 3× over.
+For context: one Standard client ($497/mo) pays for **15 months** of this entire marketing engine.
 
 ---
 
