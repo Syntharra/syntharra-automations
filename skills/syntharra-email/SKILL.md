@@ -10,6 +10,8 @@ description: >
   This skill is the single source of truth for all Syntharra email standards.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # Syntharra — Email Reference
 
 ---
