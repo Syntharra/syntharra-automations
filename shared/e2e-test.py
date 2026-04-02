@@ -207,7 +207,7 @@ print("\n[4] RETELL — AGENT")
 if agent_id:
     agent = retell(f"get-agent/{agent_id}")
     check("Agent exists in Retell",          bool(agent.get('agent_id')),                           agent_id[-16:])
-    check("Agent name = company name",       TEST_COMPANY in (agent.get('agent_name') or ''),       agent.get('agent_name'))
+    check("Agent name = AI receptionist name", TEST_AGENT == (agent.get('agent_name') or ''),       agent.get('agent_name'))
     check("Webhook URL correct",             agent.get('webhook_url') == "https://n8n.syntharra.com/webhook/retell-hvac-webhook")
     check("Voice set",                       bool(agent.get('voice_id')),                           agent.get('voice_id'))
     check("Language multilingual",           agent.get('language') == 'multi',                      agent.get('language'))
