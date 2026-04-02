@@ -27,7 +27,8 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 ## Context files — load what you need
 | What you're working on | Files to fetch |
 |---|---|
-| Any session (always) | `docs/TASKS.md` |
+| Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md` |
+| Self-improvement protocol | `docs/LEARNING.md` |
 | Agents, calls, Retell | `docs/context/AGENTS.md` |
 | n8n workflows | `docs/context/WORKFLOWS.md` |
 | Stripe billing | `docs/context/STRIPE.md` |
