@@ -13,15 +13,27 @@ description: >
 
 ## Session Rules (CRITICAL — Every Chat)
 
-At the **START** of every chat, fetch and read:
-1. `Syntharra/syntharra-automations/docs/project-state.md`
-2. `Syntharra/syntharra-website/CLAUDE.md`
+### START of every chat — fetch in this order:
+1. `Syntharra/syntharra-automations/CLAUDE.md` — master brief, rules, skill map (always)
+2. `Syntharra/syntharra-automations/docs/TASKS.md` — what's in progress, what's next (always)
+3. Then load only the context files relevant to the task:
+   - `docs/context/AGENTS.md` — Retell agent IDs, phones, Jotform
+   - `docs/context/WORKFLOWS.md` — n8n workflow IDs
+   - `docs/context/STRIPE.md` — price IDs, coupons
+   - `docs/context/SUPABASE.md` — tables, columns
+   - `docs/context/INFRA.md` — Railway, URLs, services
+   - `docs/context/ARTIFACTS.md` — Claude artifact files
+   - `docs/context/LAUNCH.md` — pre-launch checklist
 
-At the **END** of every chat that changes anything:
-1. Update `project-state.md` with what changed
-2. Push a session log to `docs/session-logs/` (what changed and why)
-3. Push all changes to GitHub before chat ends
-4. **Update any relevant skill(s)** — see Universal Skill-Update Rule below
+**Why small files?** Each context file is ~40 lines / ~500 tokens.
+Load only what you need. For a Retell-only task, fetch AGENTS.md only (~500 tokens).
+Compare to loading all of project-state.md (~12,000 tokens) every time.
+
+### END of every chat that changes anything:
+1. Update `docs/TASKS.md` — what changed, what's next, what's blocked
+2. Push all changes to GitHub before chat ends
+3. **Update relevant skill(s)** — see Universal Skill-Update Rule below
+4. Update any `docs/context/` file if IDs, URLs, or state changed
 
 ---
 
