@@ -1,55 +1,72 @@
 # Syntharra — Supabase
-> Audited live on 2026-04-02. Tables verified by direct REST call.
+> Audited live on 2026-04-02. Updated with Dan's clarification on Premium table merge.
 > Load when: querying tables, debugging data, writing to Supabase
 
 ## Connection
 - Project URL: `https://hgheyqwnrcvwtgngqdnq.supabase.co`
 - REST base: `https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1`
 - Anon key: safe client-side — RLS controls access
-- Service role key: in `syntharra_vault` table (requires service role to read)
+- Service role key: in `syntharra_vault` (requires service role to read vault)
 
-## Tables — Verified Live ✓
-| Table | Purpose | Verified |
+## Tables — Verified Live (2026-04-02)
+
+### Client & Call Data
+| Table | Purpose | Status |
 |---|---|---|
-| `hvac_standard_agent` | Standard client config + agent settings | ✓ |
-| `hvac_call_log` | Standard call records | ✓ |
-| `stripe_payment_data` | Checkout session + payment data | ✓ |
-| `client_subscriptions` | Active subscription tracking | ✓ |
-| `billing_cycles` | Monthly billing cycle records | ✓ |
-| `overage_charges` | Usage overage tracking | ✓ |
-| `website_leads` | Demo page leads (written via anon key) | ✓ |
-| `infra_health_checks` | Admin dashboard infra test results | ✓ |
-| `syntharra_activation_queue` | Premium clients awaiting activation | ✓ |
-| `transcript_analysis` | Daily AI transcript quality analysis | ✓ |
-| `client_health_scores` | Weekly client health score records | ✓ |
+| `hvac_standard_agent` | **All client config — Standard AND Premium** (merged into one table) | ✓ Live |
+| `hvac_call_log` | **All call records — Standard AND Premium** (single table) | ✓ Live |
 
-## Tables — Not Found (404) ⚠️
+> ⚠️ `hvac_premium_agent` and `hvac_premium_call_log` do NOT exist (404).
+> Premium client config and call logs were merged into the Standard tables.
+> Do not reference the premium-specific table names anywhere.
+
+### Billing & Payments
+| Table | Purpose | Status |
+|---|---|---|
+| `stripe_payment_data` | Checkout session + payment records | ✓ Live |
+| `client_subscriptions` | Active subscription tracking | ✓ Live |
+| `billing_cycles` | Monthly billing cycle records | ✓ Live |
+| `overage_charges` | Usage overage tracking | ✓ Live |
+
+### Ops & Intelligence
+| Table | Purpose | Status |
+|---|---|---|
+| `syntharra_activation_queue` | Premium clients awaiting manual activation | ✓ Live |
+| `transcript_analysis` | Daily AI transcript quality + jailbreak analysis | ✓ Live |
+| `client_health_scores` | Weekly per-client health score records | ✓ Live |
+| `infra_health_checks` | Admin dashboard infra test results | ✓ Live |
+| `website_leads` | Demo page leads (written via anon key) | ✓ Live |
+
+### Credentials
+| Table | Purpose | Status |
+|---|---|---|
+| `syntharra_vault` | ALL API keys — requires service role key to read | ✓ Live (401 on anon) |
+
+### Not Found (404) — Do Not Reference
 | Table | Notes |
 |---|---|
-| `hvac_premium_agent` | 404 — may be named differently or not yet created |
-| `hvac_premium_call_log` | 404 — may be named differently or not yet created |
-| `e2e_test_results` | 404 — was scaffolded but table not created in Supabase |
+| `hvac_premium_agent` | Merged into `hvac_standard_agent` |
+| `hvac_premium_call_log` | Merged into `hvac_call_log` |
+| `e2e_test_results` | Scaffolded but not created — recreate if E2E tests need it |
+| `agent_test_run_summary` | Deleted with Agent Scenario Testing |
+| `agent_test_results` | Deleted with Agent Scenario Testing |
+| `agent_pending_fixes` | Deleted with Agent Scenario Testing |
 
-> **Action needed:** Confirm correct table names for Premium agent + call log with Dan.
-> The Premium pipeline workflows reference these tables — if named differently, queries will fail silently.
-
-## Vault — All API Keys
-Table: `syntharra_vault` — requires **service role key** to read (anon key returns 401).
-
+## Vault Lookup Pattern
 ```
 GET /syntharra_vault?service_name=eq.{NAME}&key_type=eq.{TYPE}&select=key_value
-Headers: apikey + Authorization Bearer (service role key only)
+Headers: apikey + Authorization Bearer — SERVICE ROLE KEY required
 ```
 
-| service_name | key_type | What it is |
-|---|---|---|
-| `Retell AI` | `api_key` | Retell API key |
-| `GitHub` | `personal_access_token` | GitHub PAT |
-| `Railway` | `api_token` | Railway API token |
-| `SMTP2GO` | `api_key` | SMTP2GO API key |
-| `Groq` | `api_key` | Groq LLM API key |
-| `Supabase` | `service_role_key` | Full admin key |
-| `Stripe` | `price_standard_monthly` | etc. — see STRIPE.md |
+| service_name | key_type |
+|---|---|
+| `Retell AI` | `api_key` |
+| `GitHub` | `personal_access_token` |
+| `Railway` | `api_token` |
+| `SMTP2GO` | `api_key` |
+| `Groq` | `api_key` |
+| `Supabase` | `service_role_key` |
+| `Stripe` | `price_standard_monthly` (and other price/product IDs) |
 
 ## Key hvac_standard_agent Columns
 `agent_id, company_name, agent_name, plan_type, client_email, timezone,
@@ -63,8 +80,3 @@ caller_address, service_requested, job_type, urgency, lead_score, is_lead,
 call_tier, caller_sentiment, summary, notes, transfer_attempted,
 transfer_success, vulnerable_occupant, geocode_status, geocode_formatted,
 duration_seconds`
-
-## Removed Tables (do not reference)
-- `agent_test_run_summary` — deleted with Agent Scenario Testing
-- `agent_test_results` — deleted with Agent Scenario Testing
-- `agent_pending_fixes` — deleted with Agent Scenario Testing
