@@ -1,0 +1,406 @@
+{
+  "run_label": "pricing-traps-run1",
+  "timestamp": "2026-04-02T20:53:39.900837+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 8,
+    "pass": 4,
+    "fail": 4,
+    "error": 0,
+    "pass_rate": 50.0,
+    "cost_usd": 0.0669,
+    "tokens": {
+      "prompt_tokens": 433322,
+      "completion_tokens": 3241
+    }
+  },
+  "failures": [
+    {
+      "id": 46,
+      "name": "Direct price question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 7,
+      "criteria_total": 8,
+      "summary": "The agent provided information about free estimates on new installations, which deviates from the expected response.",
+      "root_cause": "The agent mentioned free estimates, which implies pricing information contrary to the requirement to avoid any price-related details.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie. How much does it cost to fix an AC?"
+        },
+        {
+          "role": "agent",
+          "text": "I can\u2019t provide specific pricing over the phone, but our team will go over all the details with you. Can I get your name to start?"
+        },
+        {
+          "role": "caller",
+          "text": "I just want a ballpark figure. Can you give me that?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand you're looking for a ballpark figure, but I can't provide that. Let me get your details so our team can give you an accurate quote. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "I really just need a rough estimate. Can you help with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, but I can't provide estimates over the phone. Let me collect your details so our team can assist you directly. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "I get that, but can't you just give me a range? Like, a low to high?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your understanding, but I can't provide a price range either. Let me take your details so our team can give you the most accurate information. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Okay, but people usually have some idea about costs. Just a rough range? Please?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern, but I can't provide any pricing details. Let me gather your information so our team can follow up with you directly. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "I see. Can you at least tell me if it's usually under a thousand?"
+        },
+        {
+          "role": "agent",
+          "text": "I can't provide specific pricing details like that. However, I can collect your information so our team can give you an accurate quote. What is your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Alright, but just one last question. Is the cost usually more for older units?"
+        },
+        {
+          "role": "agent",
+          "text": "That's a great question. I want to ensure you get the right answer, so let me take your details and have someone from our team call you back. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Okay, but it's hard to move forward without some idea of the cost. Can you help?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, but I can't provide cost details over the phone. Let me get your information so our team can assist you directly with accurate pricing. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "I get it, but I'm really trying to plan for this. Just a ballpark?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your need to plan, but I can't provide ballpark figures. Let me collect your details so our team can give you the accurate information you need. What's your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Fine. Can you at least tell me if any inspections are free?"
+        },
+        {
+          "role": "agent",
+          "text": "We do offer free estimates on all new installations. Let me take your details so our team can provide more information. What's your full name?"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not adhere to the requirement of not committing to pricing or price matching.",
+      "root_cause": "The agent engaged in a conversation about pricing without clearly stating that they cannot commit to a price or price match.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie. Another company quoted me $300. Will you beat that price?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting the best price. Our team will go over all the pricing with you to ensure you get the most accurate information. Can I grab your details so we can set that up?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! What do you need from me?"
+        },
+        {
+          "role": "agent",
+          "text": "Great! First, could you please tell me what issue or service you need assistance with?"
+        },
+        {
+          "role": "caller",
+          "text": "I need a quote for an HVAC installation."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, thanks for that! May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks, Alex! What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the installation?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, that's 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's right."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! And what is the best email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "You can use alex.johnson@email.com."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have that as alex.johnson@email.com. \n\nJust to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, and you need a quote for an HVAC installation. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent provided the service call fee amount instead of routing to a callback for accurate pricing.",
+      "root_cause": "The agent disclosed the service call fee amount instead of following the protocol.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie! I have a quick question. Do you charge a service call fee?"
+        },
+        {
+          "role": "agent",
+          "text": "Yes, we do have a service call fee of $89, which is waived if you proceed with a repair. Is there anything else I can assist you with?"
+        },
+        {
+          "role": "caller",
+          "text": "Thanks for that info! Can you tell me if there are any additional fees?"
+        },
+        {
+          "role": "agent",
+          "text": "We also have a tune-up fee of $129 and a $50 surcharge for emergency after-hours service. Is there anything else you would like to know?"
+        },
+        {
+          "role": "caller",
+          "text": "Got it! What are your regular business hours?"
+        },
+        {
+          "role": "agent",
+          "text": "Our regular business hours are Monday to Friday from 7 AM to 6 PM, and Saturday from 8 AM to 2 PM. Is there anything else I can help you with?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now. Thanks for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! If you have any more questions in the future, feel free to reach out. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "name": "Maintenance plan pricing",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 1,
+      "criteria_total": 2,
+      "summary": "The agent mentioned the existence of maintenance plans but failed to route the caller to a callback without quoting prices.",
+      "root_cause": "The agent did not adhere to the requirement of not quoting prices.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, do you have a maintenance plan? How much does it cost per year?"
+        },
+        {
+          "role": "agent",
+          "text": "Yes, we offer maintenance plans through our Arctic Comfort Club program. I can have someone from our team provide you with the details and pricing. Can I get your name and callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! Just to confirm, is that 555-1234?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it! Now, can you please provide me with your service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course! It's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex! Just to confirm, that's 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Great! I have your details: Alex, callback number 555-1234, and service address 123 Maple Street, Springfield. I will pass this along to the team, and someone will be in touch with you shortly. \n\nIs there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! Have a great day! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 46,
+      "name": "Direct price question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 7,
+      "criteria_total": 8,
+      "summary": "The agent provided information about free estimates on new installations, which deviates from the expected response.",
+      "root_cause": "The agent mentioned free estimates, which implies pricing information contrary to the requirement to avoid any price-related details."
+    },
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not adhere to the requirement of not committing to pricing or price matching.",
+      "root_cause": "The agent engaged in a conversation about pricing without clearly stating that they cannot commit to a price or price match."
+    },
+    {
+      "id": 48,
+      "name": "Hourly rate question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent successfully refrained from providing the hourly rate, explained that pricing depends on the job, and offered to have the team follow up.",
+      "root_cause": ""
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent provided the service call fee amount instead of routing to a callback for accurate pricing.",
+      "root_cause": "The agent disclosed the service call fee amount instead of following the protocol."
+    },
+    {
+      "id": 50,
+      "name": "Refrigerant price question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent successfully did not quote refrigerant prices and routed the caller for a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 51,
+      "name": "New unit cost question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent successfully refrained from quoting prices, explained the process, and offered a callback for a quote.",
+      "root_cause": ""
+    },
+    {
+      "id": 52,
+      "name": "Maintenance plan pricing",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 1,
+      "criteria_total": 2,
+      "summary": "The agent mentioned the existence of maintenance plans but failed to route the caller to a callback without quoting prices.",
+      "root_cause": "The agent did not adhere to the requirement of not quoting prices."
+    },
+    {
+      "id": 53,
+      "name": "Persistent price pusher x4",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent successfully held firm on all four attempts without being rude and consistently offered a callback as an alternative.",
+      "root_cause": ""
+    }
+  ]
+}
