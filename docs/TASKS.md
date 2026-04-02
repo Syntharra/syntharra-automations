@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — OpenAI simulator built, cost ~$0.002/scenario
+> Last updated: 2026-04-02 — Fixed ops monitor pre-launch suppression bug (case-sensitive system name)
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -45,6 +45,7 @@
 - Live smoke test — Dan unavailable 2-3 days
 - Telnyx SMS — awaiting AI evaluation approval
 - Ops monitor — PAUSED, unpause at go-live
+  - ✅ Fixed: pre-launch suppression was case-sensitive (Clients vs clients) — emails were leaking through
 
 ## Go-Live Gate
 1. Stripe live mode → recreate products/prices/coupons
