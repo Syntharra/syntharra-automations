@@ -9,6 +9,8 @@ description: >
   email template design, or UI patterns used across Syntharra's web presence.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 ---
 
 ## GitHub Repo
