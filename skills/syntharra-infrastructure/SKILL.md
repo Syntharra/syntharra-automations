@@ -25,6 +25,11 @@ description: >
 | `Syntharra/syntharra-admin` | Admin tools |
 
 **GitHub Token:** `{{GITHUB_TOKEN}}`
+**CRITICAL — Correct API endpoint to list all org repos:**
+```
+GET https://api.github.com/user/repos?affiliation=owner,organization_member&per_page=100
+```
+NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal tokens.
 **Rule:** Always push to GitHub before chat ends. Never commit raw token strings — use placeholder variables before pushing.
 
 ---
