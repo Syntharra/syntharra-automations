@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — Repo restructured: docs/ archived, FAILURES.md + LEARNING.md created
+> Last updated: 2026-04-02 — Skills audited, DECISIONS.md created, CLAUDE.md fixed, repo fully structured
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -40,6 +40,15 @@ Sophie's actual behaviour on these scenarios was CORRECT.
 
 ## Completed This Session
 - [x] Archived 26 stale docs/ files → docs/archive/
+- [x] Created docs/FAILURES.md — agentic failure log
+- [x] Created docs/LEARNING.md — self-improvement protocol  
+- [x] Created docs/DECISIONS.md — architectural decision log (pre-seeded)
+- [x] Fixed CLAUDE.md skill names (hvac-standard/premium → e2e-hvac-standard/premium)
+- [x] Added syntharra-client-dashboard to CLAUDE.md skill table
+- [x] Added Tools section to CLAUDE.md (simulator, auto-fix-loop, etc.)
+- [x] Added freshness dates to 11 repo skills missing them
+- [x] Backed up syntharra-client-dashboard from /mnt to repo
+- [x] Flagged: 5 repo skills not in /mnt (need uploading to Claude.ai project)
 - [x] Created docs/FAILURES.md — agentic failure log
 - [x] Created docs/LEARNING.md — self-improvement protocol
 - [x] Updated CLAUDE.md to load FAILURES.md every session
