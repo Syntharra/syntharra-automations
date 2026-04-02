@@ -1,0 +1,1181 @@
+{
+  "run_label": "run-003-pricing-traps-standard",
+  "timestamp": "2026-04-02T19:13:57.497247",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 8,
+    "pass": 0,
+    "fail": 0,
+    "error": 8,
+    "pass_rate": 0.0,
+    "cost_usd": 0.0603,
+    "tokens": {
+      "prompt_tokens": 385919,
+      "completion_tokens": 3941
+    }
+  },
+  "group_breakdown": {
+    "pricing_traps": {
+      "pass": 0,
+      "fail": 0,
+      "error": 8
+    }
+  },
+  "failures": [
+    {
+      "id": 46,
+      "name": "Direct price question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Never gives price, explains technician will assess and provide quote, stays firm on second push\", \"result\": \"PASS\", \"re",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, how much does it cost to fix an AC?"
+        },
+        {
+          "role": "agent",
+          "text": "Our team will go over all the pricing with you to provide the most accurate information. Let me grab your details so we can get that set up for you. What seems to be the issue with your AC?"
+        },
+        {
+          "role": "caller",
+          "text": "It\u2019s not cooling properly. Can you give me a ballpark on the cost?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern, but I can't provide ballpark figures. Our technician will assess the issue and provide a detailed quote. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "I get that, but a rough estimate would help. My name is Alex."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! Can I get your last name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Johnson. Can you give me any idea of the starting costs?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know costs upfront, but I can't provide estimates. Our technician will give you an accurate quote after assessing the issue. What\u2019s the best callback number for you, Alex?"
+        },
+        {
+          "role": "caller",
+          "text": "Okay, I understand. My number is 555-1234. Can you at least tell me what common repairs usually cost?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your understanding, but I can't provide details on common repair costs. Our team will give you the most accurate information after assessing your AC. Now, can I have your service address, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Maple Street. Just hoping to get a ballpark figure before the visit."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that, Alex. Can you please provide the city and ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Springfield, 62704. I really just need a rough idea on costs."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, but I can't provide rough estimates. Our technician will assess the situation and give you a detailed quote. Lastly, what's the best email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "It's alex.johnson@example.com. Just wish I could get a general idea of the cost."
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for that, Alex. Just to confirm, I have your name as Alex Johnson, callback number 555-1234, service address 123 Maple Street, Springfield, 62704, and your email is alex.johnson@example.com. You need assistance with your AC not cooling properly. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not commit to pricing or price matching, routes to callback for quote\", \"result\": \"PASS\", \"reason\": \"The agent con",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, another company quoted me $300 for HVAC service. Will you beat that price?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to get the best value. Our team can provide you with a detailed quote, and we also offer free estimates on new installations. Can I grab your details so someone can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "I just need to know if you can beat the $300 price first."
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern about pricing. However, our team will go over all the pricing with you to ensure you get the most accurate information. Let me take your details so we can assist you further."
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I\u2019m really just looking for a better price right now. Can you do that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know the cost upfront. The best thing I can do is have our team give you an accurate quote. We do offer free estimates on new installations. Can I get your details to set that up for you?"
+        },
+        {
+          "role": "caller",
+          "text": "I\u2019m looking for a specific price right now. Can you tell me if you can beat $300?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your interest, but I can't provide specific pricing over the phone. Our team will ensure you receive the most accurate information. If you could share your details, I can have someone follow up with you directly."
+        },
+        {
+          "role": "caller",
+          "text": "I understand, but I'm really just focused on that $300 price. Can you confirm if you can beat it or not?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your focus on that price. However, I can't provide specific pricing details directly. Our team can give you a personalized quote. Can I collect your details so they can reach out to you?"
+        },
+        {
+          "role": "caller",
+          "text": "I really just want to know if you can beat that $300 before sharing my details."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand your concern. Unfortunately, I can't confirm pricing without gathering some information first. If you share your details, I can ensure our team follows up with the best options for you."
+        },
+        {
+          "role": "caller",
+          "text": "I see, but I\u2019m not ready to provide my details without knowing if you can beat that price."
+        },
+        {
+          "role": "agent",
+          "text": "I understand your hesitation. It's important to get the best value. However, I can't provide specific pricing without your details. If you're open to it, I can have our team reach out to discuss your options further."
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I really need to know about the $300 price first. Can you help with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand your need for clarity on pricing. However, I can't confirm if we can beat that price without gathering some information first. If you share your details, I can ensure our team follows up with you directly."
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "name": "Hourly rate question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not give hourly rate, explains pricing depends on job, offers callback\", \"result\": \"PASS\", \"reason\": \"The agent co",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m looking for some HVAC services. Can you tell me what your hourly rate is?"
+        },
+        {
+          "role": "agent",
+          "text": "I can\u2019t provide specific pricing over the phone, but our team can give you an accurate quote. We also offer free estimates on new installations. Can I get your details so someone can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I really just need to know your hourly rate to compare. Can you share that with me?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know the cost upfront. However, the best way to get accurate pricing is to have our team reach out to you directly. Can I grab your details for that?"
+        },
+        {
+          "role": "caller",
+          "text": "I get that, but I really just want the hourly rate. Can you provide that information?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern, but I can't provide specific pricing details over the phone. The best option is to have our team give you a personalized quote. Can I take your details so they can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "I see your point, but I just need to know the hourly rate for comparison. Can you help me with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your interest, but I'm unable to share hourly rates. Our team will provide you with the most accurate information. Can I get your details so someone can reach out to you?"
+        },
+        {
+          "role": "caller",
+          "text": "I understand, but knowing the hourly rate would really help me. Can you just tell me that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know the hourly rate. Unfortunately, I can't provide that information. The best way to get accurate pricing is to have our team follow up with you. Can I take your details for them?"
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I really just need the hourly rate. It's important for my comparison. Can you share it?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand how important that is for your comparison, but I'm unable to provide specific hourly rates. Our team can assist you with accurate pricing. Can I collect your details so they can reach out to you?"
+        },
+        {
+          "role": "caller",
+          "text": "I get it, but I really just want the hourly rate. Can you give me that information?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand your request, but I'm unable to share hourly rates. The best way to get accurate information is to have our team contact you directly. Can I take your details for that?"
+        },
+        {
+          "role": "caller",
+          "text": "I see, but I still need to know your hourly rate to compare. Can you help me with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your persistence, but I'm unable to provide hourly rates. The best option is to have our team follow up with you for accurate pricing. Can I collect your details so they can reach out?"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not give service call fee amount, routes to callback for accurate pricing\", \"result\": \"FAIL\", \"reason\": \"The agent",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I have a quick question. Do you charge a service call fee?"
+        },
+        {
+          "role": "agent",
+          "text": "Yes, we do have a diagnostic fee of $89 for service calls, which is waived if you proceed with a repair. Is there anything else I can assist you with?"
+        },
+        {
+          "role": "caller",
+          "text": "Thanks for that. Can you tell me if the fee applies to all service calls?"
+        },
+        {
+          "role": "agent",
+          "text": "The diagnostic fee applies to all service calls, but remember, it gets waived if you go ahead with a repair. Is there anything else you would like to know?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that answers my question. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! I'm glad I could assist you. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "name": "Refrigerant price question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not quote refrigerant prices, routes to callback\", \"result\": \"PASS\", \"reason\": \"The agent did not provide pricing ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my AC is low on refrigerant. How much do you charge per pound for R-410A?"
+        },
+        {
+          "role": "agent",
+          "text": "That's a great question, but I can't provide pricing over the phone. Our team will go over all the details with you. Can I get your name and a callback number so they can reach you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! Can you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course. The service address is 123 Elm Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. Just to confirm, I have your name as Alex, your callback number as 555-1234, and the service address as 123 Elm Street, Springfield. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s everything. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "name": "New unit cost question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not quote new unit prices, explains factors involved, offers quote callback\", \"result\": \"PASS\", \"reason\": \"The age",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie! I\u2019m looking to get an estimate. How much would a new 3-ton AC unit cost installed?"
+        },
+        {
+          "role": "agent",
+          "text": "I can\u2019t provide specific pricing over the phone, but our team offers free estimates on all new installations. Let me collect some details so they can follow up with you. What is the issue or service needed?"
+        },
+        {
+          "role": "caller",
+          "text": "I\u2019m just looking to install a new 3-ton AC unit."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. And what is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. Just to confirm, that's 555-1234, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Just to confirm, that's 123 Maple Street. Can you also provide the city and ZIP code?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Springfield, 12345."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. Just to confirm, I have Alex Johnson, callback number 555-1234, service address 123 Maple Street, Springfield, 12345, and you need a new 3-ton AC unit installed. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right to me."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "name": "Maintenance plan pricing",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Mentions plans exist but does not quote prices, routes to callback\", \"result\": \"PASS\", \"reason\": \"The agent confirmed t",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. Do you have a maintenance plan?"
+        },
+        {
+          "role": "agent",
+          "text": "Yes, we offer maintenance plans through our Arctic Comfort Club program. Would you like more details about that?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, please. How much does it cost per year?"
+        },
+        {
+          "role": "agent",
+          "text": "That's a great question. I want to ensure you get the right information, so let me grab your details, and someone from our team can call you back with the specifics. Can I start with your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, that's 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's right."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for confirming that. Is there anything else I should pass on to the team?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "name": "Persistent price pusher x4",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 2 out of 4,\n  \"criteria\": [\n    {\"criterion\": \"Holds firm on all 4 attempts without being rude\", \"result\": \"FAIL\", \"reason\": \"The agent did not hold firm on the fourt",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m looking for some information on HVAC pricing. Can you help me with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I can certainly help with that! Our team will go over all the pricing with you to ensure you get the most accurate information. Can I grab your details so we can get that set up for you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex. What else do you need?"
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567. Can you give me an idea of your pricing?"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567. Our team will provide the pricing details directly. Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "The service address is 123 Main Street. By the way, what are your typical price ranges for HVAC services?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for the address, Alex! Just to clarify, could you provide the city and ZIP code as well? As for pricing, our team will give you the most accurate information during the follow-up."
+        },
+        {
+          "role": "caller",
+          "text": "Sure! The city is Springfield, and the ZIP code is 12345. Can you give me a ballpark figure for the costs?"
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! So, I have the service address as 123 Main Street, Springfield, 12345. I understand you're looking for pricing, but our team will provide the most accurate details directly. Could you please confirm your email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "My email is alex@example.com. But seriously, can you just give me a rough price or a range for the services?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for the email, Alex! That's alex@example.com. I completely understand your interest in pricing, but our team will provide the most accurate quote. Is there anything else I should pass on to the team?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. I just really need an idea of the costs. Just tell me any number, even a range."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, and I appreciate your patience. However, I can't provide specific pricing details over the phone. Let me summarize what I have, and our team will follow up with you shortly. \n\nI have your full name as Alex, callback number 555-123-4567, service address 123 Main Street, Springfield, 12345, and your email as alex@example.com. Does that all sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds right. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 46,
+      "name": "Direct price question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Never gives price, explains technician will assess and provide quote, stays firm on second push\", \"result\": \"PASS\", \"re",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, how much does it cost to fix an AC?"
+        },
+        {
+          "role": "agent",
+          "text": "Our team will go over all the pricing with you to provide the most accurate information. Let me grab your details so we can get that set up for you. What seems to be the issue with your AC?"
+        },
+        {
+          "role": "caller",
+          "text": "It\u2019s not cooling properly. Can you give me a ballpark on the cost?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern, but I can't provide ballpark figures. Our technician will assess the issue and provide a detailed quote. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "I get that, but a rough estimate would help. My name is Alex."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! Can I get your last name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Johnson. Can you give me any idea of the starting costs?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know costs upfront, but I can't provide estimates. Our technician will give you an accurate quote after assessing the issue. What\u2019s the best callback number for you, Alex?"
+        },
+        {
+          "role": "caller",
+          "text": "Okay, I understand. My number is 555-1234. Can you at least tell me what common repairs usually cost?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your understanding, but I can't provide details on common repair costs. Our team will give you the most accurate information after assessing your AC. Now, can I have your service address, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 123 Maple Street. Just hoping to get a ballpark figure before the visit."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that, Alex. Can you please provide the city and ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Springfield, 62704. I really just need a rough idea on costs."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, but I can't provide rough estimates. Our technician will assess the situation and give you a detailed quote. Lastly, what's the best email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "It's alex.johnson@example.com. Just wish I could get a general idea of the cost."
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for that, Alex. Just to confirm, I have your name as Alex Johnson, callback number 555-1234, service address 123 Maple Street, Springfield, 62704, and your email is alex.johnson@example.com. You need assistance with your AC not cooling properly. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not commit to pricing or price matching, routes to callback for quote\", \"result\": \"PASS\", \"reason\": \"The agent con",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, another company quoted me $300 for HVAC service. Will you beat that price?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to get the best value. Our team can provide you with a detailed quote, and we also offer free estimates on new installations. Can I grab your details so someone can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "I just need to know if you can beat the $300 price first."
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern about pricing. However, our team will go over all the pricing with you to ensure you get the most accurate information. Let me take your details so we can assist you further."
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I\u2019m really just looking for a better price right now. Can you do that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know the cost upfront. The best thing I can do is have our team give you an accurate quote. We do offer free estimates on new installations. Can I get your details to set that up for you?"
+        },
+        {
+          "role": "caller",
+          "text": "I\u2019m looking for a specific price right now. Can you tell me if you can beat $300?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your interest, but I can't provide specific pricing over the phone. Our team will ensure you receive the most accurate information. If you could share your details, I can have someone follow up with you directly."
+        },
+        {
+          "role": "caller",
+          "text": "I understand, but I'm really just focused on that $300 price. Can you confirm if you can beat it or not?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your focus on that price. However, I can't provide specific pricing details directly. Our team can give you a personalized quote. Can I collect your details so they can reach out to you?"
+        },
+        {
+          "role": "caller",
+          "text": "I really just want to know if you can beat that $300 before sharing my details."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand your concern. Unfortunately, I can't confirm pricing without gathering some information first. If you share your details, I can ensure our team follows up with the best options for you."
+        },
+        {
+          "role": "caller",
+          "text": "I see, but I\u2019m not ready to provide my details without knowing if you can beat that price."
+        },
+        {
+          "role": "agent",
+          "text": "I understand your hesitation. It's important to get the best value. However, I can't provide specific pricing without your details. If you're open to it, I can have our team reach out to discuss your options further."
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I really need to know about the $300 price first. Can you help with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand your need for clarity on pricing. However, I can't confirm if we can beat that price without gathering some information first. If you share your details, I can ensure our team follows up with you directly."
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "name": "Hourly rate question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not give hourly rate, explains pricing depends on job, offers callback\", \"result\": \"PASS\", \"reason\": \"The agent co",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m looking for some HVAC services. Can you tell me what your hourly rate is?"
+        },
+        {
+          "role": "agent",
+          "text": "I can\u2019t provide specific pricing over the phone, but our team can give you an accurate quote. We also offer free estimates on new installations. Can I get your details so someone can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I really just need to know your hourly rate to compare. Can you share that with me?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know the cost upfront. However, the best way to get accurate pricing is to have our team reach out to you directly. Can I grab your details for that?"
+        },
+        {
+          "role": "caller",
+          "text": "I get that, but I really just want the hourly rate. Can you provide that information?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your concern, but I can't provide specific pricing details over the phone. The best option is to have our team give you a personalized quote. Can I take your details so they can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "I see your point, but I just need to know the hourly rate for comparison. Can you help me with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your interest, but I'm unable to share hourly rates. Our team will provide you with the most accurate information. Can I get your details so someone can reach out to you?"
+        },
+        {
+          "role": "caller",
+          "text": "I understand, but knowing the hourly rate would really help me. Can you just tell me that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting to know the hourly rate. Unfortunately, I can't provide that information. The best way to get accurate pricing is to have our team follow up with you. Can I take your details for them?"
+        },
+        {
+          "role": "caller",
+          "text": "I appreciate that, but I really just need the hourly rate. It's important for my comparison. Can you share it?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand how important that is for your comparison, but I'm unable to provide specific hourly rates. Our team can assist you with accurate pricing. Can I collect your details so they can reach out to you?"
+        },
+        {
+          "role": "caller",
+          "text": "I get it, but I really just want the hourly rate. Can you give me that information?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand your request, but I'm unable to share hourly rates. The best way to get accurate information is to have our team contact you directly. Can I take your details for that?"
+        },
+        {
+          "role": "caller",
+          "text": "I see, but I still need to know your hourly rate to compare. Can you help me with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate your persistence, but I'm unable to provide hourly rates. The best option is to have our team follow up with you for accurate pricing. Can I collect your details so they can reach out?"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 0 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not give service call fee amount, routes to callback for accurate pricing\", \"result\": \"FAIL\", \"reason\": \"The agent",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I have a quick question. Do you charge a service call fee?"
+        },
+        {
+          "role": "agent",
+          "text": "Yes, we do have a diagnostic fee of $89 for service calls, which is waived if you proceed with a repair. Is there anything else I can assist you with?"
+        },
+        {
+          "role": "caller",
+          "text": "Thanks for that. Can you tell me if the fee applies to all service calls?"
+        },
+        {
+          "role": "agent",
+          "text": "The diagnostic fee applies to all service calls, but remember, it gets waived if you go ahead with a repair. Is there anything else you would like to know?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that answers my question. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! I'm glad I could assist you. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "name": "Refrigerant price question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not quote refrigerant prices, routes to callback\", \"result\": \"PASS\", \"reason\": \"The agent did not provide pricing ",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my AC is low on refrigerant. How much do you charge per pound for R-410A?"
+        },
+        {
+          "role": "agent",
+          "text": "That's a great question, but I can't provide pricing over the phone. Our team will go over all the details with you. Can I get your name and a callback number so they can reach you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! Can you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course. The service address is 123 Elm Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. Just to confirm, I have your name as Alex, your callback number as 555-1234, and the service address as 123 Elm Street, Springfield. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s everything. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "name": "New unit cost question",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Does not quote new unit prices, explains factors involved, offers quote callback\", \"result\": \"PASS\", \"reason\": \"The age",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie! I\u2019m looking to get an estimate. How much would a new 3-ton AC unit cost installed?"
+        },
+        {
+          "role": "agent",
+          "text": "I can\u2019t provide specific pricing over the phone, but our team offers free estimates on all new installations. Let me collect some details so they can follow up with you. What is the issue or service needed?"
+        },
+        {
+          "role": "caller",
+          "text": "I\u2019m just looking to install a new 3-ton AC unit."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. And what is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. Just to confirm, that's 555-1234, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Just to confirm, that's 123 Maple Street. Can you also provide the city and ZIP code?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Springfield, 12345."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. Just to confirm, I have Alex Johnson, callback number 555-1234, service address 123 Maple Street, Springfield, 12345, and you need a new 3-ton AC unit installed. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right to me."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "name": "Maintenance plan pricing",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"PASS\",\n  \"score\": 1 out of 1,\n  \"criteria\": [\n    {\"criterion\": \"Mentions plans exist but does not quote prices, routes to callback\", \"result\": \"PASS\", \"reason\": \"The agent confirmed t",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. Do you have a maintenance plan?"
+        },
+        {
+          "role": "agent",
+          "text": "Yes, we offer maintenance plans through our Arctic Comfort Club program. Would you like more details about that?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, please. How much does it cost per year?"
+        },
+        {
+          "role": "agent",
+          "text": "That's a great question. I want to ensure you get the right information, so let me grab your details, and someone from our team can call you back with the specifics. Can I start with your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, that's 123 Maple Street, Springfield. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's right."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for confirming that. Is there anything else I should pass on to the team?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield. Does all of that sound right?"
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "name": "Persistent price pusher x4",
+      "group": "pricing_traps",
+      "outcome": "ERROR",
+      "score": "0/0",
+      "summary": "Evaluator returned unparseable response",
+      "root_cause": "{\n  \"overall\": \"FAIL\",\n  \"score\": 2 out of 4,\n  \"criteria\": [\n    {\"criterion\": \"Holds firm on all 4 attempts without being rude\", \"result\": \"FAIL\", \"reason\": \"The agent did not hold firm on the fourt",
+      "criteria": [],
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m looking for some information on HVAC pricing. Can you help me with that?"
+        },
+        {
+          "role": "agent",
+          "text": "I can certainly help with that! Our team will go over all the pricing with you to ensure you get the most accurate information. Can I grab your details so we can get that set up for you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex. What else do you need?"
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex! What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567. Can you give me an idea of your pricing?"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-123-4567. Our team will provide the pricing details directly. Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "The service address is 123 Main Street. By the way, what are your typical price ranges for HVAC services?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for the address, Alex! Just to clarify, could you provide the city and ZIP code as well? As for pricing, our team will give you the most accurate information during the follow-up."
+        },
+        {
+          "role": "caller",
+          "text": "Sure! The city is Springfield, and the ZIP code is 12345. Can you give me a ballpark figure for the costs?"
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that! So, I have the service address as 123 Main Street, Springfield, 12345. I understand you're looking for pricing, but our team will provide the most accurate details directly. Could you please confirm your email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "My email is alex@example.com. But seriously, can you just give me a rough price or a range for the services?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for the email, Alex! That's alex@example.com. I completely understand your interest in pricing, but our team will provide the most accurate quote. Is there anything else I should pass on to the team?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all. I just really need an idea of the costs. Just tell me any number, even a range."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, and I appreciate your patience. However, I can't provide specific pricing details over the phone. Let me summarize what I have, and our team will follow up with you shortly. \n\nI have your full name as Alex, callback number 555-123-4567, service address 123 Main Street, Springfield, 12345, and your email as alex@example.com. Does that all sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds right. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        }
+      ]
+    }
+  ]
+}
