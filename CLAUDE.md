@@ -39,28 +39,28 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 | Pre-launch status | `docs/context/LAUNCH.md` |
 
 ## Skill files — load by area of work
-> Skills are stored as flat named files: `skills/{name}-SKILL.md` (e.g. `skills/syntharra-retell-SKILL.md`).
-> Download the raw file → filename is already correct → upload directly to Claude.ai project settings.
-> If a skill seems stale, check the "Last verified" date at top of the skill file.
-| Area | Skill |
+> Stored as `skills/{name}-SKILL.md` in repo. Download raw → filename already correct → upload to Claude.ai project.
+> Check "Last verified" date at top of each skill if it seems stale.
+
+| Area | Skill name |
 |---|---|
 | Admin dashboard | `syntharra-admin` |
 | Client dashboard | `syntharra-client-dashboard` |
-| Social leads system | `syntharra-social-leads` |
-| Client dashboard | `syntharra-client-dashboard` |
 | Website | `syntharra-website` |
 | Retell / agents | `syntharra-retell` |
-| n8n / infra | `syntharra-infrastructure` |
+| n8n / infrastructure | `syntharra-infrastructure` |
 | Emails | `syntharra-email` |
-| Stripe | `syntharra-stripe` |
-| HVAC Standard agent/prompt | `e2e-hvac-standard` |
-| HVAC Premium agent/prompt | `e2e-hvac-premium` |
+| Stripe / billing | `syntharra-stripe` |
+| HVAC Standard pipeline | `hvac-standard` |
+| HVAC Premium pipeline | `hvac-premium` |
+| E2E test — Standard | `e2e-hvac-standard` |
+| E2E test — Premium | `e2e-hvac-premium` |
 | Ops / session rules | `syntharra-ops` |
-| Marketing | `syntharra-marketing` |
-| Artifacts (React previews) | fetch `syntharra-artifacts/SKILL.md` directly |
+| Marketing / lead gen | `syntharra-marketing` |
+| Social leads system | `syntharra-social-leads` |
 | Brand / visual identity | `syntharra-brand` |
-| E2E test — Standard HVAC | `e2e-hvac-standard` |
-| E2E test — Premium HVAC | `e2e-hvac-premium` |
+| AI receptionist (new verticals) | `ai-receptionist` |
+| Artifacts (React previews) | fetch `syntharra-artifacts/SKILL.md` directly |
 
 
 ## Tools — use these, don't build from scratch
