@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — Fully agentic setup complete. One structural gap remains (see LEARNING.md)
+> Last updated: 2026-04-02 — Fully agentic. Skills auto-sync from GitHub. No upload step.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
