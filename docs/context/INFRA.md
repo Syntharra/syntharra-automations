@@ -1,42 +1,61 @@
 # Syntharra — Infrastructure
-> Load when: working on Railway, deployments, env vars, DNS, URLs
-> Keys stored in Supabase `syntharra_vault` — never hardcode here
+> Audited live from Railway API on 2026-04-02. Update from live API, not memory.
+> Load when: Railway services, deployments, env vars, URLs, DNS
+> Keys: stored in syntharra_vault — never put raw values in this file
 
-## Railway
-- API token: stored in vault as `service_name='Railway', key_type='api_token'`
+## Railway Project: "Syntharra"
+- API token: in `syntharra_vault` (service_name='Railway', key_type='api_token')
 - GraphQL API: `https://backboard.railway.com/graphql/v2`
-- All services auto-deploy from `main` branch (~60s)
+- Auto-deploy: all services deploy from `main` branch of their GitHub repo (~60s)
 
-## Services
-| Service | URL | Status |
-|---|---|---|
-| n8n | `https://n8n.syntharra.com` | Active |
-| Checkout | `https://checkout.syntharra.com` | Active |
-| Admin | `https://admin.syntharra.com` | Active |
-| OAuth | `https://auth.syntharra.com` | Active |
-| Ops monitor | `syntharra-ops-monitor-production.up.railway.app` | **PAUSED** |
+## Railway Services (7 total — verified live)
+| Service ID | Name | URL | Status |
+|---|---|---|---|
+| `c40f1306-0544-4915-a304-f33fdb8d4385` | syntharra-n8n | `https://n8n.syntharra.com` | Active |
+| `e3df3e6d-6824-498f-bb4a-fdb6598f7638` | syntharra-checkout | `https://checkout.syntharra.com` | Active |
+| `6a542e9d-9dff-4968-b908-6077e12ba96b` | syntharra-admin | `https://admin.syntharra.com` | Active |
+| `48325e36-a234-46cc-896f-e9b0b3a30bcf` | syntharra-oauth-server | `https://auth.syntharra.com` | Active |
+| `7ce0f943-5216-4a16-8aeb-794cc7cc1e65` | syntharra-ops-monitor | `syntharra-ops-monitor-production.up.railway.app` | **PAUSED** |
+| `9285c656-12b4-44f5-8338-9b569c5e42dc` | n8n-redis | Internal (n8n queue backing store) | Active |
+| `97e13df6-6a68-435e-95db-47fd03c10fe3` | n8n-postgres | Internal (n8n database) | Active |
 
 ## Ops Monitor
 - Service ID: `7ce0f943-5216-4a16-8aeb-794cc7cc1e65`
-- Paused: 2026-03-30 (test-mode alert spam)
-- Unpause: `mutation { sleepApplication(serviceId: "7ce0f943...", sleep: false) }`
+- Paused: 2026-03-30 (test-mode alert spam prevention)
+- Unpause at go-live via Railway dashboard or GraphQL API
 
-## GitHub
-- Token: stored in vault as `service_name='GitHub', key_type='personal_access_token'`
-- Push pattern: GET file → extract SHA → PUT with base64 content + SHA
-- NEVER commit raw token strings — GitHub secret scanning will block the push
+## GitHub Repos
+| Repo | Deploys to Railway |
+|---|---|
+| `Syntharra/syntharra-admin` | syntharra-admin |
+| `Syntharra/syntharra-checkout` | syntharra-checkout |
+| `Syntharra/syntharra-oauth-server` | syntharra-oauth-server |
+| `Syntharra/syntharra-ops-monitor` | syntharra-ops-monitor |
+| `Syntharra/syntharra-website` | GitHub Pages (not Railway) |
+| `Syntharra/syntharra-automations` | No deploy — ops/skills/docs only |
+| `Syntharra/syntharra-artifacts` | No deploy — Claude artifacts only |
+- NEVER merge syntharra-checkout into syntharra-automations
+- NEVER commit raw API tokens to any repo — GitHub secret scanning blocks the push
 
-## SMTP2GO
-- API key: stored in vault as `service_name='SMTP2GO', key_type='api_key'`
-- All n8n email nodes use SMTP2GO REST API (Railway blocks SMTP ports)
+## Email — SMTP2GO
+- API key: in `syntharra_vault` (service_name='SMTP2GO', key_type='api_key')
+- Used in ALL n8n email nodes
+- Railway blocks SMTP ports — always use SMTP2GO REST API, never nodemailer
 
-## Telnyx (SMS — pending)
+## SMS — Telnyx (PENDING)
 - Account active, identity verified, $5 credit loaded
-- Awaiting AI evaluation approval before purchasing toll-free number
-- `SMS_ENABLED=false` in Railway env until approved
+- Blocked: awaiting AI evaluation approval before purchasing toll-free number
+- `SMS_ENABLED=false` in Railway n8n env vars until approved
+- Do NOT use Twilio — Telnyx is chosen provider (Plivo as backup only)
 
 ## Admin Dashboard
-- Repo: `Syntharra/syntharra-admin`
-- Basic auth: `admin` / `syntharra2026`
-- AI assistant: Groq `llama-3.3-70b-versatile` (env: `GROQ_API_KEY`)
-- Always fetch fresh SHA before editing — never use cached values
+- URL: `https://admin.syntharra.com`
+- Basic auth: `admin` / `syntharra2026` (change via Railway env vars: ADMIN_USER, ADMIN_PASS)
+- AI assistant: Groq `llama-3.3-70b-versatile` (Railway env: `GROQ_API_KEY`)
+- Always fetch fresh SHA before editing — never use cached SHA values
+
+## n8n
+- URL: `https://n8n.syntharra.com`
+- API key: ends in `NqU` (Railway env) — old Cloud key ends in `xdI` (invalid)
+- Backed by n8n-postgres + n8n-redis (both Railway internal services)
+- Auto-Enable MCP workflow `AU8DD5r6i6SlYFnb` runs every 6h
