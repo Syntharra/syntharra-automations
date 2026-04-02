@@ -17,7 +17,7 @@ Nothing goes live until Stripe switches. Checklist:
 - [ ] Unpause ops monitor (Railway — service ID `7ce0f943-5216-4a16-8aeb-794cc7cc1e65`)
 - [ ] Set `PRE_LAUNCH_MODE=false` in ops monitor `retell.js`
 - [ ] Confirm all 15 n8n workflows are Active
-- [ ] Smoke test: call Arctic Breeze +1 (812) 994-4371, submit test Jotform
+- [ ] Smoke test: call test phone number, submit test Jotform as a real client would
 
 ## What's Working (TEST MODE)
 - Standard pipeline: onboarding → Jotform → agent provisioning → call processing ✅
