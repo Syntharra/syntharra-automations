@@ -4,7 +4,7 @@
 
 ## Retell API
 - Base URL: `https://api.retellai.com`
-- API key: `key_0157d9401f66cfa1b51fadc66445`
+- API key: query `syntharra_vault` → `service_name = 'retell'` (never hardcode)
 
 ## Live Agents
 | Agent | ID | Purpose | Status |
