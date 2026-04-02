@@ -9,6 +9,8 @@ description: >
   This is the single source of truth for all Stripe configuration at Syntharra.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # Syntharra — Stripe Reference
 
 > ⚠️ Currently in **TEST MODE**. No real payments processed yet.
