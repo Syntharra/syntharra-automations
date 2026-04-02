@@ -1,0 +1,127 @@
+{
+  "agent_id": "agent_9822f440f5c3a13bc4d283ea90",
+  "channel": "voice",
+  "last_modification_timestamp": 1775128729441,
+  "agent_name": "V7 Premium FrostKing HVAC - HVAC Premium",
+  "response_engine": {
+    "type": "conversation-flow",
+    "version": 3,
+    "conversation_flow_id": "conversation_flow_1dd3458b13a7"
+  },
+  "webhook_url": "https://n8n.syntharra.com/webhook/retell-hvac-premium-webhook",
+  "language": "multi",
+  "data_storage_setting": "everything",
+  "opt_in_signed_url": false,
+  "version": 3,
+  "is_published": false,
+  "post_call_analysis_model": "gpt-4.1-mini",
+  "pii_config": {
+    "mode": "post_call",
+    "categories": []
+  },
+  "post_call_analysis_data": [
+    {
+      "type": "system-presets",
+      "name": "call_summary",
+      "description": "Write a 1-3 sentence summary of the call."
+    },
+    {
+      "type": "system-presets",
+      "name": "call_successful",
+      "description": "Evaluate whether the agent had a successful call."
+    },
+    {
+      "type": "system-presets",
+      "name": "user_sentiment",
+      "description": "Evaluate user's sentiment, mood and satisfaction level."
+    },
+    {
+      "type": "boolean",
+      "name": "booking_attempted",
+      "description": "Was a booking attempted during this call? Return true or false."
+    },
+    {
+      "type": "boolean",
+      "name": "booking_success",
+      "description": "Was a booking successfully created during this call? Return true or false."
+    },
+    {
+      "type": "string",
+      "name": "appointment_date",
+      "description": "If a booking was made or rescheduled, what date was booked? Format: YYYY-MM-DD or empty string."
+    },
+    {
+      "type": "string",
+      "name": "appointment_time_window",
+      "description": "If a booking was made, was it morning or afternoon? Return morning, afternoon, or empty string."
+    },
+    {
+      "type": "string",
+      "name": "job_type_booked",
+      "description": "If a booking was made, what type of job or service was booked? Short string or empty string."
+    },
+    {
+      "type": "string",
+      "name": "reschedule_or_cancel",
+      "description": "Was this call a reschedule, cancellation, or neither? Return reschedule, cancel, or neither."
+    },
+    {
+      "type": "string",
+      "name": "caller_name",
+      "description": "Full name of the caller if provided. Empty string if not."
+    },
+    {
+      "type": "string",
+      "name": "caller_phone",
+      "description": "Phone number of the caller if stated. Empty string if not."
+    },
+    {
+      "type": "string",
+      "name": "caller_email",
+      "description": "Email address of the caller if provided. Empty string if not."
+    },
+    {
+      "type": "string",
+      "name": "caller_address",
+      "description": "Service address if provided. Empty string if not."
+    },
+    {
+      "type": "string",
+      "name": "service_requested",
+      "description": "What service was requested. Short description."
+    },
+    {
+      "type": "string",
+      "name": "call_type",
+      "description": "Type of call: new_booking, reschedule, cancellation, emergency, callback, existing_customer, general_question, spam."
+    },
+    {
+      "type": "string",
+      "name": "urgency",
+      "description": "Urgency level: low, medium, high, emergency."
+    },
+    {
+      "type": "boolean",
+      "name": "is_hot_lead",
+      "description": "Is this a hot lead? True if lead score would be 7 or above."
+    },
+    {
+      "type": "number",
+      "name": "lead_score",
+      "description": "Lead score 0-10. Booking made=9-10. Booking attempted but failed=7-8. General inquiry=4-6. Spam=0."
+    }
+  ],
+  "voice_id": "retell-Nico",
+  "voice_temperature": 1,
+  "voice_speed": 1,
+  "enable_dynamic_voice_speed": true,
+  "volume": 1,
+  "max_call_duration_ms": 600000,
+  "interruption_sensitivity": 0.9,
+  "ambient_sound": "call-center",
+  "ambient_sound_volume": 0.8,
+  "responsiveness": 0.9,
+  "enable_dynamic_responsiveness": true,
+  "allow_user_dtmf": true,
+  "user_dtmf_options": {}
+}
