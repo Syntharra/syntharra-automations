@@ -3,7 +3,7 @@
 
 ## Status: TEST MODE ⚠️
 Checkout server: `syntharra-checkout-production.up.railway.app`
-Signing secret: `whsec_D7eMVF0vdm2KRrVkZLzrhTihYeMbloQO`
+Signing secret: query `syntharra_vault` → `service_name = 'stripe_webhook_secret'` (never hardcode)
 Webhook ID: `we_1TEJXzECS71NQsk8eOMIs8JE`
 Webhook event: `checkout.session.completed`
 
