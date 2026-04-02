@@ -1,0 +1,504 @@
+{
+  "run_label": "core-flow-run2",
+  "timestamp": "2026-04-02T21:05:53.952381+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 15,
+    "pass": 2,
+    "fail": 4,
+    "error": 9,
+    "pass_rate": 13.3,
+    "cost_usd": 0.0438,
+    "tokens": {
+      "prompt_tokens": 284917,
+      "completion_tokens": 1813
+    }
+  },
+  "failures": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 4,
+      "summary": "The agent failed to schedule a callback despite capturing the necessary details.",
+      "root_cause": "Did not schedule a callback",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, my AC isn't cooling."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "It's running, but the air is warm."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No smells or leaks, just not cooling properly."
+        },
+        {
+          "role": "agent",
+          "text": "Got it. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s John Smith."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, John. What is the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-234-5678."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-234-5678, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 123 Main St, Dallas TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area. Let me take your details and have our team confirm whether we can help you. \n\nJust to confirm, I have John Smith, callback number 555-234-5678, and the service address is 123 Main St, Dallas TX. You need assistance with your AC not cooling properly. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that all sounds right."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's everything. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, John! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent failed to identify the situation as an emergency and did not offer a live transfer.",
+      "root_cause": "The agent did not recognize the urgency of the situation and failed to provide immediate assistance.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I have no heat in my house and it's freezing outside. I really need help."
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, let me get you sorted right away. Is your system completely not working at all right now?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s not working at all. My parents are home and it\u2019s very cold."
+        },
+        {
+          "role": "agent",
+          "text": "Are you noticing anything like a burning smell, gas smell, or water leaking?"
+        },
+        {
+          "role": "caller",
+          "text": "No, there's no burning or gas smell, and no leaks. Just no heat at all."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that information. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Mike Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Mike. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-111-2222."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-111-2222, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Mike. Now, can you provide the service address where you need assistance?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 456 Oak Ave, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area. Let me take your details and have our team confirm whether we can help you. \n\nJust to confirm, I have Mike Johnson, callback number 555-111-2222, and the service address is 456 Oak Ave, Dallas, TX. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct. Please let me know as soon as you can."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Please stay safe. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 4,
+      "summary": "The agent captured the necessary information and scheduled a callback but mentioned potential service area limitations.",
+      "root_cause": "The agent did not route to the install/quote path effectively due to mentioning service area limitations.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I need a quote for a new AC unit installation."
+        },
+        {
+          "role": "agent",
+          "text": "I'd be happy to help with that! Can I start by getting your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Sam Wilson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Sam. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "My number is 555-333-4444."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, got it. That's 555-333-4444, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the service address for the installation?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 789 Pine Rd, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "I want to be upfront with you \u2014 we may not service that area. Let me take your details and have our team confirm whether we can help you. \n\nCould you please provide the ZIP code for Dallas?"
+        },
+        {
+          "role": "caller",
+          "text": "The ZIP code is 75217."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Sam Wilson, callback number 555-333-4444, service address 789 Pine Rd, Dallas, TX 75217, and you need a quote for a new AC unit installation. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds right!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have passed all of that through to the team, and someone will be in touch with you shortly. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not offer a transfer to Mike Thornton as expected.",
+      "root_cause": "The agent failed to transfer the caller to a live person immediately as requested.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "I want to speak to someone."
+        },
+        {
+          "role": "agent",
+          "text": "I can transfer you to our team. One moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Okay, thank you."
+        },
+        {
+          "role": "agent",
+          "text": "I'm just going to transfer you now, one moment please."
+        },
+        {
+          "role": "caller",
+          "text": "Sure, I appreciate it."
+        },
+        {
+          "role": "agent",
+          "text": "I'm sorry, I wasn't able to connect you right now. Can I get your name and callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thanks for that, Alex. Just to confirm, that's 555-1234, correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I have noted that. Someone from our team will call you back shortly. Stay safe! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    }
+  ],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 4,
+      "summary": "The agent failed to schedule a callback despite capturing the necessary details.",
+      "root_cause": "Did not schedule a callback"
+    },
+    {
+      "id": 2,
+      "name": "Emergency - no heat in winter",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent failed to identify the situation as an emergency and did not offer a live transfer.",
+      "root_cause": "The agent did not recognize the urgency of the situation and failed to provide immediate assistance."
+    },
+    {
+      "id": 3,
+      "name": "Quote request",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 3,
+      "criteria_total": 4,
+      "summary": "The agent captured the necessary information and scheduled a callback but mentioned potential service area limitations.",
+      "root_cause": "The agent did not route to the install/quote path effectively due to mentioning service area limitations."
+    },
+    {
+      "id": 4,
+      "name": "Existing customer follow-up",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The call successfully routed to the existing customer path and captured all necessary callback information.",
+      "root_cause": ""
+    },
+    {
+      "id": 5,
+      "name": "FAQ - hours inquiry",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent successfully answered the FAQ about hours without collecting unnecessary lead information.",
+      "root_cause": ""
+    },
+    {
+      "id": 6,
+      "name": "Request live person immediately",
+      "group": "core_flow",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not offer a transfer to Mike Thornton as expected.",
+      "root_cause": "The agent failed to transfer the caller to a live person immediately as requested."
+    },
+    {
+      "id": 7,
+      "name": "AC making strange noise",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 8,
+      "name": "Heating system not working",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 9,
+      "name": "Spam robocall",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 10,
+      "name": "Wrong number",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 12,
+      "name": "No cooling with burning smell",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 13,
+      "name": "Callback requested",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 14,
+      "name": "Ductwork cleaning inquiry",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    },
+    {
+      "id": 15,
+      "name": "End of call - caller decides to wait",
+      "group": "core_flow",
+      "outcome": "ERROR",
+      "error": "429 Client Error: Too Many Requests for url: https://api.openai.com/v1/chat/completions"
+    }
+  ]
+}
