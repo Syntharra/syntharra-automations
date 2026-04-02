@@ -49,10 +49,19 @@
 - Do NOT use Twilio — Telnyx is chosen provider (Plivo as backup only)
 
 ## Admin Dashboard
-- URL: `https://admin.syntharra.com`
-- Basic auth: `admin` / `syntharra2026` (change via Railway env vars: ADMIN_USER, ADMIN_PASS)
-- AI assistant: Groq `llama-3.3-70b-versatile` (Railway env: `GROQ_API_KEY`)
-- Always fetch fresh SHA before editing — never use cached SHA values
+> ⚠️ DEPRECATED 2026-04-03 — replaced by HubSpot CRM.
+> Pause/delete `syntharra-admin` Railway service manually in dashboard.
+> Repo `Syntharra/syntharra-admin` archived for reference only.
+
+## HubSpot CRM
+- URL: `https://app.hubspot.com`
+- API key: in `syntharra_vault` (service_name='HubSpot', key_type='api_key')
+- Required Railway env var on n8n service: `HUBSPOT_API_KEY` (set from vault value)
+- Optional pipeline stage env vars (set after creating pipeline in HubSpot UI):
+  - `HUBSPOT_PIPELINE_ID` — deal pipeline ID
+  - `HUBSPOT_STAGE_LEAD` — stage ID for website leads
+  - `HUBSPOT_STAGE_PAID_CLIENT` — stage ID after Stripe payment
+  - `HUBSPOT_STAGE_ACTIVE` — stage ID after agent goes live
 
 ## n8n
 - URL: `https://n8n.syntharra.com`
