@@ -1,0 +1,31 @@
+{
+  "run_label": "core-flow-run8-sc1",
+  "timestamp": "2026-04-02T23:33:54.919214+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 1,
+    "pass": 1,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0101,
+    "tokens": {
+      "prompt_tokens": 65742,
+      "completion_tokens": 343
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent successfully collected all required information and confirmed it with the caller.",
+      "root_cause": ""
+    }
+  ]
+}
