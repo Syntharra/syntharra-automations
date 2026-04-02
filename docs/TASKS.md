@@ -1,51 +1,55 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-02 — Fixed ops monitor pre-launch suppression bug (case-sensitive system name)
+> Last updated: 2026-04-02 — Simulator running, loop fixes live, OpenAI in vault
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
 ## E2E Tests (pipeline)
-- Standard: 75/75 ✅ — run: `python3 shared/e2e-test.py`
-- Premium:  89/89 ✅ — run: `python3 shared/e2e-test-premium.py`
+- Standard: 75/75 ✅ — `python3 shared/e2e-test.py`
+- Premium:  89/89 ✅ — `python3 shared/e2e-test-premium.py`
 
-## Agent Simulator (NEW)
-- Script: `shared/simulator.py`
-- Cost: ~$0.002/scenario (vs $0.15 on Retell — 98% cheaper)
-- Model: gpt-4o-mini (OpenAI)
-- Requires: OpenAI API key (not yet in vault — Dan to provide)
-- Usage:
-  - All 80 standard scenarios: `python3 shared/simulator.py --key sk-... --scenarios all`
-  - Specific IDs:              `python3 shared/simulator.py --key sk-... --scenarios 81,82,89,92`
-  - By group:                  `python3 shared/simulator.py --key sk-... --group pricing_traps`
-- Results pushed to GitHub: `tests/results/simulator-run-*.json`
-- Add OpenAI key to vault: INSERT INTO syntharra_vault (service_name, key_type, key_value) VALUES ('OpenAI', 'api_key', 'sk-...')
+## Agent Simulator
+- Script: `tools/openai-agent-simulator.py`
+- Cost: ~$0.002/scenario | Model: gpt-4o-mini
+- OpenAI key: in vault (service_name='OpenAI', key_type='api_key')
+- Run: `GITHUB_TOKEN=... RETELL_KEY=... python3 tools/openai-agent-simulator.py --key sk-... --group core_flow`
+- Groups: core_flow(15), personalities(15), info_collection(15), pricing_traps(8), edge_cases(15), boundary_safety(12)
+- Results → tests/results/
+
+## Simulator Results So Far
+| Run | Group | Pass Rate | Notes |
+|---|---|---|---|
+| pricing-traps-run1 | pricing_traps | 50% (4/8) | Pricing rules tightened after |
+| core-flow-run1 | core_flow | 47% (7/15) | Loop + routing fixes applied after |
+| core-flow-run2 | core_flow | 13% (2/15) | Rate limited — ignore |
+
+## Key Finding — Evaluator Fixed
+Failures #2, #6, #12 were evaluator scoring transfers as FAIL (can't complete in text sim).
+Fixed: evaluator now accepts "agent initiated transfer" as PASS.
+Sophie's actual behaviour on these scenarios was CORRECT.
 
 ## Agent Registry
 | Agent | ID | Status |
 |---|---|---|
 | HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — do not touch |
 | HVAC Premium Template | `agent_9822f440f5c3a13bc4d283ea90` | ✅ MASTER — do not touch |
-| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | 🧪 All fixes applied |
-| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🧪 All fixes applied |
+| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | 🧪 Loop+prompt fixes live |
+| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🧪 Prompt fixes live |
 | Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
 
 ## Open Action Items
-- [ ] Dan: provide OpenAI API key → add to vault → run simulator
-- [ ] Run simulator on all 80 standard scenarios (est. ~$0.16 total)
-- [ ] Fix failures, iterate, target 90%+ pass rate
+- [ ] Run core_flow group again (evaluator now fixed) — expect 80%+
+- [ ] Run all 6 groups, fix failures, target 90%+ overall
 - [ ] Promote Standard TESTING → MASTER once verified
-- [ ] Repeat for Premium TESTING
 - [ ] Wire +18129944371 to Standard Template agent
-- [ ] Live smoke test (Dan available in 2-3 days)
-- [ ] Update CLAUDE.md skill table with e2e-hvac-premium entry
+- [ ] Live smoke test (Dan available ~2 days)
+- [ ] Update CLAUDE.md skill table with e2e-hvac-premium
 
 ## Blocked
-- Simulator: needs OpenAI API key
-- Live smoke test — Dan unavailable 2-3 days
+- Live smoke test — Dan unavailable ~2 days
 - Telnyx SMS — awaiting AI evaluation approval
 - Ops monitor — PAUSED, unpause at go-live
-  - ✅ Fixed: pre-launch suppression was case-sensitive (Clients vs clients) — emails were leaking through
 
 ## Go-Live Gate
 1. Stripe live mode → recreate products/prices/coupons
