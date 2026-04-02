@@ -17,10 +17,15 @@
 | Paid Client | Stripe payment confirmed | Stripe n8n workflow |
 | Active | Jotform onboarding complete + agent live | Jotform onboarding n8n workflow |
 
-## Object IDs (set after pipeline created in HubSpot UI)
-> Update this section once pipeline is created in HubSpot dashboard.
-- Pipeline ID: TBD — set manually in HubSpot → CRM → Deals → Pipelines
-- Stage IDs: fetch via `GET /crm/v3/pipelines/deals/{pipelineId}/stages`
+## Object IDs — Confirmed Live (2026-04-03)
+- Pipeline ID: `default` (renamed to "Syntharra Sales")
+- Stage IDs:
+  | Stage | ID |
+  |---|---|
+  | Lead | `appointmentscheduled` |
+  | Demo Booked | `qualifiedtobuy` |
+  | Paid Client | `presentationscheduled` |
+  | Active | `closedwon` |
 
 ## Key API Endpoints
 ```
