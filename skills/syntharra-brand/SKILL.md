@@ -10,6 +10,8 @@ description: >
   source of truth for ALL Syntharra visual identity. Apply silently — never narrate it.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # Syntharra — Brand Standard
 
 > Single source of truth for all Syntharra visual identity.
