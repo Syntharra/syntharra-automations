@@ -9,6 +9,8 @@ description: >
   or doing anything related to the Standard plan ($497/mo or $414/mo annual).
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 # HVAC Standard Pipeline — Full Reference
 
 ---
