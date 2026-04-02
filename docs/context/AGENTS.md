@@ -6,11 +6,29 @@
 - Base URL: `https://api.retellai.com`
 - API key: `key_0157d9401f66cfa1b51fadc66445`
 
-## Live Agents (5 unique)
-| Agent | ID | Purpose |
+## Live Agents
+| Agent | ID | Purpose | Status |
+|---|---|---|---|
+| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | Standard master template | ✅ MASTER — do not modify |
+| HVAC Premium Template | `agent_9822f440f5c3a13bc4d283ea90` | Premium master template | ✅ MASTER — do not modify |
+| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | Standard prompt fix testing | 🧪 TESTING — active |
+| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | Premium prompt fix testing | 🧪 TESTING — pending fixes |
+| Syntharra Demo Agent (Female) | `agent_2723c07c83f65c71afd06e1d50` | Demo / sales use | ✅ Live |
+| Syntharra Demo Agent (Male) | `agent_b9d169e5290c609a8734e0bb45` | Demo / sales use | ✅ Live |
+
+## Conversation Flows
+| Flow | ID | Linked To |
 |---|---|---|
-| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | Standard pipeline template agent |
-| V7 Premium FrostKing HVAC | `agent_9822f440f5c3a13bc4d283ea90` | Premium test client agent |
+| Standard Master | `conversation_flow_34d169608460` | HVAC Standard Template (MASTER) |
+| Premium Master | `conversation_flow_1dd3458b13a7` | HVAC Premium Template (MASTER) |
+| Standard TESTING | `conversation_flow_5b98b76c8ff4` | HVAC Standard (TESTING) |
+| Premium TESTING | `conversation_flow_2ded0ed4f808` | HVAC Premium (TESTING) |
+
+## Testing Protocol
+- Apply all prompt changes to TESTING agents/flows ONLY
+- Verify fixes pass 95-scenario suite on TESTING agent
+- Once confirmed: patch fixes onto MASTER flows, publish MASTER agents
+- NEVER delete old master flows — keep as backup
 | Syntharra Demo Agent (Female) | `agent_2723c07c83f65c71afd06e1d50` | Demo / sales use |
 | Syntharra Demo Agent (Male) | `agent_b9d169e5290c609a8734e0bb45` | Demo / sales use |
 
