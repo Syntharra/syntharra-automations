@@ -10,6 +10,8 @@ description: >
   the exact push workflow for shipping changes.
 ---
 
+> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+
 ## Session Rules (CRITICAL — Every Chat)
 
 At the **START** of every chat touching the admin dashboard:
