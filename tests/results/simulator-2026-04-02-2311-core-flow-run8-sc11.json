@@ -1,0 +1,31 @@
+{
+  "run_label": "core-flow-run8-sc11",
+  "timestamp": "2026-04-02T23:11:26.286809+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 1,
+    "pass": 1,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0072,
+    "tokens": {
+      "prompt_tokens": 46718,
+      "completion_tokens": 284
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "The agent successfully captured all required information, read back a summary, and scheduled a callback.",
+      "root_cause": ""
+    }
+  ]
+}
