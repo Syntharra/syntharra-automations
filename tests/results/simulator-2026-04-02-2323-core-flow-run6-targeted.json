@@ -1,0 +1,41 @@
+{
+  "run_label": "core-flow-run6-targeted",
+  "timestamp": "2026-04-02T23:23:45.601039+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 2,
+    "pass": 2,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0171,
+    "tokens": {
+      "prompt_tokens": 111589,
+      "completion_tokens": 614
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 1,
+      "name": "Basic service request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "All required data points were captured and confirmed, and the call was closed with the scripted phrase.",
+      "root_cause": ""
+    },
+    {
+      "id": 11,
+      "name": "Maintenance request",
+      "group": "core_flow",
+      "outcome": "PASS",
+      "criteria_met": 5,
+      "criteria_total": 5,
+      "summary": "The agent successfully captured all required information and confirmed the details with the caller before closing the call with the scripted phrase.",
+      "root_cause": ""
+    }
+  ]
+}
