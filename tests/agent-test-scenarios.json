@@ -116,7 +116,7 @@
     "group": "core_flow",
     "name": "End of call - caller decides to wait",
     "callerPrompt": "You called but decide you want to wait before booking. Say you will call back later.",
-    "expectedBehaviour": "Handles gracefully, does not pressure, closes professionally",
+    "expectedBehaviour": "Caller says they want to wait. Agent acknowledges gracefully, does NOT push for callback, does NOT say 'I've scheduled a callback for you' \u2014 instead closes with something like 'No problem at all, feel free to call us back whenever you're ready. Have a great day!' If agent asks for name/number and caller volunteers it, agent may take it \u2014 but must NOT say 'I've scheduled a callback' since caller did not ask for one. PASS if agent lets caller go without pressure or false callback scheduling.",
     "premiumOnly": false
   },
   {
