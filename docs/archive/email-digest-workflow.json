@@ -1,0 +1,1492 @@
+{
+  "name": "Email Digest \u2014 Daily 6am GMT",
+  "nodes": [
+    {
+      "id": "node-schedule",
+      "name": "Every Day at 6am GMT",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        400
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        },
+        "timezone": "Europe/London"
+      }
+    },
+    {
+      "id": "node-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "node-date",
+      "name": "Get Digest Date",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        460
+      ],
+      "parameters": {
+        "jsCode": "\nconst now = new Date();\nconst digestDate = now.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });\nreturn [{ json: { digestDate, runAt: now.toISOString() } }];\n"
+      }
+    },
+    {
+      "id": "node-gmail-0",
+      "name": "Gmail \u2014 Support",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "JvsxgXKALaaNcUYu",
+          "name": "Gmail OAuth2 \u2014 Support Inbox"
+        }
+      },
+      "webhookId": "573cbdf7-3d8f-44c3-b57b-0f51a92b229c"
+    },
+    {
+      "id": "node-gmail-1",
+      "name": "Gmail \u2014 Sales",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        240
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HUbJjKZI17i3rNNU",
+          "name": "Gmail OAuth2 \u2014 Sales Inbox"
+        }
+      },
+      "webhookId": "55fc143e-837c-4f6d-9ed4-a99d5e52ec44"
+    },
+    {
+      "id": "node-gmail-2",
+      "name": "Gmail \u2014 Solutions",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        380
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Y3Dvl0p5VMFPwVqM",
+          "name": "Gmail OAuth2 \u2014 Solutions Inbox"
+        }
+      },
+      "webhookId": "322ce461-1c25-432d-84e2-559fbbb3cdf5"
+    },
+    {
+      "id": "node-gmail-3",
+      "name": "Gmail \u2014 Alerts",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        520
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PhQNVvTS6HC1zU2b",
+          "name": "Gmail OAuth2 \u2014 Alerts Inbox"
+        }
+      },
+      "webhookId": "22ad6b98-8c0b-49fa-a36e-7dcb99768bd8"
+    },
+    {
+      "id": "node-gmail-4",
+      "name": "Gmail \u2014 Info",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        660
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1xxgvvSOJsJEq1Wq",
+          "name": "Gmail OAuth2 \u2014 Info Inbox"
+        }
+      },
+      "webhookId": "c8b15945-2468-465b-963c-4537766ae3d8"
+    },
+    {
+      "id": "node-gmail-5",
+      "name": "Gmail \u2014 Admin",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        800
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "y8WGEzyiuymSw0SM",
+          "name": "Gmail OAuth2 \u2014 Admin Inbox"
+        }
+      },
+      "webhookId": "4b9f744c-1e6a-4841-8d4f-750577cc07f7"
+    },
+    {
+      "id": "node-gmail-6",
+      "name": "Gmail \u2014 Careers",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        940
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates -category:forums -from:noreply -from:no-reply newer_than:1d"
+        },
+        "options": {
+          "format": "metadata",
+          "metadataHeaders": [
+            "From",
+            "To",
+            "Subject",
+            "Date"
+          ]
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "L4n5HXbGtPO1Ev5O",
+          "name": "Gmail OAuth2 \u2014 Careers Inbox"
+        }
+      },
+      "webhookId": "6da134f6-a6d4-467f-b2db-d1ed508c4813"
+    },
+    {
+      "id": "node-classify-0",
+      "name": "Classify \u2014 Support",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        100
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'support@syntharra.com', label: 'Support', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'support@syntharra.com', label: 'Support', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-classify-1",
+      "name": "Classify \u2014 Sales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        240
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'sales@syntharra.com', label: 'Sales', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'sales@syntharra.com', label: 'Sales', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-classify-2",
+      "name": "Classify \u2014 Solutions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        380
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'solutions@syntharra.com', label: 'Solutions', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'solutions@syntharra.com', label: 'Solutions', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-classify-3",
+      "name": "Classify \u2014 Alerts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        520
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'alerts@syntharra.com', label: 'Alerts', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'alerts@syntharra.com', label: 'Alerts', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-classify-4",
+      "name": "Classify \u2014 Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        660
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'info@syntharra.com', label: 'Info', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'info@syntharra.com', label: 'Info', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-classify-5",
+      "name": "Classify \u2014 Admin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        800
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'admin@syntharra.com', label: 'Admin', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'admin@syntharra.com', label: 'Admin', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-classify-6",
+      "name": "Classify \u2014 Careers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        940
+      ],
+      "parameters": {
+        "jsCode": "\nconst digestDate = $('Get Digest Date').first().json.digestDate;\nconst msgs = $input.all();\n\nif (!msgs || msgs.length === 0) {\n  return [{ json: { skip: true, inbox: 'careers@syntharra.com', label: 'Careers', digestDate, count: 0 } }];\n}\n\nconst emails = msgs.map(item => {\n  const msg = item.json;\n  const headers = msg.payload?.headers || [];\n  const h = (name) => (headers.find(x => x.name.toLowerCase() === name.toLowerCase()) || {}).value || '';\n  return {\n    id: msg.id,\n    threadId: msg.threadId,\n    from: h('From'),\n    subject: h('Subject') || '(no subject)',\n    date: h('Date'),\n    snippet: (msg.snippet || '').substring(0, 600),\n    labels: (msg.labelIds || []).join(',')\n  };\n}).filter(e => e.id);\n\nreturn [{ json: { skip: false, inbox: 'careers@syntharra.com', label: 'Careers', digestDate, emails, count: emails.length } }];\n"
+      }
+    },
+    {
+      "id": "node-groq-0",
+      "name": "Groq \u2014 Support",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Support (support@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-groq-1",
+      "name": "Groq \u2014 Sales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Sales (sales@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-groq-2",
+      "name": "Groq \u2014 Solutions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Solutions (solutions@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-groq-3",
+      "name": "Groq \u2014 Alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        520
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Alerts (alerts@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-groq-4",
+      "name": "Groq \u2014 Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        660
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Info (info@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-groq-5",
+      "name": "Groq \u2014 Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        800
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Admin (admin@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-groq-6",
+      "name": "Groq \u2014 Careers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        940
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Careers (careers@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "id": "node-save-0",
+      "name": "Save \u2014 Support",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Support';\nconst addr = 'support@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-save-1",
+      "name": "Save \u2014 Sales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Sales';\nconst addr = 'sales@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-save-2",
+      "name": "Save \u2014 Solutions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        380
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Solutions';\nconst addr = 'solutions@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-save-3",
+      "name": "Save \u2014 Alerts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        520
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Alerts';\nconst addr = 'alerts@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-save-4",
+      "name": "Save \u2014 Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        660
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Info';\nconst addr = 'info@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-save-5",
+      "name": "Save \u2014 Admin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        800
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Admin';\nconst addr = 'admin@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-save-6",
+      "name": "Save \u2014 Careers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        940
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Careers';\nconst addr = 'careers@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "credentials": {}
+    },
+    {
+      "id": "node-final",
+      "name": "Final Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        500
+      ],
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\nlet totalSaved = 0;\nconst inboxResults = [];\n\nfor (const item of items) {\n  const d = item.json;\n  totalSaved += d.saved || 0;\n  inboxResults.push({ inbox: d.inbox, label: d.label, saved: d.saved || 0, error: d.error || null });\n}\n\nconst digestDate = items[0]?.json?.digestDate || new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });\nconst gmtTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });\n\nconsole.log(`[Email Digest] ${digestDate} complete \u2014 ${totalSaved} important emails saved across ${inboxResults.filter(r => r.saved > 0).length} inboxes`);\n\nreturn [{ json: {\n  status: 'complete',\n  digestDate,\n  completedAt: new Date().toISOString(),\n  totalEmailsSaved: totalSaved,\n  inboxResults\n} }];\n"
+      }
+    },
+    {
+      "name": "Gmail \u2014 Feedback",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        1100
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "m18e17Sgh7O0V09c",
+          "name": "Gmail OAuth2 \u2014 Feedback Inbox"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates newer_than:1d",
+          "readStatus": "both"
+        }
+      },
+      "id": "c308e84d-6993-4efb-9015-b75e9bfa5528",
+      "webhookId": "f7081cdf-dce3-4a0a-99fd-03df47f3126f"
+    },
+    {
+      "name": "Prepare \u2014 Feedback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        1100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate; const msgs = $input.all(); if (!msgs || !msgs.length) { return [{ json: { skip: true, label: 'Feedback', address: 'feedback@syntharra.com', digestDate: d, emails: [] } }]; } const emails = msgs.map(function(item) { const m = item.json; let frm = ''; if (m.from && m.from.value && m.from.value[0]) { frm = m.from.value[0].name ? m.from.value[0].name + ' <' + m.from.value[0].address + '>' : m.from.value[0].address; } else if (m.headers && m.headers.from) { frm = m.headers.from; } return { id: m.id || '', threadId: m.threadId || '', from: frm, subject: m.subject || (m.headers && m.headers.subject) || '(no subject)', date: m.date || '', snippet: (m.snippet || '').substring(0, 500) }; }).filter(function(e) { return e.id; }); if (!emails.length) { return [{ json: { skip: true, label: 'Feedback', address: 'feedback@syntharra.com', digestDate: d, emails: [] } }]; } const prompt = 'Inbox: Feedback (feedback@syntharra.com)\\n\\nEmails:\\n' + JSON.stringify(emails) + '\\n\\nEXCLUDE automated tool emails (GitHub/Stripe/n8n/Railway/Supabase/Jotform system emails), newsletters, mass marketing, no-reply senders, social digests. INCLUDE only real humans writing to us.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nIf all automated return {\"emails\":[]}.'; return [{ json: { skip: false, label: 'Feedback', address: 'feedback@syntharra.com', digestDate: d, groqPrompt: prompt } }];"
+      },
+      "id": "0550225c-627f-4c5e-bf68-e5c9829c9c8b"
+    },
+    {
+      "name": "Groq \u2014 Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1220,
+        1100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Feedback (feedback@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a46a7b47-ca78-4987-83ed-bcc9ab41b751"
+    },
+    {
+      "name": "Save \u2014 Feedback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        1100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Feedback';\nconst addr = 'feedback@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "id": "134024d1-23ed-4fc9-9dc7-3499ae5b0601",
+      "credentials": {}
+    },
+    {
+      "name": "Gmail \u2014 Onboarding",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        1260
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H2v4erNUfViQbl0u",
+          "name": "Gmail OAuth2 \u2014 Onboarding Inbox"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 40,
+        "filters": {
+          "q": "-category:promotions -category:social -category:updates newer_than:1d",
+          "readStatus": "both"
+        }
+      },
+      "id": "c7ea9d68-4292-481a-962a-bf5c9b6116de",
+      "webhookId": "c39ab586-558f-4248-92b4-efcad15e551c"
+    },
+    {
+      "name": "Prepare \u2014 Onboarding",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        1260
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate; const msgs = $input.all(); if (!msgs || !msgs.length) { return [{ json: { skip: true, label: 'Onboarding', address: 'onboarding@syntharra.com', digestDate: d, emails: [] } }]; } const emails = msgs.map(function(item) { const m = item.json; let frm = ''; if (m.from && m.from.value && m.from.value[0]) { frm = m.from.value[0].name ? m.from.value[0].name + ' <' + m.from.value[0].address + '>' : m.from.value[0].address; } else if (m.headers && m.headers.from) { frm = m.headers.from; } return { id: m.id || '', threadId: m.threadId || '', from: frm, subject: m.subject || (m.headers && m.headers.subject) || '(no subject)', date: m.date || '', snippet: (m.snippet || '').substring(0, 500) }; }).filter(function(e) { return e.id; }); if (!emails.length) { return [{ json: { skip: true, label: 'Onboarding', address: 'onboarding@syntharra.com', digestDate: d, emails: [] } }]; } const prompt = 'Inbox: Onboarding (onboarding@syntharra.com)\\n\\nEmails:\\n' + JSON.stringify(emails) + '\\n\\nEXCLUDE automated tool emails (GitHub/Stripe/n8n/Railway/Supabase/Jotform system emails), newsletters, mass marketing, no-reply senders, social digests. INCLUDE only real humans writing to us.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nIf all automated return {\"emails\":[]}.'; return [{ json: { skip: false, label: 'Onboarding', address: 'onboarding@syntharra.com', digestDate: d, groqPrompt: prompt } }];"
+      },
+      "id": "a0ba6e8e-326d-492b-bec3-c5526632e326"
+    },
+    {
+      "name": "Groq \u2014 Onboarding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1220,
+        1260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UfljdfOxkfTm76LE",
+          "name": "Groq API Key"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "model": "llama-3.3-70b-versatile",
+          "temperature": 0.05,
+          "max_tokens": 3000,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an AI email triage assistant for Syntharra, a B2B SaaS company. ONLY return valid JSON, nothing else."
+            },
+            {
+              "role": "user",
+              "content": "={ 'Inbox: Onboarding (onboarding@syntharra.com)\\n\\nEmails to classify:\\n' + JSON.stringify($input.first().json.emails || []) + '\\n\\nEXCLUDE: newsletters, automated tool notifications (GitHub/Stripe/n8n/Railway/Supabase/Jotform), social digests, promo offers, no-reply senders. INCLUDE only real humans writing to us: potential clients, support questions, job applications, partnerships, complaints.\\n\\nReturn JSON: {\"emails\":[{\"id\":\"\",\"threadId\":\"\",\"from\":\"\",\"subject\":\"\",\"date\":\"\",\"snippet\":\"\",\"summary\":\"one sentence who and what they need\",\"importance\":\"high|medium\",\"category\":\"client_enquiry|sales_lead|support_request|job_application|partnership|complaint|billing|vendor|general\",\"action_required\":true,\"flag\":\"urgent|opportunity|hire|null\"}]}\\n\\nOnly include high and medium importance. If all automated return {\"emails\":[]}.' }"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "934933ed-18db-4504-bcb1-58700f27615c"
+    },
+    {
+      "name": "Save \u2014 Onboarding",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        1260
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Get Digest Date').first().json.digestDate;\nconst groqResp = $input.item.json;\nconst label = 'Onboarding';\nconst addr = 'onboarding@syntharra.com';\nconst SB_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnaGV5cXducmN2d3RnbmdxZG5xIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDI5NTM1MiwiZXhwIjoyMDg5ODcxMzUyfQ.PENNZ2K5syVFyU3Yn6FfYZP1JEtmanlV6nTrlGaeqsg';\n\nlet classified = [];\ntry {\n  const content = groqResp && groqResp.choices && groqResp.choices[0] ? groqResp.choices[0].message.content : '';\n  classified = JSON.parse(typeof content === 'string' ? content : '{}').emails || [];\n} catch(e) {\n  return [{ json: { saved: 0, error: e.message, label: label, digestDate: d } }];\n}\n\nif (!classified.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'DELETE',\n  url: SB_URL + '/rest/v1/email_digest?digest_date=eq.' + d + '&inbox_address=eq.' + encodeURIComponent(addr),\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }\n});\n\nconst records = classified\n  .filter(function(e) { return e && e.id && (e.importance === 'high' || e.importance === 'medium'); })\n  .map(function(e) {\n    let rx = null;\n    try { rx = e.date ? new Date(e.date).toISOString() : null; } catch(_) {}\n    return {\n      digest_date: d, inbox_address: addr, inbox_label: label,\n      email_id: String(e.id), thread_id: e.threadId || null,\n      from_address: (e.from || '').substring(0,500),\n      subject: (e.subject || '(no subject)').substring(0,500),\n      snippet: (e.snippet || '').substring(0,500),\n      ai_summary: (e.summary || '').substring(0,500),\n      importance: e.importance, category: e.category || 'general',\n      action_required: !!e.action_required,\n      flag: (['urgent','opportunity','hire'].indexOf(e.flag) > -1) ? e.flag : null,\n      received_at: rx\n    };\n  });\n\nif (!records.length) {\n  return [{ json: { saved: 0, label: label, digestDate: d } }];\n}\n\nawait this.helpers.httpRequest({\n  method: 'POST',\n  url: SB_URL + '/rest/v1/email_digest',\n  headers: {\n    apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,\n    'Content-Type': 'application/json', Prefer: 'return=minimal'\n  },\n  body: JSON.stringify(records)\n});\n\nreturn [{ json: { saved: records.length, label: label, digestDate: d } }];"
+      },
+      "id": "b4303524-68af-4bf6-a20f-2cc1f6fa6c1f",
+      "credentials": {}
+    }
+  ],
+  "connections": {
+    "Every Day at 6am GMT": {
+      "main": [
+        [
+          {
+            "node": "Get Digest Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Digest Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Digest Date": {
+      "main": [
+        [
+          {
+            "node": "Gmail \u2014 Support",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Sales",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Solutions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Alerts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Info",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Admin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Careers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail \u2014 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Support": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Sales": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Solutions": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Solutions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Alerts": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Info": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Admin": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Careers": {
+      "main": [
+        [
+          {
+            "node": "Classify \u2014 Careers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Support": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Sales": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Solutions": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Solutions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Alerts": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Info": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Admin": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify \u2014 Careers": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Careers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Support": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Sales": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Sales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Solutions": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Solutions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Alerts": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Info": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Admin": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Careers": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Careers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Support": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Sales": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Solutions": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Alerts": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Info": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Admin": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save \u2014 Careers": {
+      "main": [
+        [
+          {
+            "node": "Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Prepare \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare \u2014 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Feedback": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail \u2014 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Prepare \u2014 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare \u2014 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Groq \u2014 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq \u2014 Onboarding": {
+      "main": [
+        [
+          {
+            "node": "Save \u2014 Onboarding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "any",
+    "availableInMCP": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-03-31T00:03:34.072Z",
+      "createdAt": "2026-03-31T00:03:34.072Z",
+      "id": "KbkkTjDhj2TlVB4I",
+      "name": "Email & Comms"
+    }
+  ]
+}
