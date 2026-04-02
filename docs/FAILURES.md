@@ -17,6 +17,10 @@
 | 2026-04-02 | Agent Simulator | core_flow run1: 47% pass rate | Loop detection not working; routing to wrong node on repeat questions | Loop fix + prompt tightening applied to TESTING agent | syntharra-retell |
 | 2026-04-02 | Agent Simulator | pricing_traps run1: 50% pass rate | Agent gave vague pricing answers instead of firm $497/$997 | Pricing rules made explicit in prompt | syntharra-retell |
 | 2026-04-02 | Agent Simulator | core_flow run2: 13% pass rate | Rate limited by OpenAI — not an agent failure | Evaluator notes: ignore this run | — |
+| 2026-04-02 | Security | Retell API key hardcoded in 4 public Python files | Key committed directly in e2e-test.py, auto-fix-loop.py, simulator.py, e2e-test-premium.py | Replaced with `os.environ.get("RETELL_KEY", "")` in all 4 files | — |
+| 2026-04-02 | Security | Retell API key hardcoded in public AGENTS.md context file | Key written inline in docs/context/AGENTS.md (public repo) | Replaced with vault lookup instruction | — |
+| 2026-04-02 | Security | Stripe webhook signing secret in public STRIPE.md | `whsec_...` committed to public repo | Replaced with vault lookup instruction | — |
+| 2026-04-02 | Security | GitHub token hardcoded in ops-monitor/CLAUDE.md | Token written inline (private repo, but bad practice) | Replaced with Railway env var reference | — |
 | 2026-04-02 | Evaluator | Transfer scenarios scored as FAIL | Evaluator couldn't detect transfer in text sim | Fixed: evaluator now accepts "agent initiated transfer" as PASS | e2e-hvac-standard |
 
 ---
