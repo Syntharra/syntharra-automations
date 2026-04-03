@@ -74,4 +74,8 @@ if [[ "$PUSH_LOG" == "y" ]]; then
     python3 "$REPO_ROOT/tools/claude-code/push-log.py" "$LOG_FILE" "$DATE" "$TOPIC"
 fi
 
+# Send Slack notification if webhook is set
+if [ -n "$SLACK_WEBHOOK_OPS" ]; then
+    python3 "$REPO_ROOT/tools/claude-code/slack_notify.py" "#claude-code" ":memo:" "Session Complete — $TOPIC" "Date=$DATE" "Log=docs/session-logs/$DATE-$TOPIC.md"
+fi
 echo "Session closed. All good."
