@@ -39,6 +39,35 @@ Compare to loading all of project-state.md (~12,000 tokens) every time.
 
 ---
 
+
+---
+
+## Claude Code vs Claude Chat — Task Routing
+
+> Full routing table: `docs/STANDARDS.md`. Summary here for quick decisions.
+
+**Quick rule:** Does this task need real Python/shell execution or live filesystem access?
+- YES → **Claude Code**
+- NO → **Claude Chat**
+
+### Always use Claude Code for:
+- Running any `.py` script: E2E tests, simulator, auto-fix loop, self-healing loop, call analyser, safety checks
+- Pushing session logs (git ops)
+- Railway deploy verification
+- Any task requiring `subprocess`, `os`, or live FS
+
+### Always use Claude Chat for:
+- GitHub file read/write via API
+- Skill file updates
+- n8n workflow editing via API
+- Retell agent prompt editing
+- Any MCP connector task: HubSpot, Stripe, Supabase, Jotform, Slack, Google Calendar
+- Artifact/UI creation
+
+### If in Chat and a Code task arrives:
+Say: *"This task needs Claude Code — requires [reason]. Switch and run: `[exact command]`"*
+Do NOT simulate script execution in Chat.
+
 ## 📚 Universal Skill-Update Rule (ALL Syntharra Work)
 
 **Once any work is fully tested and verified, the relevant skill MUST be updated before the chat ends.**
