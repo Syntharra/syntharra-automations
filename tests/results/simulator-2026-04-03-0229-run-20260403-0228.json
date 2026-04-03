@@ -1,0 +1,82 @@
+{
+  "run_label": "run-20260403-0228",
+  "timestamp": "2026-04-03T02:29:16.736843+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 2,
+    "pass": 1,
+    "fail": 1,
+    "error": 0,
+    "pass_rate": 50.0,
+    "cost_usd": 0.008,
+    "tokens": {
+      "prompt_tokens": 50835,
+      "completion_tokens": 589
+    }
+  },
+  "failures": [
+    {
+      "id": 55,
+      "name": "Job application caller",
+      "group": "edge_cases",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not route the caller to the appropriate employment response.",
+      "root_cause": "The agent directed the caller to the website instead of providing a direct response or transfer for job inquiries.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I'm interested in job openings for HVAC technician positions. Are there any available?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for reaching out! For job inquiries, the best path is through our website or by emailing the team directly. Can I get your name and the best contact number for follow-up?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex, and my number is 555-1234."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. Just to confirm, I have your name as Alex and your number as 555-1234. Is that correct?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! I've noted your interest in job openings, and someone from our team will follow up with you soon. Have a great day! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 55,
+      "name": "Job application caller",
+      "group": "edge_cases",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not route the caller to the appropriate employment response.",
+      "root_cause": "The agent directed the caller to the website instead of providing a direct response or transfer for job inquiries."
+    },
+    {
+      "id": 60,
+      "name": "Service area dispute",
+      "group": "edge_cases",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent did not confirm or deny the service area, captured the necessary information, and noted that the agent will confirm on callback.",
+      "root_cause": ""
+    }
+  ]
+}
