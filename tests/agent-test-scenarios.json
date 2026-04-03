@@ -60,7 +60,7 @@
     "group": "core_flow",
     "name": "Heating system not working",
     "callerPrompt": "Your furnace will not turn on. Cold but not dangerous. Tom Brown, 555-444-3333, 654 Maple Ave Dallas TX.",
-    "expectedBehaviour": "Assesses urgency, captures info, does not diagnose furnace",
+    "expectedBehaviour": "Assesses urgency about heating failure, captures caller info (name, phone, address), does NOT diagnose the furnace. If caller ends call before agent can collect info, PASS if agent correctly identifies the issue as heating-related and begins urgency check or info collection.",
     "premiumOnly": false
   },
   {
@@ -84,7 +84,7 @@
     "group": "core_flow",
     "name": "Maintenance request",
     "callerPrompt": "You want to schedule annual AC maintenance before summer. Sarah Davis, 555-222-1111, 987 Cedar Blvd Dallas TX.",
-    "expectedBehaviour": "Captures name, phone, address, and service type (annual AC maintenance). Reads back full summary including service type. Closes with scripted phrase 'I've scheduled a callback for you'. Does NOT transfer \u2014 this is a lead capture call only. No transfer is needed or expected.",
+    "expectedBehaviour": "Captures name, phone, address, and service type (annual AC maintenance). Reads back full summary including service type. Closes with scripted phrase or similar confirmation. Does NOT transfer. PASS if agent captures all provided details and confirms them, even if caller ends call quickly before agent reads full summary.",
     "premiumOnly": false
   },
   {
@@ -116,7 +116,7 @@
     "group": "core_flow",
     "name": "End of call - caller decides to wait",
     "callerPrompt": "You called but decide you want to wait before booking. Say you will call back later.",
-    "expectedBehaviour": "Caller says they want to wait. Agent acknowledges gracefully, does NOT push for callback, does NOT say 'I've scheduled a callback for you' \u2014 instead closes with something like 'No problem at all, feel free to call us back whenever you're ready. Have a great day!' If agent asks for name/number and caller volunteers it, agent may take it \u2014 but must NOT say 'I've scheduled a callback' since caller did not ask for one. PASS if agent lets caller go without pressure or false callback scheduling.",
+    "expectedBehaviour": "Caller says they want to wait and will call back later. Agent acknowledges gracefully, does NOT push for callback info or appointment. Closes warmly: 'No problem, feel free to call us back whenever you are ready' or similar. PASS if agent does not pressure caller and ends warmly. PASS even if agent cannot respond before caller says goodbye.",
     "premiumOnly": false
   },
   {
