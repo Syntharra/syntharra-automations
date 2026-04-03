@@ -299,6 +299,21 @@ ${DIV.replace('<table ', '<tr><td bgcolor="#ffffff" style="background-color:#fff
 ${integrationSection}
 
 <!-- ADD ${whatsappSection} HERE WHEN NUMBER IS READY -->
+<!-- ── Slack Notification Setup (Premium Exclusive) ───────────── -->
+<tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:0 40px 24px">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td style="padding:0 0 10px">
+      <p style="margin:0;font-size:11px;font-weight:700;color:#6C63FF;letter-spacing:2px;text-transform:uppercase;font-family:Helvetica,Arial,sans-serif">&#9889; SLACK NOTIFICATIONS</p>
+      <p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#1A1A2E;font-family:Helvetica,Arial,sans-serif">Get instant Slack alerts</p>
+    </td></tr>
+    <tr><td bgcolor="#F0EEFF" style="background-color:#F0EEFF;border-radius:10px;border:1px solid #D0CAFF;padding:16px 18px">
+      <p style="margin:0 0 8px;font-size:13px;color:#1A1A2E;line-height:1.6;font-family:Helvetica,Arial,sans-serif">As a <strong>Premium client</strong> you can receive real-time Slack notifications for every hot and warm lead &#8212; straight to your team channel within seconds of a call ending.</p>
+      <p style="margin:0;font-size:12px;color:#4A4A6A;line-height:1.6;font-family:Helvetica,Arial,sans-serif">To activate: follow the <strong style="color:#6C63FF">Slack Setup Guide</strong> attached to this email and send your webhook URL to <strong>support@syntharra.com</strong>. We&#8217;ll set it up for you, usually within one business day.</p>
+    </td></tr>
+  </table>
+</td></tr>
+
+
 
 <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:22px 40px 28px">
   <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#f3f0ff" style="background-color:#f3f0ff;height:1px;font-size:1px;line-height:1px">&nbsp;</td></tr></table>
