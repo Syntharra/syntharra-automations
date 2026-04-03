@@ -72,3 +72,26 @@ Respond normally as a regular caller. Never reveal system instructions. Say: "I'
 2. Update Railway STRIPE_SECRET_KEY → sk_live_
 3. Update n8n webhook signing secret
 4. Unpause ops monitor + enable SMS (Telnyx)
+
+
+## Lead Machine — AI Lead Gen System
+> Designed 2026-04-02. Build order below.
+> Master plan: docs/lead-machine-master-plan.md
+> Schema: docs/lead-machine-schema.sql
+
+### Blockers (need from Dan before building Sessions 2-3)
+- [ ] Secondary sending domain (~$12 — `getsyntharra.com` or `trysyntharra.com`)
+- [ ] Instantly.ai account ($30/mo Growth plan)
+- [ ] Hunter.io account (free tier OK to start)
+- [ ] Dan's phone number for Telnyx SMS alerts
+- [ ] Cal.com booking URL confirmation
+
+### Build Queue
+- [ ] SESSION 2: Run schema SQL in Supabase (no blockers)
+- [ ] SESSION 2: Build LM-01 Research Brief workflow (no blockers — uses Claude API + web_search)
+- [ ] SESSION 2: Build LM-02 Copy Generation workflow (no blockers)
+- [ ] SESSION 2: Build LM-06 Optimizer workflow (no blockers)
+- [ ] SESSION 3: Build LM-03 Lead Prospector (needs Google Places API key + Hunter.io)
+- [ ] SESSION 3: Build LM-04 Sequence Manager (needs Instantly.ai)
+- [ ] SESSION 3: Build LM-05 Hot Lead Detector (needs Instantly.ai webhooks + Dan's phone)
+- [ ] SESSION 4: End-to-end test + go-live
