@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-03 — Slack setup guide PDF created for Premium clients.
+> Updated: 2026-04-03 — Slack admin form LIVE. Column in Supabase. Premium only.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 35 active workflows
 
@@ -34,6 +34,6 @@
 - [ ] Live smoke test call to +18129944371 (Dan — manual)
 - [ ] Slack setup guide PDF → email Premium clients manually when Slack webhook received at support@
 - [ ] Wire Slack conditional into Premium call processor (slack_webhook_url column now live in Supabase)
-- [ ] n8n admin form: MCP approval blocked — import manually from n8n-backups/slack-setup-admin-form.json
+- [x] Slack admin form LIVE (z8T9CKcUp7lLVoGQ) → https://n8n.syntharra.com/webhook/slack-setup
 - [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
 - [ ] Go-live: unpause Syntharra, flip Stripe to live mode
