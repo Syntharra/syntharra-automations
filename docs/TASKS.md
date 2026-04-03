@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-03 — Slack admin form LIVE. Column in Supabase. Premium only.
+> Updated: 2026-04-03 — Slack fully wired. Call processor live. Welcome email updated.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 35 active workflows
 
@@ -35,5 +35,7 @@
 - [ ] Slack setup guide PDF → email Premium clients manually when Slack webhook received at support@
 - [ ] Wire Slack conditional into Premium call processor (slack_webhook_url column now live in Supabase)
 - [x] Slack admin form LIVE (z8T9CKcUp7lLVoGQ) → https://n8n.syntharra.com/webhook/slack-setup
+- [x] Premium Call Processor: Slack: Client Notification node live (conditional on slack_webhook_url)
+- [x] Premium welcome email: Slack setup section added
 - [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
 - [ ] Go-live: unpause Syntharra, flip Stripe to live mode
