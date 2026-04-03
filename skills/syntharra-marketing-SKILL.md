@@ -303,3 +303,45 @@ This includes:
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > All website demo form submissions (leads) flow directly into HubSpot as contacts at **Lead** stage. Marketing workflows trigger on the same webhook — HubSpot receives the lead in parallel with the AI readiness score email.
+
+
+---
+
+## Lead Machine — Autonomous Lead Gen System (designed 2026-04-02)
+
+> Full spec: `docs/lead-machine-master-plan.md`
+> Schema: `docs/lead-machine-schema.sql`
+> Status: Design complete. Build Sessions 2–4 pending blockers below.
+
+### The 6 Agents
+| Agent | Workflow ID | Trigger | Job |
+|---|---|---|---|
+| Researcher | `LM-01` | Daily 5am GMT | Scrape Reddit/Trends/News for HVAC pain points |
+| Copywriter | `LM-02` | After LM-01 | Write + A/B test all outbound messages |
+| Prospector | `LM-03` | Daily 6am GMT | Google Places → enrich → verify → score leads |
+| Sequencer | `LM-04` | New lead ready | Push to Instantly.ai sequence, track all events |
+| Hot Lead Detector | `LM-05` | Click/reply/visit | Alert Dan via SMS within 2 min, send Cal.com link |
+| Optimizer | `LM-06` | Sunday 11pm GMT | Declare A/B winners, update config, weekly report |
+
+### Supabase Tables (lead_machine_*)
+- `lead_machine_research` — daily research briefs
+- `outbound_leads` — all sourced leads + status
+- `lead_machine_sequence_log` — every email event
+- `lead_machine_message_variants` — all copy variants + stats
+- `lead_machine_experiments` — A/B tests + outcomes
+- `lead_machine_bookings` — confirmed calendar bookings
+- `lead_machine_config` — system config (Optimizer writes here)
+- `lead_machine_replies` — question replies pending Dan review
+
+### Key Rules
+- NEVER send cold email from syntharra.com — secondary domain only
+- Instantly.ai handles sending/warmup — NOT SMTP2GO (protect transactional reputation)
+- Optimizer auto-declares winners at ≥50 sends — no human input needed
+- Hot lead SMS fires within 2 minutes of trigger — Dan calls within the hour
+- All bookings include Claude-generated call prep brief for Dan
+
+### Blockers for go-live
+- Secondary domain (getsyntharra.com or trysyntharra.com)
+- Instantly.ai account ($30/mo)
+- Hunter.io account (free tier to start)
+- Dan's mobile number for Telnyx SMS
