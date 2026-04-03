@@ -1,127 +1,108 @@
-# HANDOFF — Call Processor Test Suite (Start Here)
+# HANDOFF — Premium Agent Behaviour Testing (Start Here)
 
-> **Date:** 2026-04-03
-> **Status:** Call processor rebuilt ✅ | Test suite written ✅ | Needs 1 final test run at 100%
-> **One job for next session:** Run `python3 tests/call-processor-test.py`, confirm 20/20, close the task.
-
----
-
-## What happened in the last 3 sessions
-
-### The problem (discovered this session)
-The Standard Call Processor (`Kg576YtPM9yEacKn`) was **completely broken**.
-Every post-call webhook was silently erroring because the `GPT: Analyze Transcript` node had an expired OpenAI API key. Zero calls have been logged to `hvac_call_log` since that key died.
-
-### What was fixed
-All fixes are live in n8n. Workflow is active and verified working.
-
-| Fix | Detail |
-|---|---|
-| Replaced dead OpenAI node | Now uses Groq (`llama-3.3-70b-versatile`) via HTTP Request. Two-node pattern: `Build Groq Request` (Code) → `Groq: Analyze Transcript` (HTTP). |
-| Expanded Supabase write | Was writing 7 fields. Now writes 18: adds `caller_address`, `job_type`, `call_tier`, `caller_sentiment`, `vulnerable_occupant`, `transfer_attempted`, `notes`, `geocode_status`. |
-| job_type normalisation | Groq sometimes returns "Residential" or other non-enum values. Parse Lead Data maps these to the correct enum. |
-| caller_sentiment fixed | Column is **INTEGER**. Scale: 2=Positive, 3=Neutral, 4=Frustrated, 5=Angry. Strings from Groq are mapped to ints. |
-| Pricing-only lead filter | General Enquiry calls with score<6 now correctly get `is_lead=False`. |
-| Groq retry added | 3× retries with 2s backoff on the Groq HTTP node. |
-
-### Test suite built
-- Script: `tests/call-processor-test.py` (pushed to GitHub)
-- 20 scenarios covering all call types
-- 16/20 confirmed passing during session
-- Final 4 timed out due to Groq RPM exhaustion (not workflow failures)
+> **Date:** 2026-04-04
+> **Previous session:** Standard HVAC fully tested and complete (80/80 agent + 75/75 E2E + 20/20 call processor)
+> **This session:** Test HVAC Premium agent behaviour — same approach as Standard
 
 ---
 
-## What to do in the next session
+## Context
 
-### Step 1 — Run the test suite
-```bash
-python3 tests/call-processor-test.py
-```
+Standard is done. Premium shares the same base architecture but adds:
+- **Live calendar booking** — agent books appointments in real-time during the call
+- **Calendar integrations** — Google Calendar, Outlook, Calendly, Jobber, HubSpot
+- **Higher price point** — $997/mo or $831/mo annual + $2,499 setup
+- **More complex flows** — booking confirmation, slot selection, rescheduling paths
 
-**⚠️ Important:** The test script fires 20 calls sequentially. Groq's free tier has a ~30 RPM limit.
-If you hit `"The service is receiving too many requests"` errors, the Groq quota has been exhausted.
-**Wait ~60s and retry the failing scenarios individually.**
-
-The test script uses `final_*` call IDs and self-cleans Supabase rows after each scenario.
-
-### Step 2 — Expected results
-All 20 should pass. If anything fails:
-
-| Failure | Likely cause | Action |
-|---|---|---|
-| `row logged → timeout` | Groq rate limit | Wait 60s, re-run that scenario |
-| `caller_address present → MISSING` | Short transcript, Groq didn't extract | Lengthen transcript with explicit address prompt |
-| `urgency~'mergency' → High` | Groq judged urgency as High not Emergency | Acceptable — "High" still routes correctly. Adjust assertion to accept either. |
-| `is_lead==False → True` | Groq over-scored a borderline call | Check `job_type` and `lead_score` in the row, adjust transcript |
-
-### Step 3 — Once 100%
-The task is done. Update TASKS.md to mark it complete.
+The Premium agent has been built and the E2E pipeline passes (89/89). What has NOT been done
+is systematic agent behaviour testing — Sophie's conversation quality under the full Premium
+scenario suite has never been run.
 
 ---
 
-## Key IDs and endpoints
+## What to do this session
 
-| Thing | Value |
-|---|---|
-| Call Processor workflow | `Kg576YtPM9yEacKn` |
-| Webhook (Standard) | `https://n8n.syntharra.com/webhook/retell-hvac-webhook` |
-| Test agent ID | `agent_4afbfdb3fcb1ba9569353af28d` |
-| Groq credential (n8n) | `UfljdfOxkfTm76LE` |
-| **DO NOT USE** OpenAI credential | `1uzBYwyR7Q7bdkZe` (expired key) |
-| hvac_call_log table | Supabase `hgheyqwnrcvwtgngqdnq.supabase.co` |
-
----
-
-## Workflow architecture (current, confirmed working)
-
-```
-Retell POST → Filter (call_analyzed only) → Extract Call Data
-  → Supabase Lookup Client → Parse Client Data → Check Repeat Caller (dedup gate)
-  → Build Groq Request [Code] → Groq: Analyze Transcript [HTTP → api.groq.com]
-  → Parse Lead Data [Code: normalises all fields]
-  → Is Lead? [IF]
-      ├─ TRUE  → SMS + Gmail Lead Email + Supabase: Log Call → HubSpot Log Note
-      └─ FALSE → Log Non-Lead + Supabase: Log Call → HubSpot Log Note
-```
-
----
-
-## Fields now written to hvac_call_log
-
-`call_id`, `agent_id`, `company_name`, `call_tier`, `caller_name`, `caller_phone`,
-`caller_address`, `service_requested`, `job_type`, `lead_score`, `is_lead`, `urgency`,
-`caller_sentiment` (int), `vulnerable_occupant` (bool), `transfer_attempted` (bool),
-`transfer_success` (bool), `summary`, `notes`, `duration_seconds`, `geocode_status`
-
----
-
-## Skill reference
-
-Load this skill at session start:
+### Step 1 — Load context
 ```python
-load_skill("standard-call-processor-testing")
+claude_md   = fetch("CLAUDE.md")
+tasks_md    = fetch("docs/TASKS.md")
+failures_md = fetch("docs/FAILURES.md")
+# Then load:
+premium_skill    = load_skill("hvac-premium")
+e2e_premium      = load_skill("e2e-hvac-premium")
+retell_skill     = load_skill("syntharra-retell")
 ```
 
-Full documentation at: `skills/standard-call-processor-testing-SKILL.md`
+### Step 2 — Understand the Premium agent
+- Load `docs/context/AGENTS.md` for current agent/flow IDs
+- Review the Premium MASTER prompt vs Standard — identify what's different
+- Check if Standard MASTER improvements (lean 4,053-char prompt, code node for caller style,
+  all 12 node fixes) have been applied to Premium TESTING agent
+
+### Step 3 — Sync Premium TESTING with Standard improvements
+Standard MASTER was fully overhauled in the previous sessions (2026-04-02/03).
+Premium TESTING (`agent_2cffe3d86d7e1990d08bea068f`) may be out of date.
+Before testing: compare Premium TESTING prompt against Standard MASTER and apply equivalent fixes.
+
+### Step 4 — Run agent simulator against Premium TESTING
+```bash
+python3 tools/openai-agent-simulator.py --agent agent_2cffe3d86d7e1990d08bea068f --group core_flow
+```
+Run all groups. Fix failures on TESTING. Target 95%+ before touching MASTER.
+
+### Step 5 — Promote to MASTER once passing
+- Patch `agent_9822f440f5c3a13bc4d283ea90` (MASTER) with verified changes
+- Publish MASTER
+- Update `skills/hvac-premium-SKILL.md`
 
 ---
 
-## Groq rate limit note (IMPORTANT for testing)
+## Key IDs — Premium
 
-The Groq free tier allows ~30 RPM. Running 20 test scenarios in rapid succession will hit this.
-
-**Safe test cadence:**
-- Fire 1 call, wait 10s, fire next
-- If you see `"receiving too many requests"` → stop, wait 60s, continue
-- Groq quota resets at midnight UTC daily
-- To avoid entirely: upgrade Groq plan or run test scenarios in batches of 5 with 60s gaps
+| Resource | ID |
+|---|---|
+| MASTER Agent | `agent_9822f440f5c3a13bc4d283ea90` |
+| TESTING Agent | `agent_2cffe3d86d7e1990d08bea068f` |
+| MASTER Flow | `conversation_flow_1dd3458b13a7` |
+| TESTING Flow | `conversation_flow_2ded0ed4f808` |
+| Onboarding workflow | `kz1VmwNccunRMEaF` |
+| Call processor workflow | `STQ4Gt3rH8ptlvMi` |
+| E2E test | `python3 shared/e2e-test-premium.py` (89/89 ✅) |
 
 ---
 
-## Other open items (not blocking this task)
+## What's different about Premium testing vs Standard
 
-- Live smoke test call to `+18129944371` (Dan needs to do this manually)
-- Apply Standard MASTER improvements to HVAC Premium TESTING
-- Unpause syntharra-ops-monitor (go-live gate)
-- Slack webhook URL from Dan (for wiring notifications into 8 n8n workflows)
+| Area | Standard | Premium |
+|---|---|---|
+| Core flow | Lead capture only | Lead capture + booking flow |
+| Calendar | None | Real-time slot fetch + booking |
+| Scenarios | 80 scenarios, 6 groups | Expect similar — booking scenarios added |
+| Complexity | Sophie collects info + closes | Sophie collects info + confirms booking slot |
+| Failure modes | Wrong routing, missed fields | Wrong routing + failed booking + slot confusion |
+
+---
+
+## Standard improvements to carry over to Premium
+
+These were all fixed in Standard MASTER (2026-04-03) — check if Premium has them:
+
+1. **Lean global prompt** (~4,000 chars) — remove bloat, move specifics to nodes
+2. **Code node for caller style detection** — injects `caller_style_note` at leadcapture top
+3. **Explicit scripted closing words** in leadcapture node
+4. **Emergency routing** — extreme urgency (freezing/elderly) offers transfer; matter-of-fact = high-priority lead
+5. **Wrong number branch** in identify_call_node
+6. **MINIMAL INFO RULE** in leadcapture — no extra probing after caller says enough
+7. **Out-of-area re-ask fix** — only collect REMAINING details
+8. **Vendor/job applicant handling** in identify_call_node
+9. **Pricing redirect** — no specific fees, redirect to team callback
+
+---
+
+## Standard test scores for reference
+
+| Test | Score | Script |
+|---|---|---|
+| Agent behaviour | 80/80 ✅ | `tools/openai-agent-simulator.py` |
+| E2E pipeline | 75/75 ✅ | `python3 shared/e2e-test.py` |
+| Call processor | 20/20 ✅ | `python3 tests/call-processor-test.py` |
