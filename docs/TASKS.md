@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-03 — Daily Ops Digest live. All Slack notifications complete.
+> Updated: 2026-04-03 — Slack setup guide PDF created for Premium clients.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 35 active workflows
 
@@ -32,5 +32,7 @@
 
 ## Open Items
 - [ ] Live smoke test call to +18129944371 (Dan — manual)
+- [ ] Slack setup guide PDF → email Premium clients manually when Slack webhook received at support@
+- [ ] Wire Slack webhook into Premium call processor (manual trigger — support team inputs URL)
 - [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
 - [ ] Go-live: unpause Syntharra, flip Stripe to live mode
