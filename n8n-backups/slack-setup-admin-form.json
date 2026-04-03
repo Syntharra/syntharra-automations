@@ -1,0 +1,7 @@
+{
+  "workflowId": "z8T9CKcUp7lLVoGQ",
+  "name": "Slack Setup \u2014 Internal Admin Form",
+  "url": "https://n8n.syntharra.com/workflow/z8T9CKcUp7lLVoGQ",
+  "webhook_url": "https://n8n.syntharra.com/webhook/slack-setup",
+  "description": "Internal form: enter company name + webhook URL \u2192 saves to hvac_standard_agent.slack_webhook_url in Supabase. Premium clients only."
+}
