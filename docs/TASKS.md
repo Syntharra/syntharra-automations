@@ -16,6 +16,12 @@
 - Call processor: 20/20 ✅
 - Go-live gate: 3–5 live smoke calls → unpause ops-monitor → SMS_ENABLED=true
 
+
+## Marketing
+- Agentic Marketing Blueprint: DELIVERED ✅ (2026-04-03)
+- 18-agent architecture designed, 12-week HVAC launch calendar, cost model, projections
+- Next: Build n8n workflows for 6 new agents, set up Supabase tables
+
 ## Premium HVAC — IN PROGRESS 🔧
 - Agent: `agent_9822f440f5c3a13bc4d283ea90` (MASTER) | `agent_2cffe3d86d7e1990d08bea068f` (TESTING)
 - Flow: `conversation_flow_1dd3458b13a7` (MASTER) | `conversation_flow_2ded0ed4f808` (TESTING)
