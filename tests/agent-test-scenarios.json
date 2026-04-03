@@ -436,7 +436,7 @@
     "group": "edge_cases",
     "name": "Job application caller",
     "callerPrompt": "You are calling to ask about job openings for HVAC technician positions.",
-    "expectedBehaviour": "Routes to appropriate employment response, does not go through service flow",
+    "expectedBehaviour": "Acknowledges the job inquiry, directs to website or email, collects name and contact number to pass to the team, does not go through standard HVAC service lead flow",
     "premiumOnly": false
   },
   {
