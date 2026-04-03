@@ -441,3 +441,17 @@ This includes:
 - `new CodeNode(...)` → INVALID. Use `node({ type: 'n8n-nodes-base.code', ... })` factory
 - `new` expressions of any kind are blocked by the SDK security layer
 - Always call `validate_workflow` before `update_workflow` — saves failed push attempts
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Hosting | Railway | n8n needs persistent filesystem — Vercel is stateless. Railway gives persistent services + Postgres + Redis in one platform | Railway pricing increases significantly |
+| Email sending | SMTP2GO REST API | Railway blocks SMTP ports 25/465/587/2525 — SMTP2GO over HTTPS 443 is the only viable option | Move off Railway |
+| Repo listing | `/user/repos?affiliation=owner,organization_member` | `/orgs/{org}/repos` returns 404 for org accounts with personal tokens | — |
+| Ops monitor | Separate Railway service (syntharra-ops-monitor repo) | Decoupled from n8n — monitor survives n8n restarts; can alert on n8n being down | — |
+| n8n deployment | Self-hosted on Railway | Workflow engine needs persistent state; Railway's persistent service model fits exactly | Hosted n8n pricing improves |
+| Skills location | GitHub, fetched at session start | /mnt has no API — GitHub allows programmatic updates, always current next session | Claude.ai adds /mnt API |
+| Context files | Small domain-specific files in docs/context/ | Single 12k-token project-state.md wasted context; each domain file is ~500 tokens, load only what's needed | Context file count exceeds 20 |
