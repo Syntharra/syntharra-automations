@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-04 — Premium agent prep complete, core_flow run done (9/15), fixes needed
+> Updated: 2026-04-04 — Standards added: n8n labelling + Claude Code routing enforced
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -40,6 +40,10 @@
 | HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🔧 TESTING — core_flow fixes needed |
 | Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
+
+## Standards & Housekeeping
+- [ ] **n8n labelling audit** — apply correct names + tags to all 20 existing workflows (see `docs/STANDARDS.md` for target labels + PATCH command)
+- [ ] Test Claude Code routing: confirm simulator runs correctly in Claude Code session before Premium MASTER promotion
 
 ## Open Action Items
 - [ ] Fix 6 core_flow failures on Premium TESTING flow
