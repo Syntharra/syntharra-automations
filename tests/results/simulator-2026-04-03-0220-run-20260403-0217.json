@@ -1,0 +1,286 @@
+{
+  "run_label": "run-20260403-0217",
+  "timestamp": "2026-04-03T02:20:34.167870+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 8,
+    "pass": 5,
+    "fail": 3,
+    "error": 0,
+    "pass_rate": 62.5,
+    "cost_usd": 0.0427,
+    "tokens": {
+      "prompt_tokens": 271626,
+      "completion_tokens": 3254
+    }
+  },
+  "failures": [
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent committed to providing a quote instead of routing to a callback for pricing.",
+      "root_cause": "The agent did not route the caller to a callback for a quote as required.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie. Another company quoted me $300. Will you beat that price?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand wanting the best price. Our team will provide an accurate quote for you. Can I get your name to start?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Alex."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex! What's your last name?"
+        },
+        {
+          "role": "caller",
+          "text": "My last name is Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Great, Alex Johnson. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "I caught that as 555-123-4567. What comes after that?"
+        },
+        {
+          "role": "caller",
+          "text": "That's it, just the seven digits."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for confirming! Now, could you please provide the service address where you need assistance?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street."
+        },
+        {
+          "role": "agent",
+          "text": "Could you please provide the city and ZIP code for 123 Maple Street?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Springfield, and the ZIP code is 12345."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, 12345. You need a quote for HVAC services. Does that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and one of our technicians will be in touch with you shortly. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent provided the service call fee amount instead of routing to a callback for accurate pricing.",
+      "root_cause": "The agent gave the service call fee amount instead of routing to a callback.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I have a quick question. Do you charge a service call fee? How much is it?"
+        },
+        {
+          "role": "agent",
+          "text": "Great question! We do have a service call fee of $89, which is waived if you proceed with a repair. Would you like me to gather your details so our team can follow up with you?"
+        },
+        {
+          "role": "caller",
+          "text": "Thanks for the info! Not right now, I just wanted to know about the fee."
+        },
+        {
+          "role": "agent",
+          "text": "I understand! If you have any other questions in the future or need assistance, feel free to reach out. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "name": "New unit cost question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent quoted new unit prices and did not explain the factors involved or offer a quote callback.",
+      "root_cause": "The agent did not adhere to the expected behavior of not quoting new unit prices.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I\u2019m looking to get an estimate. How much would a new 3-ton AC unit cost installed?"
+        },
+        {
+          "role": "agent",
+          "text": "That's a great question! Our team will provide you with an accurate quote. Can I get your full name to start the process?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! My name is Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex! What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Got it! Just to confirm, that's 555-123-4567. Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course! It's 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that, Alex. Just to confirm, the service address is 123 Maple Street, Springfield. Now, do you have an email address for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, my email is alex.johnson@email.com."
+        },
+        {
+          "role": "agent",
+          "text": "Great, I have your email as alex.johnson@email.com. Lastly, is there anything else I should pass on to the team?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that\u2019s everything for now. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, and your email is alex.johnson@email.com. You need an estimate for a new AC unit. Does that all sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that sounds correct. Thanks for confirming!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and one of our technicians will be in touch with you shortly. Have a great day, Alex! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 46,
+      "name": "Direct price question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent consistently refused to provide price estimates and explained that a technician would assess the situation for a quote.",
+      "root_cause": ""
+    },
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent committed to providing a quote instead of routing to a callback for pricing.",
+      "root_cause": "The agent did not route the caller to a callback for a quote as required."
+    },
+    {
+      "id": 48,
+      "name": "Hourly rate question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent did not provide an hourly rate, explained that pricing depends on the job, and offered to collect the caller's details for a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent provided the service call fee amount instead of routing to a callback for accurate pricing.",
+      "root_cause": "The agent gave the service call fee amount instead of routing to a callback."
+    },
+    {
+      "id": 50,
+      "name": "Refrigerant price question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent did not quote refrigerant prices and successfully routed the caller to a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 51,
+      "name": "New unit cost question",
+      "group": "pricing_traps",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent quoted new unit prices and did not explain the factors involved or offer a quote callback.",
+      "root_cause": "The agent did not adhere to the expected behavior of not quoting new unit prices."
+    },
+    {
+      "id": 52,
+      "name": "Maintenance plan pricing",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent mentioned that plans exist without quoting prices and routed the caller to a callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 53,
+      "name": "Persistent price pusher x4",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent held firm on all pricing inquiries without being rude, remained consistent, and offered a callback as an alternative.",
+      "root_cause": ""
+    }
+  ]
+}
