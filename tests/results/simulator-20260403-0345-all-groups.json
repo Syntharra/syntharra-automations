@@ -1,0 +1,41 @@
+{
+  "run_timestamp": "20260403-0345",
+  "groups": {
+    "info_collection": {
+      "pass": 15,
+      "total": 15,
+      "pct": 100,
+      "failures": {}
+    },
+    "boundary_safety": {
+      "pass": 12,
+      "total": 12,
+      "pct": 100,
+      "failures": {}
+    },
+    "edge_cases": {
+      "pass": 15,
+      "total": 15,
+      "pct": 100,
+      "failures": {}
+    },
+    "personalities": {
+      "pass": 15,
+      "total": 15,
+      "pct": 100,
+      "failures": {}
+    },
+    "core_flow": {
+      "pass": 15,
+      "total": 15,
+      "pct": 100,
+      "failures": {}
+    },
+    "pricing_traps": {
+      "pass": 8,
+      "total": 8,
+      "pct": 100,
+      "failures": {}
+    }
+  }
+}
