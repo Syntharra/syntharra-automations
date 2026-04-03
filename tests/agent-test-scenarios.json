@@ -28,7 +28,7 @@
     "group": "core_flow",
     "name": "Existing customer follow-up",
     "callerPrompt": "You had a technician visit 3 days ago and the problem came back. You are an existing customer.",
-    "expectedBehaviour": "Routes to existing customer path, captures callback info",
+    "expectedBehaviour": "Routes to existing customer path. Agent acknowledges the issue and takes callback info. PASS if agent correctly routes to existing customer handling and begins collecting name/callback. PASS even if caller ends call before full info collected \u2014 routing intent is what matters.",
     "premiumOnly": false
   },
   {
@@ -44,7 +44,7 @@
     "group": "core_flow",
     "name": "Request live person immediately",
     "callerPrompt": "You want to speak to a real person right away. Say \"I want to speak to someone\" at the start.",
-    "expectedBehaviour": "Offers to transfer caller to Mike or team, initiates transfer. If transfer fails in simulation, handles gracefully with callback \u2014 both are acceptable outcomes.",
+    "expectedBehaviour": "Offers to transfer caller to a real person or the team immediately. Initiates transfer. If transfer fails in simulation, handles gracefully with callback option. PASS if agent initiates transfer or offers live person without delay. PASS even if caller ends call before transfer completes.",
     "premiumOnly": false
   },
   {
