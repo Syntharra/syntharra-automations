@@ -33,6 +33,7 @@
 ## Open Items
 - [ ] Live smoke test call to +18129944371 (Dan — manual)
 - [ ] Slack setup guide PDF → email Premium clients manually when Slack webhook received at support@
-- [ ] Wire Slack webhook into Premium call processor (manual trigger — support team inputs URL)
+- [ ] Wire Slack conditional into Premium call processor (slack_webhook_url column now live in Supabase)
+- [ ] n8n admin form: MCP approval blocked — import manually from n8n-backups/slack-setup-admin-form.json
 - [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
 - [ ] Go-live: unpause Syntharra, flip Stripe to live mode
