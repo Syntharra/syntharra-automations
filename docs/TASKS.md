@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-04 — Standard complete, Premium agent testing next
+> Updated: 2026-04-04 — Standard complete, Premium improvements applied, simulator ready — Standard complete, Premium agent testing next
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -10,12 +10,13 @@
 - Master skill updated: `skills/hvac-standard-SKILL.md`
 - Go-live gate: 3–5 live smoke calls → unpause ops-monitor → SMS_ENABLED=true
 
-## Premium HVAC — NEXT SESSION 🎯
+## Premium HVAC — READY TO TEST 🎯
 - Agent: `agent_9822f440f5c3a13bc4d283ea90` (MASTER) | `agent_2cffe3d86d7e1990d08bea068f` (TESTING)
 - Flow: `conversation_flow_1dd3458b13a7` (MASTER) | `conversation_flow_2ded0ed4f808` (TESTING)
 - E2E: 89/89 ✅ — `python3 shared/e2e-test-premium.py`
-- Agent behaviour: NOT YET TESTED — load `skills/hvac-premium-SKILL.md` + `skills/e2e-hvac-premium-SKILL.md`
-- Task: run agent simulator against Premium TESTING agent, fix failures, promote to MASTER
+- Agent behaviour: NOT YET TESTED — simulator built, all improvements applied to TESTING flow
+- Task: run Premium simulator (need OpenAI key) → fix failures → promote to MASTER
+- Simulator: `python3 tools/openai-agent-simulator-premium.py --key sk-... --group core_flow`
 
 ## Agent Registry
 | Agent | ID | Status |
