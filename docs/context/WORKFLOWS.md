@@ -93,3 +93,23 @@
 ## API Note
 n8n REST API PUT endpoint does NOT accept `description` as a field on this version.
 Descriptions are maintained in this file. To set in n8n UI: open workflow → Settings → Description.
+
+## Slack Integration (2026-04-03)
+- Webhook URL: `syntharra_vault` → `service_name='slack_webhook_ops'`
+- n8n env var: `SLACK_WEBHOOK_OPS`
+- Channels: `#ops-alerts`, `#onboarding`, `#calls`, `#claude-code`, `#weekly-digest`
+- All notifications sent via HTTP POST to webhook URL — no Slack bot/OAuth needed
+- Skill: `syntharra-slack-SKILL.md`
+
+### Workflows with Slack notifications (to be wired in):
+| Workflow | Channel | Trigger |
+|---|---|---|
+| Stripe Workflow `xKD3ny6kfHL0HHXq` | `#onboarding` | New payment received |
+| HVAC Std Onboarding `4Hx7aRdzMl5N0uJP` | `#onboarding` | Agent went live |
+| HVAC Prem Onboarding `kz1VmwNccunRMEaF` | `#onboarding` | Agent went live |
+| HVAC Std Call Processor `Kg576YtPM9yEacKn` | `#calls` | Lead captured (score ≥7) |
+| HVAC Prem Call Processor `STQ4Gt3rH8ptlvMi` | `#calls` | Lead captured (score ≥7) |
+| Usage Alert Monitor `Wa3pHRMwSjbZHqMC` | `#ops-alerts` | 80% and 100% usage warnings |
+| Premium Integration Connected `a0IAwwUJP4YgwgjG` | `#onboarding` | OAuth integration connected |
+| Ops Monitor (when unpaused) | `#ops-alerts` | Any service down |
+
