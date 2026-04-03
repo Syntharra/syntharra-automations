@@ -24,45 +24,49 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 9. **Update relevant skill(s) after ANY verified work — no exceptions, no skipping**
 10. Update `docs/TASKS.md` at end of every chat
 
-## SELF-IMPROVEMENT — MANDATORY, NOT OPTIONAL
-> This is the most important long-term rule. Every session must make Claude smarter.
-> Skill files are the permanent brain. FAILURES.md is the audit trail.
-> If you fixed something, learned something, or hit a gotcha — it goes in the skill. Always.
+## SELF-IMPROVEMENT PROTOCOL — NON-NEGOTIABLE
 
-### Hard trigger rule — if you touched it, you update it
-| If you worked on... | Update this skill |
+Skills and FAILURES.md are Claude's permanent, compounding memory.
+They only get updated when there is a real learning — not just because a task was completed.
+
+### When to update a skill file
+- A bug was diagnosed and fixed → add root cause + correct pattern
+- An API call failed before working → add what was wrong and what works
+- A gotcha was discovered (wrong arg, wrong order, wrong assumption) → document it
+- A rate limit, quota, or interval constraint was hit → document the limit and safe threshold
+- Something was tried that doesn't work → add explicit "do NOT do X" entry
+
+**Do NOT update a skill just because you used it normally with no issues.**
+**Do NOT add entries that don't contain a real lesson.**
+
+### When to update FAILURES.md
+- Every time a bug is fixed — one row per fix
+- Format: `date | area | what failed | root cause | fix applied | skill updated (yes/no)`
+- Only log once the fix is **verified working** — not while still debugging
+
+### Hard gate — answer these before closing every session
+1. Did anything break or fail this session? → FAILURES.md row + skill update
+2. Did I discover a correct pattern by testing/failing first? → Add to skill
+3. Did I fix a wrong assumption? → Add "was wrong because X, correct is Y" to skill
+4. Are skill files more accurate and useful than when I started? → If no, do it now
+**If nothing went wrong and nothing was learned — no skill update needed. That's fine.**
+**If something did go wrong or was figured out — it must be documented before the chat ends.**
+
+### Which skill to update — global, covers all skills
+| System touched | Skill to update |
 |---|---|
-| Railway, n8n, ops monitor, env vars, deploys | `syntharra-infrastructure` |
-| Retell agents, conversation flows, prompts | `syntharra-retell` |
-| Emails, SMTP2GO, alert templates | `syntharra-email` |
-| Stripe, billing, pricing, webhooks | `syntharra-stripe` |
-| HubSpot CRM, pipeline stages, contacts | `syntharra-hubspot` |
-| Website, landing pages, HTML/CSS | `syntharra-website` |
-| HVAC Standard pipeline, onboarding | `hvac-standard` |
-| HVAC Premium pipeline, onboarding | `hvac-premium` |
-| E2E tests, scenario runner, simulators | `e2e-hvac-standard` or `e2e-hvac-premium` |
+| Railway, deploys, env vars, ops monitor | `syntharra-infrastructure` |
+| Retell agents, flows, prompts, calls | `syntharra-retell` |
+| n8n workflows, webhooks, nodes | `syntharra-infrastructure` |
+| Emails, SMTP2GO, templates, alerts | `syntharra-email` |
+| Stripe, billing, products, prices | `syntharra-stripe` |
+| HubSpot, CRM, pipeline, contacts | `syntharra-hubspot` |
+| Website, HTML, CSS, pages | `syntharra-website` |
+| HVAC Standard pipeline | `hvac-standard` |
+| HVAC Premium pipeline | `hvac-premium` |
+| E2E tests, simulators, scenario runner | `e2e-hvac-standard` or `e2e-hvac-premium` |
 | Client dashboard | `syntharra-client-dashboard` |
 | Marketing, lead gen, newsletter | `syntharra-marketing` |
-
-### What goes in a skill update
-- Correct API patterns (with working examples)
-- Things that look right but are wrong (e.g. Railway `where:` vs `input:`)
-- Rate limits, quotas, intervals to stay within
-- Gotchas discovered during debugging
-- Confirmed working mutations/queries
-- Things NOT to do and why
-
-### What goes in FAILURES.md
-Every new failure/fix gets a row: `date | area | what failed | root cause | fix applied | skill updated`
-- Log it even if the fix was trivial
-- Mark skill updated = YES/NO — if NO, update the skill before closing
-
-### Self-improvement checklist — run before EVERY session end
-- [ ] Did I fix a bug? → Root cause in FAILURES.md + gotcha in skill
-- [ ] Did I learn a correct API pattern? → Add to skill with working example
-- [ ] Did I discover something that doesn't work? → Add "do NOT do X" to skill
-- [ ] Did I change any config/IDs/URLs? → Update skill tables
-- [ ] Are skill files richer than when I started this session? → If no, do it now
 
 ---
 
