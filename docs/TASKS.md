@@ -1,41 +1,52 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-03 — Slack fully wired. Call processor live. Welcome email updated.
+> Updated: 2026-04-04 — Premium agent prep complete, core_flow run done (9/15), fixes needed
 
-## Status: PRE-LAUNCH | Stripe TEST MODE | 35 active workflows
+## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
-## Slack Internal Notifications — COMPLETE ✅
-- Bot: @syntharra (U0AQR9PQWCS) | Scopes: chat:write, chat:write.public, incoming-webhook
-- SLACK_BOT_TOKEN in vault + Railway (n8n + ops-monitor)
-- 16/16 channels confirmed live
+## Standard HVAC — ALL TESTING COMPLETE ✅
+- Agent behaviour: 80/80 ✅
+- E2E pipeline:   75/75 ✅
+- Call processor: 20/20 ✅
+- Go-live gate: 3–5 live smoke calls → unpause ops-monitor → SMS_ENABLED=true
 
-## Ops Monitor — COMPLETE ✅
-- Email alerts: PAUSED | Slack: warning+critical → #ops-alerts | SMS: critical only ✅
+## Premium HVAC — IN PROGRESS 🔧
+- Agent: `agent_9822f440f5c3a13bc4d283ea90` (MASTER) | `agent_2cffe3d86d7e1990d08bea068f` (TESTING)
+- Flow: `conversation_flow_1dd3458b13a7` (MASTER) | `conversation_flow_2ded0ed4f808` (TESTING)
+- E2E: 89/89 ✅
+- All 9 Standard improvements applied to TESTING flow ✅ (incl. code node)
+- Simulator: `tools/openai-agent-simulator-premium.py` ✅
 
-## Email Intelligence — LIVE ✅
-- ID: PavRLBVQQpWrKUYs | Active | 15-min schedule | daniel@syntharra.com credential
-- 10 aliases → per-alias channel routing
+### core_flow result: 9/15 (60%) ❌ — fixes needed before continuing
+Failures:
+- #5  FAQ repetition — agent repeats same info multiple times
+- #7  Booking push — agent tries to book when caller only wants callback
+- #11 Service type order — agent confirms before capturing service type
+- #13 Callback repetition — agent over-confirms callback details
+- #14 Pricing redirect — agent gives pricing instead of redirecting to team
+- #15 Over-eager close — agent over-encourages caller to call back
 
-## Daily Ops Digest — LIVE ✅
-- ID: SiMn59qJOfrZZS81 | Active | 6am GMT daily → #all-syntharra
-- Covers: clients, 24h calls/leads, MRR, system health
-- Timezone: GMT/UTC (Europe/London for date label)
-
-## E2E Tests
-- Standard: 75/75 ✅ | Premium: 89/89 ✅
+### Next session action plan
+1. Fix the 6 core_flow failures (prompt/node edits to TESTING flow)
+2. Re-run core_flow — target 14/15+
+3. Continue remaining 6 groups: info_collection, personalities, pricing_traps, edge_cases, boundary_safety, premium_specific
+4. Fix all failures → 95%+ overall
+5. Promote TESTING → MASTER
 
 ## Agent Registry
 | Agent | ID | Status |
 |---|---|---|
-| HVAC Standard | agent_4afbfdb3fcb1ba9569353af28d | ✅ MASTER LIVE |
-| HVAC Premium | agent_9822f440f5c3a13bc4d283ea90 | ✅ MASTER |
-| HVAC Standard TESTING | agent_731f6f4d59b749a0aa11c26929 | ✅ Synced |
+| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE |
+| HVAC Premium Template | `agent_9822f440f5c3a13bc4d283ea90` | ✅ MASTER — needs behaviour testing |
+| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | ✅ Synced with MASTER |
+| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🔧 TESTING — core_flow fixes needed |
+| Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
+| Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
 
-## Open Items
-- [ ] Live smoke test call to +18129944371 (Dan — manual)
-- [ ] Slack setup guide PDF → email Premium clients manually when Slack webhook received at support@
-- [ ] Wire Slack conditional into Premium call processor (slack_webhook_url column now live in Supabase)
-- [x] Slack admin form LIVE (z8T9CKcUp7lLVoGQ) → https://n8n.syntharra.com/webhook/slack-setup
-- [x] Premium Call Processor: Slack: Client Notification node live (conditional on slack_webhook_url)
-- [x] Premium welcome email: Slack setup section added
-- [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
-- [ ] Go-live: unpause Syntharra, flip Stripe to live mode
+## Open Action Items
+- [ ] Fix 6 core_flow failures on Premium TESTING flow
+- [ ] Run remaining 6 simulator groups on Premium
+- [ ] Promote Premium TESTING → MASTER once 95%+
+- [ ] Live smoke test calls to +18129944371 (Standard — manual)
+- [ ] Go-live: unpause syntharra-ops-monitor Railway service
+- [ ] Go-live: set SMS_ENABLED=true once Telnyx approved
+- [ ] Get Slack webhook URL from Dan → add to vault + Railway env
