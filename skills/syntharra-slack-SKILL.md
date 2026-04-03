@@ -1,205 +1,84 @@
----
-name: syntharra-slack
-description: >
-  Complete reference for all Syntharra Slack integrations.
-  Load when: adding Slack notifications to any n8n workflow, building new Slack alerts,
-  debugging Slack message delivery, adding new channels, or working on the Claude Code
-  progress notification system.
----
+# Syntharra Slack Skill
+> Updated 2026-04-03 — Slack is the primary internal notification channel.
 
-> Last verified: 2026-04-03 — initial setup
+## Webhook
+- Stored in: `syntharra_vault` → `service_name='slack_webhook_ops'`
+- Retrieve with standard vault pattern (service role key required)
+- Method: POST, Content-Type: application/json, no auth header needed
 
-# Syntharra — Slack Reference
-
----
-
-## Workspace Setup
-- Workspace: Syntharra (internal ops only)
-- Slack webhook URL: stored in `syntharra_vault` → `service_name='slack_webhook_ops'`
-- n8n env var: `SLACK_WEBHOOK_OPS` (set in Railway n8n service)
-- All messages sent via Incoming Webhook — no OAuth bot needed for current use
-
----
-
-## Channel Structure
-
-| Channel | Purpose | Who sees it |
+## Channel Map
+| Event | Channel | Emoji |
 |---|---|---|
-| `#ops-alerts` | System alerts, errors, infra issues | Dan |
-| `#onboarding` | New client events (payment, agent live, integration connected) | Dan |
-| `#calls` | Notable call events (lead captured, emergency, transfer) | Dan |
-| `#claude-code` | Claude Code session progress, E2E results, self-heal updates | Dan |
-| `#weekly-digest` | Weekly summary — leads, calls, health scores | Dan |
+| New Stripe payment | `#onboarding` | 💰 |
+| Agent live (Std/Prem) | `#onboarding` | ✅ |
+| Supabase write failure | `#ops-alerts` | 🚨 |
+| Usage alert (80%/100%) | `#ops-alerts` | ⚡/⚠️ |
+| Reconciliation mismatch | `#ops-alerts` | ⚠️ |
 
----
-
-## n8n HTTP Node Pattern (all Slack messages)
-
+## Code Node Pattern
 ```javascript
-// HTTP Request node — POST to Slack webhook
-Method: POST
-URL: {{ $env.SLACK_WEBHOOK_OPS }}
-Body (JSON):
-{
-  "channel": "#ops-alerts",
-  "username": "Syntharra Ops",
-  "icon_emoji": ":robot_face:",
-  "blocks": [
-    {
-      "type": "header",
-      "text": { "type": "plain_text", "text": "🔔 Alert Title" }
-    },
-    {
-      "type": "section",
-      "fields": [
-        { "type": "mrkdwn", "text": "*Client:*\nAcme HVAC" },
-        { "type": "mrkdwn", "text": "*Event:*\nAgent went live" }
-      ]
-    },
-    {
-      "type": "context",
-      "elements": [{ "type": "mrkdwn", "text": "2026-04-03 14:32 UTC" }]
-    }
+const SLACK_URL = 'https://hooks.slack.com/services/[REDACTED — see vault: slack_webhook_ops]';
+await this.helpers.httpRequest({
+  method: 'POST',
+  url: SLACK_URL,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    channel: '#ops-alerts',
+    username: 'Syntharra Ops',
+    icon_emoji: ':rotating_light:',
+    blocks: [
+      { type: 'header', text: { type: 'plain_text', text: 'Title' } },
+      { type: 'section', fields: [{ type: 'mrkdwn', text: '*Field:*\nValue' }] },
+      { type: 'context', elements: [{ type: 'mrkdwn', text: new Date().toUTCString() + ' • Source' }] }
+    ]
+  }),
+  json: true
+});
+```
+
+## HTTP Request Node (expression body)
+Hardcode the webhook URL directly in the node URL field (incoming webhooks require no auth headers).
+Set `specifyBody: json`, jsonBody:
+```
+={{ JSON.stringify({
+  channel: "#onboarding",
+  username: "Syntharra Ops",
+  icon_emoji: ":white_check_mark:",
+  blocks: [
+    { type: "header", text: { type: "plain_text", text: "Title — " + $json.company_name } },
+    { type: "section", fields: [{ type: "mrkdwn", text: "*Field:*\n" + $json.value }] },
+    { type: "context", elements: [{ type: "mrkdwn", text: new Date().toUTCString() + " • Workflow" }] }
   ]
-}
+}) }}
 ```
+Always add `options.response.response.neverError: true` so Slack failure never breaks the flow.
 
----
-
-## Message Templates
-
-### New Payment (Stripe)
-```json
-{
-  "channel": "#onboarding",
-  "username": "Syntharra Ops",
-  "icon_emoji": ":moneybag:",
-  "blocks": [
-    { "type": "header", "text": { "type": "plain_text", "text": "💰 New Payment Received" }},
-    { "type": "section", "fields": [
-      { "type": "mrkdwn", "text": "*Client:*\n{{company_name}}" },
-      { "type": "mrkdwn", "text": "*Plan:*\n{{plan_type}}" },
-      { "type": "mrkdwn", "text": "*Amount:*\n{{amount}}" },
-      { "type": "mrkdwn", "text": "*Email:*\n{{email}}" }
-    ]},
-    { "type": "context", "elements": [{ "type": "mrkdwn", "text": "{{timestamp}} • Stripe" }]}
-  ]
-}
-```
-
-### Agent Live (Onboarding Complete)
-```json
-{
-  "channel": "#onboarding",
-  "username": "Syntharra Ops",
-  "icon_emoji": ":white_check_mark:",
-  "blocks": [
-    { "type": "header", "text": { "type": "plain_text", "text": "✅ Agent Live — {{company_name}}" }},
-    { "type": "section", "fields": [
-      { "type": "mrkdwn", "text": "*Agent ID:*\n{{agent_id}}" },
-      { "type": "mrkdwn", "text": "*Plan:*\n{{plan_type}}" },
-      { "type": "mrkdwn", "text": "*Phone:*\n{{phone_number}}" },
-      { "type": "mrkdwn", "text": "*Transfer #:*\n{{transfer_number}}" }
-    ]},
-    { "type": "context", "elements": [{ "type": "mrkdwn", "text": "{{timestamp}} • JotForm Onboarding" }]}
-  ]
-}
-```
-
-### Lead Captured (Call Processor)
-```json
-{
-  "channel": "#calls",
-  "username": "Syntharra Ops",
-  "icon_emoji": ":telephone_receiver:",
-  "blocks": [
-    { "type": "header", "text": { "type": "plain_text", "text": "📞 Lead Captured — {{company_name}}" }},
-    { "type": "section", "fields": [
-      { "type": "mrkdwn", "text": "*Caller:*\n{{caller_name}}" },
-      { "type": "mrkdwn", "text": "*Service:*\n{{service_type}}" },
-      { "type": "mrkdwn", "text": "*Lead Score:*\n{{lead_score}}/10" },
-      { "type": "mrkdwn", "text": "*Call Duration:*\n{{duration}}s" }
-    ]},
-    { "type": "context", "elements": [{ "type": "mrkdwn", "text": "{{timestamp}} • Standard" }]}
-  ]
-}
-```
-
-### Claude Code — E2E Result
-```json
-{
-  "channel": "#claude-code",
-  "username": "Claude Code",
-  "icon_emoji": ":robot_face:",
-  "blocks": [
-    { "type": "header", "text": { "type": "plain_text", "text": "{{status_emoji}} E2E {{tier}} — {{result}}" }},
-    { "type": "section", "text": { "type": "mrkdwn", "text": "{{pass_count}} passed • {{fail_count}} failed • {{duration}}" }},
-    { "type": "context", "elements": [{ "type": "mrkdwn", "text": "{{timestamp}} • {{agent_id}}" }]}
-  ]
-}
-```
-
-### Claude Code — Session Summary
-```json
-{
-  "channel": "#claude-code",
-  "username": "Claude Code",
-  "icon_emoji": ":memo:",
-  "blocks": [
-    { "type": "header", "text": { "type": "plain_text", "text": "📋 Session Complete — {{topic}}" }},
-    { "type": "section", "text": { "type": "mrkdwn", "text": "{{summary}}" }},
-    { "type": "section", "fields": [
-      { "type": "mrkdwn", "text": "*Changes:*\n{{changes}}" },
-      { "type": "mrkdwn", "text": "*E2E:*\n{{e2e_result}}" }
-    ]},
-    { "type": "context", "elements": [{ "type": "mrkdwn", "text": "{{timestamp}} • Log: {{log_url}}" }]}
-  ]
-}
-```
-
----
-
-## Sending from Claude Code (Python)
-
-```python
-import os, requests, json
-from datetime import datetime, timezone
-
-WEBHOOK = os.environ.get("SLACK_WEBHOOK_OPS", "")
-
-def slack(channel, emoji, title, fields=None, text=None):
-    if not WEBHOOK:
-        print(f"[SLACK SKIP] {title}")
-        return
-    blocks = [{"type": "header", "text": {"type": "plain_text", "text": title}}]
-    if text:
-        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": text}})
-    if fields:
-        blocks.append({"type": "section", "fields": [
-            {"type": "mrkdwn", "text": f"*{k}:*\n{v}"} for k, v in fields.items()
-        ]})
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    blocks.append({"type": "context", "elements": [{"type": "mrkdwn", "text": ts}]})
-    requests.post(WEBHOOK, json={"channel": channel, "username": "Syntharra Ops",
-                                  "icon_emoji": emoji, "blocks": blocks})
-```
-
-Usage:
-```python
-slack("#claude-code", ":white_check_mark:", "E2E Standard — 75/75 PASSED",
-      fields={"Duration": "2m 14s", "Agent": "TESTING"})
-
-slack("#onboarding", ":moneybag:", "New Payment — Acme HVAC",
-      fields={"Plan": "Standard", "Amount": "$497/mo"})
-```
-
----
-
-## Architecture Decisions
-
-| Decision | Chose | Why | Revisit if |
+## Workflow Coverage (all updated 2026-04-03)
+| Workflow | ID | Slack Node | Internal Email Status |
 |---|---|---|---|
-| Delivery method | Incoming Webhook (no bot) | Simpler setup, no OAuth, no bot token management. Sufficient for one-way notifications | Need 2-way interaction (slash commands, button responses) |
-| Single webhook URL | One webhook, channel specified per message | Fewer credentials to manage; one Railway env var | Slack workspace splits across teams |
-| Channel per domain | ops-alerts / onboarding / calls / claude-code | Clean separation — Dan can mute #calls without missing #onboarding | More team members with different access needs |
-| Blocks format | Slack Block Kit (not plain text) | Structured, scannable on mobile; fields show key:value at a glance | — |
+| Stripe Workflow | `xKD3ny6kfHL0HHXq` | `Slack: New Payment` → #onboarding | `Send Internal Notification` PAUSED |
+| Std Onboarding | `4Hx7aRdzMl5N0uJP` | `Slack: Agent Live` → #onboarding | `Email Summary to Dan` + `Error Notification` PAUSED |
+| Usage Monitor | `Wa3pHRMwSjbZHqMC` | `Slack: Usage Alert (Internal)` → #ops-alerts | `Gmail: Notify You (Internal)` PAUSED |
+| Std Call Processor | `Kg576YtPM9yEacKn` | Inline in alert node → #ops-alerts | Email PAUSED |
+| Prem Call Processor | `STQ4Gt3rH8ptlvMi` | Inline in Log Call retry → #ops-alerts | Email replaced |
+| Prem Onboarding | `kz1VmwNccunRMEaF` | `Slack: Agent Live (Premium)` → #onboarding | `Send Internal Notification` PAUSED |
+
+## Reactivating Paused Email Nodes
+Remove the first 3 lines of the Code node jsCode:
+```
+// PAUSED 2026-04-03 — ...
+console.log('[PAUSED] ...');
+return $input.all();
+```
+
+## Rules
+- NEVER touch client-facing email nodes (lead alerts, welcome emails, usage warnings, OAuth emails)
+- Only internal ops emails paused (to onboarding@/alerts@syntharra.com)
+- Always neverError: true on Slack HTTP nodes
+- Include context block with timestamp + source in every message
+
+## Gotchas (learned 2026-04-03)
+- MCP flag resets after SDK workflow update — always run AU8DD5r6i6SlYFnb after every SDK update
+- n8n REST API PUT — do NOT include `active` field (read-only, causes 400 error)
+- .onFalse() only valid on IF nodes — HTTP Request error output: use .add(node).to(errorHandler)
+- Premium Onboarding patched via REST API — too risky to rebuild 21-node complex flow via SDK
