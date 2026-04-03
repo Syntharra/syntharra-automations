@@ -24,12 +24,13 @@
 - #14 Pricing redirect — fix applied, retest pending
 - #15 Over-eager close — fix applied, retest pending
 
-### Next action — Claude Code (simulator fixed, ready to run)
-- Simulator switched to Groq (llama-3.3-70b-versatile) — key in Supabase vault service_name='Groq'
-- Run: `python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group core_flow`
-- Then run remaining 6 groups: personalities, info_collection, pricing_traps, edge_cases, boundary_safety, premium_specific
-- Fix any failures, re-run affected group, target 90/95+
-- Promote TESTING → MASTER once passing
+### Next action — Claude Code (simulator READY ✅)
+- Model: llama-3.3-70b-versatile (same as standard — confirmed working)
+- Prompt: global prompt only (~10k chars) — node instructions stripped, fits 12k TPM
+- Groq key: in Supabase vault service_name='Groq', key_type='api_key'
+- Run: `git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group core_flow`
+- Then: personalities → info_collection → pricing_traps → edge_cases → boundary_safety → premium_specific
+- Fix failures per group, target 90/95+, then promote TESTING → MASTER
 
 ## Agent Registry
 | Agent | ID | Status |
