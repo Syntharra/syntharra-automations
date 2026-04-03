@@ -23,6 +23,7 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 8. Push all changes to GitHub before chat ends
 9. **Update relevant skill(s) after ANY verified work — no exceptions, no skipping**
 10. Update `docs/TASKS.md` at end of every chat
+11. **Document architectural reasoning in `docs/ARCHITECTURE.md` whenever a non-obvious choice is made**
 
 ## SELF-IMPROVEMENT PROTOCOL — NON-NEGOTIABLE
 
@@ -49,6 +50,7 @@ They only get updated when there is a real learning — not just because a task 
 2. Did I discover a correct pattern by testing/failing first? → Add to skill
 3. Did I fix a wrong assumption? → Add "was wrong because X, correct is Y" to skill
 4. Are skill files more accurate and useful than when I started? → If no, do it now
+5. **Did I make any architectural choice this session that isn't documented?** → Write it to `docs/ARCHITECTURE.md` before closing
 **If nothing went wrong and nothing was learned — no skill update needed. That's fine.**
 **If something did go wrong or was figured out — it must be documented before the chat ends.**
 
@@ -70,18 +72,19 @@ They only get updated when there is a real learning — not just because a task 
 
 ---
 
-## Session startup — always load these 3
+## Session startup — always load these 4
 ```python
-claude_md   = fetch("CLAUDE.md")
-tasks_md    = fetch("docs/TASKS.md")
-failures_md = fetch("docs/FAILURES.md")
+claude_md     = fetch("CLAUDE.md")
+tasks_md      = fetch("docs/TASKS.md")
+failures_md   = fetch("docs/FAILURES.md")
+decisions_md  = fetch("docs/DECISIONS.md")   # why things are built the way they are
 ```
 
 ## Context files — load what you need
 | What you're working on | File to fetch |
 |---|---|
-| Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md` |
-| Architectural decisions | `docs/DECISIONS.md` |
+| Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md`, `docs/DECISIONS.md` |
+| Full reasoning behind decisions | `docs/ARCHITECTURE.md` |
 | Agents, calls, Retell | `docs/context/AGENTS.md` |
 | n8n workflows | `docs/context/WORKFLOWS.md` |
 | Stripe billing | `docs/context/STRIPE.md` |
