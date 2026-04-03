@@ -1,5 +1,5 @@
 # Syntharra — Slack Internal Notifications Skill
-> Updated 2026-04-03 — FULLY LIVE. Bot token working, all 16 channels confirmed, email intelligence active.
+> Updated 2026-04-03 — COMPLETE. 16/16 channels confirmed. chat:write.public active. Ops monitor email paused. Email intelligence live.
 
 ---
 
@@ -16,10 +16,11 @@ All 16 channels live and tested. Email intelligence scanning 10 aliases every 15
 | Bot name | `@syntharra` (user `U0AQR9PQWCS`, bot `B0AR46TCYDP`) |
 | Vault | `service_name='Slack'`, `key_type='bot_token'` |
 | Railway env var | `SLACK_BOT_TOKEN` (set on n8n service) |
-| Scope | `chat:write` + `incoming-webhook` |
+| Scope | `chat:write` + `chat:write.public` + `incoming-webhook` |
 | API endpoint | `POST https://slack.com/api/chat.postMessage` |
 
 **IMPORTANT: Always use channel IDs (C0...), never channel names. IDs are permanent.**
+**chat:write.public is active — bot posts to ANY channel without /invite. Never need to invite again.**
 
 ---
 
@@ -104,6 +105,27 @@ All aliases (sales@, support@, etc.) are aliases of one Google account — use O
 ### Groq Filter
 Score 1-2 (spam/automated) → dropped. Score 3-5 → posted to channel.
 Model: `llama3-8b-8192` | via `this.helpers.httpRequest()` in Code node.
+
+
+---
+
+## Ops Monitor Integration — LIVE ✅
+
+**Repo:** `Syntharra/syntharra-ops-monitor`
+**File:** `src/utils/alertManager.js`
+
+Alert routing:
+| Tier | Dashboard | Slack | Email | SMS |
+|---|---|---|---|---|
+| info | ✅ | ❌ (noise) | ❌ paused | ❌ |
+| warning | ✅ | ✅ #ops-alerts | ❌ paused | ❌ |
+| critical | ✅ | ✅ #ops-alerts | ❌ paused | ✅ Telnyx |
+
+Email paused with `if(false)` wrapper — one line to reactivate.
+Daily digest email also paused — Slack real-time replaces it.
+SMS (Telnyx) on critical: untouched, still active.
+
+`SLACK_BOT_TOKEN` env var set on Railway ops monitor service.
 
 ---
 
