@@ -60,3 +60,5 @@
 **Root cause:** Global prompt now ~37k chars. Personality instructions appended at END are below the model's effective attention window. Instructions not followed.
 **Fix (pending):** Move personality handling INTO node-leadcapture instruction text where it will be in active context during info collection.
 **Skill updated:** N/A — fix not yet applied
+| 2026-04-03 | Jotform Monitor | HTTP 429 — Jotform API Unreachable (CRITICAL alert) | Monitor fetched each form's submissions twice per run (staleness loop + orphan detection loop) → doubled API calls, hit Jotform rate limit | Cache formSubmissions in first pass, reuse in orphan block — 3 calls/run instead of 5 | syntharra-infrastructure |
+| 2026-04-03 | Infrastructure Monitor | Railway Checkout status 'unknown' (WARNING alert fires every 5 min) | Railway GQL API changed: `input:` filter deprecated in 2025-Q4; also transient states (DEPLOYING/BUILDING) treated as failures | Updated query to use `where: { serviceId: { equals: ... } }` + `orderBy: CREATED_AT DESC`; TRANSIENT states now suppressed | syntharra-infrastructure |
