@@ -315,3 +315,49 @@ Only update this skill when something **fundamental** changes — not during rou
 ### Personality handling placement
 - Must be in NODE instruction text, NOT global prompt
 - Place in nonemergency_leadcapture_node for maximum effect during info collection
+
+## Code Node (Retell) — Verified Patterns
+
+### Creating via API
+- Type string `"code"` IS accepted by the API (confirmed 2026-04-03)
+- Required fields:
+  ```json
+  {
+    "id": "node-xxx",
+    "name": "node_name",
+    "type": "code",
+    "code": "// JS here",
+    "speak_during_execution": false,
+    "wait_for_result": true,
+    "else_edge": {
+      "id": "edge-xxx",
+      "destination_node_id": "target-node-id",
+      "transition_condition": { "type": "prompt", "prompt": "Else" }
+    },
+    "edges": [],
+    "display_position": { "x": 0, "y": 0 }
+  }
+  ```
+- `else_edge.transition_condition.prompt` MUST equal exactly `"Else"` — any other string rejected
+
+### Available globals inside code node JS
+- `metadata.transcript` — array of `{role: 'user'|'agent', content: string}` — conversation history
+- `dv.<name>` — read dynamic variables set elsewhere in flow
+- `fetch(url)` — make HTTP requests
+- `console.log()` — shows in Run results
+- DO NOT use `conversationHistory` (undefined), `call.transcript` (undefined)
+
+### Setting output variables
+```js
+// Assign directly to variable name, then return it
+caller_style_note = note;
+return { caller_style_note: note };
+```
+
+### Caller style detector pattern
+- Run code node BETWEEN identify_call_node and leadcapture
+- Reads `metadata.transcript`, detects caller style signals
+- Sets `caller_style_note` variable
+- Leadcapture reads `{{caller_style_note}}` at top of instruction
+- This replaces a large personality table in the prompt — saves ~800 tokens per call
+
