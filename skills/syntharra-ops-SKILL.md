@@ -439,3 +439,24 @@ const stripeMonthly = await getVaultKey('Stripe', 'price_standard_monthly');
 - HubSpot is the sales, marketing, and client relationship layer
 - API key: `syntharra_vault` (service_name='HubSpot', key_type='api_key')
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
+
+
+---
+
+## Simulator Run Strategy (from 2026-04-03 session)
+
+### Fastest path to 95%+ pass rate
+1. Run one group to baseline: `--group pricing_traps` (8 scenarios, fastest)
+2. For each FAIL: run `--scenarios <id>` in isolation to confirm it's real (not variance)
+3. Fix prompt via API, publish, retest the specific scenario IDs
+4. Only run full `--group` to confirm after targeted fixes pass
+5. Never run all 6 groups at once — rate limiting degrades results
+
+### Self-improvement loop
+After any simulator session:
+1. Every genuine fix → row in FAILURES.md + update to relevant skill
+2. Every scenario definition problem → fix `expectedBehaviour` in scenarios.json + commit
+3. Every new Retell API pattern discovered → add to syntharra-retell-SKILL.md
+4. Every evaluator pattern learned → add to e2e-hvac-standard-SKILL.md
+
+This compounds. Each session should start faster than the last because the skills have the right answers already loaded.
