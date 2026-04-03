@@ -363,6 +363,36 @@ return { caller_style_note: note };
 
 ---
 
+
+## Edge Rewiring Gotcha (discovered 2026-04-04)
+
+### Problem
+`PATCH update-conversation-flow` returns 400: "Please remove or update finetune examples before deleting the associated node or edge" when you change the `destination_node_id` of an existing edge — even when `get-conversation-flow` shows `finetune_examples: []`.
+
+### Root cause
+Retell stores finetune examples in its backend and does NOT expose them in the API response. The example count returned is unreliable. Any change to `destination_node_id` is treated as "deleting" the old edge.
+
+### Fix
+Do NOT change `destination_node_id` on existing edges. Instead:
+1. Add a NEW edge with the same `transition_condition.prompt` text
+2. Insert the new edge FIRST in the `edges` array (Retell uses first-match routing)
+3. Leave the original edge in place — it acts as a fallback and won't trigger if the new edge fires first
+
+```python
+new_edge = {
+    "id": "edge-to-NEW-destination",
+    "destination_node_id": "node-new-target",
+    "transition_condition": {
+        "type": "prompt",
+        "prompt": original_edge['transition_condition']['prompt']  # same condition
+    }
+}
+node['edges'].insert(0, new_edge)  # insert FIRST for routing priority
+```
+
+### Note
+Adding entirely NEW edges (without changing existing ones) works fine. Adding new nodes also works fine. Only changing `destination_node_id` of existing edges is blocked.
+
 ## Architecture Decisions
 
 | Decision | Chose | Why | Revisit if |
