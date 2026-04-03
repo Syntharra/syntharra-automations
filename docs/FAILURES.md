@@ -69,3 +69,28 @@
 | 2026-04-03 | PDF build | Attempted logo fix produced different PDF layout entirely | build_final.py diverged from original structure; cover page changed | Kept all original content, only stripped logo/icon references | no |
 | 2026-04-03 | GitHub API | Archiving file failed with "sha wasn't supplied" | File already existed in archive from partial first attempt; need SHA to overwrite | Checked existence first, supplied SHA on retry | no |
 | 2026-04-03 | Jotform Monitor | 429 persisted — reported as 'still erroring' | Quota burned by burst E2E testing earlier same day (resets midnight UTC, ~2hrs away). Independently: backup poller was running every 15min = 192 API calls/day headroom consumed faster during test days | Changed backup poll interval 15min → 60min (48 calls/day); added graceful 429 skip-and-retry logic in code node | syntharra-infrastructure |
+
+### 2026-04-03 | Agent Simulator | Code Node architecture session
+
+| Date | Area | What Failed | Root Cause | Fix Applied | Skill Updated |
+|------|------|-------------|------------|-------------|---------------|
+| 2026-04-03 | Retell API | Code node type not creatable via REST API | API validator whitelist doesn't include 'code' type string yet — UI-only feature | Created via Retell UI (Cowork), then patched code/else_edge via API using correct field names | syntharra-retell |
+| 2026-04-03 | Retell Code Node | `conversationHistory` undefined in code node | Retell code node uses `metadata.transcript` not `conversationHistory` | Updated JS to use `metadata.transcript` | syntharra-retell |
+| 2026-04-03 | Retell Code Node | else_edge prompt must equal exactly "Else" | API rejects any other string for else_edge transition_condition.prompt | Always set `else_edge.transition_condition.prompt = "Else"` | syntharra-retell |
+| 2026-04-03 | Simulator | personalities 47%→87% over multiple runs | Global prompt 15k chars — personality table ignored at end of context | Code node detects caller style, injects `caller_style_note` variable into leadcapture top | syntharra-retell |
+| 2026-04-03 | Simulator | #18 chatty still failing after code node | Chatty regex too broad (matched 'you know'), Sophie echoed tangents despite instruction | Stronger CRITICAL RULE: no affirmations after tangents, tighter regex using story/tangent patterns | syntharra-retell |
+| 2026-04-03 | Simulator | #21 distracted never fired interruption | callerPrompt didn't actually simulate interruptions | Fixed callerPrompt to include explicit "hold on — kids noise — I'm back" moments | e2e-hvac-standard |
+| 2026-04-03 | Simulator | #23 technical failed 2/4 | Sophie didn't mention technician explicitly in closing | Added "our technician will assess on-site" to TECHNICAL style note + closing phrase | syntharra-retell |
+| 2026-04-03 | Simulator | pricing_traps 62% → 100% | Global prompt listed $89 fee as shareable; scenarios say don't share | Removed all specific fee amounts from global prompt — all pricing redirects to team callback | syntharra-retell |
+| 2026-04-03 | Simulator | #54 vendor, #56 cancel routing wrong | No vendor/job-applicant handling in identify_call_node | Added vendor/job rule (collect name+number, direct to website) | syntharra-retell |
+| 2026-04-03 | Simulator | #55 job application evaluator mismatch | expectedBehaviour vague — Sophie correctly handled it but evaluator failed | Updated expectedBehaviour to match correct handling (acknowledge + collect contact + redirect) | e2e-hvac-standard |
+| 2026-04-03 | Simulator | #60 service area dispute failing | Sophie not adding service area confirmation note | Added: "our team will confirm service area coverage when they call back" | syntharra-retell |
+
+### Retell Code Node — Confirmed Working Patterns
+- Type string: `"code"` — valid in API as of 2026-04-03
+- Required fields: `code` (JS string), `else_edge` (with destination_node_id + transition_condition.prompt = "Else"), `wait_for_result: true`
+- Available globals in JS: `metadata.transcript` (conversation history), `dv.<name>` (dynamic vars), `fetch()` (HTTP)
+- Output variables: assign to variable name directly (e.g. `caller_style_note = note`), then `return { caller_style_note: note }`
+- DO NOT use `conversationHistory` — it doesn't exist in code node context
+- DO NOT use `call.transcript` — it doesn't exist
+- Use `metadata.transcript` — array of `{role: 'user'|'agent', content: string}`
