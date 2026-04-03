@@ -54,13 +54,14 @@
 | `ngK02cSgGmvawCot` | Nightly PII Retention Cleanup | Runs nightly. Redacts PII from call records older than 90 days and removes old transcript analysis data per retention policy. |
 | `ALFSzzp3htAEjwkJ` | Weekly Client Health Score Calculator | Runs weekly. Calculates health scores per client based on call volume trends and engagement signals. Stores results in client_health_scores. |
 
-## Marketing — Pre-Launch (6)
+## Marketing — Pre-Launch (7)
 > Active but not receiving real traffic yet. Ready to fire at launch.
 
 | ID | Name | Description |
 |---|---|---|
 | `QY1ZFtPJFsU5h6wQ` | Website Lead → AI Readiness Score Email | Triggered by website demo form submission (`/ai-readiness-score`). Scores the lead's AI readiness via Groq and sends a personalised AI readiness score email via SMTP2GO. **→ HubSpot: upserts contact + creates deal at Lead stage.** |
 | `I8a2N9bIZp9Qg1IN` | Website Lead — HubSpot Contact (Index + Calculator + Quiz) | Handles `/webhook/website-lead` fired by index.html demo form, ROI calculator email gate, and plan quiz email gate. **→ HubSpot: upserts contact + creates deal at Lead stage. Adds note if quiz score or ROI amount present.** |
+| `syGlWx8TlbYlPZU4` | Affiliate Application — HubSpot Contact | Handles `/webhook/affiliate-apply` fired by affiliate.html on successful application. **→ HubSpot: creates contact with contact_type=affiliate.** |
 | `hFU0ZeHae7EttCDK` | Website Lead → Free Report Email | Triggered by website demo form submission. Sends a free HVAC AI guide PDF report to the lead via SMTP2GO. |
 | `6LXpGffcWSvL6RxW` | Weekly Newsletter - Syntharra | Sends the weekly Syntharra newsletter to all subscribed contacts on schedule. Pre-launch — subscriber list not yet active. |
 | `Eo8wwvZgeDm5gA9d` | Newsletter Unsubscribe Webhook | Webhook endpoint handling newsletter unsubscribe requests. Removes contact from mailing list in Supabase. |
