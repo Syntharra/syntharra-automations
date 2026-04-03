@@ -1,0 +1,77 @@
+{
+  "name": "Slack Notification \u2014 Shared Helper",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "slack-notify",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "id": "slack-webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "syntharra-slack-notify"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_OPS }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "={{ $json.body.channel }}"
+            },
+            {
+              "name": "username",
+              "value": "Syntharra Ops"
+            },
+            {
+              "name": "icon_emoji",
+              "value": "={{ $json.body.icon_emoji || ':robot_face:' }}"
+            },
+            {
+              "name": "blocks",
+              "value": "={{ $json.body.blocks }}"
+            }
+          ]
+        }
+      },
+      "id": "slack-http-node",
+      "name": "POST to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "POST to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    "slack",
+    "notifications",
+    "infrastructure"
+  ]
+}
