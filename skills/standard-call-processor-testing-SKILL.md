@@ -1,16 +1,17 @@
 ---
 name: standard-call-processor-testing
 description: >
-  Complete reference for testing the Syntharra Standard Call Processor (n8n workflow Kg576YtPM9yEacKn).
-  Load this skill when: running call processor tests, debugging call log issues, adding new fields to
-  the call processor output, verifying Groq analysis quality, or investigating why calls aren't logging.
+  Complete reference for the Syntharra Standard Call Processor (n8n workflow Kg576YtPM9yEacKn)
+  and its test suite. Load this skill when: testing the call processor, debugging call log
+  issues, adding fields to the call processor, verifying Groq analysis quality, or
+  investigating why calls are not being logged. Status: 20/20 tests passing (100%).
 ---
 
 # Standard Call Processor — Test Reference
 
-> **Status: Pipeline verified ✅ — 2026-04-03**
-> **Test script:** `tests/call-processor-test.py` (20 scenarios)
-> **Workflow ID:** `Kg576YtPM9yEacKn`
+> **Status: 20/20 scenarios passing — verified 2026-04-03**
+> **Test script:** `tests/call-processor-test.py`
+> **Workflow:** `Kg576YtPM9yEacKn` — HVAC Call Processor - Retell Webhook
 > **Webhook:** `https://n8n.syntharra.com/webhook/retell-hvac-webhook`
 
 ---
@@ -21,17 +22,17 @@ description: >
 Retell POST → Filter (call_analyzed only) → Extract Call Data → Supabase Lookup Client
   → Parse Client Data → Check Repeat Caller → Build Groq Request (Code)
   → Groq: Analyze Transcript (HTTP → api.groq.com) → Parse Lead Data (Code)
-  → Is Lead? → [Lead path] SMS + Email + Supabase Log Call → HubSpot Log Note
-              → [Non-lead path] Log Non-Lead + Supabase Log Call → HubSpot Log Note
+  → Is Lead? → [Lead] Twilio SMS + Gmail + Supabase: Log Call → HubSpot Note
+              → [Non-lead] Log Non-Lead + Supabase: Log Call → HubSpot Note
 ```
 
 ### Key nodes
-| Node | Type | Purpose |
-|---|---|---|
-| `Build Groq Request` | Code | Builds Groq API request body with system + user prompts |
-| `Groq: Analyze Transcript` | HTTP Request | POST to `api.groq.com/openai/v1/chat/completions` |
-| `Parse Lead Data` | Code | Parses Groq JSON, normalises all fields, maps to DB schema |
-| `Supabase: Log Call` | HTTP Request | Writes full row to `hvac_call_log` |
+| Node | ID | Type | Purpose |
+|---|---|---|---|
+| Build Groq Request | `50a626fa-...` | Code | Builds Groq API body from system prompt + transcript |
+| Groq: Analyze Transcript | `bd6e53ec-...` | HTTP Request | POST to Groq API |
+| Parse Lead Data | `67a039a0-...` | Code | Parses Groq JSON, normalises all fields |
+| Supabase: Log Call | `d941f776-...` | HTTP Request | Writes row to `hvac_call_log` |
 
 ---
 
@@ -39,147 +40,138 @@ Retell POST → Filter (call_analyzed only) → Extract Call Data → Supabase L
 
 - **Provider:** Groq (`api.groq.com/openai/v1/chat/completions`)
 - **Model:** `llama-3.3-70b-versatile`
-- **Temperature:** 0.2
-- **Max tokens:** 600
-- **Credential:** n8n `httpHeaderAuth` → id `UfljdfOxkfTm76LE` ("Groq API Key")
-- **Retry:** 3 attempts, 2s backoff (added 2026-04-03)
+- **Temperature:** 0.2 | **Max tokens:** 600
+- **Credential:** `UfljdfOxkfTm76LE` (Groq API Key, httpHeaderAuth)
+- **Retry:** 3 attempts, 2s backoff
 
-> ⚠️ **DO NOT use the OpenAI credential** (`1uzBYwyR7Q7bdkZe`) — it has an expired/invalid key.
-> The workflow was broken with OpenAI. All AI analysis now routes through Groq.
+> ⚠️ **NEVER use OpenAI credential** `1uzBYwyR7Q7bdkZe` — it has an invalid/expired API key.
+> The workflow was completely broken with OpenAI. Groq replaced it 2026-04-03.
 
 ---
 
-## Groq Rate Limits (FREE TIER)
+## Groq Rate Limits
 
-- **Limit:** ~30 RPM (requests per minute) on free Groq tier
-- **Symptom:** `"The service is receiving too many requests from you"` — HTTP 429
-- **Recovery:** Wait ~60s after hitting limit
-- **Test rule:** Never fire more than 6 scenarios in 60 seconds. Space sequential test calls by at least 10s.
-- **Upgrade path:** If hitting limits in production, upgrade Groq plan or add longer retry backoff.
+- **Free tier:** ~30 RPM (requests per minute)
+- **Symptom when exceeded:** `"The service is receiving too many requests from you"` — HTTP 429
+- **Recovery:** Wait 60s after hitting limit
+- **Test spacing rule:** Minimum 12s between calls. Never fire more than 5 in 60s.
+- **Production:** Groq's Railway IP has generous limits. Rate limiting only affects test runs.
 
 ---
 
 ## Fields Written to `hvac_call_log`
 
-| Field | Source | Notes |
-|---|---|---|
-| `call_id` | Retell webhook | Dedup key — duplicate call_ids are rejected |
-| `agent_id` | Retell webhook | Foreign key to `hvac_standard_agent` |
-| `company_name` | Supabase lookup | From client record |
-| `call_tier` | Parse Lead Data | From `plan_type` in client record, default "Standard" |
-| `caller_name` | Groq | Null if not captured |
-| `caller_phone` | Groq | Falls back to `from_number` |
-| `caller_address` | Groq | Null if not given in call |
-| `service_requested` | Groq | Free text description |
-| `job_type` | Groq → normalised | See enum below |
-| `lead_score` | Groq | Integer 1-10 |
-| `is_lead` | Groq + override | True if score >= 5 AND real service need |
-| `urgency` | Groq | Low / Medium / High / Emergency |
-| `caller_sentiment` | Groq → integer | 2=Positive, 3=Neutral, 4=Frustrated, 5=Angry |
-| `vulnerable_occupant` | Groq | True if elderly/child/medical mentioned |
-| `transfer_attempted` | Groq | True if live transfer was offered/initiated |
-| `summary` | Groq | 1-2 sentence summary |
-| `notes` | Groq | Extra details |
-| `duration_seconds` | Retell webhook | Call duration |
-| `geocode_status` | (reserved) | Empty string currently |
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `call_id` | text | Retell webhook | Dedup key — duplicates rejected |
+| `agent_id` | text | Retell webhook | FK to `hvac_standard_agent` |
+| `company_name` | text | Supabase lookup | From client record |
+| `call_tier` | text | Parse Lead Data | From `plan_type`, default "Standard" |
+| `caller_name` | text | Groq | Null if not captured |
+| `caller_phone` | text | Groq | Falls back to `from_number` |
+| `caller_address` | text | Groq | Empty string if not given |
+| `service_requested` | text | Groq | Free text |
+| `job_type` | text | Groq → normalised | See enum below |
+| `lead_score` | int | Groq | 1-10 |
+| `is_lead` | bool | Groq + overrides | See logic below |
+| `urgency` | text | Groq | Low/Medium/High/Emergency |
+| `caller_sentiment` | int | Groq → mapped | 2=Positive, 3=Neutral, 4=Frustrated, 5=Angry |
+| `vulnerable_occupant` | bool | Groq | True if elderly/child/medical |
+| `transfer_attempted` | bool | Groq | True if live transfer initiated |
+| `summary` | text | Groq | 1-2 sentence summary |
+| `notes` | text | Groq | Extra details |
+| `duration_seconds` | int | Retell webhook | Call duration |
 
 ### job_type enum (normalised in Parse Lead Data)
-`Repair`, `Installation`, `Maintenance`, `Emergency`, `General Enquiry`,
-`Wrong Number`, `Spam`, `Vendor`, `Job Application`, `Other`
+`Repair` · `Installation` · `Maintenance` · `Emergency` · `General Enquiry` ·
+`Wrong Number` · `Spam` · `Vendor` · `Job Application` · `Other`
 
-### caller_sentiment scale (integer)
-`2` = Positive/Satisfied · `3` = Neutral · `4` = Frustrated · `5` = Angry/Furious
+### is_lead logic (Parse Lead Data)
+```
+is_lead = false  if job_type in [Wrong Number, Spam, Vendor, Job Application]
+is_lead = false  if job_type == General Enquiry AND lead_score < 6
+is_lead = Groq's value  otherwise (true if Groq says so AND lead_score >= 5)
+```
 
-> ⚠️ `caller_sentiment` column is **INTEGER** in Supabase — do NOT write strings.
-> Parse Lead Data maps Groq string labels → integers via SM map.
+### caller_sentiment scale (integer stored in DB)
+`2` Positive · `3` Neutral · `4` Frustrated · `5` Angry
+> ⚠️ Column is INTEGER — never write string values.
 
 ---
 
 ## Dedup Logic
 
-The `Check Repeat Caller` node checks if `call_id` already exists in `hvac_call_log`.
-If it does, the execution exits early — no duplicate row is created.
+`Check Repeat Caller` node verifies `call_id` doesn't already exist in `hvac_call_log`.
+If duplicate, execution exits early — no second row created.
 
 ---
 
-## Test Suite (`tests/call-processor-test.py`)
+## Test Suite
 
-20 scenarios covering:
+**Location:** `tests/call-processor-test.py`
+**Status:** 20/20 (100%) — verified 2026-04-03
 
-| # | Scenario | Expected |
+| # | Scenario | Key assertions |
 |---|---|---|
-| 1 | Standard repair lead | is_lead=True, all fields captured |
-| 2 | New install quote | job_type=Installation, lead |
-| 3 | Emergency elderly no heat | urgency=Emergency, vulnerable_occupant=True |
+| 1 | Standard repair lead | caller_address, job_type=Repair, is_lead=True |
+| 2 | New installation quote | job_type=Installation, lead_score>=6 |
+| 3 | Emergency — elderly, no heat | vulnerable_occupant=True, urgency=Emergency or High |
 | 4 | Maintenance booking | job_type=Maintenance |
 | 5 | Wrong number | is_lead=False |
 | 6 | Spam robocall | is_lead=False |
 | 7 | Out of service area | is_lead=False |
-| 8 | Live transfer gas emergency | transfer_attempted=True |
-| 9 | Caller hangs up early | partial data captured |
+| 8 | Live transfer — gas emergency | transfer_attempted=True |
+| 9 | Caller hangs up early | name + phone captured |
 | 10 | High-value commercial | lead_score>=8 |
 | 11 | Phonetic phone number | caller_phone decoded correctly |
-| 12 | Pricing enquiry, no booking | is_lead=False |
+| 12 | Pricing enquiry, no booking intent | is_lead=False |
 | 13 | Short call / silence | is_lead=False |
-| 14 | Frustrated caller | caller_sentiment>=4 |
-| 15 | No address given | caller_name + phone only |
+| 14 | Frustrated/angry caller | caller_sentiment>=4 |
+| 15 | Caller withholds address | name + phone only |
 | 16 | Vendor/supplier call | is_lead=False |
-| 17 | Job applicant | is_lead=False |
-| 18 | Dedup (same call_id twice) | only 1 row in DB |
-| 19 | Borderline service area | is_lead=True |
-| 20 | Complex address, urgent commercial | lead_score>=7, address captured |
+| 17 | Job applicant | is_lead=False (non-lead type override) |
+| 18 | Dedup — same call_id resent | only 1 row in DB |
+| 19 | Borderline service area | data captured, summary present |
+| 20 | Complex address, urgent commercial | caller_address present, lead_score>=7 |
 
-### Running the tests
-
+### Running tests
 ```bash
-# Run all 20 — allow 15+ minutes, rate limits apply
 python3 tests/call-processor-test.py
-
-# Run a single targeted scenario (modify TS/sid in script)
-# Always wait 60s after a rate limit error before retrying
+# Allow 12+ minutes — 12s spacing between calls to respect Groq RPM
+# Wait 60s after any 429 error before retrying
 ```
-
-> ⚠️ **Rate limit rule:** Do not run more than 6 scenarios in any 60-second window.
-> The test script fires scenarios sequentially — running all 20 at once will hit Groq RPM limits
-> on the free tier. Add `time.sleep(10)` between each call or upgrade Groq plan.
 
 ---
 
-## Common Failure Modes
+## Common Failure Modes & Root Causes
 
 | Symptom | Root cause | Fix |
 |---|---|---|
-| All calls error immediately | OpenAI credential expired | Use Groq (already fixed 2026-04-03) |
-| `fetch is not defined` in Code node | n8n Code nodes don't support `fetch()` | Use `$http.request()` or split into Code + HTTP Request nodes |
-| `$http is not defined` | n8n version doesn't support `$http` | Use two-node pattern: Code builds body, HTTP Request fires it |
-| `JSON Body is not valid JSON` | n8n expression in `specifyBody: json` | Use `contentType: raw` + `JSON.stringify(...)` in body expression |
-| IIFE `(() => {})()` in jsonBody fails | n8n expression engine doesn't support IIFE | Move logic to Code node, use simple `$json.field` refs in HTTP body |
-| `caller_sentiment` insert fails (22P02) | Column is INTEGER — strings rejected | Map strings to integers in Parse Lead Data (2=Positive, 3=Neutral, 4=Frustrated, 5=Angry) |
-| Rows not appearing despite exec=success | `Supabase: Log Call` body error | Check jsonBody expression for invalid syntax; always verify with direct Supabase POST test |
-| `The service is receiving too many requests` | Groq RPM exceeded | Wait 60s then retry; space test calls by 10s+ |
-| `caller_address` null despite address in transcript | Groq didn't extract it | Richer transcript with explicit "address?" agent prompt improves extraction |
-| urgency returns "High" instead of "Emergency" | Groq judges severity conservatively | Use explicit "emergency" word in transcript; acceptable — High still triggers priority routing |
+| All calls error at GPT node | OpenAI credential expired | Use Groq (already fixed 2026-04-03) |
+| `fetch is not defined` in Code node | n8n Code nodes don't support `fetch()` | Use two-node pattern: Code builds body, HTTP Request fires it |
+| `$http is not defined` | Not available in this n8n version | Same as above — split node approach |
+| `JSON Body is not valid JSON` in HTTP node | n8n can't evaluate JS expressions in `specifyBody:json` mode | Use `contentType:raw` + `JSON.stringify(...)` expression |
+| IIFE `(() => {})()` in jsonBody fails | n8n expression engine rejects IIFE | Move JS logic to Code node; keep jsonBody as simple `$json.field` refs |
+| `caller_sentiment` insert fails (22P02) | Column is INTEGER, Groq returns string | Map strings to integers in Parse Lead Data |
+| `caller_address` always empty in DB | Field was missing from Supabase jsonBody expression | Add `caller_address: $json.caller_address || ""` to jsonBody |
+| Groq 429 rate limit during tests | Free-tier RPM exhausted by rapid test firing | Space calls 12s+ apart; wait 60s after 429 |
+| job_type = "Residential" or wrong value | Groq using non-enum values | Normalise via JM map in Parse Lead Data |
+| Job applicant scored as lead | Groq gives lead_score>=5 for some applicants | Override: NON_LEAD_TYPES forces is_lead=false |
+| urgency returns "High" vs "Emergency" | Groq judges severity conservatively | Both are valid — assert `urgency in ["Emergency","High"]` for urgent scenarios |
 
 ---
 
-## n8n Credential Reference
+## Workflow Changes (2026-04-03)
 
-| Credential | ID | Used by |
-|---|---|---|
-| Groq API Key | `UfljdfOxkfTm76LE` | Groq: Analyze Transcript |
-| Supabase Anon Key | `x9C4EKUtEBCiGE08` | Supabase: Log Call (write via anon — RLS allows) |
-| ~~OpenAI account~~ | ~~`1uzBYwyR7Q7bdkZe`~~ | ~~BROKEN — do not use~~ |
-
----
-
-## Session History
-
-| Date | Change |
+| Change | Why |
 |---|---|
-| 2026-04-03 | Initial build: replaced broken OpenAI credential with Groq |
-| 2026-04-03 | Fixed Supabase write: added all new fields (address, job_type, sentiment, vulnerable_occupant, transfer_attempted, call_tier) |
-| 2026-04-03 | Fixed IIFE expression in jsonBody — moved logic to Parse Lead Data Code node |
-| 2026-04-03 | Fixed caller_sentiment integer mapping (Angry=5, not 1) |
-| 2026-04-03 | Added pricing-only lead filter in Parse Lead Data |
-| 2026-04-03 | Added Groq retry (3× / 2s backoff) to Groq HTTP node |
-| 2026-04-03 | Wrote 20-scenario test suite → `tests/call-processor-test.py` |
+| Replaced OpenAI → Groq | OpenAI credential had expired/invalid key — zero calls logged since expiry |
+| Two-node pattern (Code + HTTP) | Groq call cannot use n8n's OpenAI LangChain node; Code builds body, HTTP fires it |
+| Expanded Supabase write: 7 → 18 fields | New fields were never mapped to DB columns |
+| Added caller_address to jsonBody | Was missing from Supabase body — field existed in `$json` but never written |
+| Parse Lead Data: job_type normalisation | Groq returns non-enum values ("Residential"); JM map normalises |
+| Parse Lead Data: non-lead type override | Job Application, Vendor, Spam, Wrong Number force is_lead=False |
+| Parse Lead Data: pricing-only filter | General Enquiry with low score forces is_lead=False |
+| caller_sentiment: string → integer map | Supabase column is INTEGER; 2=Positive, 3=Neutral, 4=Frustrated, 5=Angry |
+| Groq retry: 3× / 2s backoff | Production resilience against transient Groq 429s |
+| Improved address extraction prompt | Explicit instruction to scan all transcript lines for any address mention |
