@@ -455,3 +455,26 @@ This includes:
 | n8n deployment | Self-hosted on Railway | Workflow engine needs persistent state; Railway's persistent service model fits exactly | Hosted n8n pricing improves |
 | Skills location | GitHub, fetched at session start | /mnt has no API — GitHub allows programmatic updates, always current next session | Claude.ai adds /mnt API |
 | Context files | Small domain-specific files in docs/context/ | Single 12k-token project-state.md wasted context; each domain file is ~500 tokens, load only what's needed | Context file count exceeds 20 |
+
+
+## n8n MCP + SDK Gotchas (learned 2026-04-03)
+
+### MCP flag resets after SDK update
+After any `update_workflow` via MCP SDK, the `availableInMCP` flag gets reset to false.
+**Fix:** Always run workflow `AU8DD5r6i6SlYFnb` (Auto-Enable MCP) immediately after any SDK update.
+
+### n8n REST API PUT — active field is read-only
+When patching workflows via `PUT /api/v1/workflows/{id}`, do NOT include `active` in the payload.
+Returns 400 with "request/body/active is read-only".
+**Safe payload keys:** `name`, `nodes`, `connections`, `settings` only.
+
+### .onFalse() only valid on IF nodes
+The SDK `.onFalse()` chaining method only works on `n8n-nodes-base.if` nodes.
+HTTP Request nodes with `onError: continueErrorOutput` use a different pattern:
+```javascript
+export default workflow('id', 'name')
+  .add(httpRequestNode)
+  .to(successHandler)
+  .add(httpRequestNode)   // reference same node again
+  .to(errorHandler);      // connects to error output
+```
