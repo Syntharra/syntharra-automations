@@ -46,18 +46,19 @@ def fetch_scenarios():
     ).json()
     return json.loads(base64.b64decode(r["content"]).decode())
 
-def chat(api_key, system_prompt, messages, temperature=0.7, retries=3):
+def chat(api_key, system_prompt, messages, temperature=0.7, retries=6):
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": MODEL,
         "temperature": temperature,
         "messages": [{"role": "system", "content": system_prompt}] + messages
     }
+    time.sleep(2)  # 2s inter-call delay — keeps Groq RPM under 30
     for attempt in range(retries):
         try:
             r = requests.post(OPENAI_URL, headers=headers, json=payload, timeout=30)
             if r.status_code == 429:
-                wait = 20 * (attempt + 1)
+                wait = 30 * (attempt + 1)
                 print(f" [rate limit — waiting {wait}s]", end="", flush=True)
                 time.sleep(wait)
                 continue
@@ -177,7 +178,8 @@ def run_scenarios(api_key, scenarios_to_run, agent_prompt, max_turns=MAX_TURNS):
     for i, scenario in enumerate(scenarios_to_run):
         print(f"  [{i+1:02d}/{len(scenarios_to_run)}] #{scenario['id']:02d} {scenario['name'][:55]}...", end=" ", flush=True)
         try:
-            transcript, sim_usage = simulate_scenario(api_key, scenario, agent_prompt, max_turns)
+            time.sleep(5)  # inter-scenario cooldown
+        transcript, sim_usage = simulate_scenario(api_key, scenario, agent_prompt, max_turns)
             evaluation = evaluate_transcript(api_key, scenario, transcript)
             outcome = evaluation.get("overall", "ERROR")
             met     = evaluation.get("criteria_met", 0)
