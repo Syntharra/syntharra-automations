@@ -1,0 +1,31 @@
+{
+  "run_label": "run-20260403-0203",
+  "timestamp": "2026-04-03T02:04:04.311577+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 1,
+    "pass": 1,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0051,
+    "tokens": {
+      "prompt_tokens": 31761,
+      "completion_tokens": 493
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent successfully steered the conversation back and captured the required information without being rude.",
+      "root_cause": ""
+    }
+  ]
+}
