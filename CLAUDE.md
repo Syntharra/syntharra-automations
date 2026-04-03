@@ -55,15 +55,23 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 
 ## SELF-IMPROVEMENT PROTOCOL — NON-NEGOTIABLE
 
-Skills and FAILURES.md are Claude's permanent, compounding memory.
-They only get updated when there is a real learning — not just because a task was completed.
+This is not an end-of-session checklist. It is an active loop running throughout every session.
+Skills, FAILURES.md, and ARCHITECTURE.md are Claude's permanent compounding memory.
+Every session must leave them more accurate and useful than they were at the start.
+
+### The compounding intelligence loop
+```
+Observe → Question assumptions → Act → Reflect → Document → Next session starts smarter
+```
+This loop runs on EVERY non-trivial action — not just when things break.
 
 ### When to update a skill file
 - A bug was diagnosed and fixed → add root cause + correct pattern
 - An API call failed before working → add what was wrong and what works
 - A gotcha was discovered (wrong arg, wrong order, wrong assumption) → document it
 - A rate limit, quota, or interval constraint was hit → document the limit and safe threshold
-- Something was tried that doesn't work → add explicit "do NOT do X" entry
+- Something was tried that doesn't work → add "do NOT do X" entry
+- A correct pattern was confirmed by testing → add it as a verified working pattern
 
 **Do NOT update a skill just because you used it normally with no issues.**
 **Do NOT add entries that don't contain a real lesson.**
@@ -71,16 +79,37 @@ They only get updated when there is a real learning — not just because a task 
 ### When to update FAILURES.md
 - Every time a bug is fixed — one row per fix
 - Format: `date | area | what failed | root cause | fix applied | skill updated (yes/no)`
-- Only log once the fix is **verified working** — not while still debugging
+- Only log once the fix is verified working — not while still debugging
 
-### Hard gate — answer these before closing every session
-1. Did anything break or fail this session? → FAILURES.md row + skill update
-2. Did I discover a correct pattern by testing/failing first? → Add to skill
-3. Did I fix a wrong assumption? → Add "was wrong because X, correct is Y" to skill
-4. Are skill files more accurate and useful than when I started? → If no, do it now
-5. **Did I make any architectural choice this session that isn't documented?** → Write it to `docs/ARCHITECTURE.md` before closing
-**If nothing went wrong and nothing was learned — no skill update needed. That's fine.**
-**If something did go wrong or was figured out — it must be documented before the chat ends.**
+### When to update ARCHITECTURE.md
+- Any non-obvious decision was made → document WHY, what was considered, what was rejected
+- A "quick fix" was tempting but a better path was chosen → document both and why
+- A constraint was discovered (API limit, token limit, timeout) → document with correct workaround
+- An assumption was tested and confirmed or disproved → document the result
+
+### Mandatory session-end REFLECTION — written into session log every single session
+Before closing, write and answer every line of this block honestly in the session log:
+
+```
+## Session Reflection
+1. What did I get wrong or do inefficiently, and why?
+2. What assumption did I make that turned out to be incorrect?
+3. What would I do differently if this exact task came up again?
+4. What pattern emerged that future-me needs to know?
+5. What was added to ARCHITECTURE.md / skill files, and what was the specific lesson?
+6. Did I do anything "because that's how it's done" that I haven't actually verified?
+   If yes → add to ARCHITECTURE.md as an open question to test next session.
+```
+
+**This reflection is not optional. Shallow answers are not acceptable.**
+**If it isn't in the session log, the session is not closed.**
+
+### Compounding intelligence rule
+Any time Claude catches itself doing something "because that's how it's done" — stop.
+Ask: has this assumption been tested and verified on this project?
+- Verified → add to skill file as confirmed pattern
+- Not verified → flag in ARCHITECTURE.md as open question, test next opportunity
+- Proven wrong → add to FAILURES.md, correct the skill file, never repeat it
 
 ### Which skill to update — global, covers all skills
 | System touched | Skill to update |
@@ -125,14 +154,19 @@ The correct fix (switch to a higher-TPM model) was already known — it just was
 
 ---
 
-## Session startup — always load these 4
+## Session startup — always load these 6
 ```python
-claude_md     = fetch("CLAUDE.md")
-tasks_md      = fetch("docs/TASKS.md")
-failures_md   = fetch("docs/FAILURES.md")
-decisions_md  = fetch("docs/DECISIONS.md")   # why things are built the way they are
-standards_md  = fetch("docs/STANDARDS.md")  # labelling rules + Claude Code routing — ALWAYS load
+claude_md     = fetch("CLAUDE.md")            # operating rules — always first
+tasks_md      = fetch("docs/TASKS.md")        # current state + open items
+failures_md   = fetch("docs/FAILURES.md")     # what broke before — scan before touching anything
+decisions_md  = fetch("docs/DECISIONS.md")    # why things are built the way they are
+standards_md  = fetch("docs/STANDARDS.md")    # labelling rules + Claude Code routing
+arch_md       = fetch("docs/ARCHITECTURE.md") # non-obvious decisions — MANDATORY, read before acting
 ```
+
+> ARCHITECTURE.md is mandatory every session — not optional, not "when relevant".
+> It contains reasoning behind decisions that aren't obvious from the code.
+> Reading it prevents re-litigating settled choices and repeating past mistakes.
 
 ## Context files — load what you need
 | What you're working on | File to fetch |
