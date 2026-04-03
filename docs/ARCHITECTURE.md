@@ -257,6 +257,20 @@
 
 ---
 
+## [2026-04-04] — Simulator: Evaluator reliability — open question
+
+**Assumption not yet verified:** The LLM-based evaluator gives reliable pass/fail results.
+
+**Evidence against:** Scenario #11 (maintenance request) — agent correctly captured all details including service type and read them back in the booking confirmation. Evaluator still failed it (3/4 criteria) claiming service type wasn't read back. Transcript clearly showed it was. This is a false fail.
+
+**Open question:** What is the actual false-fail rate across all 95 scenarios? Is one run per scenario sufficient, or should we run each 2-3 times and only mark as FAIL if majority fail?
+
+**Why it matters:** If the false-fail rate is >5%, we're spending time fixing agent behaviour that is actually correct. The fix cost (prompt edits, re-runs) is wasted.
+
+**To test next opportunity:** Run core_flow twice and compare results. Count how many scenarios flip between runs. If >2/15 flip, implement majority-vote (run 3x, fail only if 2/3 fail).
+
+---
+
 > ## How to add entries
 > Add a new `## [date] — [area]: [title]` section above this line.
 > Fill in all 6 fields. One paragraph each is enough.
