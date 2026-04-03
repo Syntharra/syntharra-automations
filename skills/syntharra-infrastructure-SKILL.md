@@ -231,6 +231,13 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 
 **Use REST API directly** — MCP OAuth connector is broken.
 
+### Jotform Rate Limit Rules (learned 2026-04-03)
+- Jotform free tier has a strict hourly API call limit — easy to exceed with inefficient monitors
+- **Never use `/user` as a connectivity ping** — it wastes a rate-limit slot. Use the first form fetch as connectivity check instead
+- **Never fetch form submissions more than once per run** — cache results in memory, reuse for all downstream checks
+- **Ops monitor check interval: 30 minutes** (not 15) — stays well within rate limits
+- **HTTP 429 = transient rate limit, not an outage** — alert as WARNING not CRITICAL, bail immediately, retry next scheduled cycle
+
 ---
 
 ## SMTP2GO
