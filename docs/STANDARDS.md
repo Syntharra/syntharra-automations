@@ -92,32 +92,97 @@ curl -X PATCH https://n8n.syntharra.com/api/v1/workflows/{WORKFLOW_ID} \
 > For tag-only or name-only updates, PATCH accepts partial payloads.
 > Full workflow PUT requires only: `name`, `nodes`, `connections`, `settings`.
 
-### Existing Workflow Labels (Pending Audit — 2026-04-04)
+### Live Workflow Registry (verified 2026-04-04 — 47 total)
 
-| Workflow Name (target) | ID | Tags (target) | Status |
+**37 labelled ✅ | 10 unlabelled ⚠️ (9 inactive/duplicate, 1 active)**
+
+#### HVAC Standard (active)
+| ID | Name | Tags |
+|---|---|---|
+| `4Hx7aRdzMl5N0uJP` | HVAC AI Receptionist - JotForm Onboarding (Supabase) | `HVAC Standard` |
+| `Kg576YtPM9yEacKn` | HVAC Call Processor - Retell Webhook (Supabase) | `HVAC Standard` |
+| `iLPb6ByiytisqUJC` | HVAC Weekly Lead Report (Supabase) | `HVAC Standard` |
+
+#### HVAC Premium (active)
+| ID | Name | Tags |
+|---|---|---|
+| `kz1VmwNccunRMEaF` | HVAC Prem Onboarding | `HVAC Premium` |
+| `STQ4Gt3rH8ptlvMi` | HVAC Premium Call Processor | `HVAC Premium` |
+| `73Y0MHVBu05bIm5p` | Premium Integration Dispatcher | `HVAC Premium` |
+| `La99yvfmWg6AuvM2` | Premium Dispatcher — Outlook | `HVAC Premium` |
+| `b9xRG7wtqCZ5fdxo` | Premium Dispatcher — Calendly | `HVAC Premium` |
+| `BxnR17qUfAb5BZCz` | Premium Dispatcher — Jobber | `HVAC Premium` |
+| `msEy13eRz66LPxW6` | Premium Dispatcher — HubSpot | `HVAC Premium` |
+| `rGrnCr5mPFP2TIc7` | Premium Dispatcher — Google Calendar | `HVAC Premium` |
+| `a0IAwwUJP4YgwgjG` | Premium — Integration Connected Handler | `HVAC Premium` |
+| `5vphecmEhxnwFz2X` | Premium — Daily Token Refresh | `HVAC Premium` |
+| `ptDdy38HKt9DUOAV` | Premium — Send You're Live Email | `HVAC Premium` |
+
+#### Billing
+| ID | Name | Tags |
+|---|---|---|
+| `xKD3ny6kfHL0HHXq` | Stripe Workflow | `Billing` |
+| `z1DNTjvTDAkExsX8` | Monthly Minutes Calculator & Overage Billing | `Billing` |
+| `Wa3pHRMwSjbZHqMC` | Usage Alert Monitor (80% & 100% Warnings) | `Operations`, `Billing` |
+
+#### Marketing & Leads
+| ID | Name | Tags |
+|---|---|---|
+| `QY1ZFtPJFsU5h6wQ` | Website Lead → AI Readiness Score Email | `Marketing & Leads` |
+| `hFU0ZeHae7EttCDK` | Website Lead → Free Report Email | `Marketing & Leads` |
+| `I8a2N9bIZp9Qg1IN` | Website Lead — HubSpot Contact (Index + Calculator + Quiz) | `Marketing & Leads` |
+| `6LXpGffcWSvL6RxW` | Weekly Newsletter - Syntharra | `Marketing & Leads` |
+| `Eo8wwvZgeDm5gA9d` | Newsletter Unsubscribe Webhook | `Marketing & Leads` |
+| `syGlWx8TlbYlPZU4` | Affiliate Application — HubSpot Contact | `Marketing & Leads` |
+
+#### Operations
+| ID | Name | Tags |
+|---|---|---|
+| `44WfbVmJ7Zihcwgs` | Nightly GitHub Backup | `Operations` |
+| `AU8DD5r6i6SlYFnb` | Auto-Enable MCP on All Workflows | `Operations` |
+| `LF8ZSYyQbmjV4rN0` | Jotform Webhook Backup Polling | `Operations` |
+| `13cOIXxvj83NfDqQ` | Publish Retell Agent | `Retell & Calls`, `Operations` |
+| `SiMn59qJOfrZZS81` | Daily Ops Digest — 6am → #all-syntharra | `Operations` |
+| `z8T9CKcUp7lLVoGQ` | Slack Setup — Internal Admin Form | `Operations` |
+| `ALFSzzp3htAEjwkJ` | Weekly Client Health Score Calculator | `Operations` |
+| `ofoXmXwjW9WwGvL6` | Daily Transcript Analysis + Jailbreak Monitor | `Operations` |
+| `ngK02cSgGmvawCot` | Nightly PII Retention Cleanup | `Operations` |
+
+#### Email & Comms
+| ID | Name | Tags |
+|---|---|---|
+| `PavRLBVQQpWrKUYs` | Email Intelligence — Inbox Scanner → Slack | `Operations`, `Email & Comms` |
+| `lXqt5anbJgsAMP7O` | Send Welcome Email (Manual) | `Email & Comms` |
+| `4aulrlX1v8AtWwvC` | Email Digest — Daily 6am GMT | `Email & Comms` |
+
+#### Blog & Content
+| ID | Name | Tags |
+|---|---|---|
+| `j8hExewOREmRp3Oq` | Blog Auto-Publisher | `Blog & Content` |
+
+#### Testing & QA
+| ID | Name | Tags |
+|---|---|---|
+| `URbQPNQP26OIdYMo` | E2E Test Cleanup — 5 Min Delayed Delete | `Testing & QA` |
+
+---
+
+#### ⚠️ Unlabelled — Pending (leave duplicates for now per Dan)
+
+| ID | Name | Active | Action needed |
 |---|---|---|---|
-| HVAC Standard — Onboarding | `k0KeQxWb3j3BbQEk` | `hvac`, `standard`, `onboarding`, `active` | ⬜ Pending |
-| HVAC Standard — Call Processor | `OyDCyiOjG0twguXq` | `hvac`, `standard`, `call-processor`, `active` | ⬜ Pending |
-| HVAC Premium — Onboarding | `KXDSMVKSf59tAtal` | `hvac`, `premium`, `onboarding`, `active` | ⬜ Pending |
-| HVAC Premium — Call Processor | `UhxfrDaEeYUk4jAD` | `hvac`, `premium`, `call-processor`, `active` | ⬜ Pending |
-| HVAC Premium — Dispatcher | `kVKyPQO7cXKUJFbW` | `hvac`, `premium`, `dispatcher`, `active` | ⬜ Pending |
-| Shared — Stripe Webhook | `ydzfhitWiF5wNzEy` | `shared`, `billing`, `active` | ⬜ Pending |
-| Shared — Weekly Lead Report | `mFuiB4pyXyWSIM5P` | `shared`, `lead-gen`, `ops`, `active` | ⬜ Pending |
-| Shared — Minutes Calculator | `9SuchBjqhFmLbH8o` | `shared`, `ops`, `active` | ⬜ Pending |
-| Shared — Usage Alert Monitor | `lQsYJWQeP5YPikam` | `shared`, `ops`, `active` | ⬜ Pending |
-| Shared — Publish Retell Agent | `sBFhshlsz31L6FV8` | `shared`, `ops`, `active` | ⬜ Pending |
-| Testing — Scenario Runner v4 | `94QmMVGdEDl2S9MF` | `shared`, `testing`, `active` | ⬜ Pending |
-| Testing — Scenario Transcript Gen | `dHO8O0QHBZJyzytn` | `shared`, `testing`, `active` | ⬜ Pending |
-| Testing — Scenario Process Single | `rlf1dHVcTlzUbPX7` | `shared`, `testing`, `active` | ⬜ Pending |
-| Shared — Website Lead AI Score | `FBNjSmb3eLdBS3N9` | `shared`, `lead-gen`, `active` | ⬜ Pending |
-| Shared — Website Lead Free Report | `ykaZkQXWO2zEJCdu` | `shared`, `lead-gen`, `email`, `active` | ⬜ Pending |
-| Shared — Nightly GitHub Backup | `EAHgqAfQoCDumvPU` | `shared`, `ops`, `backup`, `active` | ⬜ Pending |
-| Shared — Send Welcome Email | `Rd5HiN7v2SRwNmiY` | `shared`, `email`, `backup`, `inactive` | ⬜ Pending |
-| Shared — Auto-Enable MCP | `AU8DD5r6i6SlYFnb` | `shared`, `ops`, `active` | ⬜ Pending |
-| Shared — E2E Cleanup | `URbQPNQP26OIdYMo` | `shared`, `testing`, `active` | ⬜ Pending |
-| Shared — Integration Hub | `8WYFy093XA6UKB7L` | `shared`, `inactive` | ⬜ Pending |
+| `5wxgBfJL7QeNP2ab` | Google Keep → Groq → Slack To-Do List | 🟢 Yes | Add tags |
+| `NY6vhwLFmecAkxdH` | Keep → Slack TEST RUN | ⚫ No | Duplicate/test — add tags or delete |
+| `HeG3aJQBXyRPKSXA` | SYNTHARRA_TEST_RUNNER | ⚫ No | Add tags |
+| `SziSvI1zl49cs3cQ` | Premium — Integration Connected Handler | ⚫ No | Duplicate — leave for now |
+| `OXuB3WR23fg0MmEu` | Premium — Integration Connected Handler | ⚫ No | Duplicate — leave for now |
+| `IS5eC0SEzIv76TPQ` | Premium — Integration Connected Handler | ⚫ No | Duplicate — leave for now |
+| `UKEoUeNqYvDDJv79` | [TEST STUB] Retell Tool Dispatcher | ⚫ No | Add tags |
+| `AZZguGm5ypF6e5m9` | Blog Auto-Publisher | ⚫ No | Duplicate — leave for now |
+| `TZ4p1UyzTrCJPdKA` | Email Digest — Daily 6am GMT | ⚫ No | Duplicate — leave for now |
+| `S3vHBQopDiOssM7G` | Email Digest — Daily 6am GMT | ⚫ No | Duplicate — leave for now |
 
-> Run the labelling audit task in the next available session. See TASKS.md.
+> Duplicates left in place per Dan's instruction (2026-04-04). Review separately.
 
 ---
 
