@@ -1,0 +1,328 @@
+{
+  "run_label": "run-20260403-0158",
+  "timestamp": "2026-04-03T01:59:52.110658+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 5,
+    "pass": 2,
+    "fail": 3,
+    "error": 0,
+    "pass_rate": 40.0,
+    "cost_usd": 0.0314,
+    "tokens": {
+      "prompt_tokens": 201250,
+      "completion_tokens": 2056
+    }
+  },
+  "failures": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent did not steer the conversation back gently or capture the required information without being overly chatty.",
+      "root_cause": "The agent engaged too much in the caller's chatter without redirecting the conversation effectively.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hey Sophie! I\u2019ve got this noisy AC unit. It\u2019s driving me a bit nuts, you know?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand how frustrating that can be! Can you please provide your full name?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! It\u2019s Alex Thompson. Funny how these machines can be so loud, right?"
+        },
+        {
+          "role": "agent",
+          "text": "Absolutely, they can be quite unpredictable! Can you please give me the best callback number for you, Alex?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course! It\u2019s 555-1234. I mean, I can\u2019t believe how loud it gets sometimes\u2014like a rock concert in my living room!"
+        },
+        {
+          "role": "agent",
+          "text": "That does sound quite disruptive! Just to confirm, is the number you provided 555-1234?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s right! It\u2019s wild, though\u2014sometimes it sounds like it\u2019s trying to communicate with aliens or something!"
+        },
+        {
+          "role": "agent",
+          "text": "That\u2019s quite the comparison! Now, could you please provide the service address where the AC unit is located?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! It\u2019s 123 Elm Street. You know, I always wonder how they make these AC units so complicated."
+        },
+        {
+          "role": "agent",
+          "text": "I hear you, they can be quite complex! Can you please provide the city and ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "Absolutely! It\u2019s Springfield, 12345. I mean, why can\u2019t they just keep it simple, right?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand! Just to confirm, I have your service address as 123 Elm Street, Springfield, 12345. Now, is there anything else I should pass on to the team regarding your noisy AC?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it\u2019s really loud, especially when it starts up. It\u2019s like a freight train! Just thought I should mention that."
+        },
+        {
+          "role": "agent",
+          "text": "Got it! So, to confirm, I have Alex Thompson, callback number 555-1234, service address 123 Elm Street, Springfield, 12345, and you need help with a noisy AC that sounds like a freight train. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yep, that\u2019s all correct! It\u2019s just so annoying sometimes. You\u2019d think they\u2019d figure this out by now!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "Nope, that\u2019s it for now! Thanks for your help, Sophie! You\u2019re a lifesaver."
+        },
+        {
+          "role": "agent",
+          "text": "You're very welcome, Alex! I'm glad I could assist. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Distracted caller with noisy kids",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent did not demonstrate patience with interruptions, did not recap where they were, and repeated questions unnecessarily.",
+      "root_cause": "The agent failed to manage the conversation effectively with the distracted caller.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I need help with my HVAC system. It's not working properly."
+        },
+        {
+          "role": "agent",
+          "text": "I can help with that! Could you please describe the issue you're experiencing with your HVAC system?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's making a loud noise and the air isn't cooling down."
+        },
+        {
+          "role": "agent",
+          "text": "Sounds like you know your system \u2014 our technician will appreciate that. May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Jennifer Martinez."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Jennifer! Can I get your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 555-234-1111."
+        },
+        {
+          "role": "agent",
+          "text": "Got it! That's 555-234-1111. Now, could you please provide the service address where the HVAC system is located?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's 456 Oak St, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that, Jennifer. Just to confirm, I have your address as 456 Oak St, Dallas, TX. What is the ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 75201."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Now, could you please provide the best email for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's jennifermartinez@email.com."
+        },
+        {
+          "role": "agent",
+          "text": "Great, I have your email as jennifermartinez@email.com. Is there anything else I should pass on to the team regarding your HVAC issue?"
+        },
+        {
+          "role": "caller",
+          "text": "No, I think that's everything. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, I have Jennifer Martinez, callback number 555-234-1111, service address 456 Oak St, Dallas, TX 75201, and your email is jennifermartinez@email.com. You need help with your HVAC system. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and someone will be in touch with you shortly. Have a great day, Jennifer! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Overly technical caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent acknowledged the caller's expertise and captured the necessary information, but did not route the call correctly or confirm the diagnosis.",
+      "root_cause": "The agent failed to route the call to a technician despite recognizing the caller's expertise.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m experiencing issues with my HVAC system. The compressor isn\u2019t cycling properly, and I suspect a refrigerant leak."
+        },
+        {
+          "role": "agent",
+          "text": "Sounds like you know your system well! Our technician will appreciate that. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Jordan Thompson."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Jordan. Can I have your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course, it's 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Got it! That's 555-123-4567. Now, could you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 123 Maple Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Just to confirm, that's 123 Maple Street, Springfield. Do you have a ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, the ZIP code is 62701."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, so that's 123 Maple Street, Springfield, 62701. Is there an email address you'd like to provide for a confirmation?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's jordan.thompson@email.com."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Jordan. Just to confirm, I have your name as Jordan Thompson, callback number 555-123-4567, service address 123 Maple Street, Springfield, 62701, and your email as jordan.thompson@email.com. You need assistance with your HVAC system. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s correct. I really need someone to check the refrigerant levels and potential leaks."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and someone will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that covers everything. Thank you for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're very welcome, Jordan! Have a great day! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent did not steer the conversation back gently or capture the required information without being overly chatty.",
+      "root_cause": "The agent engaged too much in the caller's chatter without redirecting the conversation effectively."
+    },
+    {
+      "id": 21,
+      "name": "Distracted caller with noisy kids",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent did not demonstrate patience with interruptions, did not recap where they were, and repeated questions unnecessarily.",
+      "root_cause": "The agent failed to manage the conversation effectively with the distracted caller."
+    },
+    {
+      "id": 22,
+      "name": "Very brief one-word answers",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent effectively worked with brief answers and confirmed each one without demanding elaboration.",
+      "root_cause": ""
+    },
+    {
+      "id": 23,
+      "name": "Overly technical caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent acknowledged the caller's expertise and captured the necessary information, but did not route the call correctly or confirm the diagnosis.",
+      "root_cause": "The agent failed to route the call to a technician despite recognizing the caller's expertise."
+    },
+    {
+      "id": 26,
+      "name": "Work number with after-hours caveat",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent successfully captured the preferred callback number and timing preference.",
+      "root_cause": ""
+    }
+  ]
+}
