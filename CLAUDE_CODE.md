@@ -1,52 +1,28 @@
-# Syntharra — Claude Code Operating Rules
-> Claude Code reads this file at session start.
-> It is the execution-layer companion to CLAUDE.md.
-> All rules in CLAUDE.md apply here without exception.
+# Syntharra — Claude Code Entry Point
+> Read this file first at the start of every Claude Code session.
+> Same engineer, same rules, same memory as the chat sessions.
 
-## Role of Claude Code in this project
-Claude Code is the **execution and verification layer**:
-- Run E2E tests automatically after any agent or workflow change
-- Self-healing loop: test → diagnose → fix → re-test → repeat until green
-- Enforce session log push at close
-- Verify GitHub pushes completed
-
-Claude Code does NOT make architectural decisions, strategic choices, or design calls.
-Those happen in the Claude.ai chat. Claude Code executes and verifies what was decided there.
-
-## Session startup
-Always run first — gets full project context:
+## On start — run this
 ```bash
-python3 tools/session-start.py
+python3 tools/claude-code/session-start.py
 ```
 
-## After any Retell agent or prompt change
-```bash
-python3 tools/post-change-verify.py --scope standard
-# or
-python3 tools/post-change-verify.py --scope premium
-```
+## You are the same engineer
+CLAUDE.md is the master brief. All non-negotiables carry over exactly.
+TESTING agents only. E2E must pass before any production push.
+3-strike stop rule applies. Max 10 self-healing iterations.
 
-## Session close — mandatory, no exceptions
+## Session close checklist
 ```bash
-python3 tools/session-close.py --topic "your-topic-here"
+./tools/claude-code/session-end.sh "topic-description"
 ```
+This enforces: E2E passed, changes pushed, TASKS.md updated, session log written.
 
-## Hard limits — burned in, not negotiable
-| Rule | Detail |
+## Available tools
+| Script | Purpose |
 |---|---|
-| TESTING only | Never touch MASTER agents (Standard: agent_4afbfdb3fcb1ba9569353af28d / Premium: agent_9822f440f5c3a13bc4d283ea90) |
-| E2E gate | No production push without passing E2E |
-| Loop cap | Self-healing loop max 10 iterations then stop + report |
-| Fail limit | 3 consecutive failures on any step = stop, surface to Dan |
-| No deletes | Never delete or recreate a Retell agent |
-| Read first | Always fetch current file before any edit |
-| Session log | Must push docs/session-logs/ entry before closing |
-| No rewrites | Always str_replace on fetched content, never overwrite from scratch |
-
-## Agent quick reference
-| Agent | ID | Rule |
-|---|---|---|
-| Standard MASTER | agent_4afbfdb3fcb1ba9569353af28d | NEVER TOUCH |
-| Premium MASTER | agent_9822f440f5c3a13bc4d283ea90 | NEVER TOUCH |
-| Standard TESTING | agent_731f6f4d59b749a0aa11c26929 | All test work here |
-| Premium TESTING | agent_2cffe3d86d7e1990d08bea068f | All test work here |
+| `tools/claude-code/session-start.py` | Load context, print open tasks |
+| `tools/claude-code/session-end.sh` | Enforce close checklist, push session log |
+| `tools/claude-code/run-e2e.sh` | Run E2E test suite (TESTING only) |
+| `tools/claude-code/self-heal.sh` | Self-healing loop (TESTING only, max 10 iter) |
+| `tools/claude-code/verify-push.sh` | Confirm GitHub push landed |
