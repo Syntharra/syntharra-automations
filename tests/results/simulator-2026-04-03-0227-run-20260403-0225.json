@@ -1,0 +1,220 @@
+{
+  "run_label": "run-20260403-0225",
+  "timestamp": "2026-04-03T02:27:35.774441+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 7,
+    "pass": 5,
+    "fail": 2,
+    "error": 0,
+    "pass_rate": 71.4,
+    "cost_usd": 0.0317,
+    "tokens": {
+      "prompt_tokens": 203315,
+      "completion_tokens": 2001
+    }
+  },
+  "failures": [
+    {
+      "id": 55,
+      "name": "Job application caller",
+      "group": "edge_cases",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not route the caller to the appropriate employment response.",
+      "root_cause": "The agent failed to address the caller's request for job openings and did not provide a proper routing to employment information.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I\u2019m calling to ask about job openings for HVAC technician positions. Are there any available?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for reaching out! For job openings, I recommend emailing us directly through our website. Is there anything HVAC service-related I can assist you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "I just wanted to know about job openings specifically. Are there any current positions listed on your website?"
+        },
+        {
+          "role": "agent",
+          "text": "I understand your interest, but I can't provide details about job openings. Please check our website for the latest listings. Is there anything HVAC service-related I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now. I\u2019ll check the website for job listings. Thanks for your help!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome! Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "name": "Service area dispute",
+      "group": "edge_cases",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent did not confirm or deny the service area, capture the necessary information, or indicate that a callback would confirm the service area.",
+      "root_cause": "The agent failed to address the service area dispute as required.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I need some help with my HVAC system. It's not working right."
+        },
+        {
+          "role": "agent",
+          "text": "I can help with that! Can you please describe the issue you're experiencing with your HVAC system?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure. It\u2019s not heating properly. The temperature feels off."
+        },
+        {
+          "role": "agent",
+          "text": "Sounds like you need some assistance. May I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Alex Johnson."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. Can I get your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Got it! And could you please provide the service address for your HVAC system?"
+        },
+        {
+          "role": "caller",
+          "text": "I live at 123 Maple Street."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! Can you also provide the city and ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "It's in Springfield, ZIP code 12345."
+        },
+        {
+          "role": "agent",
+          "text": "Great, thank you for that information. Is there anything else I should pass on to the team regarding your heating issue?"
+        },
+        {
+          "role": "caller",
+          "text": "Just that it's been getting colder, and I need it fixed soon."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, Alex. Just to confirm, I have your name as Alex Johnson, callback number 555-123-4567, service address 123 Maple Street, Springfield, ZIP code 12345, and you need help with your heating issue. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and one of our technicians will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! Have a great day! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent did not commit to pricing and routed the caller for a callback for a quote.",
+      "root_cause": ""
+    },
+    {
+      "id": 49,
+      "name": "Service call fee question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 1,
+      "criteria_total": 1,
+      "summary": "The agent did not provide the service call fee amount and routed the caller for a callback for accurate pricing.",
+      "root_cause": ""
+    },
+    {
+      "id": 51,
+      "name": "New unit cost question",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent did not quote new unit prices, explained factors involved, and offered a quote callback.",
+      "root_cause": ""
+    },
+    {
+      "id": 54,
+      "name": "Vendor - parts supplier",
+      "group": "edge_cases",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent correctly identified the caller's intent and did not capture them as a lead.",
+      "root_cause": ""
+    },
+    {
+      "id": 55,
+      "name": "Job application caller",
+      "group": "edge_cases",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 1,
+      "summary": "The agent did not route the caller to the appropriate employment response.",
+      "root_cause": "The agent failed to address the caller's request for job openings and did not provide a proper routing to employment information."
+    },
+    {
+      "id": 56,
+      "name": "Cancel existing appointment",
+      "group": "edge_cases",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent successfully routed the call to the existing customer path, captured the necessary information, and did not go through the new lead flow.",
+      "root_cause": ""
+    },
+    {
+      "id": 60,
+      "name": "Service area dispute",
+      "group": "edge_cases",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 3,
+      "summary": "The agent did not confirm or deny the service area, capture the necessary information, or indicate that a callback would confirm the service area.",
+      "root_cause": "The agent failed to address the service area dispute as required."
+    }
+  ]
+}
