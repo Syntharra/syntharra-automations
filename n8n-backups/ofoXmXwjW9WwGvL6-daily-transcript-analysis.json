@@ -1,0 +1,566 @@
+{
+  "updatedAt": "2026-04-03T11:46:00.104Z",
+  "createdAt": "2026-04-01T22:30:50.255Z",
+  "id": "ofoXmXwjW9WwGvL6",
+  "name": "Daily Transcript Analysis + Jailbreak Monitor",
+  "description": "Daily analysis of call transcripts via Groq for quality issues and prompt injection detection.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "baa3bd68-a13f-4d51-b916-aa920ce35f7c",
+      "name": "Daily 2am UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ec1c978c-08e7-44e5-a97a-af22528a4f79",
+      "name": "Fetch Yesterday Calls",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = '{{SUPABASE_SERVICE_ROLE_KEY}}';\n\nconst now = new Date();\nconst yesterday = new Date(now);\nyesterday.setDate(now.getDate() - 1);\nyesterday.setHours(0, 0, 0, 0);\nconst today = new Date(now);\ntoday.setHours(0, 0, 0, 0);\n\nconst startDate = yesterday.toISOString();\nconst endDate = today.toISOString();\n\nconst res = await this.helpers.httpRequest({\n  method: 'GET',\n  url: SUPABASE_URL + '/rest/v1/hvac_call_log' +\n    '?call_timestamp=gte.' + startDate +\n    '&call_timestamp=lt.' + endDate +\n    '&select=call_id,agent_id,company_name,caller_name,caller_phone,job_type,lead_score,is_lead,is_hot_lead,urgency,caller_sentiment,summary,notes,duration_seconds,call_successful,retell_summary,retell_sentiment,transfer_attempted,emergency,call_type' +\n    '&order=call_timestamp.asc',\n  headers: {\n    apikey: SB_KEY,\n    Authorization: 'Bearer ' + SB_KEY\n  },\n  json: true\n});\n\nconst calls = Array.isArray(res) ? res : [];\nconsole.log('[Transcript Analysis] Found ' + calls.length + ' calls for ' + yesterday.toDateString());\n\nif (calls.length === 0) {\n  return [{ json: { no_calls: true, date: yesterday.toDateString() } }];\n}\n\nreturn calls.map(c => ({ json: c }));\n"
+      }
+    },
+    {
+      "id": "623b92ca-bd37-4147-a556-a3c092f6f131",
+      "name": "Has Calls?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "has-calls",
+              "leftValue": "={{ $json.no_calls }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEqual",
+                "rightType": "boolean"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0e865f55-748c-4ff1-86b7-c09012763001",
+      "name": "Batch 5 at a time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      }
+    },
+    {
+      "id": "5c9211da-e213-4334-87c3-76fef2b1b88a",
+      "name": "Groq: Analyze Call Quality",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst d = $input.item.json;\n\n// Build analysis context from Retell built-in data + our Groq-parsed data\nconst transcript_text = d.retell_summary || d.summary || d.notes || '';\nconst call_id = d.call_id || '';\n\nif (!call_id || transcript_text.length < 10) {\n  return { json: { ...d, analysis: { skipped: true, reason: 'insufficient_data' } } };\n}\n\nconst GROQ_KEY = '{{GROQ_API_KEY}}';\n\nconst systemPrompt = `You are an AI quality analyst for Syntharra \u2014 a company that runs AI phone receptionists for HVAC businesses.\nAnalyze this call record and return ONLY a JSON object with these fields:\n\n{\n  \"quality_score\": <integer 1-10, overall call quality>,\n  \"confusion_loops\": <integer, how many times agent seemed stuck or repeated itself>,\n  \"frustration_detected\": <boolean, caller showed frustration or asked for human>,\n  \"price_hallucination\": <boolean, agent stated specific dollar amounts they shouldn't have>,\n  \"premature_ending\": <boolean, call ended before info was fully captured>,\n  \"missed_lead\": <boolean, should have been a lead but wasn't scored as one>,\n  \"issue_category\": <string: \"none\" | \"loop\" | \"wrong_transfer\" | \"missed_lead\" | \"data_gap\" | \"sentiment_mismatch\" | \"premature_end\" | \"hallucination\">,\n  \"issue_description\": <string, 1 sentence description of the main issue, or \"No issues detected\">,\n  \"learning_note\": <string, 1 sentence actionable improvement for the agent prompt, or \"None\">,\n  \"requires_prompt_fix\": <boolean, true if this reveals a systematic agent prompt problem>\n}\n\nReturn ONLY the JSON object. No explanation, no markdown.`;\n\nconst userPrompt = `Call ID: ${call_id}\nCompany: ${d.company_name || 'Unknown'}\nJob Type: ${d.job_type || 'Unknown'}\nLead Score: ${d.lead_score || 0}\nIs Lead: ${d.is_lead}\nCall Successful (Retell): ${d.call_successful}\nDuration: ${d.duration_seconds || 0}s\nSentiment: ${d.retell_sentiment || d.caller_sentiment || 'Unknown'}\nEmergency: ${d.emergency || false}\nTransfer Attempted: ${d.transfer_attempted || false}\n\nSummary: ${transcript_text}\nAdditional Notes: ${d.notes || 'None'}`;\n\ntry {\n  const groqRes = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.groq.com/openai/v1/chat/completions',\n    headers: {\n      Authorization: 'Bearer ' + GROQ_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify({\n      model: 'llama-3.3-70b-versatile',\n      temperature: 0.1,\n      max_tokens: 400,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userPrompt }\n      ]\n    })\n  });\n  \n  const raw = groqRes.choices[0].message.content.trim();\n  let analysis;\n  try {\n    analysis = JSON.parse(raw.replace(/```json|```/g, '').trim());\n  } catch(e) {\n    analysis = { error: 'parse_failed', raw: raw.substring(0, 100), quality_score: 5, issue_category: 'none', issue_description: 'Parse failed', learning_note: 'None', requires_prompt_fix: false };\n  }\n  \n  return { json: { ...d, analysis } };\n} catch(e) {\n  return { json: { ...d, analysis: { error: e.message, skipped: true, quality_score: 5, issue_category: 'none' } } };\n}\n"
+      }
+    },
+    {
+      "id": "3a88867b-a2e5-48a9-a83c-cd6cb06b809c",
+      "name": "Wait 2s (Rate Limit)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        400
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "await new Promise(r => setTimeout(r, 2000));\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "d984e275-7042-43d0-a559-933ca5929c89",
+      "name": "Save Analysis to Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = '{{SUPABASE_SERVICE_ROLE_KEY}}';\nconst h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal,resolution=ignore-duplicates' };\n\nconst items = $input.all();\nlet saved = 0;\nlet issues = [];\n\nfor (const item of items) {\n  const d = item.json;\n  const a = d.analysis || {};\n  if (a.skipped) continue;\n\n  const secFlags = [];\n  if (a.price_hallucination) secFlags.push('price_hallucination');\n\n  const notesParts = [\n    a.issue_description || 'No issues',\n    a.learning_note && a.learning_note !== 'None' ? 'FIX: ' + a.learning_note : null,\n    a.missed_lead ? 'MISSED LEAD detected' : null,\n    a.requires_prompt_fix ? 'PROMPT FIX required' : null\n  ].filter(Boolean);\n\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: SUPABASE_URL + '/rest/v1/transcript_analysis',\n      headers: h,\n      body: {\n        call_id: d.call_id,\n        agent_id: d.agent_id,\n        company_name: d.company_name,\n        analysis_date: new Date().toISOString().split('T')[0],\n        confusion_loops: a.confusion_loops || 0,\n        frustration_detected: a.frustration_detected || false,\n        price_hallucination: a.price_hallucination || false,\n        premature_ending: a.premature_ending || false,\n        security_flags: secFlags,\n        overall_score: a.quality_score || 50,\n        analysis_notes: notesParts.join(' | ')\n      },\n      json: true\n    });\n    saved++;\n\n    if (a.requires_prompt_fix || a.frustration_detected || a.missed_lead) {\n      issues.push({\n        call_id: d.call_id,\n        company: d.company_name,\n        issue: a.issue_category,\n        description: a.issue_description,\n        note: a.learning_note,\n        score: a.quality_score,\n        requires_fix: a.requires_prompt_fix\n      });\n    }\n  } catch(e) {\n    console.error('[Save] Error on ' + d.call_id + ': ' + e.message);\n  }\n}\n\nreturn [{ json: { saved, issues, total_analyzed: items.length } }];\n"
+      }
+    },
+    {
+      "id": "a1b2c3d4-push-learn",
+      "name": "Push Learning + Slack Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// Pull today's analysis, build learning summary, push to GitHub FAILURES.md + Slack\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = '{{SUPABASE_SERVICE_ROLE_KEY}}';\nconst GITHUB_TOKEN = '{{GITHUB_TOKEN}}';\nconst SLACK_WH = '{{SLACK_WEBHOOK_URL}}';\n\nconst today = new Date().toISOString().split('T')[0];\n\n// Fetch today's analysis summary\nconst res = await this.helpers.httpRequest({\n  method: 'GET',\n  url: SUPABASE_URL + '/rest/v1/transcript_analysis' +\n    '?analysis_date=eq.' + today +\n    '&select=quality_score,issue_category,issue_description,learning_note,requires_prompt_fix,frustration_detected,missed_lead,company_name',\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY },\n  json: true\n});\n\nconst rows = Array.isArray(res) ? res : [];\nif (rows.length === 0) {\n  return [{ json: { status: 'no_analysis_today' } }];\n}\n\nconst total = rows.length;\nconst avgScore = rows.reduce((s, r) => s + (r.quality_score || 5), 0) / total;\nconst issues = rows.filter(r => r.requires_prompt_fix);\nconst frustrated = rows.filter(r => r.frustration_detected);\nconst missed = rows.filter(r => r.missed_lead);\nconst byCategory = {};\nrows.forEach(r => { byCategory[r.issue_category] = (byCategory[r.issue_category] || 0) + 1; });\n\n// Build Slack digest\nconst scoreEmoji = avgScore >= 8 ? '\ud83d\udfe2' : avgScore >= 6 ? '\ud83d\udfe1' : '\ud83d\udd34';\nconst blocks = {\n  text: '*Syntharra Daily Call Intelligence Report* \u2014 ' + today,\n  blocks: [\n    { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcca Daily Call Intelligence \u2014 ' + today } },\n    { type: 'section', text: { type: 'mrkdwn', text: scoreEmoji + ' *Agent Health Score: ' + avgScore.toFixed(1) + '/10* across ' + total + ' calls analysed' } },\n    { type: 'section', fields: [\n      { type: 'mrkdwn', text: '*\ud83d\udd25 Issues needing fix:* ' + issues.length },\n      { type: 'mrkdwn', text: '*\ud83d\ude24 Frustrated callers:* ' + frustrated.length },\n      { type: 'mrkdwn', text: '*\ud83d\udcb0 Missed leads:* ' + missed.length },\n      { type: 'mrkdwn', text: '*\ud83d\udcc2 Issue breakdown:* ' + JSON.stringify(byCategory).replace(/[{}\"]/g, '').replace(/,/g, ' | ') }\n    ]}\n  ]\n};\n\n// Add issue details if any prompt fixes needed\nif (issues.length > 0) {\n  const issueText = issues.slice(0, 3).map(i => '\u2022 ' + i.issue_description + ' \u2192 _' + i.learning_note + '_').join('\\n');\n  blocks.blocks.push({\n    type: 'section',\n    text: { type: 'mrkdwn', text: '*\ud83d\udee0\ufe0f Prompt Fixes Needed:*\\n' + issueText }\n  });\n  blocks.blocks.push({\n    type: 'section',\n    text: { type: 'mrkdwn', text: '_I will apply these fixes at the start of the next chat session._' }\n  });\n}\n\n// Post to Slack\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SLACK_WH,\n    body: blocks,\n    json: true\n  });\n} catch(e) {\n  console.error('Slack failed: ' + e.message);\n}\n\n// Push learning notes to GitHub FAILURES.md if there are prompt fixes\nif (issues.length > 0) {\n  try {\n    // Fetch current FAILURES.md\n    const ghRes = await this.helpers.httpRequest({\n      method: 'GET',\n      url: 'https://api.github.com/repos/Syntharra/syntharra-automations/contents/docs/FAILURES.md',\n      headers: { Authorization: 'Bearer ' + GITHUB_TOKEN, 'User-Agent': 'n8n-syntharra' },\n      json: true\n    });\n    \n    const currentContent = Buffer.from(ghRes.content, 'base64').toString('utf-8');\n    const sha = ghRes.sha;\n    \n    // Build new rows\n    const newRows = issues.map(i => \n      '| ' + today + ' | Agent Behaviour (auto-detected) | ' + i.issue_description + ' | ' +\n      'Detected via daily transcript analysis \u2014 call_id: ' + i.call_id + ' | ' +\n      'Queued for prompt fix: ' + i.learning_note + ' | No \u2014 queued |'\n    ).join('\\n');\n    \n    const updatedContent = currentContent + '\\n' + newRows;\n    const encoded = Buffer.from(updatedContent).toString('base64');\n    \n    await this.helpers.httpRequest({\n      method: 'PUT',\n      url: 'https://api.github.com/repos/Syntharra/syntharra-automations/contents/docs/FAILURES.md',\n      headers: { \n        Authorization: 'Bearer ' + GITHUB_TOKEN, \n        'Content-Type': 'application/json',\n        'User-Agent': 'n8n-syntharra'\n      },\n      body: {\n        message: '[auto] Daily transcript learning \u2014 ' + today + ' (' + issues.length + ' issues)',\n        content: encoded,\n        sha: sha\n      },\n      json: true\n    });\n    console.log('[Learning] Pushed ' + issues.length + ' learning notes to FAILURES.md');\n  } catch(e) {\n    console.error('[Learning] GitHub push failed: ' + e.message);\n  }\n}\n\nreturn [{ json: { total, avgScore: avgScore.toFixed(2), issues: issues.length, frustrated: frustrated.length, missed: missed.length, slack_sent: true } }];\n"
+      }
+    },
+    {
+      "id": "baaf76f1-4a93-4b24-9aeb-1aaf8d79692b",
+      "name": "No Calls \u2014 Slack Note",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        420
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst SLACK_WH = '{{SLACK_WEBHOOK_URL}}';\nconst today = new Date().toISOString().split('T')[0];\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SLACK_WH,\n    body: { text: '\ud83d\udcf5 *Daily Transcript Analysis* \u2014 ' + today + ': No calls to analyse yesterday. Agent idle.' },\n    json: true\n  });\n} catch(e) {}\n\nreturn [{ json: { status: 'no_calls', date: today } }];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Daily 2am UTC": {
+      "main": [
+        [
+          {
+            "node": "Fetch Yesterday Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Yesterday Calls": {
+      "main": [
+        [
+          {
+            "node": "Has Calls?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Calls?": {
+      "main": [
+        [
+          {
+            "node": "Batch 5 at a time",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Calls \u2014 Slack Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch 5 at a time": {
+      "main": [
+        [
+          {
+            "node": "Groq: Analyze Call Quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq: Analyze Call Quality": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Save Analysis to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Analysis to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Push Learning + Slack Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Daily 2am UTC": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "aiBuilderAssisted": true
+  },
+  "pinData": {},
+  "versionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+  "activeVersionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+  "versionCounter": 30,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-01T22:30:50.255Z",
+      "createdAt": "2026-04-01T22:30:50.255Z",
+      "role": "workflow:owner",
+      "workflowId": "ofoXmXwjW9WwGvL6",
+      "projectId": "PHE9TwI1tz9lKI9q",
+      "project": {
+        "updatedAt": "2026-03-30T01:04:12.384Z",
+        "createdAt": "2026-03-30T00:03:18.522Z",
+        "id": "PHE9TwI1tz9lKI9q",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T11:45:24.723Z",
+    "createdAt": "2026-04-03T11:45:24.723Z",
+    "versionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+    "workflowId": "ofoXmXwjW9WwGvL6",
+    "nodes": [
+      {
+        "id": "baa3bd68-a13f-4d51-b916-aa920ce35f7c",
+        "name": "Daily 2am UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 2,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "ec1c978c-08e7-44e5-a97a-af22528a4f79",
+        "name": "Fetch Yesterday Calls",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = '{{SUPABASE_SERVICE_ROLE_KEY}}';\n\nconst now = new Date();\nconst yesterday = new Date(now);\nyesterday.setDate(now.getDate() - 1);\nyesterday.setHours(0, 0, 0, 0);\nconst today = new Date(now);\ntoday.setHours(0, 0, 0, 0);\n\nconst startDate = yesterday.toISOString();\nconst endDate = today.toISOString();\n\nconst res = await this.helpers.httpRequest({\n  method: 'GET',\n  url: SUPABASE_URL + '/rest/v1/hvac_call_log' +\n    '?call_timestamp=gte.' + startDate +\n    '&call_timestamp=lt.' + endDate +\n    '&select=call_id,agent_id,company_name,caller_name,caller_phone,job_type,lead_score,is_lead,is_hot_lead,urgency,caller_sentiment,summary,notes,duration_seconds,call_successful,retell_summary,retell_sentiment,transfer_attempted,emergency,call_type' +\n    '&order=call_timestamp.asc',\n  headers: {\n    apikey: SB_KEY,\n    Authorization: 'Bearer ' + SB_KEY\n  },\n  json: true\n});\n\nconst calls = Array.isArray(res) ? res : [];\nconsole.log('[Transcript Analysis] Found ' + calls.length + ' calls for ' + yesterday.toDateString());\n\nif (calls.length === 0) {\n  return [{ json: { no_calls: true, date: yesterday.toDateString() } }];\n}\n\nreturn calls.map(c => ({ json: c }));\n"
+        }
+      },
+      {
+        "id": "623b92ca-bd37-4147-a556-a3c092f6f131",
+        "name": "Has Calls?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          440,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": ""
+            },
+            "conditions": [
+              {
+                "id": "has-calls",
+                "leftValue": "={{ $json.no_calls }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "notEqual",
+                  "rightType": "boolean"
+                }
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "0e865f55-748c-4ff1-86b7-c09012763001",
+        "name": "Batch 5 at a time",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          660,
+          200
+        ],
+        "parameters": {
+          "batchSize": 5,
+          "options": {}
+        }
+      },
+      {
+        "id": "5c9211da-e213-4334-87c3-76fef2b1b88a",
+        "name": "Groq: Analyze Call Quality",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          200
+        ],
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "\nconst d = $input.item.json;\n\n// Build analysis context from Retell built-in data + our Groq-parsed data\nconst transcript_text = d.retell_summary || d.summary || d.notes || '';\nconst call_id = d.call_id || '';\n\nif (!call_id || transcript_text.length < 10) {\n  return { json: { ...d, analysis: { skipped: true, reason: 'insufficient_data' } } };\n}\n\nconst GROQ_KEY = '{{GROQ_API_KEY}}';\n\nconst systemPrompt = `You are an AI quality analyst for Syntharra \u2014 a company that runs AI phone receptionists for HVAC businesses.\nAnalyze this call record and return ONLY a JSON object with these fields:\n\n{\n  \"quality_score\": <integer 1-10, overall call quality>,\n  \"confusion_loops\": <integer, how many times agent seemed stuck or repeated itself>,\n  \"frustration_detected\": <boolean, caller showed frustration or asked for human>,\n  \"price_hallucination\": <boolean, agent stated specific dollar amounts they shouldn't have>,\n  \"premature_ending\": <boolean, call ended before info was fully captured>,\n  \"missed_lead\": <boolean, should have been a lead but wasn't scored as one>,\n  \"issue_category\": <string: \"none\" | \"loop\" | \"wrong_transfer\" | \"missed_lead\" | \"data_gap\" | \"sentiment_mismatch\" | \"premature_end\" | \"hallucination\">,\n  \"issue_description\": <string, 1 sentence description of the main issue, or \"No issues detected\">,\n  \"learning_note\": <string, 1 sentence actionable improvement for the agent prompt, or \"None\">,\n  \"requires_prompt_fix\": <boolean, true if this reveals a systematic agent prompt problem>\n}\n\nReturn ONLY the JSON object. No explanation, no markdown.`;\n\nconst userPrompt = `Call ID: ${call_id}\nCompany: ${d.company_name || 'Unknown'}\nJob Type: ${d.job_type || 'Unknown'}\nLead Score: ${d.lead_score || 0}\nIs Lead: ${d.is_lead}\nCall Successful (Retell): ${d.call_successful}\nDuration: ${d.duration_seconds || 0}s\nSentiment: ${d.retell_sentiment || d.caller_sentiment || 'Unknown'}\nEmergency: ${d.emergency || false}\nTransfer Attempted: ${d.transfer_attempted || false}\n\nSummary: ${transcript_text}\nAdditional Notes: ${d.notes || 'None'}`;\n\ntry {\n  const groqRes = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.groq.com/openai/v1/chat/completions',\n    headers: {\n      Authorization: 'Bearer ' + GROQ_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify({\n      model: 'llama-3.3-70b-versatile',\n      temperature: 0.1,\n      max_tokens: 400,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userPrompt }\n      ]\n    })\n  });\n  \n  const raw = groqRes.choices[0].message.content.trim();\n  let analysis;\n  try {\n    analysis = JSON.parse(raw.replace(/```json|```/g, '').trim());\n  } catch(e) {\n    analysis = { error: 'parse_failed', raw: raw.substring(0, 100), quality_score: 5, issue_category: 'none', issue_description: 'Parse failed', learning_note: 'None', requires_prompt_fix: false };\n  }\n  \n  return { json: { ...d, analysis } };\n} catch(e) {\n  return { json: { ...d, analysis: { error: e.message, skipped: true, quality_score: 5, issue_category: 'none' } } };\n}\n"
+        }
+      },
+      {
+        "id": "3a88867b-a2e5-48a9-a83c-cd6cb06b809c",
+        "name": "Wait 2s (Rate Limit)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          400
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "await new Promise(r => setTimeout(r, 2000));\nreturn $input.all();"
+        }
+      },
+      {
+        "id": "d984e275-7042-43d0-a559-933ca5929c89",
+        "name": "Save Analysis to Supabase",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          200
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = '{{SUPABASE_SERVICE_ROLE_KEY}}';\nconst h = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal,resolution=ignore-duplicates' };\n\nconst items = $input.all();\nlet saved = 0;\nlet issues = [];\n\nfor (const item of items) {\n  const d = item.json;\n  const a = d.analysis || {};\n  if (a.skipped) continue;\n\n  const secFlags = [];\n  if (a.price_hallucination) secFlags.push('price_hallucination');\n\n  const notesParts = [\n    a.issue_description || 'No issues',\n    a.learning_note && a.learning_note !== 'None' ? 'FIX: ' + a.learning_note : null,\n    a.missed_lead ? 'MISSED LEAD detected' : null,\n    a.requires_prompt_fix ? 'PROMPT FIX required' : null\n  ].filter(Boolean);\n\n  try {\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: SUPABASE_URL + '/rest/v1/transcript_analysis',\n      headers: h,\n      body: {\n        call_id: d.call_id,\n        agent_id: d.agent_id,\n        company_name: d.company_name,\n        analysis_date: new Date().toISOString().split('T')[0],\n        confusion_loops: a.confusion_loops || 0,\n        frustration_detected: a.frustration_detected || false,\n        price_hallucination: a.price_hallucination || false,\n        premature_ending: a.premature_ending || false,\n        security_flags: secFlags,\n        overall_score: a.quality_score || 50,\n        analysis_notes: notesParts.join(' | ')\n      },\n      json: true\n    });\n    saved++;\n\n    if (a.requires_prompt_fix || a.frustration_detected || a.missed_lead) {\n      issues.push({\n        call_id: d.call_id,\n        company: d.company_name,\n        issue: a.issue_category,\n        description: a.issue_description,\n        note: a.learning_note,\n        score: a.quality_score,\n        requires_fix: a.requires_prompt_fix\n      });\n    }\n  } catch(e) {\n    console.error('[Save] Error on ' + d.call_id + ': ' + e.message);\n  }\n}\n\nreturn [{ json: { saved, issues, total_analyzed: items.length } }];\n"
+        }
+      },
+      {
+        "id": "a1b2c3d4-push-learn",
+        "name": "Push Learning + Slack Digest",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1320,
+          200
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "\n// Pull today's analysis, build learning summary, push to GitHub FAILURES.md + Slack\nconst SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst SB_KEY = '{{SUPABASE_SERVICE_ROLE_KEY}}';\nconst GITHUB_TOKEN = '{{GITHUB_TOKEN}}';\nconst SLACK_WH = '{{SLACK_WEBHOOK_URL}}';\n\nconst today = new Date().toISOString().split('T')[0];\n\n// Fetch today's analysis summary\nconst res = await this.helpers.httpRequest({\n  method: 'GET',\n  url: SUPABASE_URL + '/rest/v1/transcript_analysis' +\n    '?analysis_date=eq.' + today +\n    '&select=quality_score,issue_category,issue_description,learning_note,requires_prompt_fix,frustration_detected,missed_lead,company_name',\n  headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY },\n  json: true\n});\n\nconst rows = Array.isArray(res) ? res : [];\nif (rows.length === 0) {\n  return [{ json: { status: 'no_analysis_today' } }];\n}\n\nconst total = rows.length;\nconst avgScore = rows.reduce((s, r) => s + (r.quality_score || 5), 0) / total;\nconst issues = rows.filter(r => r.requires_prompt_fix);\nconst frustrated = rows.filter(r => r.frustration_detected);\nconst missed = rows.filter(r => r.missed_lead);\nconst byCategory = {};\nrows.forEach(r => { byCategory[r.issue_category] = (byCategory[r.issue_category] || 0) + 1; });\n\n// Build Slack digest\nconst scoreEmoji = avgScore >= 8 ? '\ud83d\udfe2' : avgScore >= 6 ? '\ud83d\udfe1' : '\ud83d\udd34';\nconst blocks = {\n  text: '*Syntharra Daily Call Intelligence Report* \u2014 ' + today,\n  blocks: [\n    { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcca Daily Call Intelligence \u2014 ' + today } },\n    { type: 'section', text: { type: 'mrkdwn', text: scoreEmoji + ' *Agent Health Score: ' + avgScore.toFixed(1) + '/10* across ' + total + ' calls analysed' } },\n    { type: 'section', fields: [\n      { type: 'mrkdwn', text: '*\ud83d\udd25 Issues needing fix:* ' + issues.length },\n      { type: 'mrkdwn', text: '*\ud83d\ude24 Frustrated callers:* ' + frustrated.length },\n      { type: 'mrkdwn', text: '*\ud83d\udcb0 Missed leads:* ' + missed.length },\n      { type: 'mrkdwn', text: '*\ud83d\udcc2 Issue breakdown:* ' + JSON.stringify(byCategory).replace(/[{}\"]/g, '').replace(/,/g, ' | ') }\n    ]}\n  ]\n};\n\n// Add issue details if any prompt fixes needed\nif (issues.length > 0) {\n  const issueText = issues.slice(0, 3).map(i => '\u2022 ' + i.issue_description + ' \u2192 _' + i.learning_note + '_').join('\\n');\n  blocks.blocks.push({\n    type: 'section',\n    text: { type: 'mrkdwn', text: '*\ud83d\udee0\ufe0f Prompt Fixes Needed:*\\n' + issueText }\n  });\n  blocks.blocks.push({\n    type: 'section',\n    text: { type: 'mrkdwn', text: '_I will apply these fixes at the start of the next chat session._' }\n  });\n}\n\n// Post to Slack\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SLACK_WH,\n    body: blocks,\n    json: true\n  });\n} catch(e) {\n  console.error('Slack failed: ' + e.message);\n}\n\n// Push learning notes to GitHub FAILURES.md if there are prompt fixes\nif (issues.length > 0) {\n  try {\n    // Fetch current FAILURES.md\n    const ghRes = await this.helpers.httpRequest({\n      method: 'GET',\n      url: 'https://api.github.com/repos/Syntharra/syntharra-automations/contents/docs/FAILURES.md',\n      headers: { Authorization: 'Bearer ' + GITHUB_TOKEN, 'User-Agent': 'n8n-syntharra' },\n      json: true\n    });\n    \n    const currentContent = Buffer.from(ghRes.content, 'base64').toString('utf-8');\n    const sha = ghRes.sha;\n    \n    // Build new rows\n    const newRows = issues.map(i => \n      '| ' + today + ' | Agent Behaviour (auto-detected) | ' + i.issue_description + ' | ' +\n      'Detected via daily transcript analysis \u2014 call_id: ' + i.call_id + ' | ' +\n      'Queued for prompt fix: ' + i.learning_note + ' | No \u2014 queued |'\n    ).join('\\n');\n    \n    const updatedContent = currentContent + '\\n' + newRows;\n    const encoded = Buffer.from(updatedContent).toString('base64');\n    \n    await this.helpers.httpRequest({\n      method: 'PUT',\n      url: 'https://api.github.com/repos/Syntharra/syntharra-automations/contents/docs/FAILURES.md',\n      headers: { \n        Authorization: 'Bearer ' + GITHUB_TOKEN, \n        'Content-Type': 'application/json',\n        'User-Agent': 'n8n-syntharra'\n      },\n      body: {\n        message: '[auto] Daily transcript learning \u2014 ' + today + ' (' + issues.length + ' issues)',\n        content: encoded,\n        sha: sha\n      },\n      json: true\n    });\n    console.log('[Learning] Pushed ' + issues.length + ' learning notes to FAILURES.md');\n  } catch(e) {\n    console.error('[Learning] GitHub push failed: ' + e.message);\n  }\n}\n\nreturn [{ json: { total, avgScore: avgScore.toFixed(2), issues: issues.length, frustrated: frustrated.length, missed: missed.length, slack_sent: true } }];\n"
+        }
+      },
+      {
+        "id": "baaf76f1-4a93-4b24-9aeb-1aaf8d79692b",
+        "name": "No Calls \u2014 Slack Note",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          420
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "\nconst SLACK_WH = '{{SLACK_WEBHOOK_URL}}';\nconst today = new Date().toISOString().split('T')[0];\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: SLACK_WH,\n    body: { text: '\ud83d\udcf5 *Daily Transcript Analysis* \u2014 ' + today + ': No calls to analyse yesterday. Agent idle.' },\n    json: true\n  });\n} catch(e) {}\n\nreturn [{ json: { status: 'no_calls', date: today } }];\n"
+        }
+      }
+    ],
+    "connections": {
+      "Daily 2am UTC": {
+        "main": [
+          [
+            {
+              "node": "Fetch Yesterday Calls",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Yesterday Calls": {
+        "main": [
+          [
+            {
+              "node": "Has Calls?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Calls?": {
+        "main": [
+          [
+            {
+              "node": "Batch 5 at a time",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Calls \u2014 Slack Note",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Batch 5 at a time": {
+        "main": [
+          [
+            {
+              "node": "Groq: Analyze Call Quality",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Groq: Analyze Call Quality": {
+        "main": [
+          [
+            {
+              "node": "Wait 2s (Rate Limit)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2s (Rate Limit)": {
+        "main": [
+          [
+            {
+              "node": "Save Analysis to Supabase",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Analysis to Supabase": {
+        "main": [
+          [
+            {
+              "node": "Push Learning + Slack Digest",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T11:46:00.225Z",
+        "id": 583,
+        "workflowId": "ofoXmXwjW9WwGvL6",
+        "versionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+        "event": "deactivated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      },
+      {
+        "createdAt": "2026-04-03T11:46:00.543Z",
+        "id": 584,
+        "workflowId": "ofoXmXwjW9WwGvL6",
+        "versionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+        "event": "activated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      },
+      {
+        "createdAt": "2026-04-03T11:45:24.768Z",
+        "id": 581,
+        "workflowId": "ofoXmXwjW9WwGvL6",
+        "versionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+        "event": "deactivated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      },
+      {
+        "createdAt": "2026-04-03T11:45:24.796Z",
+        "id": 582,
+        "workflowId": "ofoXmXwjW9WwGvL6",
+        "versionId": "81a56c2a-1464-4133-9552-ad0f30f606a7",
+        "event": "activated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      }
+    ]
+  }
+}
