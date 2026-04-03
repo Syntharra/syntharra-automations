@@ -146,3 +146,14 @@ Add to n8n Railway service env vars:
 - Supabase remains source of truth for Retell agent config (`hvac_standard_agent`)
 - Supabase `hvac_call_log` remains the call record store
 - HubSpot = sales/relationship layer only
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| CRM choice | HubSpot over custom dashboard | Custom admin dashboard was maintenance overhead; HubSpot free tier covers all pre-launch needs; has API for n8n to write to automatically | HubSpot pricing becomes significant at scale |
+| HubSpot write pattern | Non-blocking (try/catch) in all workflows | HubSpot outages must never break the call pipeline — CRM is a nice-to-have, not a pipeline dependency | — |
+| Data split | Supabase for agent config, HubSpot for CRM | Supabase is the operational source of truth; HubSpot is the sales/relationship view | Sync complexity becomes a maintenance burden |
+| Contact upsert | Search → update or create | Prevents duplicate contacts from repeat form submissions or retries | — |
