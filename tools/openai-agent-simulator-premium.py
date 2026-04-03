@@ -20,7 +20,7 @@ RETELL_KEY   = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 TESTING_FLOW = "conversation_flow_2ded0ed4f808"
 OPENAI_URL   = "https://api.groq.com/openai/v1/chat/completions"
-MODEL        = "llama-3.3-70b-versatile"
+MODEL        = "meta-llama/llama-4-scout-17b-16e-instruct"  # 30k TPM — required for full prompt + node instructions
 MAX_TURNS    = 10
 
 def fetch_agent_prompt():
