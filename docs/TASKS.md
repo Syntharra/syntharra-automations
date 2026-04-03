@@ -54,3 +54,23 @@
 - [ ] Go-live: set SMS_ENABLED=true once Telnyx approved
 - [ ] Get Slack webhook URL from Dan → add to syntharra_vault + Railway env
 - [ ] Wire Slack HTTP nodes into 8 n8n workflows
+
+## 2026-04-03 — Slack Integration COMPLETE
+- [x] Webhook stored in `syntharra_vault` (service_name='Slack', key_type='webhook_url')
+- [x] All 6 n8n workflows updated with Slack notifications
+- [x] All internal email nodes paused in place (preserved with [PAUSED — use Slack] naming)
+- [x] Stripe → #onboarding: new payment alert
+- [x] Std Onboarding → #onboarding: agent live | #ops-alerts: errors
+- [x] Prem Onboarding → #onboarding: agent live | #ops-alerts: token warnings
+- [x] Usage Monitor → #ops-alerts: 80%/100% usage alerts (Gmail internal node paused)
+- [x] Std Call Processor → #ops-alerts: Supabase write failures
+- [x] Prem Call Processor → #ops-alerts: Supabase write failures
+- [x] Reconcile node: #ops-alerts unmatched payment warnings
+
+### Channels live
+| Channel | Events |
+|---|---|
+| #onboarding | New payments, agent live (Standard + Premium) |
+| #ops-alerts | Errors, token warnings, Supabase failures, unmatched payments, usage warnings |
+| #claude-code | E2E results, session summaries (via Claude Code tools) |
+
