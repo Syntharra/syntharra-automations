@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-03 — core_flow 100% ✅ | personalities 47% needs node-level fix
+> Last updated: 2026-04-03 — Jotform 429 fixed | Railway GQL query fixed | Personalities fix pending
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
