@@ -26,7 +26,15 @@ MAX_TURNS    = 10
 def fetch_agent_prompt():
     rh = {"Authorization": f"Bearer {RETELL_KEY}", "Content-Type": "application/json"}
     flow = requests.get(f"https://api.retellai.com/get-conversation-flow/{TESTING_FLOW}", headers=rh).json()
-    return flow["global_prompt"]  # global prompt only — node instructions not needed for behaviour testing
+    global_prompt = flow["global_prompt"]
+    node_sections = []
+    for node in flow["nodes"]:
+        name  = node.get("name", "")
+        text  = node.get("instruction", {}).get("text", "")
+        ntype = node.get("type", "")
+        if text and ntype != "end":
+            node_sections.append(f"[NODE: {name}]\n{text}")
+    return global_prompt + "\n\n---\nNODE INSTRUCTIONS:\n\n" + "\n\n".join(node_sections)
 
 def fetch_scenarios():
     if not GITHUB_TOKEN:
