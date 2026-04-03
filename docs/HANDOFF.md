@@ -1,108 +1,102 @@
-# HANDOFF — Premium Agent Behaviour Testing (Start Here)
+# HANDOFF — Premium Agent core_flow Fixes
 
 > **Date:** 2026-04-04
-> **Previous session:** Standard HVAC fully tested and complete (80/80 agent + 75/75 E2E + 20/20 call processor)
-> **This session:** Test HVAC Premium agent behaviour — same approach as Standard
+> **Previous session:** Applied all Standard improvements to Premium TESTING flow. Ran core_flow group.
+> **This session:** Fix 6 core_flow failures, re-run, then continue remaining groups.
 
 ---
 
-## Context
+## Current state
 
-Standard is done. Premium shares the same base architecture but adds:
-- **Live calendar booking** — agent books appointments in real-time during the call
-- **Calendar integrations** — Google Calendar, Outlook, Calendly, Jobber, HubSpot
-- **Higher price point** — $997/mo or $831/mo annual + $2,499 setup
-- **More complex flows** — booking confirmation, slot selection, rescheduling paths
+### Premium TESTING flow (conversation_flow_2ded0ed4f808) — improvements applied ✅
+All 9 Standard improvements in place and verified:
+- Code node (call_style_detector) — node-call-style-detector, wired from identify_call
+- Wrong number + vendor handling
+- MINIMAL INFO rule
+- WhatsApp + commercial caller handling
+- Scripted close in fallback_leadcapture
+- Emergency 2-step sequence
+- Service area remaining-only rule
+- caller_style_note injection in booking_capture + fallback_leadcapture
 
-The Premium agent has been built and the E2E pipeline passes (89/89). What has NOT been done
-is systematic agent behaviour testing — Sophie's conversation quality under the full Premium
-scenario suite has never been run.
+### core_flow result: 9/15 (60%) ❌
+
+| # | Scenario | Result | Failure reason |
+|---|---|---|---|
+| 1 | Basic service request | ✅ | — |
+| 2 | Emergency - no heat in winter | ✅ | — |
+| 3 | Quote request | ✅ | — |
+| 4 | Existing customer follow-up | ✅ | — |
+| 5 | FAQ - hours inquiry | ❌ | Agent repeated same info multiple times |
+| 6 | Request live person immediately | ✅ | — |
+| 7 | AC making strange noise | ❌ | Agent pushed to book when caller only wanted callback |
+| 8 | Heating system not working | ✅ | — |
+| 9 | Spam robocall | ✅ | — |
+| 10 | Wrong number | ✅ | — |
+| 11 | Maintenance request | ❌ | Confirmed details before capturing service type |
+| 12 | No cooling with burning smell | ✅ | — |
+| 13 | Callback requested | ❌ | Repeated callback confirmation details multiple times |
+| 14 | Ductwork cleaning inquiry | ❌ | Gave pricing info instead of redirecting to team |
+| 15 | End of call - caller decides to wait | ❌ | Over-eager close, kept encouraging caller to call back |
 
 ---
 
 ## What to do this session
 
-### Step 1 — Load context
-```python
-claude_md   = fetch("CLAUDE.md")
-tasks_md    = fetch("docs/TASKS.md")
-failures_md = fetch("docs/FAILURES.md")
-# Then load:
-premium_skill    = load_skill("hvac-premium")
-e2e_premium      = load_skill("e2e-hvac-premium")
-retell_skill     = load_skill("syntharra-retell")
-```
+### Step 1 — Fix the 6 failures
 
-### Step 2 — Understand the Premium agent
-- Load `docs/context/AGENTS.md` for current agent/flow IDs
-- Review the Premium MASTER prompt vs Standard — identify what's different
-- Check if Standard MASTER improvements (lean 4,053-char prompt, code node for caller style,
-  all 12 node fixes) have been applied to Premium TESTING agent
+**Fix 1 — Repetition bug (#5, #13, #15)**
+Node: general_questions_node + confirm_booking_node + ending_node
+Issue: Agent re-states info already confirmed, or over-closes
+Fix: Add to relevant nodes — "State each piece of information ONCE only. Do not repeat what has already been confirmed. Close with a single warm goodbye — do not repeat it."
 
-### Step 3 — Sync Premium TESTING with Standard improvements
-Standard MASTER was fully overhauled in the previous sessions (2026-04-02/03).
-Premium TESTING (`agent_2cffe3d86d7e1990d08bea068f`) may be out of date.
-Before testing: compare Premium TESTING prompt against Standard MASTER and apply equivalent fixes.
+**Fix 2 — Booking push (#7)**
+Node: booking_capture_node
+Issue: Premium agent defaults to booking even when caller explicitly says callback only
+Fix: Add explicit rule — "If caller says they only want a callback and does NOT want to book right now, respect that immediately. Route to fallback_leadcapture. Do NOT push booking after caller declines."
 
-### Step 4 — Run agent simulator against Premium TESTING
-```bash
-python3 tools/openai-agent-simulator.py --agent agent_2cffe3d86d7e1990d08bea068f --group core_flow
-```
-Run all groups. Fix failures on TESTING. Target 95%+ before touching MASTER.
+**Fix 3 — Service type order (#11)**
+Node: booking_capture_node
+Issue: Agent confirms details before knowing what service is needed
+Fix: Enforce order — Step 1 is always service type. Cannot move to name/address until service is confirmed.
 
-### Step 5 — Promote to MASTER once passing
-- Patch `agent_9822f440f5c3a13bc4d283ea90` (MASTER) with verified changes
-- Publish MASTER
-- Update `skills/hvac-premium-SKILL.md`
+**Fix 4 — Pricing redirect (#14)**
+Node: general_questions_node
+Issue: Agent gives pricing details when asked
+Fix: Pricing section already in global prompt — likely a node-level gap. Add to general_questions_node: "NEVER quote prices, estimates, or cost ranges. For any pricing question: 'Our team will go over all pricing at the appointment.'"
+
+**Fix 5 — Over-eager close (#15)**
+Node: ending_node
+Issue: Agent over-encourages caller to call back, repeats farewell
+Fix: Add to ending_node — "Say goodbye ONCE. Do not repeat farewells or encourage the caller to call back multiple times. One warm close, then end."
+
+### Step 2 — Re-run core_flow (5 at a time, 3 batches)
+Target: 14/15+ before moving on
+
+### Step 3 — Continue remaining groups
+Run in this order, 5 at a time:
+1. info_collection (15 scenarios)
+2. personalities (15 scenarios)
+3. pricing_traps (8 scenarios)
+4. edge_cases (15 scenarios)
+5. boundary_safety (12 scenarios)
+6. premium_specific (15 scenarios)
 
 ---
 
-## Key IDs — Premium
-
+## Key IDs
 | Resource | ID |
 |---|---|
-| MASTER Agent | `agent_9822f440f5c3a13bc4d283ea90` |
 | TESTING Agent | `agent_2cffe3d86d7e1990d08bea068f` |
-| MASTER Flow | `conversation_flow_1dd3458b13a7` |
 | TESTING Flow | `conversation_flow_2ded0ed4f808` |
-| Onboarding workflow | `kz1VmwNccunRMEaF` |
-| Call processor workflow | `STQ4Gt3rH8ptlvMi` |
-| E2E test | `python3 shared/e2e-test-premium.py` (89/89 ✅) |
+| MASTER Agent | `agent_9822f440f5c3a13bc4d283ea90` |
+| MASTER Flow | `conversation_flow_1dd3458b13a7` |
+| Simulator | `tools/openai-agent-simulator-premium.py` |
 
----
-
-## What's different about Premium testing vs Standard
-
-| Area | Standard | Premium |
-|---|---|---|
-| Core flow | Lead capture only | Lead capture + booking flow |
-| Calendar | None | Real-time slot fetch + booking |
-| Scenarios | 80 scenarios, 6 groups | Expect similar — booking scenarios added |
-| Complexity | Sophie collects info + closes | Sophie collects info + confirms booking slot |
-| Failure modes | Wrong routing, missed fields | Wrong routing + failed booking + slot confusion |
-
----
-
-## Standard improvements to carry over to Premium
-
-These were all fixed in Standard MASTER (2026-04-03) — check if Premium has them:
-
-1. **Lean global prompt** (~4,000 chars) — remove bloat, move specifics to nodes
-2. **Code node for caller style detection** — injects `caller_style_note` at leadcapture top
-3. **Explicit scripted closing words** in leadcapture node
-4. **Emergency routing** — extreme urgency (freezing/elderly) offers transfer; matter-of-fact = high-priority lead
-5. **Wrong number branch** in identify_call_node
-6. **MINIMAL INFO RULE** in leadcapture — no extra probing after caller says enough
-7. **Out-of-area re-ask fix** — only collect REMAINING details
-8. **Vendor/job applicant handling** in identify_call_node
-9. **Pricing redirect** — no specific fees, redirect to team callback
-
----
-
-## Standard test scores for reference
-
-| Test | Score | Script |
-|---|---|---|
-| Agent behaviour | 80/80 ✅ | `tools/openai-agent-simulator.py` |
-| E2E pipeline | 75/75 ✅ | `python3 shared/e2e-test.py` |
-| Call processor | 20/20 ✅ | `python3 tests/call-processor-test.py` |
+## Simulator pattern (NEVER run more than 5 at once)
+```python
+fetch_scenarios("core_flow", start=0, count=5)   # batch 1
+fetch_scenarios("core_flow", start=5, count=5)   # batch 2
+fetch_scenarios("core_flow", start=10, count=5)  # batch 3
+```
+Pause after each batch. Report. Ask Dan to continue before next batch.
