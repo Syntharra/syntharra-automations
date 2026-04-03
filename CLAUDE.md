@@ -102,6 +102,29 @@ They only get updated when there is a real learning — not just because a task 
 
 ---
 
+## PRE-ACTION PROTOCOL — mandatory before every non-trivial decision
+
+Before taking any action that involves changing a model, prompt, config, test, or fix — especially under time pressure — answer these 3 questions explicitly in your response:
+
+1. **WHY am I doing it this way?** — Is this fixing the root cause or just a symptom?
+2. **WHAT would be invalidated if I'm wrong?** — What breaks downstream if this assumption is incorrect?
+3. **Does this decision belong in ARCHITECTURE.md or a skill file?** — If yes, write it there before closing the session.
+
+**If you cannot answer question 1 clearly — stop and diagnose further before acting.**
+
+### Why this rule exists
+On 2026-04-04, the simulator was hitting Groq TPM limits. The "quick fix" was to strip node instructions from the prompt to reduce token count. Question 1 answer was "saves tokens" — technically true. But question 2 was never asked: *"What does stripping node instructions invalidate?"* — Answer: the entire test. Node instructions define how the agent behaves at each stage of the call. Testing without them means testing an incomplete agent. The fix was wrong and had to be reverted.
+
+The correct fix (switch to a higher-TPM model) was already known — it just wasn't reached because the shortcut was taken first.
+
+### The pattern to break
+> Task is hard → quick fix appears → quick fix is taken → quick fix causes a new problem → revert → do it properly
+
+### The pattern to enforce
+> Task is hard → ask WHY → ask WHAT BREAKS → take the right action → document the decision
+
+---
+
 ## Session startup — always load these 4
 ```python
 claude_md     = fetch("CLAUDE.md")
