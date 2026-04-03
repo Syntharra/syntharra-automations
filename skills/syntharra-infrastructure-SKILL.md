@@ -108,35 +108,90 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 | Railway n8n API key | `{{N8N_API_KEY}}` |
 | Migration status | Complete ✅ — all 19 workflows imported, credentials re-entered, CNAME live |
 
-### All n8n Workflows
+### All n8n Workflows (verified live 2026-04-04 — 47 total, 37 labelled)
 
-#### Active
-| Workflow | ID | Type |
+> Source of truth: live n8n instance. IDs below are current.
+> n8n API key: `service_name='n8n Railway', key_type='api_key'` in syntharra_vault
+
+#### HVAC Standard
+| Workflow | ID | Active |
 |---|---|---|
-| HVAC Std Onboarding | `k0KeQxWb3j3BbQEk` | Standard |
-| HVAC Std Call Processor | `OyDCyiOjG0twguXq` | Standard |
-| HVAC Prem Onboarding | `KXDSMVKSf59tAtal` | Premium |
-| HVAC Prem Call Processor | `UhxfrDaEeYUk4jAD` | Premium |
-| HVAC Prem Dispatcher | `kVKyPQO7cXKUJFbW` | Premium |
-| Stripe Workflow | `ydzfhitWiF5wNzEy` | Shared |
-| Weekly Lead Report | `mFuiB4pyXyWSIM5P` | Shared |
-| Minutes Calculator | `9SuchBjqhFmLbH8o` | Shared |
-| Usage Alert Monitor | `lQsYJWQeP5YPikam` | Shared |
-| Publish Retell Agent | `sBFhshlsz31L6FV8` | Shared |
-| Scenario Runner v4 | `94QmMVGdEDl2S9MF` | Testing |
-| Scenario Transcript Gen | `dHO8O0QHBZJyzytn` | Testing |
-| Scenario Process Single | `rlf1dHVcTlzUbPX7` | Testing |
-| Website Lead → AI Score | `FBNjSmb3eLdBS3N9` | Lead Gen |
-| Website Lead → Free Report | `ykaZkQXWO2zEJCdu` | Lead Gen |
-| Nightly GitHub Backup | `EAHgqAfQoCDumvPU` | Ops |
-| Send Welcome Email (manual) | `Rd5HiN7v2SRwNmiY` | Backup |
-| Auto-Enable MCP | `AU8DD5r6i6SlYFnb` | Ops (runs every 6h) |
-| E2E Cleanup | `URbQPNQP26OIdYMo` | Testing (webhook: /e2e-test-cleanup, 5-min delay) |
+| HVAC AI Receptionist - JotForm Onboarding (Supabase) | `4Hx7aRdzMl5N0uJP` | ✅ |
+| HVAC Call Processor - Retell Webhook (Supabase) | `Kg576YtPM9yEacKn` | ✅ |
+| HVAC Weekly Lead Report (Supabase) | `iLPb6ByiytisqUJC` | ✅ |
 
-#### Inactive (confirm with Dan before deleting)
-| Workflow | ID |
-|---|---|
-| Integration Hub | `8WYFy093XA6UKB7L` |
+#### HVAC Premium
+| Workflow | ID | Active |
+|---|---|---|
+| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | ✅ |
+| HVAC Premium Call Processor | `STQ4Gt3rH8ptlvMi` | ✅ |
+| Premium Integration Dispatcher | `73Y0MHVBu05bIm5p` | ✅ |
+| Premium Dispatcher — Outlook | `La99yvfmWg6AuvM2` | ✅ |
+| Premium Dispatcher — Calendly | `b9xRG7wtqCZ5fdxo` | ✅ |
+| Premium Dispatcher — Jobber | `BxnR17qUfAb5BZCz` | ✅ |
+| Premium Dispatcher — HubSpot | `msEy13eRz66LPxW6` | ✅ |
+| Premium Dispatcher — Google Calendar | `rGrnCr5mPFP2TIc7` | ✅ |
+| Premium — Integration Connected Handler | `a0IAwwUJP4YgwgjG` | ✅ |
+| Premium — Daily Token Refresh | `5vphecmEhxnwFz2X` | ✅ |
+| Premium — Send You're Live Email | `ptDdy38HKt9DUOAV` | ✅ |
+
+#### Billing
+| Workflow | ID | Active |
+|---|---|---|
+| Stripe Workflow | `xKD3ny6kfHL0HHXq` | ✅ |
+| Monthly Minutes Calculator & Overage Billing | `z1DNTjvTDAkExsX8` | ✅ |
+| Usage Alert Monitor (80% & 100% Warnings) | `Wa3pHRMwSjbZHqMC` | ✅ |
+
+#### Marketing & Leads
+| Workflow | ID | Active |
+|---|---|---|
+| Website Lead → AI Readiness Score Email | `QY1ZFtPJFsU5h6wQ` | ✅ |
+| Website Lead → Free Report Email | `hFU0ZeHae7EttCDK` | ✅ |
+| Website Lead — HubSpot Contact (Index + Calculator + Quiz) | `I8a2N9bIZp9Qg1IN` | ✅ |
+| Weekly Newsletter - Syntharra | `6LXpGffcWSvL6RxW` | ✅ |
+| Newsletter Unsubscribe Webhook | `Eo8wwvZgeDm5gA9d` | ✅ |
+| Affiliate Application — HubSpot Contact | `syGlWx8TlbYlPZU4` | ✅ |
+
+#### Operations
+| Workflow | ID | Active |
+|---|---|---|
+| Nightly GitHub Backup | `44WfbVmJ7Zihcwgs` | ✅ |
+| Auto-Enable MCP on All Workflows | `AU8DD5r6i6SlYFnb` | ✅ |
+| Jotform Webhook Backup Polling | `LF8ZSYyQbmjV4rN0` | ✅ |
+| Publish Retell Agent | `13cOIXxvj83NfDqQ` | ✅ |
+| Daily Ops Digest — 6am → #all-syntharra | `SiMn59qJOfrZZS81` | ✅ |
+| Slack Setup — Internal Admin Form | `z8T9CKcUp7lLVoGQ` | ✅ |
+| Weekly Client Health Score Calculator | `ALFSzzp3htAEjwkJ` | ✅ |
+| Daily Transcript Analysis + Jailbreak Monitor | `ofoXmXwjW9WwGvL6` | ✅ |
+| Nightly PII Retention Cleanup | `ngK02cSgGmvawCot` | ✅ |
+
+#### Email & Comms
+| Workflow | ID | Active |
+|---|---|---|
+| Email Intelligence — Inbox Scanner → Slack | `PavRLBVQQpWrKUYs` | ✅ |
+| Send Welcome Email (Manual) | `lXqt5anbJgsAMP7O` | ✅ |
+| Email Digest — Daily 6am GMT | `4aulrlX1v8AtWwvC` | ✅ |
+
+#### Blog & Content
+| Workflow | ID | Active |
+|---|---|---|
+| Blog Auto-Publisher | `j8hExewOREmRp3Oq` | ✅ |
+
+#### Testing & QA
+| Workflow | ID | Active |
+|---|---|---|
+| E2E Test Cleanup — 5 Min Delayed Delete | `URbQPNQP26OIdYMo` | ✅ |
+
+#### Unlabelled / Inactive (leave duplicates for now — Dan 2026-04-04)
+| Workflow | ID | Active |
+|---|---|---|
+| Google Keep → Groq → Slack To-Do List | `5wxgBfJL7QeNP2ab` | ✅ (needs tags) |
+| Keep → Slack TEST RUN | `NY6vhwLFmecAkxdH` | ⚫ |
+| SYNTHARRA_TEST_RUNNER | `HeG3aJQBXyRPKSXA` | ⚫ |
+| Premium — Integration Connected Handler (×3 duplicates) | `SziSvI1zl49cs3cQ`, `OXuB3WR23fg0MmEu`, `IS5eC0SEzIv76TPQ` | ⚫ |
+| [TEST STUB] Retell Tool Dispatcher | `UKEoUeNqYvDDJv79` | ⚫ |
+| Blog Auto-Publisher (duplicate) | `AZZguGm5ypF6e5m9` | ⚫ |
+| Email Digest — Daily 6am GMT (×2 duplicates) | `TZ4p1UyzTrCJPdKA`, `S3vHBQopDiOssM7G` | ⚫ |
 
 ### n8n API Rules
 - PUT workflow payload: only `name`, `nodes`, `connections`, `settings` (only `executionOrder` from settings)
