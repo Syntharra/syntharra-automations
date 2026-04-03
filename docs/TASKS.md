@@ -43,3 +43,14 @@ Results: `tests/results/simulator-20260403-*-all-groups.json`
 - [ ] Wire +12292672271 (Demo line) if needed
 - [ ] Go-live: unpause syntharra-ops-monitor Railway service
 - [ ] Go-live: set SMS_ENABLED=true once Telnyx approved
+
+## 2026-04-03 — Slack Integration
+- [x] Created `skills/syntharra-slack-SKILL.md` — channels, templates, n8n patterns, Claude Code helper
+- [x] Created `tools/claude-code/slack_notify.py` — send Slack from Claude Code sessions
+- [x] Updated `run-e2e.sh` — posts E2E pass/fail to #claude-code
+- [x] Updated `session-end.sh` — posts session summary to #claude-code
+- [x] Created `n8n-backups/slack-notification-helper.json` — importable n8n workflow
+- [x] Updated WORKFLOWS.md — Slack wiring plan for all 8 key workflows
+- [ ] **NEXT: Get Slack webhook URL from Dan → add to syntharra_vault + Railway env**
+- [ ] Wire Slack HTTP nodes into 8 n8n workflows (Stripe, onboarding x2, call processors x2, usage monitor, integration handler, ops monitor)
+
