@@ -1,0 +1,195 @@
+{
+  "updatedAt": "2026-04-03T11:46:01.224Z",
+  "createdAt": "2026-04-01T22:31:41.428Z",
+  "id": "ALFSzzp3htAEjwkJ",
+  "name": "Weekly Client Health Score Calculator",
+  "description": "Calculates weekly client health scores based on call volume trends. Stores results in Supabase.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "ab843049-5802-4ad4-89e8-16d26350b7f4",
+      "name": "Weekly Monday 3am UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 3,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c3ff8345-1164-4fdd-9b72-de09f27d4159",
+      "name": "Calculate + Save Health Scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst SB = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst K = '{{SUPABASE_SERVICE_ROLE_KEY}}';\nconst SLACK_WH = '{{SLACK_WEBHOOK_URL}}';\nconst h = { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': 'application/json' };\n\nconst now = new Date();\nconst weekStart = new Date(now); weekStart.setDate(now.getDate() - 7);\nconst prevWeekStart = new Date(now); prevWeekStart.setDate(now.getDate() - 14);\nconst weekStartStr = weekStart.toISOString().split('T')[0];\n\nconst agents = await this.helpers.httpRequest({\n  method: 'GET',\n  url: SB + '/rest/v1/hvac_standard_agent?select=agent_id,company_name,plan_type',\n  headers: h, json: true\n});\n\nif (!agents || agents.length === 0) {\n  return [{ json: { status: 'no_agents' } }];\n}\n\nconst results = [];\n\nfor (const agent of agents) {\n  // This week's calls\n  const thisCalls = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SB + '/rest/v1/hvac_call_log' +\n      '?agent_id=eq.' + agent.agent_id +\n      '&call_timestamp=gte.' + weekStart.toISOString() +\n      '&select=call_id,lead_score,is_lead,call_successful,caller_sentiment',\n    headers: h, json: true\n  });\n\n  // Previous week's calls (for trend)\n  const prevCalls = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SB + '/rest/v1/hvac_call_log' +\n      '?agent_id=eq.' + agent.agent_id +\n      '&call_timestamp=gte.' + prevWeekStart.toISOString() +\n      '&call_timestamp=lt.' + weekStart.toISOString() +\n      '&select=call_id',\n    headers: h, json: true\n  });\n\n  // This week's quality analysis\n  const analysis = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SB + '/rest/v1/transcript_analysis' +\n      '?agent_id=eq.' + agent.agent_id +\n      '&analysis_date=gte.' + weekStartStr +\n      '&select=overall_score,frustration_detected,price_hallucination,confusion_loops,premature_ending',\n    headers: h, json: true\n  });\n\n  const tc = Array.isArray(thisCalls) ? thisCalls : [];\n  const pc = Array.isArray(prevCalls) ? prevCalls : [];\n  const ta = Array.isArray(analysis) ? analysis : [];\n\n  const totalThis = tc.length;\n  const totalPrev = pc.length;\n  const trendPct = totalPrev > 0 ? Math.round(((totalThis - totalPrev) / totalPrev) * 100) : 0;\n\n  // Quality-adjusted health score\n  const avgQuality = ta.length > 0 ? ta.reduce((s, a) => s + (a.overall_score || 50), 0) / ta.length : null;\n  const leadRate = totalThis > 0 ? tc.filter(c => c.is_lead).length / totalThis : 0;\n  const successRate = totalThis > 0 ? tc.filter(c => c.call_successful).length / totalThis : 0;\n  const frustrations = ta.filter(a => a.frustration_detected).length;\n\n  let score = avgQuality !== null ? avgQuality : 50;\n  score += leadRate * 20;\n  score += successRate * 15;\n  score -= (frustrations / Math.max(ta.length, 1)) * 20;\n  score = Math.max(0, Math.min(100, Math.round(score)));\n\n  try {\n    // Delete old entry for this week first (upsert manually)\n    await this.helpers.httpRequest({\n      method: 'DELETE',\n      url: SB + '/rest/v1/client_health_scores?agent_id=eq.' + agent.agent_id + '&week_start=eq.' + weekStartStr,\n      headers: h\n    });\n\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: SB + '/rest/v1/client_health_scores',\n      headers: { ...h, Prefer: 'return=minimal' },\n      body: {\n        agent_id: agent.agent_id,\n        company_name: agent.company_name,\n        week_start: weekStartStr,\n        call_volume_current: totalThis,\n        call_volume_previous: totalPrev,\n        call_volume_trend: trendPct,\n        dashboard_logins: 0,\n        payment_status: 'ok',\n        health_score: score,\n        calculated_at: new Date().toISOString()\n      },\n      json: true\n    });\n\n    results.push({ company: agent.company_name, score, calls: totalThis, trend: trendPct });\n  } catch(e) {\n    console.error('Health score save failed for ' + agent.company_name + ': ' + e.message);\n  }\n}\n\n// Slack weekly digest\nif (results.length > 0) {\n  const avgScore = Math.round(results.reduce((s, r) => s + r.score, 0) / results.length);\n  const scoreEmoji = avgScore >= 75 ? '\ud83d\udfe2' : avgScore >= 55 ? '\ud83d\udfe1' : '\ud83d\udd34';\n  const rows = results.sort((a,b) => b.score - a.score)\n    .map(r => scoreEmoji + ' *' + r.company + '*: ' + r.score + '/100 | ' + r.calls + ' calls | trend: ' + (r.trend >= 0 ? '+' : '') + r.trend + '%')\n    .join('\\n');\n\n  await this.helpers.httpRequest({\n    method: 'POST', url: SLACK_WH,\n    body: {\n      text: '\ud83d\udcc8 Weekly Agent Health Scores',\n      blocks: [\n        { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcc8 Weekly Agent Health Report' } },\n        { type: 'section', text: { type: 'mrkdwn', text: '*Fleet average: ' + avgScore + '/100*' } },\n        { type: 'section', text: { type: 'mrkdwn', text: rows } }\n      ]\n    },\n    json: true\n  });\n}\n\nreturn [{ json: { status: 'complete', agents_scored: results.length, results } }];\n"
+      }
+    }
+  ],
+  "connections": {
+    "Weekly Monday 3am UTC": {
+      "main": [
+        [
+          {
+            "node": "Calculate + Save Health Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Weekly Monday 3am UTC": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "aiBuilderAssisted": true
+  },
+  "pinData": null,
+  "versionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+  "activeVersionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+  "versionCounter": 15,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-01T22:31:41.428Z",
+      "createdAt": "2026-04-01T22:31:41.428Z",
+      "role": "workflow:owner",
+      "workflowId": "ALFSzzp3htAEjwkJ",
+      "projectId": "PHE9TwI1tz9lKI9q",
+      "project": {
+        "updatedAt": "2026-03-30T01:04:12.384Z",
+        "createdAt": "2026-03-30T00:03:18.522Z",
+        "id": "PHE9TwI1tz9lKI9q",
+        "name": "Daniel Blackmore <daniel@syntharra.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-04-03T11:44:59.358Z",
+    "createdAt": "2026-04-03T11:44:59.358Z",
+    "versionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+    "workflowId": "ALFSzzp3htAEjwkJ",
+    "nodes": [
+      {
+        "id": "ab843049-5802-4ad4-89e8-16d26350b7f4",
+        "name": "Weekly Monday 3am UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtDay": [
+                  1
+                ],
+                "triggerAtHour": 3,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "c3ff8345-1164-4fdd-9b72-de09f27d4159",
+        "name": "Calculate + Save Health Scores",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "\nconst SB = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';\nconst K = '{{SUPABASE_SERVICE_ROLE_KEY}}';\nconst SLACK_WH = '{{SLACK_WEBHOOK_URL}}';\nconst h = { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': 'application/json' };\n\nconst now = new Date();\nconst weekStart = new Date(now); weekStart.setDate(now.getDate() - 7);\nconst prevWeekStart = new Date(now); prevWeekStart.setDate(now.getDate() - 14);\nconst weekStartStr = weekStart.toISOString().split('T')[0];\n\nconst agents = await this.helpers.httpRequest({\n  method: 'GET',\n  url: SB + '/rest/v1/hvac_standard_agent?select=agent_id,company_name,plan_type',\n  headers: h, json: true\n});\n\nif (!agents || agents.length === 0) {\n  return [{ json: { status: 'no_agents' } }];\n}\n\nconst results = [];\n\nfor (const agent of agents) {\n  // This week's calls\n  const thisCalls = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SB + '/rest/v1/hvac_call_log' +\n      '?agent_id=eq.' + agent.agent_id +\n      '&call_timestamp=gte.' + weekStart.toISOString() +\n      '&select=call_id,lead_score,is_lead,call_successful,caller_sentiment',\n    headers: h, json: true\n  });\n\n  // Previous week's calls (for trend)\n  const prevCalls = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SB + '/rest/v1/hvac_call_log' +\n      '?agent_id=eq.' + agent.agent_id +\n      '&call_timestamp=gte.' + prevWeekStart.toISOString() +\n      '&call_timestamp=lt.' + weekStart.toISOString() +\n      '&select=call_id',\n    headers: h, json: true\n  });\n\n  // This week's quality analysis\n  const analysis = await this.helpers.httpRequest({\n    method: 'GET',\n    url: SB + '/rest/v1/transcript_analysis' +\n      '?agent_id=eq.' + agent.agent_id +\n      '&analysis_date=gte.' + weekStartStr +\n      '&select=overall_score,frustration_detected,price_hallucination,confusion_loops,premature_ending',\n    headers: h, json: true\n  });\n\n  const tc = Array.isArray(thisCalls) ? thisCalls : [];\n  const pc = Array.isArray(prevCalls) ? prevCalls : [];\n  const ta = Array.isArray(analysis) ? analysis : [];\n\n  const totalThis = tc.length;\n  const totalPrev = pc.length;\n  const trendPct = totalPrev > 0 ? Math.round(((totalThis - totalPrev) / totalPrev) * 100) : 0;\n\n  // Quality-adjusted health score\n  const avgQuality = ta.length > 0 ? ta.reduce((s, a) => s + (a.overall_score || 50), 0) / ta.length : null;\n  const leadRate = totalThis > 0 ? tc.filter(c => c.is_lead).length / totalThis : 0;\n  const successRate = totalThis > 0 ? tc.filter(c => c.call_successful).length / totalThis : 0;\n  const frustrations = ta.filter(a => a.frustration_detected).length;\n\n  let score = avgQuality !== null ? avgQuality : 50;\n  score += leadRate * 20;\n  score += successRate * 15;\n  score -= (frustrations / Math.max(ta.length, 1)) * 20;\n  score = Math.max(0, Math.min(100, Math.round(score)));\n\n  try {\n    // Delete old entry for this week first (upsert manually)\n    await this.helpers.httpRequest({\n      method: 'DELETE',\n      url: SB + '/rest/v1/client_health_scores?agent_id=eq.' + agent.agent_id + '&week_start=eq.' + weekStartStr,\n      headers: h\n    });\n\n    await this.helpers.httpRequest({\n      method: 'POST',\n      url: SB + '/rest/v1/client_health_scores',\n      headers: { ...h, Prefer: 'return=minimal' },\n      body: {\n        agent_id: agent.agent_id,\n        company_name: agent.company_name,\n        week_start: weekStartStr,\n        call_volume_current: totalThis,\n        call_volume_previous: totalPrev,\n        call_volume_trend: trendPct,\n        dashboard_logins: 0,\n        payment_status: 'ok',\n        health_score: score,\n        calculated_at: new Date().toISOString()\n      },\n      json: true\n    });\n\n    results.push({ company: agent.company_name, score, calls: totalThis, trend: trendPct });\n  } catch(e) {\n    console.error('Health score save failed for ' + agent.company_name + ': ' + e.message);\n  }\n}\n\n// Slack weekly digest\nif (results.length > 0) {\n  const avgScore = Math.round(results.reduce((s, r) => s + r.score, 0) / results.length);\n  const scoreEmoji = avgScore >= 75 ? '\ud83d\udfe2' : avgScore >= 55 ? '\ud83d\udfe1' : '\ud83d\udd34';\n  const rows = results.sort((a,b) => b.score - a.score)\n    .map(r => scoreEmoji + ' *' + r.company + '*: ' + r.score + '/100 | ' + r.calls + ' calls | trend: ' + (r.trend >= 0 ? '+' : '') + r.trend + '%')\n    .join('\\n');\n\n  await this.helpers.httpRequest({\n    method: 'POST', url: SLACK_WH,\n    body: {\n      text: '\ud83d\udcc8 Weekly Agent Health Scores',\n      blocks: [\n        { type: 'header', text: { type: 'plain_text', text: '\ud83d\udcc8 Weekly Agent Health Report' } },\n        { type: 'section', text: { type: 'mrkdwn', text: '*Fleet average: ' + avgScore + '/100*' } },\n        { type: 'section', text: { type: 'mrkdwn', text: rows } }\n      ]\n    },\n    json: true\n  });\n}\n\nreturn [{ json: { status: 'complete', agents_scored: results.length, results } }];\n"
+        }
+      }
+    ],
+    "connections": {
+      "Weekly Monday 3am UTC": {
+        "main": [
+          [
+            {
+              "node": "Calculate + Save Health Scores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Daniel Blackmore",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-04-03T11:44:59.424Z",
+        "id": 579,
+        "workflowId": "ALFSzzp3htAEjwkJ",
+        "versionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+        "event": "deactivated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      },
+      {
+        "createdAt": "2026-04-03T11:44:59.466Z",
+        "id": 580,
+        "workflowId": "ALFSzzp3htAEjwkJ",
+        "versionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+        "event": "activated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      },
+      {
+        "createdAt": "2026-04-03T11:46:01.274Z",
+        "id": 585,
+        "workflowId": "ALFSzzp3htAEjwkJ",
+        "versionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+        "event": "deactivated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      },
+      {
+        "createdAt": "2026-04-03T11:46:01.600Z",
+        "id": 586,
+        "workflowId": "ALFSzzp3htAEjwkJ",
+        "versionId": "b97e2757-b808-45f0-8f13-b848ede4734c",
+        "event": "activated",
+        "userId": "0eceaa4a-6883-4340-8413-32460f7a990b"
+      }
+    ]
+  }
+}
