@@ -24,6 +24,8 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 9. **Update relevant skill(s) after ANY verified work — no exceptions, no skipping**
 10. Update `docs/TASKS.md` at end of every chat
 11. **Document architectural reasoning in `docs/ARCHITECTURE.md` whenever a non-obvious choice is made**
+12. **Every new/modified n8n workflow MUST be labelled before session close** — see `docs/STANDARDS.md`
+13. **Route execution tasks to Claude Code, not Chat** — see `docs/STANDARDS.md` for routing rules
 
 ## Claude Code — Safe Operating Rules
 > Claude Code is the execution layer for session tasks. It complements this workflow — never replaces or overrides it.
@@ -106,12 +108,13 @@ claude_md     = fetch("CLAUDE.md")
 tasks_md      = fetch("docs/TASKS.md")
 failures_md   = fetch("docs/FAILURES.md")
 decisions_md  = fetch("docs/DECISIONS.md")   # why things are built the way they are
+standards_md  = fetch("docs/STANDARDS.md")  # labelling rules + Claude Code routing — ALWAYS load
 ```
 
 ## Context files — load what you need
 | What you're working on | File to fetch |
 |---|---|
-| Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md`, `docs/DECISIONS.md` |
+| Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md`, `docs/DECISIONS.md`, `docs/STANDARDS.md` |
 | Full reasoning behind decisions | `docs/ARCHITECTURE.md` |
 | Agents, calls, Retell | `docs/context/AGENTS.md` |
 | n8n workflows | `docs/context/WORKFLOWS.md` |
