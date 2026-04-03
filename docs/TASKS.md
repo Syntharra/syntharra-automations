@@ -1,3 +1,12 @@
+
+## 2026-04-03 — Claude Code Integration Shipped
+- [x] CLAUDE.md updated with Claude Code safe operating rules (8 hard limits)
+- [x] CLAUDE_CODE.md created — root-level file Claude Code reads at session start
+- [x] tools/session-start.py — loads full project context (CLAUDE.md, TASKS, FAILURES, DECISIONS)
+- [x] tools/session-close.py — enforces 5-question hard gate + pushes session log
+- [x] tools/post-change-verify.py — auto E2E after agent/workflow changes + self-healing loop
+- [ ] Item 4 (scheduled autonomous work) — needs Anthropic API key in vault, then n8n cron workflow
+
 # Syntharra — Tasks & Continuity
 > Updated: 2026-04-03 — Code Node live | personalities 87%+ | pricing 100% | edge/boundary mostly fixed
 
