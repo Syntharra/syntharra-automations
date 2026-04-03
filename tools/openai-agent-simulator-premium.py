@@ -20,7 +20,8 @@ RETELL_KEY   = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 TESTING_FLOW = "conversation_flow_2ded0ed4f808"
 OPENAI_URL   = "https://api.groq.com/openai/v1/chat/completions"
-MODEL        = "llama-3.3-70b-versatile"
+MODEL        = "llama-3.3-70b-versatile"   # agent + evaluator
+MODEL_FAST   = "llama-3.1-8b-instant"       # caller sim — fast, low token cost
 MAX_TURNS    = 10
 
 def fetch_agent_prompt():
@@ -46,14 +47,14 @@ def fetch_scenarios():
     ).json()
     return json.loads(base64.b64decode(r["content"]).decode())
 
-def chat(api_key, system_prompt, messages, temperature=0.7, retries=6):
+def chat(api_key, system_prompt, messages, temperature=0.7, retries=6, model=None):
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
-        "model": MODEL,
+        "model": model or MODEL,
         "temperature": temperature,
         "messages": [{"role": "system", "content": system_prompt}] + messages
     }
-    time.sleep(2)  # 2s inter-call delay — keeps Groq RPM under 30
+    time.sleep(1)  # 1s inter-call delay — caller uses fast model, lower token load
     for attempt in range(retries):
         try:
             r = requests.post(OPENAI_URL, headers=headers, json=payload, timeout=30)
@@ -103,7 +104,7 @@ RULES:
     agent_history.append({"role": "assistant", "content": greeting})
 
     for turn in range(max_turns):
-        caller_reply, usage = chat(api_key, caller_system, caller_history, temperature=0.8)
+        caller_reply, usage = chat(api_key, caller_system, caller_history, temperature=0.8, model=MODEL_FAST)
         total_usage["prompt_tokens"]     += usage.get("prompt_tokens", 0)
         total_usage["completion_tokens"] += usage.get("completion_tokens", 0)
         transcript.append({"role": "caller", "text": caller_reply})
