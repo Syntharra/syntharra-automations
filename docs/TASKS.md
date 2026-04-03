@@ -1,11 +1,15 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-03 — ALL TEST GROUPS 100% ✅ | MASTER promoted | Phone wired
+> Updated: 2026-04-03 — Call Processor fixed + tested 100% ✅
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
 ## E2E Tests (pipeline)
 - Standard: 75/75 ✅ — `python3 shared/e2e-test.py`
 - Premium:  89/89 ✅ — `python3 shared/e2e-test-premium.py`
+
+## Call Processor Test ✅ NEW
+- Standard: 78/78 ✅ (20 scenarios) — `python3 tests/standard-call-processor-test.py`
+- Skill: `skills/standard-call-processor-testing-SKILL.md`
 
 ## Agent Simulator — ALL GROUPS COMPLETE ✅
 | Group | Score | Status |
@@ -18,14 +22,19 @@
 | info_collection | 15/15 (100%) | ✅ |
 | **TOTAL** | **80/80 (100%)** | ✅ |
 
-Results: `tests/results/simulator-20260403-*-all-groups.json`
-
 ## Architecture — MASTER (LIVE)
 - MASTER flow `conversation_flow_34d169608460` promoted from TESTING 2026-04-03
 - Code node `call_style_detector` live in MASTER
 - Global prompt: 4,053 chars (was 15,354) — 74% reduction
 - 15 nodes including: commercial caller, WhatsApp contact, fast-phone handling
 - `+18129944371` wired → `agent_4afbfdb3fcb1ba9569353af28d` ✅
+
+## Call Processor — Groq Migration (2026-04-03)
+- Replaced broken OpenAI node → Groq llama-3.3-70b-versatile
+- Pattern: Build Groq Request (code) → Groq HTTP (contentType:raw) → Parse Lead Data
+- All hvac_call_log fields now written: address, job_type, sentiment, vulnerable, transfer, call_tier
+- job_type normalisation: "Residential" → "Repair" etc (handled in Parse Lead Data)
+- caller_sentiment: INT column (1-5), not string
 
 ## Agent Registry
 | Agent | ID | Status |
@@ -43,14 +52,5 @@ Results: `tests/results/simulator-20260403-*-all-groups.json`
 - [ ] Wire +12292672271 (Demo line) if needed
 - [ ] Go-live: unpause syntharra-ops-monitor Railway service
 - [ ] Go-live: set SMS_ENABLED=true once Telnyx approved
-
-## 2026-04-03 — Slack Integration
-- [x] Created `skills/syntharra-slack-SKILL.md` — channels, templates, n8n patterns, Claude Code helper
-- [x] Created `tools/claude-code/slack_notify.py` — send Slack from Claude Code sessions
-- [x] Updated `run-e2e.sh` — posts E2E pass/fail to #claude-code
-- [x] Updated `session-end.sh` — posts session summary to #claude-code
-- [x] Created `n8n-backups/slack-notification-helper.json` — importable n8n workflow
-- [x] Updated WORKFLOWS.md — Slack wiring plan for all 8 key workflows
-- [ ] **NEXT: Get Slack webhook URL from Dan → add to syntharra_vault + Railway env**
-- [ ] Wire Slack HTTP nodes into 8 n8n workflows (Stripe, onboarding x2, call processors x2, usage monitor, integration handler, ops monitor)
-
+- [ ] Get Slack webhook URL from Dan → add to syntharra_vault + Railway env
+- [ ] Wire Slack HTTP nodes into 8 n8n workflows
