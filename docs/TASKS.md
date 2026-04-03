@@ -3,6 +3,13 @@
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
+
+## Marketing — APEX Blueprint Delivered ✅
+- Full 9-section strategic blueprint: agent architecture, HVAC launch, projections, costs, risks
+- 5 new agents recommended: SEO, Paid Acquisition, Email Nurture, Brand Guardian, Referral Engine
+- 12-week sprint calendar with KPI gates
+- Next: implement n8n workflows per blueprint recommendations
+
 ## Standard HVAC — ALL TESTING COMPLETE ✅
 - Agent behaviour: 80/80 ✅
 - E2E pipeline:   75/75 ✅
@@ -51,6 +58,3 @@
 - [ ] Run remaining 6 simulator groups on Premium
 - [ ] Promote Premium TESTING → MASTER once 95%+
 - [ ] Live smoke test calls to +18129944371 (Standard — manual)
-- [ ] Go-live: unpause syntharra-ops-monitor Railway service
-- [ ] Go-live: set SMS_ENABLED=true once Telnyx approved
-- [ ] Get Slack webhook URL from Dan → add to vault + Railway env
