@@ -84,7 +84,7 @@
     "group": "core_flow",
     "name": "Maintenance request",
     "callerPrompt": "You want to schedule annual AC maintenance before summer. Sarah Davis, 555-222-1111, 987 Cedar Blvd Dallas TX.",
-    "expectedBehaviour": "Captures name, phone, address, and service type (annual AC maintenance). Reads back full summary including service type. Closes with scripted phrase or similar confirmation. Does NOT transfer. PASS if agent captures all provided details and confirms them, even if caller ends call quickly before agent reads full summary.",
+    "expectedBehaviour": "Captures name, phone, address, and service type (annual AC maintenance). Reads back full details including service type before closing. Does NOT transfer. PASS if agent captures all provided details (name, phone, address, service type) and confirms them back.",
     "premiumOnly": false
   },
   {
