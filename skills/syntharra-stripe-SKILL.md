@@ -257,3 +257,15 @@ Only update this skill when something **fundamental** changes — not during rou
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > After Stripe checkout.session.completed fires, the Stripe n8n workflow upserts the contact and creates a deal at **Paid Client** stage in HubSpot automatically.
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Checkout server | Separate repo (syntharra-checkout) | Keeps billing code isolated — can update pricing page without touching main infra or n8n | — |
+| Products | One product per plan (Standard/Premium) | Clean Stripe dashboard; each product has monthly + annual + setup fee prices | Plan structure changes |
+| Annual pricing | 2 months free (pay 10, get 12) | Simple to communicate to customers; ~17% discount matches industry standard | Market research changes benchmark |
+| Test mode | All pre-launch in test mode | No real payments until go-live; entire pipeline validated before charging anyone | Go-live date confirmed |
+| Coupons | Discount codes recreated in live mode | Test mode coupon IDs don't carry to live mode — must recreate with same code names | — |
