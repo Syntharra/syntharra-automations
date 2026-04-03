@@ -96,6 +96,7 @@ They only get updated when there is a real learning — not just because a task 
 | E2E tests, simulators, scenario runner | `e2e-hvac-standard` or `e2e-hvac-premium` |
 | Client dashboard | `syntharra-client-dashboard` |
 | Marketing, lead gen, newsletter | `syntharra-marketing` |
+| Slack notifications, channels, alerts | `syntharra-slack` |
 
 ---
 
@@ -147,6 +148,7 @@ def load_skill(name):
 | E2E test — Premium | `e2e-hvac-premium` |
 | Ops / session rules | `syntharra-ops` |
 | Marketing / lead gen | `syntharra-marketing` |
+| Slack notifications | `syntharra-slack` |
 | Social leads system | `syntharra-social-leads` |
 | Brand / visual identity | `syntharra-brand` |
 | AI receptionist (new verticals) | `ai-receptionist` |
