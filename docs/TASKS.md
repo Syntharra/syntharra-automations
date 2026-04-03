@@ -24,12 +24,12 @@
 - #14 Pricing redirect — fix applied, retest pending
 - #15 Over-eager close — fix applied, retest pending
 
-### Next session action plan
-1. Fix the 6 core_flow failures (prompt/node edits to TESTING flow)
-2. Re-run core_flow — target 14/15+
-3. Continue remaining 6 groups: info_collection, personalities, pricing_traps, edge_cases, boundary_safety, premium_specific
-4. Fix all failures → 95%+ overall
-5. Promote TESTING → MASTER
+### Next action — Claude Code (simulator fixed, ready to run)
+- Simulator switched to Groq (llama-3.3-70b-versatile) — key in Supabase vault service_name='Groq'
+- Run: `python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group core_flow`
+- Then run remaining 6 groups: personalities, info_collection, pricing_traps, edge_cases, boundary_safety, premium_specific
+- Fix any failures, re-run affected group, target 90/95+
+- Promote TESTING → MASTER once passing
 
 ## Agent Registry
 | Agent | ID | Status |
