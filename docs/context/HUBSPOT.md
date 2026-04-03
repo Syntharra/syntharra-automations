@@ -70,13 +70,17 @@ PUT /crm/v3/associations/notes/{noteId}/contacts/{contactId}/note_to_contact
 ```
 
 ## Workflows That Push to HubSpot
-| n8n Workflow | What it sends | When |
-|---|---|---|
-| Website Lead → AI Readiness Score | Create contact (Lead stage) | Website demo form submit |
-| Stripe Workflow | Update deal → Paid Client stage | Stripe checkout.session.completed |
-| HVAC AI Receptionist - Jotform Onboarding (Standard) | Update deal → Active stage | Jotform Standard submit |
-| HVAC Prem Onboarding | Update deal → Active stage | Jotform Premium submit |
-| HVAC Call Processor | Add note to contact (call summary, lead score) | Post-call webhook |
+| n8n Workflow | ID | What it sends | When |
+|---|---|---|---|
+| Website Lead → AI Readiness Score | `QY1ZFtPJFsU5h6wQ` | Upsert contact + deal (Lead), lead_source=ai_readiness | ai-readiness.html submit |
+| Website Lead → Free Report | `hFU0ZeHae7EttCDK` | Upsert contact + deal (Lead), lead_source=free_report | index.html exit popup |
+| Website Lead — Index + Calculator + Quiz | `I8a2N9bIZp9Qg1IN` | Upsert contact + deal (Lead), lead_source mapped from source | index/calculator/plan-quiz submit |
+| Affiliate Application | `syGlWx8TlbYlPZU4` | Create contact, contact_type=affiliate | affiliate.html submit |
+| Stripe Workflow | `xKD3ny6kfHL0HHXq` | Upsert contact + deal (Paid Client), mrr, plan_type, contact_type=client | Stripe payment confirmed |
+| HVAC Jotform Onboarding Standard | `4Hx7aRdzMl5N0uJP` | Update contact + deal (Active), company record, trade_vertical, agent_live_date | Jotform Standard submit |
+| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | Update contact + deal (Active), company record, trade_vertical, agent_live_date | Jotform Premium submit |
+| HVAC Call Processor Standard | `Kg576YtPM9yEacKn` | Log call note (caller, service, lead score, sentiment, summary) | Post-call webhook Standard |
+| HVAC Call Processor Premium | `STQ4Gt3rH8ptlvMi` | Log call note | Post-call webhook Premium |
 
 ## Properties Mapped
 | Supabase / system field | HubSpot property |
