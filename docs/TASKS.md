@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-03 — Jotform backup poller slowed to 60min | 429 graceful handler added | Personalities fix pending
+> Last updated: 2026-04-02 — Extract Variables task added for both testing agents | Personalities fix pending
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
@@ -38,6 +38,7 @@ Remaining failures: #16 elderly, #18 chatty, #19 non-native, #21 distracted, #22
 | Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
 
 ## Open Action Items (priority order)
+- [ ] Add Extract Variables to HVAC Standard (TESTING) + HVAC Premium (TESTING) agents — do AFTER prompt is locked
 - [ ] Move personality handling from global_prompt INTO node-leadcapture instruction
 - [ ] Run personalities-run3 — target 80%+
 - [ ] Run info_collection, pricing_traps, edge_cases, boundary_safety groups
