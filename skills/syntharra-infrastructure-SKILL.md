@@ -185,7 +185,7 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 #### Unlabelled / Inactive (leave duplicates for now — Dan 2026-04-04)
 | Workflow | ID | Active |
 |---|---|---|
-| Google Keep → Groq → Slack To-Do List | `5wxgBfJL7QeNP2ab` | ✅ (needs tags) |
+| Google Keep → Groq → Slack To-Do List | `5wxgBfJL7QeNP2ab` | ✅ Tagged `Operations` |
 | Keep → Slack TEST RUN | `NY6vhwLFmecAkxdH` | ⚫ |
 | SYNTHARRA_TEST_RUNNER | `HeG3aJQBXyRPKSXA` | ⚫ |
 | Premium — Integration Connected Handler (×3 duplicates) | `SziSvI1zl49cs3cQ`, `OXuB3WR23fg0MmEu`, `IS5eC0SEzIv76TPQ` | ⚫ |
@@ -207,16 +207,23 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 2. **Tags** — minimum 2: one vertical/shared tag + one function tag + one status tag
 3. **Description** — 1–2 sentences in plain English
 
-**Apply via PATCH (partial update — safe, doesn't touch nodes):**
+**Apply tags via dedicated endpoint (verified 2026-04-04):**
 ```bash
-curl -X PATCH https://n8n.syntharra.com/api/v1/workflows/{ID} \
+# 1. Get tag IDs
+curl https://n8n.syntharra.com/api/v1/tags -H "X-N8N-API-KEY: {{N8N_API_KEY}}"
+
+# 2. Apply to workflow
+curl -X PUT https://n8n.syntharra.com/api/v1/workflows/{ID}/tags \
   -H "X-N8N-API-KEY: {{N8N_API_KEY}}" \
   -H "Content-Type: application/json" \
-  -d '{"name": "HVAC Standard — Call Processor", "tags": [{"name": "hvac"}, {"name": "standard"}, {"name": "call-processor"}, {"name": "active"}]}'
+  -d '[{"id": "TAG_ID_1"}, {"id": "TAG_ID_2"}]'
 ```
 
+> ⚠️ `PATCH /workflows/{id}` = 405. `PUT /workflows/{id}` with tags in body = 400 read-only error.
+> Only correct method: `PUT /workflows/{id}/tags` with tag ID array.
+
 **Session close checklist line:** `Labels: all workflows labelled ✅`
-**Audit needed:** All 20 existing workflows are unlabelled — see STANDARDS.md table.
+**Current status:** 38/47 active workflows labelled ✅. 9 inactive duplicates left intentionally.
 
 ### Webhook URLs
 | Service | URL |
