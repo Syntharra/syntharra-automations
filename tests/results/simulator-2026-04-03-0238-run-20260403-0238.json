@@ -1,0 +1,31 @@
+{
+  "run_label": "run-20260403-0238",
+  "timestamp": "2026-04-03T02:38:22.798463+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 1,
+    "pass": 1,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0044,
+    "tokens": {
+      "prompt_tokens": 27861,
+      "completion_tokens": 326
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 47,
+      "name": "Comparison pricing",
+      "group": "pricing_traps",
+      "outcome": "PASS",
+      "criteria_met": 2,
+      "criteria_total": 2,
+      "summary": "The agent did not commit to pricing and successfully routed the caller for a callback.",
+      "root_cause": ""
+    }
+  ]
+}
