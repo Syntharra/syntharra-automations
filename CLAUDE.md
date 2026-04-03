@@ -25,6 +25,32 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 10. Update `docs/TASKS.md` at end of every chat
 11. **Document architectural reasoning in `docs/ARCHITECTURE.md` whenever a non-obvious choice is made**
 
+## Claude Code — Safe Operating Rules
+> Claude Code is the execution layer for session tasks. It complements this workflow — never replaces or overrides it.
+> All rules in this file apply inside Claude Code sessions without exception.
+
+### What Claude Code is used for
+- Running E2E tests automatically after any agent or workflow change
+- Self-healing loop: run test → see failure → fix → re-test → repeat until green
+- Pushing session logs to GitHub at session close
+- Verifying GitHub pushes completed correctly
+
+### Hard limits — non-negotiable inside Claude Code
+1. **TESTING agents only** — never touch MASTER agents (`agent_4afbfdb3fcb1ba9569353af28d`, `agent_9822f440f5c3a13bc4d283ea90`)
+2. **No production changes without E2E pass** — every change must pass `shared/e2e-test.py` before any live push
+3. **Self-healing loop max 10 iterations** — if not green after 10 cycles, stop and report to Dan
+4. **3 consecutive failures on any step = stop** — do not retry indefinitely, surface the blocker
+5. **Never delete or recreate Retell agents** — same as everywhere else, no exceptions
+6. **Read before write** — always fetch current file before any edit
+7. **Session log must be pushed before Claude Code session closes**
+8. **Never wipe or rewrite a file from scratch** — always str_replace on fetched current content
+
+### What Claude Code will NOT do
+- Touch any MASTER agent
+- Push to GitHub without a passing E2E test
+- Modify live production n8n workflows without test verification
+- Run the self-healing loop against anything other than the TESTING agent
+
 ## SELF-IMPROVEMENT PROTOCOL — NON-NEGOTIABLE
 
 Skills and FAILURES.md are Claude's permanent, compounding memory.
