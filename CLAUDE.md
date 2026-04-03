@@ -188,6 +188,40 @@ def load_skill(name):
 - Current focus: HVAC contractors USA. Expansion: plumbing, electrical, cleaning — same system, one parameter change
 - SMS via Telnyx (pending approval). NOT Twilio.
 
+
+## Claude Code — Safe Operating Rules
+> Claude Code is the execution layer for session-based tasks. It complements this chat — never replaces or overwrites it.
+> These rules are as non-negotiable as the Retell agent rules above.
+
+### Hard limits (never violate)
+1. **TESTING agents only** — self-healing loop and E2E runs operate on TESTING agents exclusively. MASTER agents are never touched by Claude Code.
+2. **E2E must pass before any production push** — no exceptions. Green tests = safe to push. Anything else = stop and report.
+3. **No destructive operations** — no deleting files, agents, workflows, Supabase rows, or GitHub history. Ever.
+4. **3-strike stop rule** — if any automated step fails 3 consecutive times, stop completely and report to Dan. Do not loop indefinitely.
+5. **Max 10 iterations** on any self-healing loop before stopping and reporting.
+6. **Session log mandatory** — Claude Code session cannot close without pushing a session log to `docs/session-logs/YYYY-MM-DD-topic.md`.
+
+### What Claude Code does in a session
+| Task | Script | Operates on |
+|---|---|---|
+| Run E2E after agent change | `python3 shared/e2e-test.py` | TESTING agent only |
+| Run E2E after workflow change | `python3 shared/e2e-test-premium.py` | TESTING agent only |
+| Self-healing loop | `python3 tools/self-healing-loop.py` | TESTING agent only |
+| Push session log | `tools/claude-code/push-session-log.sh` | `docs/session-logs/` only |
+| Verify GitHub push | `tools/claude-code/verify-push.sh` | Read-only check |
+
+### What Claude Code never does
+- Never runs against MASTER agents (`agent_4afbfdb3fcb1ba9569353af28d`, `agent_9822f440f5c3a13bc4d283ea90`)
+- Never modifies n8n production workflows without E2E pass
+- Never changes Railway env vars without explicit Dan instruction in chat
+- Never touches Stripe in live mode
+- Never sends real emails to real clients during testing
+
+### CLAUDE.md for Claude Code
+> When Claude Code starts, it must fetch and follow this CLAUDE.md exactly.
+> The operating rules, skill files, and session protocols are identical whether running in chat or Claude Code.
+> Claude Code is not a separate context — it is the same engineer, same rules, same memory.
+
 ## Brand tokens (quick reference)
 - Violet: `#6C63FF` | Cyan: `#00D4FF` | Dark: `#1A1A2E`
 - Font: DM Sans (UI) | Email font: Inter
