@@ -57,3 +57,9 @@ Remaining failures: #16 elderly, #18 chatty, #19 non-native, #21 distracted, #22
 2. Update Railway STRIPE_SECRET_KEY → sk_live_
 3. Update n8n webhook signing secret
 4. Unpause ops monitor + enable SMS (Telnyx)
+
+## Completed 2026-04-03
+- [x] Email hub — all 6 emails built and brand-compliant
+- [x] Welcome Premium & Hot Lead Alert stubs replaced with full implementations
+- [x] Call forwarding PDF rebuilt — no logo, QR codes included, set as standard
+- [x] Old PDF build scripts and onboarding HTML archived
