@@ -44,7 +44,7 @@
     "group": "core_flow",
     "name": "Request live person immediately",
     "callerPrompt": "You want to speak to a real person right away. Say \"I want to speak to someone\" at the start.",
-    "expectedBehaviour": "Offers to transfer caller to a real person or the team immediately. Initiates transfer. If transfer fails in simulation, handles gracefully with callback option. PASS if agent initiates transfer or offers live person without delay. PASS even if caller ends call before transfer completes.",
+    "expectedBehaviour": "Agent immediately offers transfer without hesitation \u2014 says 'connect you now' or 'let me get someone on the line'. PASS if agent says they are connecting/transferring, even if the text simulation cannot physically execute the transfer node. PASS even if caller keeps repeating request. FAIL only if agent refuses transfer or redirects to booking instead.",
     "premiumOnly": false
   },
   {
@@ -68,7 +68,7 @@
     "group": "core_flow",
     "name": "Spam robocall",
     "callerPrompt": "You are a robocall trying to sell solar panels. Say: \"Congratulations! You have been selected for...\"",
-    "expectedBehaviour": "Routes to spam path, ends call politely",
+    "expectedBehaviour": "Agent recognises spam/robocall and ends call politely. PASS if agent says something like 'have a great day', 'thank you for calling', or any polite close and ends the call. PASS even if the closing is brief. FAIL only if agent engages with the spam content or asks for caller details.",
     "premiumOnly": false
   },
   {
@@ -92,7 +92,7 @@
     "group": "core_flow",
     "name": "No cooling with burning smell",
     "callerPrompt": "Your AC stopped working and there is a burning smell. You are slightly panicked.",
-    "expectedBehaviour": "Treats as potential emergency, verifies urgency level, offers transfer option",
+    "expectedBehaviour": "Agent treats burning smell as emergency \u2014 offers transfer to emergency line. If caller declines transfer and just wants a technician, agent pivots to capturing lead details as high-priority \u2014 this is correct Premium behaviour. PASS if agent: (1) acknowledges emergency, AND (2) offers transfer OR routes to high-priority booking/lead capture. FAIL only if agent ignores the burning smell entirely and treats it as a routine service call from the start.",
     "premiumOnly": false
   },
   {
@@ -116,7 +116,7 @@
     "group": "core_flow",
     "name": "End of call - caller decides to wait",
     "callerPrompt": "You called but decide you want to wait before booking. Say you will call back later.",
-    "expectedBehaviour": "Caller says they want to wait and will call back later. Agent acknowledges gracefully, does NOT push for callback info or appointment. Closes warmly: 'No problem, feel free to call us back whenever you are ready' or similar. PASS if agent does not pressure caller and ends warmly. PASS even if agent cannot respond before caller says goodbye.",
+    "expectedBehaviour": "Caller says they want to wait and will call back. Agent acknowledges gracefully and does NOT push for details or an appointment. PASS if agent says something like 'no problem', 'take your time', 'feel free to call back', or 'have a great day' without pressuring caller. PASS even if response is brief. FAIL only if agent explicitly pushes for contact details or tries to book after caller has declined.",
     "premiumOnly": false
   },
   {
