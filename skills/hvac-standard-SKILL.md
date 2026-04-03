@@ -1,303 +1,453 @@
 ---
 name: hvac-standard
 description: >
-  Complete reference for the Syntharra HVAC Standard pipeline — the first and primary live product.
-  ALWAYS load this skill when: debugging the HVAC Standard onboarding flow, working on the Standard
-  call processor, editing the Arctic Breeze demo agent, troubleshooting Jotform Standard submissions,
-  checking Standard client records in Supabase, working on n8n Standard workflows, editing Retell
-  agent prompts or conversation flows for Standard tier, handling Standard client calls or call logs,
-  or doing anything related to the Standard plan ($497/mo or $414/mo annual).
+  Master reference for the entire HVAC Standard product — Retell agent, onboarding pipeline,
+  call processor, Supabase, n8n workflows, and all testing. Load this skill for ANY task
+  touching the Standard product: agent prompt changes, onboarding debugging, call log issues,
+  Stripe/billing, E2E testing, call processor testing, or agent behaviour testing.
+  This skill is the single source of truth. The three specialist skills
+  (e2e-hvac-standard, standard-call-processor-testing, hvac-standard-agent-testing) contain
+  deeper detail for their specific domains — load them when you need to run or debug tests.
+  This skill covers: what the system does, how it is built, all IDs and endpoints, test status,
+  and known issues. Do not load all four at once — this skill alone is sufficient for most tasks.
 ---
 
-> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
-
-# HVAC Standard Pipeline — Full Reference
+> **Last verified: 2026-04-04**
+> **System status: PRE-LAUNCH — Stripe TEST MODE — all testing complete**
+> **Go-live gate: 3–5 live smoke calls, then unpause ops-monitor and set SMS_ENABLED=true**
 
 ---
 
-## Retell Agent
+# HVAC Standard — Master Reference
+
+---
+
+## 1. What This Product Is
+
+An AI phone receptionist for HVAC contractors, built on Retell AI.
+- Answers calls 24/7 as a named agent (e.g. "Sophie")
+- Qualifies leads, captures caller details, scores urgency
+- Handles emergencies, existing customers, wrong numbers, spam
+- Routes genuine emergencies to a live transfer number
+- Posts a lead notification to the client (email + SMS) within seconds of call end
+- Logs every call to Supabase and HubSpot
+
+**Pricing:** $497/mo (monthly) or $414/mo (annual) + $1,499 setup fee
+**Plan name in DB:** `Standard`
+
+---
+
+## 2. Retell Agent
 
 | Item | Value |
 |---|---|
-| Agent Name | Arctic Breeze HVAC |
-| Agent ID | `agent_4afbfdb3fcb1ba9569353af28d` |
+| MASTER Agent ID | `agent_4afbfdb3fcb1ba9569353af28d` |
+| TESTING Agent ID | `agent_731f6f4d59b749a0aa11c26929` |
 | Phone Number | `+1 (812) 994-4371` |
 | Transfer Number | `+1 (856) 363-0633` |
-| Conversation Flow | `conversation_flow_34d169608460` |
-| Retell API Key | `{{RETELL_API_KEY}}` |
+| MASTER Conversation Flow | `conversation_flow_34d169608460` |
+| TESTING Conversation Flow | `conversation_flow_5b98b76c8ff4` |
+| Demo Agent (Female/Sophie) | `agent_2723c07c83f65c71afd06e1d50` |
+| Demo Agent (Male/Jake) | `agent_b9d169e5290c609a8734e0bb45` |
 
-
-
-### Demo Agents (must always stay published)
-| Name | Agent ID |
-|---|---|
-| Jake | `agent_b9d169e5290c609a8734e0bb45` |
-| Sophie | `agent_2723c07c83f65c71afd06e1d50` |
-
----
-
-## Critical Retell Rules
-
-- **NEVER delete or recreate a Retell agent** — agent_id is the foreign key tying Retell, Supabase, call processor, and phone number together. Always patch in place.
-- **Always publish after any agent update**: `POST https://api.retellai.com/publish-agent/{agent_id}` with `Authorization: Bearer {{RETELL_API_KEY}}` (returns 200 empty body)
-- If a new agent is ever created: immediately update Supabase `agent_id`, phone assignment, and n8n in same operation
+### Hard rules — non-negotiable
+- **NEVER delete or recreate a Retell agent** — agent_id is the FK across Retell, Supabase, call processor, and phone number
+- **ALWAYS publish after any agent or flow update:** `POST https://api.retellai.com/publish-agent/{agent_id}`
+- **All changes go to TESTING first** — verify at ≥95% pass rate before patching MASTER
 - Demo agents must always stay published
-- **Use commas not dashes** in agent prompts for better AI readability
 
-### Prompt Architecture
-- Master base prompt + company info block + call type nodes
-- Dynamic variables: `{{agent_name}}`, `{{company_name}}`, `{{COMPANY_INFO_BLOCK}}`
-- Call types: service/repair, install/quote, existing customer, FAQ, emergency, live transfer
+### Conversation Flow — 12 nodes (exact)
 
----
-
-## n8n Workflows
-
-| Workflow | ID |
-|---|---|
-| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` |
-| HVAC Std Call Processor | `Kg576YtPM9yEacKn` |
-
-- n8n instance: `https://n8n.syntharra.com`
-- Railway n8n API key: `{{N8N_API_KEY — query syntharra_vault}}`
-- **Always click Publish after any workflow edits**
-- n8n PUT payload: only `name`, `nodes`, `connections`, `settings` (only `executionOrder` from settings) — extra fields cause 400 errors
-- All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
-
-### Email Routing (Standard)
-
-| Notification Type | To |
-|---|---|
-| Internal onboarding notifications | `onboarding@syntharra.com` |
-| Internal call processor notifications | `admin@syntharra.com` |
-| Customer-facing contact reference | `support@syntharra.com` |
-
----
-
-## Jotform — Standard Onboarding
-
-| Item | Value |
-|---|---|
-| Form ID | `260795139953066` |
-| Webhook URL | `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding` |
-| API Key | `{{JOTFORM_API_KEY — query syntharra_vault}}` (account: Blackmore_Daniel) |
-
-**Use REST API directly** — do NOT use MCP OAuth connector (broken).
-
----
-
-## Supabase
-
-| Item | Value |
-|---|---|
-| URL | `hgheyqwnrcvwtgngqdnq.supabase.co` |
-| Primary table | `hvac_standard_agent` |
-| Call log table | `hvac_call_log` |
-
-### `hvac_standard_agent` key fields
-`agent_id`, `company_name`, `notification_email`, `notification_email_2`, `notification_email_3`, `notification_sms_2`, `notification_sms_3`
-
-### `hvac_call_log` key fields
-`call_tier`, `job_type`, `vulnerable_occupant`, `caller_sentiment`, `geocode_status`, `geocode_formatted`, `caller_address`, `notes`
-
----
-
-## Standard Plan Pricing
-
-| Billing | Price | Setup Fee | Minutes |
+| # | Node ID | Name | Type |
 |---|---|---|---|
-| Monthly | $497/mo | $1,499 | 475 min/mo |
-| Annual | $414/mo | $1,499 | 475 min/mo |
+| 1 | `node-greeting` | `greeting_node` | conversation |
+| 2 | `node-identify-call` | `identify_call_node` | conversation |
+| 3 | `node-leadcapture` | `nonemergency_leadcapture_node` | conversation |
+| 4 | `node-verify-emergency` | `verify_emergency_node` | conversation |
+| 5 | `node-existing-customer` | `existing_customer_node` | conversation |
+| 6 | `node-general-questions` | `general_questions_node` | conversation |
+| 7 | `node-callback` | `callback_node` | conversation |
+| 8 | `node-spam-robocall` | `spam_robocall_node` | conversation |
+| 9 | `node-transfer-call` | `Transfer Call` | transfer_call |
+| 10 | `node-transfer-failed` | `transfer_failed_node` | conversation |
+| 11 | `node-ending` | `Ending` | conversation |
+| 12 | `node-end-call` | `End Call` | end |
+
+If a flow has anything other than exactly 12 nodes, something is wrong.
+
+### Prompt architecture
+- Global prompt: lean (~4,000 chars) — handles identity, rules, edge cases
+- Node-level instructions: specific behaviour per call type
+- Dynamic variables injected at runtime: `{{agent_name}}`, `{{company_name}}`, `{{COMPANY_INFO_BLOCK}}`
+- Code node (`node-caller-style`) detects caller style (chatty/technical/distressed) and injects `caller_style_note` into leadcapture node top
+- Use commas not dashes in prompt text for better LLM readability
 
 ---
 
-## Stripe (TEST MODE)
+## 3. Onboarding Pipeline
+
+**Trigger:** Client submits Jotform Standard form → webhook fires → n8n provisions everything
+
+```
+Jotform submission
+  → POST /webhook/jotform-hvac-onboarding
+  → n8n: HVAC AI Receptionist - JotForm Onboarding (4Hx7aRdzMl5N0uJP)
+      → Parse form data
+      → Create Supabase record (hvac_standard_agent)
+      → Clone Retell agent from MASTER template
+      → Build 12-node conversation flow with client data injected
+      → Publish agent
+      → Wire phone number
+      → Send "You're Live" email to client
+      → Notify onboarding@syntharra.com
+      → HubSpot: update contact + create deal at Active stage
+```
+
+| Item | Value |
+|---|---|
+| Jotform Form ID | `260795139953066` |
+| Jotform webhook path | `/webhook/jotform-hvac-onboarding` |
+| Onboarding workflow ID | `4Hx7aRdzMl5N0uJP` |
+| Supabase table | `hvac_standard_agent` |
+
+> Always use Jotform REST API directly — never MCP connector (broken)
+
+### Key Jotform → Supabase field mappings
+
+| Supabase column | Jotform key |
+|---|---|
+| `company_name` | `q4_hvacCompany` |
+| `owner_name` | `q54_ownerName` |
+| `client_email` | `q5_emailAddress` |
+| `company_phone` | `q6_mainCompany` |
+| `agent_name` | `q10_aiAgent10` |
+| `services_offered` | `q13_servicesOffered` |
+| `service_area` | `q16_primaryService` |
+| `emergency_service` | `q20_247Emergency` |
+| `emergency_phone` | `q21_emergencyAfterhours` |
+| `business_hours` | `q17_businessHours` |
+| `lead_phone` | `q32_leadNotification` |
+| `lead_email` | `q33_leadNotification33` |
+| `transfer_phone` | `q48_transferPhone` |
+| `transfer_triggers` | `q49_transferTriggers` |
+| `timezone` | `q34_timezone` |
+
+Full 40-field mapping: `skills/e2e-hvac-standard-SKILL.md`
+
+---
+
+## 4. Call Processor
+
+**Trigger:** Every call end → Retell fires `call_analyzed` webhook → n8n processes
+
+```
+POST /webhook/retell-hvac-webhook
+  → Filter: call_analyzed events only
+  → Extract Call Data
+  → Supabase Lookup Client (by agent_id)
+  → Parse Client Data
+  → Check Repeat Caller (dedup gate — rejects duplicate call_id)
+  → Build Groq Request [Code node]
+  → Groq: Analyze Transcript [HTTP → api.groq.com]
+  → Parse Lead Data [Code — normalises all fields]
+  → Is Lead? [IF]
+      ├─ TRUE  → SMS alert + Gmail lead email + Supabase: Log Call + HubSpot Note
+      └─ FALSE → Log Non-Lead + Supabase: Log Call + HubSpot Note
+```
+
+| Item | Value |
+|---|---|
+| Workflow ID | `Kg576YtPM9yEacKn` |
+| Webhook path | `/webhook/retell-hvac-webhook` |
+| AI model | Groq `llama-3.3-70b-versatile` |
+| Groq credential (n8n) | `UfljdfOxkfTm76LE` |
+| Output table | `hvac_call_log` |
+
+> ⚠️ **NEVER use OpenAI credential `1uzBYwyR7Q7bdkZe`** — expired key, caused silent total failure.
+> Groq replaced OpenAI entirely on 2026-04-03.
+
+### Fields written to hvac_call_log (18 fields)
+
+| Field | Type | Source |
+|---|---|---|
+| `call_id` | text | Retell webhook — dedup key |
+| `agent_id` | text | Retell webhook |
+| `company_name` | text | Supabase lookup |
+| `call_tier` | text | `plan_type` field, default "Standard" |
+| `caller_name` | text | Groq |
+| `caller_phone` | text | Groq (falls back to `from_number`) |
+| `caller_address` | text | Groq (empty string if not given) |
+| `service_requested` | text | Groq |
+| `job_type` | text | Groq → normalised enum |
+| `lead_score` | int | Groq (1–10) |
+| `is_lead` | bool | Groq + override rules |
+| `urgency` | text | Groq: Low / Medium / High / Emergency |
+| `caller_sentiment` | int | Groq → integer: 2=Positive 3=Neutral 4=Frustrated 5=Angry |
+| `vulnerable_occupant` | bool | Groq |
+| `transfer_attempted` | bool | Groq |
+| `summary` | text | Groq |
+| `notes` | text | Groq |
+| `duration_seconds` | int | Retell webhook |
+
+### is_lead override logic
+```
+is_lead = False  if job_type in [Wrong Number, Spam, Vendor, Job Application]
+is_lead = False  if job_type == General Enquiry AND lead_score < 6
+is_lead = Groq value  otherwise
+```
+
+### job_type enum
+`Repair` · `Installation` · `Maintenance` · `Emergency` · `General Enquiry` ·
+`Wrong Number` · `Spam` · `Vendor` · `Job Application` · `Other`
+
+### caller_sentiment — stored as INTEGER
+`2` Positive · `3` Neutral · `4` Frustrated · `5` Angry
+Never write string values — column type is INT, will throw 22P02.
+
+---
+
+## 5. Supabase Tables
+
+| Table | Purpose |
+|---|---|
+| `hvac_standard_agent` | All client config — Standard AND Premium (merged, no separate premium table) |
+| `hvac_call_log` | All call records — Standard AND Premium (single table, `call_tier` differentiates) |
+
+> `hvac_premium_agent` and `hvac_premium_call_log` do NOT exist — do not reference them.
+
+### hvac_standard_agent key columns
+`agent_id, company_name, agent_name, plan_type, client_email, timezone, lead_phone, lead_email,
+services_offered, service_area, business_hours, emergency_service, emergency_phone,
+stripe_customer_id, subscription_id, notification_email_2/3, notification_sms_2/3,
+transfer_phone, transfer_triggers, conversation_flow_id`
+
+### hvac_call_log key columns
+`call_id, agent_id, company_name, call_tier, caller_name, caller_phone, caller_address,
+service_requested, job_type, urgency, lead_score, is_lead, caller_sentiment,
+vulnerable_occupant, transfer_attempted, transfer_success, summary, notes,
+geocode_status, geocode_formatted, duration_seconds, created_at`
+
+---
+
+## 6. n8n Workflows (Standard)
+
+| Workflow | ID | Purpose |
+|---|---|---|
+| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | Jotform → Supabase + Retell provision |
+| HVAC Call Processor | `Kg576YtPM9yEacKn` | Post-call webhook → Groq → Supabase + HubSpot |
+| Weekly Lead Report | `iLPb6ByiytisqUJC` | Sunday 6pm per-timezone client report |
+| Usage Alert Monitor | `Wa3pHRMwSjbZHqMC` | 80% + 100% minute usage warnings |
+| Monthly Minutes Calc | `z1DNTjvTDAkExsX8` | Overage billing per client |
+| Send Welcome Email | `lXqt5anbJgsAMP7O` | Manual resend trigger |
+
+**n8n rules:**
+- PUT payload accepts only: `name`, `nodes`, `connections`, `settings.executionOrder` — nothing else
+- Always publish after edits
+- `fetch()` is NOT available in n8n Code nodes — use Code (builds body) + HTTP Request (fires call) pattern
+- `$http` not available on this n8n version — same workaround
+
+---
+
+## 7. Stripe (TEST MODE)
 
 | Item | Value |
 |---|---|
 | Standard product | `prod_UC0hZtntx3VEg2` |
-| Monthly price | `price_1TDckaECS71NQsk8DdNsWy1o` |
-| Annual price | `price_1TDckiECS71NQsk8fqDio8pw` |
-| Setup fee price | `price_1TEKKrECS71NQsk8Mw3Z8CoC` |
-| Founding discount | `FOUNDING-STANDARD` → `gzp8vnD7` ($1,499 off once) |
-| Closer $250 off | `CLOSER-250` → `mGTTQZOw` |
-| Closer $500 off | `CLOSER-500` → `GJiRoaMY` |
-| Closer $750 off | `CLOSER-750` → `fUzLNIgz` |
-| Closer $1000 off | `CLOSER-1000` → `3wraC3tQ` |
+| Monthly price | `price_1TDckaECS71NQsk8DdNsWy1o` ($497/mo) |
+| Annual price | `price_1TDckiECS71NQsk8fqDio8pw` ($414/mo) |
+| Setup fee price | `price_1TEKKrECS71NQsk8Mw3Z8CoC` ($1,499) |
+| Stripe webhook | `ydzfhitWiF5wNzEy` |
+| Founding discount | `FOUNDING-STANDARD` → `gzp8vnD7` ($1,499 off) |
+| Closer $250–$1000 off | `CLOSER-250/500/750/1000` coupons in vault |
 
 ---
 
-## Stripe Workflow (Shared — also affects Standard)
+## 8. Email Flow
 
-| Item | Value |
-|---|---|
-| Workflow ID | `ydzfhitWiF5wNzEy` |
-| Trigger | `checkout.session.completed` |
-| Flow | Extract Session → Save to Supabase → Send Welcome Email → Internal Notification |
-| Webhook URL | `https://n8n.syntharra.com/webhook/syntharra-stripe-webhook` |
-| Webhook signing secret | `{{STRIPE_WEBHOOK_SECRET}}` |
+Three emails per Standard client:
+1. **Stripe welcome** — on checkout.session.completed (automated)
+2. **"You're Live"** — after agent provisioned (automated via onboarding workflow)
+3. **Weekly lead report** — every Sunday, per-timezone (automated)
 
----
-
-## Email Flow (Standard Clients — 3 emails)
-
-1. Stripe welcome email (automated via Stripe → n8n)
-2. "You're Live" email + PDF (sent after agent is provisioned)
-3. Weekly report (ongoing)
+Internal notifications:
+- New onboarding → `onboarding@syntharra.com`
+- Lead alert (call processor) → `admin@syntharra.com`
+- All: SMTP2GO credential `"SMTP2GO - Syntharra"`, light theme (#F7F7FB bg, #6C63FF accent)
 
 ---
 
-## Shared n8n Workflows (affect Standard)
+## 9. HubSpot CRM
 
-| Workflow | ID |
-|---|---|
-| Stripe Workflow | `ydzfhitWiF5wNzEy` |
-| Weekly Lead Report | `mFuiB4pyXyWSIM5P` |
-| Minutes Calculator | `9SuchBjqhFmLbH8o` |
-| Usage Alert Monitor | `lQsYJWQeP5YPikam` |
-| Publish Retell Agent | `sBFhshlsz31L6FV8` |
-| Nightly GitHub Backup | `EAHgqAfQoCDumvPU` |
+All client and lead activity flows to HubSpot automatically:
+- Website lead → `Lead` stage
+- Stripe payment → `Paid Client` stage
+- Jotform onboarding → `Active` stage
+- Post-call → note logged to client contact
+
+Pipeline: "Syntharra Sales" → Lead → Demo Booked → Paid Client → Active
+Full reference: `skills/syntharra-hubspot-SKILL.md`
 
 ---
 
-## SMS
+## 10. SMS
 
 - SMS wired but disabled: `SMS_ENABLED=false`
-- Preferred provider: Telnyx (awaiting AI evaluation approval — account active, $5 loaded, identity verified)
-- Backup: Plivo. **Never Twilio.**
+- Provider: Telnyx (awaiting AI evaluation approval — account active, $5 loaded)
+- **Never Twilio**
+- Enable at go-live: set `SMS_ENABLED=true` in Railway env once Telnyx approved
 
 ---
 
-## Demo Call Instructions
+## 11. Credentials & Vault
 
-Arctic Breeze is the **test agent only** — used for demos and VSL recording, not a real client.
-- Call: `+1 (812) 994-4371`
-- Persona: "Mike Henderson"
-- Used for VSL Scene 3
+All API keys in Supabase `syntharra_vault` — never hardcode. Query by `service_name` + `key_type`.
 
----
-
----
-
-## 🔑 Syntharra Vault — Credential Access
-
-ALL Syntharra API keys and secrets are stored in the Supabase table `syntharra_vault`.
-
-- **Project URL:** `https://hgheyqwnrcvwtgngqdnq.supabase.co`
-- **Table:** `syntharra_vault`
-- **Query by:** `service_name` + `key_type` fields → retrieve `key_value`
-- **Auth:** Supabase service role key — stored in vault as `service_name = 'Supabase'`, `key_type = 'service_role_key'`
-- **NEVER** store keys in skill files, session logs, GitHub, or project memory
-
-### REST Lookup Pattern
 ```
-GET https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/syntharra_vault?service_name=eq.{SERVICE_NAME}&key_type=eq.{KEY_TYPE}&select=key_value
-Headers:
-  apikey: {SUPABASE_SERVICE_ROLE_KEY}
-  Authorization: Bearer {SUPABASE_SERVICE_ROLE_KEY}
+GET https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/syntharra_vault
+  ?service_name=eq.{NAME}&key_type=eq.{TYPE}&select=key_value
+Headers: apikey + Authorization: Bearer {SERVICE_ROLE_KEY}
 ```
 
-### JavaScript Lookup Pattern (n8n / Node.js)
-```javascript
-async function getVaultKey(serviceName, keyType) {
-  const SUPABASE_URL = 'https://hgheyqwnrcvwtgngqdnq.supabase.co';
-  const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/syntharra_vault?service_name=eq.${serviceName}&key_type=eq.${keyType}&select=key_value`,
-    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
-  );
-  const data = await res.json();
-  return data[0]?.key_value;
-}
-
-// Examples:
-const retellKey    = await getVaultKey('Retell AI', 'api_key');
-const n8nUrl       = await getVaultKey('n8n Railway', 'instance_url');
-const stripeMonthly = await getVaultKey('Stripe', 'price_standard_monthly');
-```
-
-### Known service_name / key_type Values
-
-| service_name | key_type | What it is |
-|---|---|---|
-| `n8n Railway` | `instance_url` | `https://n8n.syntharra.com` |
-| `n8n Railway` | `api_key` | n8n Railway API key |
-| `Retell AI` | `api_key` | Retell API key |
-| `Retell AI` | `agent_id_arctic_breeze` | Test HVAC agent ID |
-| `Retell AI` | `agent_id_demo_jake` | Demo agent Jake |
-| `Retell AI` | `agent_id_demo_sophie` | Demo agent Sophie |
-| `Retell AI` | `conversation_flow_id` | Live conversation flow |
-| `Retell AI` | `phone_number` | Arctic Breeze phone |
-| `Supabase` | `project_url` | Supabase project URL |
-| `Supabase` | `service_role_key` | Full admin key |
-| `GitHub` | `personal_access_token` | GitHub PAT |
-| `Stripe` | `product_id_standard` | Standard product ID |
-| `Stripe` | `product_id_premium` | Premium product ID |
-| `Stripe` | `price_standard_monthly` | $497/mo price ID |
-| `Stripe` | `price_standard_annual` | $414/mo price ID |
-| `Stripe` | `price_standard_setup` | $1,499 setup price ID |
-| `Stripe` | `price_premium_monthly` | $997/mo price ID |
-| `Stripe` | `price_premium_annual` | $831/mo price ID |
-| `Stripe` | `price_premium_setup` | $2,499 setup price ID |
-| `Stripe` | `coupon_founding_standard` | FOUNDING-STANDARD coupon |
-| `Stripe` | `coupon_founding_premium` | FOUNDING-PREMIUM coupon |
-| `Stripe` | `webhook_url` | Stripe webhook URL |
-| `Stripe` | `webhook_id` | Stripe webhook ID |
-| `Jotform` | `api_key` | Jotform API key |
-| `Jotform` | `form_id_standard` | Standard onboarding form ID |
-| `Jotform` | `form_id_premium` | Premium onboarding form ID |
-| `Jotform` | `webhook_standard_new` | Railway n8n webhook URL |
-| `SMTP2GO` | `api_key` | SMTP2GO API key |
-| `Railway` | `api_token` | Railway API token |
-| `Railway` | `project_id` | Syntharra project ID |
-| `Railway` | `service_id_n8n` | n8n service ID |
-| `Railway` | `service_id_checkout` | Checkout service ID |
-| `Railway` | `service_id_ops_monitor` | Ops monitor service ID |
+Key vault entries:
+| service_name | key_type |
+|---|---|
+| `Retell AI` | `api_key` |
+| `Groq` | `api_key` |
+| `n8n Railway` | `api_key`, `instance_url` |
+| `Supabase` | `service_role_key` |
+| `Stripe` | `price_standard_monthly`, `price_standard_annual`, `price_standard_setup` |
+| `Jotform` | `api_key`, `form_id_standard` |
+| `GitHub` | `personal_access_token` |
+| `Railway` | `api_token` |
 
 ---
 
-## 🔄 Auto-Update Rule
+## 12. Testing — Complete Status
 
-**Whenever you complete any task that touches this skill's domain, you MUST update this SKILL.md before the chat ends.**
+### 12.1 Agent Behaviour Testing — 80/80 ✅
 
-This includes:
-- New n8n workflow created or renamed → update the workflow table
-- New Supabase table or column added → update the tables section
-- New Jotform field added → update field mappings
-- API key or credential changed → update the keys section
-- New Retell agent created → update agent IDs
-- Stripe product/price/coupon added or changed → update Stripe section
-- New Railway service created → update infrastructure section
-- New website page created → update file map
-- Any webhook URL changed → update webhook URLs
-- Any new learnings or gotchas discovered → add to key rules/learnings
+Tests Sophie's conversation behaviour across all scenario types.
+**Tool:** `tools/openai-agent-simulator.py`
+**Specialist skill:** `skills/hvac-standard-agent-testing-SKILL.md` (load for prompt changes or re-testing)
 
-**How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
-**GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
-
-## CRM — HubSpot (active since 2026-04-03)
-> HubSpot replaced the admin dashboard as Syntharra's CRM layer.
-> Load `skills/syntharra-hubspot-SKILL.md` for full API reference.
-
-- **All client records, deals, and sales pipeline live in HubSpot**
-- **All marketing leads flow into HubSpot** (website form → Lead stage)
-- **All paying clients auto-create in HubSpot** (Stripe → Paid Client stage)
-- **All onboarded clients auto-update in HubSpot** (Jotform → Active stage)
-- **All call activity is logged in HubSpot** (Retell post-call → contact note)
-- Supabase remains operational source of truth for Retell agent config + call logs
-- HubSpot is the sales, marketing, and client relationship layer
-- API key: `syntharra_vault` (service_name='HubSpot', key_type='api_key')
-- Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
-
-> After Jotform Standard onboarding completes and the agent goes live, the workflow updates the client contact and creates a deal at **Active** stage in HubSpot automatically.
-
----
-
-## Architecture Decisions
-
-| Decision | Chose | Why | Revisit if |
+| Group | Scenarios | Score | Status |
 |---|---|---|---|
-| Call flow structure | Node-based conversation flow | Deterministic routing (emergency → lead capture → existing customer) is more reliable than freeform prompt; easier to test each path | Retell removes flow feature |
-| Caller style detection | Code node injects note at leadcapture top | Long global prompt had style instructions ignored at bottom; code node = deterministic + short injection at active context position | — |
-| Transfer fallback | transfer_failed node | If live transfer fails, agent collects contact and promises callback — never dead-ends the caller | — |
-| Single TESTING agent | Separate from MASTER | All prompt experiments happen on TESTING agent; MASTER is never touched until changes are verified at 95%+ pass rate | — |
+| core_flow | 15 | 15/15 | ✅ 100% |
+| pricing_traps | 8 | 8/8 | ✅ 100% |
+| personalities | 15 | 15/15 | ✅ 100% |
+| boundary_safety | 12 | 12/12 | ✅ 100% |
+| edge_cases | 15 | 15/15 | ✅ 100% |
+| info_collection | 15 | 15/15 | ✅ 100% |
+| **TOTAL** | **80** | **80/80** | ✅ **100%** |
+
+Last verified: 2026-04-03
+
+**When to re-run:** Any time the global prompt or a conversation flow node is edited.
+**Rule:** Never promote TESTING → MASTER until agent behaviour tests pass at ≥95%.
+
+### 12.2 E2E Pipeline Test — 75/75 ✅
+
+Tests the full onboarding pipeline from Jotform submission to Retell agent live.
+**Script:** `python3 shared/e2e-test.py`
+**Specialist skill:** `skills/e2e-hvac-standard-SKILL.md` (load when running or debugging)
+
+| Phase | What's tested | Assertions |
+|---|---|---|
+| 1 | Jotform webhook → HTTP 200 | 1 |
+| 2 | n8n onboarding workflow completes | 1 |
+| 3 | Supabase record — all 40+ fields populated | 40+ |
+| 4 | Retell agent exists, published, correct config | 8 |
+| 5 | Conversation flow — exactly 12 nodes | 12 |
+| 6 | Call processor — fake call logged to hvac_call_log | 8 |
+| 7 | Stripe gate — SMS/Twilio correctly skipped in test mode | 1 |
+
+Last verified: 2026-04-02. Self-cleaning — test agent + row auto-deleted after 5 mins.
+
+**When to re-run:** Any time onboarding workflow, Supabase schema, or Retell provisioning logic changes.
+
+### 12.3 Call Processor Test — 20/20 ✅
+
+Tests Groq transcript analysis, field extraction, lead scoring, and Supabase writes.
+**Script:** `python3 tests/call-processor-test.py`
+**Specialist skill:** `skills/standard-call-processor-testing-SKILL.md` (load when running or debugging)
+
+| Scenario group | Count | Status |
+|---|---|---|
+| Core leads (repair, install, maintenance, emergency, follow-up) | 5 | ✅ |
+| Edge cases (hang-up, wrong number, spam, out-of-area, live transfer) | 5 | ✅ |
+| Lead scoring (commercial, pricing-only, phonetic number, dedup, short call) | 5 | ✅ |
+| Field accuracy (sentiment, geocode, no-address, vendor, job applicant) | 5 | ✅ |
+
+Last verified: 2026-04-04. Script spaces calls 12s apart to respect Groq free-tier RPM.
+
+**When to re-run:** Any time the call processor workflow, Groq prompt, Parse Lead Data node, or Supabase schema changes.
+
+### Key assertion calibration notes (call processor)
+- `caller_address` — assert `present`, not `contains city-name` (Groq stores street line only)
+- `urgency` for no-heat without gas — "High" is correct, not "Emergency" (Emergency = gas/fire/safety only)
+- `geocode_status` — async, do not assert in timed tests (may not populate within 25s)
+- `is_lead` for no-address vague calls — correctly `False`, do not assert True
+
+---
+
+## 13. Testing Protocol — How to Make Changes Safely
+
+```
+1. Load current TESTING agent config
+2. Make change on TESTING agent/flow only
+3. Run targeted simulator scenarios (--scenarios X,Y,Z) — verify fix
+4. Run full group (--group core_flow etc.) — confirm no regressions
+5. If call processor changed: run python3 tests/call-processor-test.py
+6. If onboarding pipeline changed: run python3 shared/e2e-test.py
+7. Once all pass at ≥95%: patch MASTER agent/flow with exact same change
+8. Publish MASTER
+9. Update this skill
+```
+
+**TESTING agent IDs (safe to modify):**
+- Agent: `agent_731f6f4d59b749a0aa11c26929`
+- Flow: `conversation_flow_5b98b76c8ff4`
+
+**MASTER agent IDs (only patch after tests pass):**
+- Agent: `agent_4afbfdb3fcb1ba9569353af28d`
+- Flow: `conversation_flow_34d169608460`
+
+---
+
+## 14. Go-Live Checklist
+
+- [x] Agent behaviour testing — 80/80 ✅
+- [x] E2E pipeline testing — 75/75 ✅
+- [x] Call processor testing — 20/20 ✅
+- [x] MASTER flow promoted with lean 4,053-char prompt ✅
+- [x] HubSpot CRM integration wired to all workflows ✅
+- [ ] Live smoke calls — 3–5 real calls to +18129944371 (Dan manual)
+- [ ] Unpause syntharra-ops-monitor on Railway
+- [ ] Set `SMS_ENABLED=true` once Telnyx approved
+- [ ] Get Slack webhook URL from Dan → wire to 8 n8n workflows
+
+---
+
+## 15. Known Issues / Watch Points
+
+| Issue | Status | Notes |
+|---|---|---|
+| SMS disabled | Pending Telnyx approval | Set SMS_ENABLED=true in Railway env to enable |
+| Slack not wired | Pending webhook URL from Dan | 8 workflows ready to receive it |
+| geocode_status async | By design | Populated after row write — not visible in immediate reads |
+| Groq free-tier RPM ~30/min | Production unaffected | Only matters during bulk test runs |
+| OpenAI credential `1uzBYwyR7Q7bdkZe` | Dead — do not use | Expired key, caused silent call processor failure |
+
+---
+
+## 16. Architecture Decisions
+
+| Decision | Chose | Reason |
+|---|---|---|
+| Node-based conversation flow | 12-node Retell flow | Deterministic routing — more reliable than freeform; each path independently testable |
+| Caller style detection | Code node → inject variable at leadcapture top | Long global prompt ignores style rules at bottom; code node injects at active context position |
+| Separate TESTING agents | Always keep TESTING separate from MASTER | Zero risk to live callers during prompt iteration |
+| Groq for transcript analysis | Groq `llama-3.3-70b-versatile` | OpenAI credential died; Groq faster + cheaper, 3× retry gives production resilience |
+| Single Supabase table for Standard + Premium | `hvac_standard_agent` + `hvac_call_log` | Simplifies queries; `plan_type` + `call_tier` fields differentiate; no join complexity |
+| HubSpot as CRM | HubSpot | Admin dashboard deprecated; HubSpot gives sales pipeline + contact history without building it |
+
