@@ -428,3 +428,29 @@ Adding entirely NEW edges (without changing existing ones) works fine. Adding ne
 - Agent was saying "callback number [your number]" in confirmation readback
 - Root cause: agent accepted caller's refusal to repeat and moved on without a real number
 - Fix: persist with digit confirmation OR offer caller-ID fallback before moving on
+
+---
+
+## Premium Agent Prompt — Verified Fixes (2026-04-04)
+
+### Booking push behaviour
+- Do NOT use language like "this is your PRIMARY function — always attempt to book before offering a callback"
+- This causes agent to push booking on FAQ callers, callback-only callers, and non-bookable enquiries
+- Correct: "offer to book if the caller is open to it — never push on callers who just want a callback or FAQ answer"
+
+### Booking step order
+- Agent must ask "what service do you need?" BEFORE confirming details back
+- Correct flow: (1) identify service → (2) collect contact details → (3) ask once if they want to book or callback → (4) read back ALL details including service type
+
+### CRITICAL RULES that must exist in premium global prompt
+Add these if missing — each fixes a simulator failure:
+- NEVER repeat information already stated in this call. Each fact is said once only
+- NEVER push for booking or extra details if caller says they will call back or are not ready. Accept gracefully and end call
+- For callback-only callers: name and phone number is sufficient. Do NOT ask for address or service type unless they offer it
+- For simple FAQ calls (hours, services, area): answer the question, offer further help once. Do NOT collect lead info unless caller has booking intent
+
+### em-dash encoding in Retell prompts
+Retell stores em-dashes as a 3-char garbled sequence: `\xe2\u20ac\u201d`
+When doing str.replace() on Retell prompt content in Python, use this exact sequence — not `—` or `\u2014`
+Always fetch the prompt fresh and inspect with repr() before attempting replacements.
+
