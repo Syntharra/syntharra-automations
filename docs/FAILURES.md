@@ -106,3 +106,7 @@
 | 2026-04-03 | Call Processor | Test rows not found via SB_ANON key | SB_ANON key has RLS restrictions — cannot read rows immediately after write in test context | All test suite reads use SB_SVC (service role key) which bypasses RLS | standard-call-processor-testing |
 | 2026-04-03 | n8n Code Nodes | `fetch()` not defined in n8n Code nodes | fetch() is a browser API not available in Node.js n8n environment | Use HTTP Request node for outbound calls from n8n; cannot use fetch/XMLHttpRequest in Code nodes | standard-call-processor-testing |
 | 2026-04-03 | n8n Code Nodes | `$http.request()` not defined either | $http helper not available on this n8n version | Only workaround: split into Code node (builds body) + HTTP Request node (fires call) | standard-call-processor-testing |
+
+| 2026-04-03 | n8n REST API | PUT /api/v1/workflows rejects `active` field | Field is read-only — must exclude from payload | Removed `active` from PUT payload | No |
+| 2026-04-03 | n8n SDK | .onFalse() used on HTTP Request node | .onFalse() only valid on IF nodes | Used .add(node).to(handler) pattern for error outputs | Yes — syntharra-infrastructure |
+| 2026-04-03 | n8n MCP | MCP access flag resets after SDK workflow update | SDK update overwrites availableInMCP setting | Always run AU8DD5r6i6SlYFnb (Auto-Enable MCP) after any SDK update | Yes — syntharra-infrastructure |
