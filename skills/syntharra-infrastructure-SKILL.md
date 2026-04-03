@@ -144,6 +144,25 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 - **Always click Publish after any workflow edits**
 - All email nodes: SMTP2GO credential name `"SMTP2GO - Syntharra"`
 
+### n8n Workflow Labelling — MANDATORY
+> Full standard: `docs/STANDARDS.md`. Summary rules here for quick reference.
+
+**Every workflow MUST have before session close:**
+1. **Name** — pattern: `[Vertical] [Tier] — [Function]` e.g. `HVAC Standard — Call Processor`
+2. **Tags** — minimum 2: one vertical/shared tag + one function tag + one status tag
+3. **Description** — 1–2 sentences in plain English
+
+**Apply via PATCH (partial update — safe, doesn't touch nodes):**
+```bash
+curl -X PATCH https://n8n.syntharra.com/api/v1/workflows/{ID} \
+  -H "X-N8N-API-KEY: {{N8N_API_KEY}}" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "HVAC Standard — Call Processor", "tags": [{"name": "hvac"}, {"name": "standard"}, {"name": "call-processor"}, {"name": "active"}]}'
+```
+
+**Session close checklist line:** `Labels: all workflows labelled ✅`
+**Audit needed:** All 20 existing workflows are unlabelled — see STANDARDS.md table.
+
 ### Webhook URLs
 | Service | URL |
 |---|---|
