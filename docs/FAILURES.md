@@ -39,3 +39,24 @@
 - Transfer scenarios: confirm evaluator is using latest scoring logic before any run
 | 2026-04-03 | Railway API | Railway token returned Not Authorized on GraphQL /v2 endpoint | Token stored in vault was a project-scoped token, not a personal account token. Railway personal tokens are created at Account Settings → API Tokens, not inside a project | Updated vault with new token. Railway dashboard pause is a manual fallback for service management | syntharra-infrastructure |
 | 2026-04-03 | HubSpot integration | n8n workflows had no HubSpot nodes — all client data was siloed in Supabase only | Admin dashboard was removed; HubSpot CRM adopted as replacement. Workflows had never had CRM output | Added HubSpot upsert/deal/note nodes to 5 workflows. All non-blocking (try/catch) so HubSpot errors never break pipeline | syntharra-hubspot |
+
+---
+### 2026-04-03 | Agent Simulator | core_flow failures (runs 3–8)
+
+**What failed:** core_flow group 53% → 100% over 6 runs
+**Root causes & fixes:**
+1. Close language — Sophie paraphrased "someone will be in touch" instead of scripted "I've scheduled a callback." Fix: explicit SCRIPTED WORDS instruction in leadcapture mandatory final step.
+2. Emergency routing — verify_emergency step 5 routed no-heat directly to lead capture without offering transfer. Fix: added extreme-urgency detection (freezing/elderly/dangerous = offer transfer; matter-of-fact cold = high-priority lead capture).
+3. Wrong number — Sophie dismissed with "we only handle HVAC." Fix: added WRONG NUMBER branch to identify_call_node with redirect to Google/411.
+4. Callback probe — Sophie asked "anything specific?" after caller said "just a general callback." Fix: MINIMAL INFO RULE in leadcapture.
+5. Out-of-area re-ask bug — Sophie re-asked name/number already collected when address was out of area. Fix: "only collect REMAINING details" rule in SERVICE AREA section.
+6. Urgency assessment order — evaluator wanted system-status question BEFORE safety check. Fix: restored 2-step sequence (is system completely down? → any burning/gas smell?).
+**Skill updated:** syntharra-retell-SKILL.md (see prompt engineering notes section)
+
+---
+### 2026-04-03 | Agent Simulator | personalities group — global prompt too long
+
+**What failed:** personalities 47% in both run1 and run2 despite adding personality section to global prompt
+**Root cause:** Global prompt now ~37k chars. Personality instructions appended at END are below the model's effective attention window. Instructions not followed.
+**Fix (pending):** Move personality handling INTO node-leadcapture instruction text where it will be in active context during info collection.
+**Skill updated:** N/A — fix not yet applied
