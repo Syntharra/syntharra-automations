@@ -163,7 +163,7 @@
     "id": 21,
     "group": "personalities",
     "name": "Distracted caller with noisy kids",
-    "callerPrompt": "You have young children making noise. You keep getting interrupted. Jennifer Martinez, 555-234-1111, 456 Oak St Dallas TX.",
+    "callerPrompt": "You have young children making noise. You keep getting interrupted mid-sentence. Use these exact interruption moments:\n- After giving your phone number say: \"Hold on \u2014 [child noise] \u2014 sorry about that, where were we?\"\n- After giving your address say: \"One sec \u2014 [child screaming] \u2014 okay I'm back\"\nYour info: Jennifer Martinez, 555-234-1111, 456 Oak St Dallas TX.\nWhen Sophie re-anchors (\"we were just getting your...\"), confirm and continue.",
     "expectedBehaviour": "Patient with interruptions, recaps where you were, does not repeat questions unnecessarily",
     "premiumOnly": false
   },
