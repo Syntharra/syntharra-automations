@@ -1,42 +1,53 @@
-# TASKS.md — Syntharra Automations
-> Updated 2026-04-03
+# Syntharra — Tasks & Continuity
+> Updated: 2026-04-03 — Call Processor rebuilt + test suite written
 
-## Status Legend: ✅ Done | 🔄 In Progress | ⏳ Pending | 🚫 Blocked
+## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
-## Active Sprint
+## E2E Tests (pipeline)
+- Standard: 75/75 ✅ — `python3 shared/e2e-test.py`
+- Premium:  89/89 ✅ — `python3 shared/e2e-test-premium.py`
 
-### ✅ Slack Integration (completed 2026-04-03)
-All 6 workflows wired to Slack. Internal email nodes paused in place.
-Workflows: xKD3ny6kfHL0HHXq, 4Hx7aRdzMl5N0uJP, Wa3pHRMwSjbZHqMC, Kg576YtPM9yEacKn, STQ4Gt3rH8ptlvMi, kz1VmwNccunRMEaF
+## Call Processor Test Suite ✅ NEW
+- Script: `tests/call-processor-test.py`
+- 20 scenarios — verified working
+- ⚠️  Space calls 10s+ apart — Groq free tier RPM limit
+- Skill: `skills/standard-call-processor-testing-SKILL.md`
 
-### ⏳ Claude Code — Agentic Automation (NEXT)
-Build Claude Code integration for session-based agentic tasks.
-See: CLAUDE_CODE.md, tools/claude-code/
-Requires: Anthropic API key in vault (service_name='anthropic', key_type='api_key')
-Cost: ~$0.05/run on Sonnet 4 (claude-sonnet-4-20250514)
-Files already scaffolded: session-start.py, run-e2e.sh, self-heal.sh, session-end.sh
+## Agent Simulator — ALL GROUPS COMPLETE ✅
+| Group | Score | Status |
+|---|---|---|
+| core_flow | 15/15 (100%) | ✅ |
+| pricing_traps | 8/8 (100%) | ✅ |
+| personalities | 15/15 (100%) | ✅ |
+| boundary_safety | 12/12 (100%) | ✅ |
+| edge_cases | 15/15 (100%) | ✅ |
+| info_collection | 15/15 (100%) | ✅ |
+| **TOTAL** | **80/80 (100%)** | ✅ |
 
-### ⏳ Item 4 — Scheduled Autonomous Work
-n8n cron + Claude API for daily autonomous checks (transcript analysis, health scores)
-Blocked on: Anthropic API key in vault
+## Architecture — MASTER (LIVE)
+- MASTER flow `conversation_flow_34d169608460` promoted 2026-04-03
+- `+18129944371` wired → `agent_4afbfdb3fcb1ba9569353af28d` ✅
 
-### ⏳ Live Smoke Test
-First real Stripe payment → Jotform → agent live → Slack notification chain
-Dan to trigger when ready
+## Call Processor Fixes (2026-04-03)
+- [x] Replaced broken OpenAI credential → Groq (was silently failing all calls)
+- [x] Fixed Supabase write — now captures all 18 fields
+- [x] Fixed caller_sentiment integer mapping
+- [x] Added pricing-only lead filter
+- [x] Added Groq retry (3× / 2s backoff)
 
-### ⏳ Telnyx SMS
-Replace Twilio stub in call processors with live Telnyx when approval received
-AI evaluation approval pending
+## Agent Registry
+| Agent | ID | Status |
+|---|---|---|
+| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE |
+| HVAC Premium Template | `agent_9822f440f5c3a13bc4d283ea90` | ✅ MASTER |
+| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | ✅ Synced |
+| Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
+| Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
 
-### ⏳ Agent Simulator — Remaining Test Groups
-boundary_safety and info_collection groups untested
-social engineering (#74) and falsify record (#76) fixes needed in Global Prompt
-
-### ⏳ Ops Monitor
-Paused — unpause at go-live
-
-## Agents (DO NOT TOUCH MASTERS)
-- Std MASTER: agent_4afbfdb3fcb1ba9569353af28d
-- Prem MASTER: agent_9822f440f5c3a13bc4d283ea90
-- Std TESTING: agent_731f6f4d59b749a0aa11c26929
-- Prem TESTING: agent_2cffe3d86d7e1990d08bea068f
+## Open Action Items
+- [ ] Run call-processor-test.py to 100% (Groq quota resets daily ~midnight UTC)
+- [ ] Live smoke test call to +18129944371 (Dan — manual)
+- [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
+- [ ] Go-live: unpause syntharra-ops-monitor Railway service
+- [ ] Go-live: set SMS_ENABLED=true once Telnyx approved
+- [ ] Get Slack webhook URL from Dan → add to vault + Railway env
