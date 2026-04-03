@@ -478,3 +478,20 @@ export default workflow('id', 'name')
   .add(httpRequestNode)   // reference same node again
   .to(errorHandler);      // connects to error output
 ```
+
+## Agentic Learning Tables — Real Schemas (verified 2026-04-03)
+
+### transcript_analysis — REAL columns
+`id, call_id, agent_id, company_name, analysis_date, confusion_loops, frustration_detected,`
+`price_hallucination, premature_ending, security_flags (text[]), overall_score (int 1-100), analysis_notes (text), created_at`
+❌ DO NOT use: quality_score, issue_category, learning_note, requires_prompt_fix, missed_lead, duration_seconds, job_type
+
+### client_health_scores — REAL columns
+`id, agent_id, company_name, week_start, call_volume_current, call_volume_previous,`
+`call_volume_trend (int %), dashboard_logins, payment_status (text 'ok'), health_score, calculated_at`
+❌ DO NOT use: lead_count, lead_rate, success_rate, avg_lead_score, prompt_fix_count, frustration_rate, missed_lead_count
+Upsert pattern: DELETE then INSERT (no ON CONFLICT configured)
+
+### Slack vault key
+service_name='Slack', key_type='webhook_url'
+
