@@ -1,0 +1,29 @@
+{
+  "workflow_id": "STQ4Gt3rH8ptlvMi",
+  "name": "HVAC Premium Call Processor",
+  "url": "https://n8n.syntharra.com/workflow/STQ4Gt3rH8ptlvMi",
+  "last_updated": "2026-04-03",
+  "nodes": [
+    "Retell Premium Webhook",
+    "Filter: call_analyzed Only",
+    "Extract Call Data",
+    "Supabase: Lookup Client",
+    "Parse Client Data",
+    "Check Repeat Caller",
+    "GPT: Analyze Call",
+    "Parse Lead Data",
+    "Is Lead?",
+    "Log Call to Supabase",
+    "HubSpot - Log Call Note (Premium)",
+    "Slack: Supabase Write Failed",
+    "Slack: Lead Call Alert",
+    "Slack: Client Notification"
+  ],
+  "changes_2026_04_03": [
+    "Parse Client Data: now passes slack_webhook_url through pipeline",
+    "Added: Slack: Client Notification node (id: slack-client-notification)",
+    "Conditional: only fires if slack_webhook_url is set on client record in Supabase",
+    "Wired: Slack: Lead Call Alert -> Slack: Client Notification"
+  ],
+  "note": "Full JSON backup blocked by GitHub secret scanning (workflow contains API keys inline). Restore from n8n directly."
+}
