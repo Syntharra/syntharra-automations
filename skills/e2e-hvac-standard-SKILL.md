@@ -182,3 +182,49 @@ When adding a new Jotform field that must reach Supabase:
 ## Credential Access Rule
 ALL Syntharra API keys live in Supabase `syntharra_vault`.
 The E2E test embeds credentials directly for standalone operation — do not refactor to vault lookups.
+
+
+---
+
+## Agent Simulator — Operational Patterns
+
+### Rate limiting in parallel runs
+- Running 6 groups simultaneously hammers OpenAI RPM limits
+- Symptoms: `[rate limit — waiting 20s]` messages + evaluator gets degraded context → false FAILs
+- **Rule: never run more than 2 groups in parallel**
+- **Rule: run targeted scenario IDs first (`--scenarios 18,21,23`) to validate fixes before full group runs**
+
+### Evaluator variance
+- The same scenario can PASS or FAIL across runs due to LLM evaluator stochasticity
+- A single FAIL on an otherwise passing scenario is usually variance, not a real regression
+- **Rule: before fixing a failure, run the failing scenario 2x in isolation — if it passes once, it's variance**
+- Cost: ~$0.002 per retest — always worth it before changing the prompt
+
+### When to fix the scenario vs fix the agent
+Two types of failures exist — treat them differently:
+
+| Type | Signal | Action |
+|---|---|---|
+| **Real agent failure** | Transcript shows Sophie doing the wrong thing | Fix the prompt/node |
+| **Bad scenario** | Transcript shows Sophie doing the right thing, evaluator fails anyway | Fix `expectedBehaviour` in scenarios.json |
+| **Evaluator mismatch** | expectedBehaviour conflicts with our prompt design | Fix expectedBehaviour to match correct behaviour |
+
+Examples of bad scenarios fixed this session:
+- #55 job applicant: Sophie correctly redirected to website + collected contact — evaluator failed because expectedBehaviour said "routes appropriately" (too vague). Fixed: clarified expectedBehaviour to match correct handling.
+- #21 distracted: Sophie correctly re-anchored — but callerPrompt never actually simulated interruptions. Fixed: callerPrompt updated to include explicit "hold on — [kids] — I'm back" moments.
+
+### Scenario callerPrompt quality rule
+- If `expectedBehaviour` requires Sophie to demonstrate a behaviour (e.g. re-anchor after interruption), the `callerPrompt` MUST actually trigger that scenario
+- Before fixing Sophie for failing #21-type tests, read the transcript — if the triggering event never happened, fix the scenario
+
+### Evaluator criteria count
+- The evaluator derives criteria from `expectedBehaviour` — each comma/and-joined clause = 1 criterion
+- Vague expectedBehaviour → inconsistent criteria count → inconsistent pass/fail
+- Write expectedBehaviour as explicit, testable actions: "Acknowledges, redirects to team, collects name + number, does not go through service flow"
+
+### Batch run timeout strategy
+- Full 15-scenario group takes 3-4 minutes solo, 8+ minutes with rate limiting
+- Tool execution limit is ~3 minutes
+- Strategy: run `--scenarios` for targeted tests (fast, <90s for 5 scenarios), then full `--group` only for final confirmation
+- Always use `timeout 150` to prevent hangs
+
