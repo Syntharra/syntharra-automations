@@ -423,3 +423,21 @@ This includes:
 - HubSpot is the sales, marketing, and client relationship layer
 - API key: `syntharra_vault` (service_name='HubSpot', key_type='api_key')
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
+
+
+### Jotform Rate Limiting — Key Facts
+- Free tier: **1,000 API calls/day**, resets at **midnight UTC** (not rolling 24h)
+- A burst of E2E test runs can exhaust the daily quota in one session
+- When quota is exhausted, ALL subsequent calls return 429 until midnight UTC reset
+- The 429 response has **no Retry-After header** — you must know the reset time
+- Backup poller at 15min = 192 calls/day; at 60min = 48 calls/day — always use 60min
+- **Graceful 429 handler pattern**: check `jotRes.responseCode === 429` and return `{ status: 'rate_limited', skipped: true }` — do NOT throw, just skip and let the next scheduled run retry
+- Onboarding webhook workflow makes 0 Jotform API calls (Jotform calls n8n, not vice versa)
+- Safe daily budget: 48 (poller) + ~50 (testing buffer) = well under 1,000
+
+### n8n SDK — Known Forbidden Patterns
+- `new WorkflowBuilder(...)` → INVALID. Use `workflow('id', 'name')` factory
+- `new ScheduleTriggerNode(...)` → INVALID. Use `trigger({ type: '...', ... })` factory
+- `new CodeNode(...)` → INVALID. Use `node({ type: 'n8n-nodes-base.code', ... })` factory
+- `new` expressions of any kind are blocked by the SDK security layer
+- Always call `validate_workflow` before `update_workflow` — saves failed push attempts
