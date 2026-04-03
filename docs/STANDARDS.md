@@ -78,23 +78,27 @@ Before closing ANY session that creates or modifies n8n workflows:
 ### How to Apply Labels via n8n API
 
 ```bash
-# Update workflow name + tags via PATCH
-curl -X PATCH https://n8n.syntharra.com/api/v1/workflows/{WORKFLOW_ID} \
+# Step 1 — Get tag IDs (tags must exist first)
+curl https://n8n.syntharra.com/api/v1/tags \
+  -H "X-N8N-API-KEY: {{N8N_API_KEY}}"
+
+# Step 2 — Apply tags to a workflow using the dedicated tags endpoint
+curl -X PUT https://n8n.syntharra.com/api/v1/workflows/{WORKFLOW_ID}/tags \
   -H "X-N8N-API-KEY: {{N8N_API_KEY}}" \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "HVAC Standard — Call Processor",
-    "tags": [{"name": "hvac"}, {"name": "standard"}, {"name": "call-processor"}, {"name": "active"}]
-  }'
+  -d '[{"id": "TAG_ID_1"}, {"id": "TAG_ID_2"}]'
 ```
 
-> Note: n8n tags are created on first use. No pre-registration needed.
-> For tag-only or name-only updates, PATCH accepts partial payloads.
-> Full workflow PUT requires only: `name`, `nodes`, `connections`, `settings`.
+> **Critical gotchas (verified 2026-04-04):**
+> - `PATCH /workflows/{id}` → 405 Method Not Allowed — does NOT exist in this n8n version
+> - `PUT /workflows/{id}` with `tags` in body → 400 `tags is read-only` — ignored silently in body
+> - **Correct method: `PUT /workflows/{id}/tags`** with array of `{id}` objects
+> - Tags must already exist — get IDs from `GET /api/v1/tags` first
+> - Full workflow PUT requires only: `name`, `nodes`, `connections`, `settings`
 
 ### Live Workflow Registry (verified 2026-04-04 — 47 total)
 
-**37 labelled ✅ | 10 unlabelled ⚠️ (9 inactive/duplicate, 1 active)**
+**38 labelled ✅ | 9 unlabelled ⚠️ (all inactive duplicates — left intentionally per Dan 2026-04-04)**
 
 #### HVAC Standard (active)
 | ID | Name | Tags |
@@ -171,7 +175,7 @@ curl -X PATCH https://n8n.syntharra.com/api/v1/workflows/{WORKFLOW_ID} \
 
 | ID | Name | Active | Action needed |
 |---|---|---|---|
-| `5wxgBfJL7QeNP2ab` | Google Keep → Groq → Slack To-Do List | 🟢 Yes | Add tags |
+| `5wxgBfJL7QeNP2ab` | Google Keep → Groq → Slack To-Do List | 🟢 Yes | ✅ Tagged `Operations` (2026-04-04) |
 | `NY6vhwLFmecAkxdH` | Keep → Slack TEST RUN | ⚫ No | Duplicate/test — add tags or delete |
 | `HeG3aJQBXyRPKSXA` | SYNTHARRA_TEST_RUNNER | ⚫ No | Add tags |
 | `SziSvI1zl49cs3cQ` | Premium — Integration Connected Handler | ⚫ No | Duplicate — leave for now |
