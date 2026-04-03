@@ -20,8 +20,8 @@ RETELL_KEY   = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 TESTING_FLOW = "conversation_flow_2ded0ed4f808"
 OPENAI_URL   = "https://api.groq.com/openai/v1/chat/completions"
-MODEL        = "llama-3.3-70b-versatile"   # agent + evaluator
-MODEL_FAST   = "llama-3.1-8b-instant"       # caller sim — fast, low token cost
+MODEL        = "meta-llama/llama-4-scout-17b-16e-instruct"  # agent + evaluator — 30k TPM
+MODEL_FAST   = "llama-3.1-8b-instant"       # caller sim — fast, separate 6k TPM pool
 MAX_TURNS    = 10
 
 def fetch_agent_prompt():
