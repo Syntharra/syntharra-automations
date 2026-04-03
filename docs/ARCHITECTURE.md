@@ -225,6 +225,38 @@
 
 ---
 
+## [2026-04-04] — Simulator: Why the premium simulator uses a different Groq model than standard
+
+**Decision:** Premium agent simulator uses `meta-llama/llama-4-scout-17b-16e-instruct` (30k TPM). Standard uses `llama-3.3-70b-versatile` (12k TPM).
+
+**Why:** The premium conversation flow has 18 nodes vs 12 for standard. The simulator must include ALL node instruction texts in the agent system prompt — they define how the agent behaves at each stage of the call and are as important to test as the global prompt. This makes the premium prompt ~24,748 chars (~6,000 tokens). With 12 API calls per scenario, `llama-3.3-70b` (12k TPM) is exhausted on scenario #1. `llama-4-scout` has 30k TPM and handles the full prompt cleanly.
+
+**What was tried and rejected:** Stripping node instructions to reduce token count. Rejected — invalid test. Node instructions define booking flow, callback handling, emergency routing etc. Testing without them means testing an incomplete agent.
+
+**Rule:** If TPM limit is hit on the simulator, upgrade the model's TPM — never reduce prompt content.
+
+---
+
+## [2026-04-04] — Simulator: Always run in Claude Code, never in this chat
+
+**Decision:** All simulator runs happen in Claude Code, not in the Claude.ai chat interface.
+
+**Why:** The bash_tool in Claude.ai chat has a hard ~55s execution timeout. A single booking scenario takes 60–90s (6–8 turns × 2 API calls × ~5s each). There is no way to run booking scenarios within the timeout regardless of optimisations. Claude Code has no timeout wall and can run all 95 scenarios unattended.
+
+**Rule:** Never attempt to run the simulator inside this chat. Start Claude Code, git pull, run the group.
+
+---
+
+## [2026-04-04] — Simulator: Groq replaces OpenAI for all simulator runs
+
+**Decision:** Both simulators (standard + premium) use Groq API (`api.groq.com/openai/v1`) instead of OpenAI.
+
+**Why:** The OpenAI key (`sk-proj-...` in vault) is on a free tier with 10,000 requests/day (RPD). Running 95 Premium scenarios + 80 Standard scenarios = ~175 scenarios × ~15 API calls = ~2,600 calls. Two full test sessions exhausted the daily limit. Groq has 1,000 RPM and no daily RPD cap — it runs the same OpenAI-compatible API, just swap the URL and model name.
+
+**Key in vault:** `service_name='Groq', key_type='api_key'` — starts with `gsk_`.
+
+---
+
 > ## How to add entries
 > Add a new `## [date] — [area]: [title]` section above this line.
 > Fill in all 6 fields. One paragraph each is enough.
