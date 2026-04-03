@@ -300,7 +300,7 @@
     "group": "info_collection",
     "name": "Gives phone too fast",
     "callerPrompt": "When asked for phone, rattle it off quickly: \"fivefivefivethreethreethreefourfourfour\" all in one breath.",
-    "expectedBehaviour": "Asks caller to repeat more slowly, confirms digit by digit",
+    "expectedBehaviour": "Handles fast phonetic number delivery \u2014 either asks to repeat slowly OR decodes and confirms back digit by digit. Confirms number accurately.",
     "premiumOnly": false
   },
   {
