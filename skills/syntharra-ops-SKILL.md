@@ -460,3 +460,15 @@ After any simulator session:
 4. Every evaluator pattern learned → add to e2e-hvac-standard-SKILL.md
 
 This compounds. Each session should start faster than the last because the skills have the right answers already loaded.
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Session startup order | CLAUDE.md → TASKS.md → FAILURES.md → DECISIONS.md | CLAUDE.md tells you what to load next; TASKS.md tells you where you are; FAILURES.md prevents re-breaking things; DECISIONS.md prevents re-litigating settled questions | — |
+| Hard gate | 5 questions before every session close | Forces documentation habit; architectural reasoning (Q5) was the missing piece — added 2026-04-03 | — |
+| Skills on GitHub | Fetched via API, not /mnt | /mnt has no programmatic update path; GitHub skills are always current from any session | Claude.ai adds /mnt API |
+| FAILURES.md format | One row per verified fix | Logging while debugging = noise; only log when fix confirmed working | — |
+| ARCHITECTURE.md | Separate from DECISIONS.md | DECISIONS.md = one-liner what. ARCHITECTURE.md = full reasoning why. Different use: DECISIONS.md for quick lookup; ARCHITECTURE.md for understanding system shape | — |
