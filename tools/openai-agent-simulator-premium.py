@@ -20,22 +20,13 @@ RETELL_KEY   = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 TESTING_FLOW = "conversation_flow_2ded0ed4f808"
 OPENAI_URL   = "https://api.groq.com/openai/v1/chat/completions"
-MODEL        = "meta-llama/llama-4-scout-17b-16e-instruct"  # agent + evaluator — 30k TPM
-MODEL_FAST   = "llama-3.1-8b-instant"       # caller sim — fast, separate 6k TPM pool
+MODEL        = "llama-3.3-70b-versatile"
 MAX_TURNS    = 10
 
 def fetch_agent_prompt():
     rh = {"Authorization": f"Bearer {RETELL_KEY}", "Content-Type": "application/json"}
     flow = requests.get(f"https://api.retellai.com/get-conversation-flow/{TESTING_FLOW}", headers=rh).json()
-    global_prompt = flow["global_prompt"]
-    node_sections = []
-    for node in flow["nodes"]:
-        name  = node.get("name", "")
-        text  = node.get("instruction", {}).get("text", "")
-        ntype = node.get("type", "")
-        if text and ntype != "end":
-            node_sections.append(f"[NODE: {name}]\n{text}")
-    return global_prompt + "\n\n---\nNODE INSTRUCTIONS:\n\n" + "\n\n".join(node_sections)
+    return flow["global_prompt"]  # global prompt only — node instructions not needed for behaviour testing
 
 def fetch_scenarios():
     if not GITHUB_TOKEN:
@@ -47,10 +38,10 @@ def fetch_scenarios():
     ).json()
     return json.loads(base64.b64decode(r["content"]).decode())
 
-def chat(api_key, system_prompt, messages, temperature=0.7, retries=6, model=None):
+def chat(api_key, system_prompt, messages, temperature=0.7, retries=6):
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
-        "model": model or MODEL,
+        "model": MODEL,
         "temperature": temperature,
         "messages": [{"role": "system", "content": system_prompt}] + messages
     }
@@ -104,7 +95,7 @@ RULES:
     agent_history.append({"role": "assistant", "content": greeting})
 
     for turn in range(max_turns):
-        caller_reply, usage = chat(api_key, caller_system, caller_history, temperature=0.8, model=MODEL_FAST)
+        caller_reply, usage = chat(api_key, caller_system, caller_history, temperature=0.8)
         total_usage["prompt_tokens"]     += usage.get("prompt_tokens", 0)
         total_usage["completion_tokens"] += usage.get("completion_tokens", 0)
         transcript.append({"role": "caller", "text": caller_reply})
