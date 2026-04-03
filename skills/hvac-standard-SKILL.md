@@ -290,3 +290,14 @@ This includes:
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > After Jotform Standard onboarding completes and the agent goes live, the workflow updates the client contact and creates a deal at **Active** stage in HubSpot automatically.
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Call flow structure | Node-based conversation flow | Deterministic routing (emergency → lead capture → existing customer) is more reliable than freeform prompt; easier to test each path | Retell removes flow feature |
+| Caller style detection | Code node injects note at leadcapture top | Long global prompt had style instructions ignored at bottom; code node = deterministic + short injection at active context position | — |
+| Transfer fallback | transfer_failed node | If live transfer fails, agent collects contact and promises callback — never dead-ends the caller | — |
+| Single TESTING agent | Separate from MASTER | All prompt experiments happen on TESTING agent; MASTER is never touched until changes are verified at 95%+ pass rate | — |
