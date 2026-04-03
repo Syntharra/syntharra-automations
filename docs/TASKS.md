@@ -30,6 +30,11 @@
 | HVAC Premium | agent_9822f440f5c3a13bc4d283ea90 | ✅ MASTER |
 | HVAC Standard TESTING | agent_731f6f4d59b749a0aa11c26929 | ✅ Synced |
 
+## Daily Ops Digest — LIVE ✅
+- ID: `SiMn59qJOfrZZS81` | Active | 6am UTC daily → #all-syntharra
+- Covers: clients (total/std/prem/agents/MRR), calls (24h/leads/hot/sentiment), system health
+- STRIPE_SECRET_KEY added to Railway n8n env vars
+
 ## Open Items
 - [ ] Live smoke test call to +18129944371 (Dan — manual)
 - [ ] Apply Standard MASTER improvements to HVAC Premium TESTING + test
