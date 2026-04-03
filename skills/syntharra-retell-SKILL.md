@@ -373,3 +373,28 @@ return { caller_style_note: note };
 | Code node creation | UI-create then API-patch | Code node type not in REST API validator whitelist as of 2026-04-03 — UI only | Retell updates API whitelist |
 | Prompt style | Commas not dashes | Better AI readability in voice context | — |
 | Publish after every update | Always call publish-agent after any patch | Retell agents are draft until published — unpublished changes have no effect on live calls | — |
+
+## Info Collection — Verified Patterns (added 2026-04-03)
+
+### Commercial callers
+- Facilities managers / commercial property callers need business name captured
+- Add to phone collection step: "And what's the business or company name?" for commercial inquiries
+- Pattern: detect commercial context (building, facility, office park, etc.) → ask for company name
+
+### WhatsApp-only callers
+- Some callers have no phone/email but have WhatsApp
+- DO NOT reject — accept WhatsApp number as valid contact method
+- Note it explicitly: "Got it, I'll note that as a WhatsApp number."
+- Pattern in leadcapture: under phone collection, add WhatsApp acceptance clause
+
+### Fast phonetic phone delivery
+- Caller gives number as words ("fivefivefive...") all in one breath
+- Agent should: either ask to repeat slowly OR decode and confirm back digit by digit
+- If agent decodes correctly and confirms digits → PASS (both paths are valid)
+- If caller refuses to repeat slowly → offer "Would it be okay to use the number you're calling from?"
+- Never record a placeholder like "[your number]" — always confirm actual digits
+
+### Placeholder digits bug
+- Agent was saying "callback number [your number]" in confirmation readback
+- Root cause: agent accepted caller's refusal to repeat and moved on without a real number
+- Fix: persist with digit confirmation OR offer caller-ID fallback before moving on
