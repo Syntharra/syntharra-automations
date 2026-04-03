@@ -94,3 +94,8 @@
 - DO NOT use `conversationHistory` — it doesn't exist in code node context
 - DO NOT use `call.transcript` — it doesn't exist
 - Use `metadata.transcript` — array of `{role: 'user'|'agent', content: string}`
+| 2026-04-03 | info_collection | #43 commercial caller — no biz name captured | leadcapture node had no commercial caller instruction | Added: commercial callers → ask for business/company name | syntharra-retell |
+| 2026-04-03 | info_collection | #45 WhatsApp-only caller rejected | No WhatsApp handling in phone collection step | Added: accept WhatsApp number as valid contact, note it explicitly | syntharra-retell |
+| 2026-04-03 | info_collection | #38 fast phonetic phone — evaluator strict | Agent correctly decoded phonetic digits but evaluator wanted "repeat slowly" | Updated scenario #38 expectedBehaviour to accept decode+confirm path | e2e-hvac-standard |
+| 2026-04-03 | info_collection | #34 phone correction mid-readback — timeout on first run | OpenAI read timeout (35s) | Added retry logic (3 attempts, backoff) to simulator chat() | e2e-hvac-standard |
+| 2026-04-03 | promotion | TESTING → MASTER | MASTER flow had 14 nodes + 15,354-char bloated prompt | Patched MASTER with all 15 TESTING nodes + 4,053-char lean prompt + published | syntharra-retell |
