@@ -9,9 +9,9 @@
 ## Live Agents
 | Agent | ID | Purpose | Status |
 |---|---|---|---|
-| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | Standard master template | ✅ MASTER — do not modify |
+| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | Standard master template | ✅ MASTER — LIVE — promoted 2026-04-03 |
 | HVAC Premium Template | `agent_9822f440f5c3a13bc4d283ea90` | Premium master template | ✅ MASTER — do not modify |
-| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | Standard prompt fix testing | 🧪 TESTING — active |
+| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | Standard prompt fix testing | ✅ Synced with MASTER — 2026-04-03 |
 | HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | Premium prompt fix testing | 🧪 TESTING — pending fixes |
 | Syntharra Demo Agent (Female) | `agent_2723c07c83f65c71afd06e1d50` | Demo / sales use | ✅ Live |
 | Syntharra Demo Agent (Male) | `agent_b9d169e5290c609a8734e0bb45` | Demo / sales use | ✅ Live |
