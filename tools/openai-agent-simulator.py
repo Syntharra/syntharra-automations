@@ -5,10 +5,10 @@ Simulates caller conversations against the HVAC Standard agent prompt
 and evaluates pass/fail per scenario. ~$0.002 per scenario vs $0.15 on Retell.
 
 Usage:
-    python3 simulator.py --key sk-... --scenarios all
-    python3 simulator.py --key sk-... --scenarios 46,47,48,53,69,70
-    python3 simulator.py --key sk-... --group pricing_traps
-    python3 simulator.py --key sk-... --scenarios all --max-turns 8
+    python3 simulator.py --key gsk_... --scenarios all
+    python3 simulator.py --key gsk_... --scenarios 46,47,48,53,69,70
+    python3 simulator.py --key gsk_... --group pricing_traps
+    python3 simulator.py --key gsk_... --scenarios all --max-turns 8
 
 Groups: core_flow, personalities, info_collection, pricing_traps, edge_cases, boundary_safety
 """
@@ -19,8 +19,8 @@ from datetime import datetime, timezone
 RETELL_KEY   = os.environ.get("RETELL_KEY", "")  # export RETELL_KEY=... before running
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 TESTING_FLOW = "conversation_flow_5b98b76c8ff4"
-OPENAI_URL   = "https://api.openai.com/v1/chat/completions"
-MODEL        = "gpt-4o-mini"
+OPENAI_URL   = "https://api.groq.com/openai/v1/chat/completions"
+MODEL        = "llama-3.3-70b-versatile"
 MAX_TURNS    = 10
 
 def fetch_agent_prompt():
@@ -277,7 +277,7 @@ def push_results(results, total_pass, total_fail, total_error, total_tokens, run
 
 def main():
     parser = argparse.ArgumentParser(description="Syntharra Agent Simulator")
-    parser.add_argument("--key",       required=True,  help="OpenAI API key")
+    parser.add_argument("--key",       required=True,  help="Groq API key (gsk_...)")
     parser.add_argument("--scenarios", default="all",  help="Comma-separated IDs or 'all'")
     parser.add_argument("--group",     default=None,   help="Run a specific group only")
     parser.add_argument("--max-turns", type=int, default=MAX_TURNS)
