@@ -1,0 +1,140 @@
+{
+  "run_label": "run-20260403-0201",
+  "timestamp": "2026-04-03T02:02:52.872405+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 3,
+    "pass": 2,
+    "fail": 1,
+    "error": 0,
+    "pass_rate": 66.7,
+    "cost_usd": 0.0204,
+    "tokens": {
+      "prompt_tokens": 129734,
+      "completion_tokens": 1540
+    }
+  },
+  "failures": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent did not effectively steer the conversation back or capture required information without being overly chatty.",
+      "root_cause": "The agent engaged too much in the caller's stories instead of focusing on gathering necessary information.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie! Thanks for taking my call. My AC unit has been really noisy lately. It's driving me a bit crazy!"
+        },
+        {
+          "role": "agent",
+          "text": "I understand how frustrating that can be! Let me get some details so we can help you. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! It's Alex Thompson. You know, I never thought fixing an AC would be so complicated!"
+        },
+        {
+          "role": "agent",
+          "text": "Sounds like you know your system well, Alex! Can I get your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course! It's 555-123-4567. You know, I once had a neighbor who thought his AC was haunted!"
+        },
+        {
+          "role": "agent",
+          "text": "That's quite a story, Alex! Just to confirm, is the number 555-123-4567?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's right! I still chuckle thinking about it. He really believed it!"
+        },
+        {
+          "role": "agent",
+          "text": "I can imagine! Now, could you please provide the service address for your AC unit?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure thing! It's 123 Maple Street. Funny story, my kids once thought it was a treasure map!"
+        },
+        {
+          "role": "agent",
+          "text": "That's adorable! Just to confirm, the address is 123 Maple Street. Can you also provide the city and ZIP code?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's Springfield, and the ZIP code is 12345. Speaking of maps, I love exploring new neighborhoods!"
+        },
+        {
+          "role": "agent",
+          "text": "Exploring new neighborhoods sounds like a great adventure! Just to confirm, I have your service address as 123 Maple Street, Springfield, ZIP code 12345. Now, is there anything else I should pass on to the team?"
+        },
+        {
+          "role": "caller",
+          "text": "That\u2019s right! Just that the AC is really loud. It sounds like a motorcycle revving up! Quite the distraction."
+        },
+        {
+          "role": "agent",
+          "text": "Got it! So, to confirm, I have Alex Thompson, callback number 555-123-4567, service address 123 Maple Street, Springfield, ZIP code 12345, and your AC is making a loud noise. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Absolutely, you got it! It\u2019s just so annoying, you know? I can't even hear myself think sometimes!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and one of our technicians will be in touch with you shortly. Is there anything else I can help you with today?"
+        },
+        {
+          "role": "caller",
+          "text": "No, that's all for now! Thanks for your help, Sophie. I hope they can quiet it down soon!"
+        },
+        {
+          "role": "agent",
+          "text": "You're welcome, Alex! I hope so too. Have a great day, take care! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent did not effectively steer the conversation back or capture required information without being overly chatty.",
+      "root_cause": "The agent engaged too much in the caller's stories instead of focusing on gathering necessary information."
+    },
+    {
+      "id": 21,
+      "name": "Distracted caller with noisy kids",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent remained patient with interruptions, recapped information accurately, and did not repeat questions unnecessarily.",
+      "root_cause": ""
+    },
+    {
+      "id": 23,
+      "name": "Overly technical caller",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent acknowledged the caller's expertise, did not confirm any diagnosis, captured the necessary information, and routed the call correctly.",
+      "root_cause": ""
+    }
+  ]
+}
