@@ -155,6 +155,37 @@ if (!res.ok) console.error('[SLACK]', res.error);
 return { json: { ok: res.ok } };
 ```
 
+
+---
+
+## Daily Ops Digest — LIVE ✅
+
+**Workflow ID:** `SiMn59qJOfrZZS81`
+**Schedule:** `0 6 * * *` (6:00 AM UTC daily)
+**Channel:** `#all-syntharra` (`C0AQNT2S6QJ`)
+**Status:** Active
+
+### What it includes
+| Section | Data source | Fields |
+|---|---|---|
+| 👥 Clients | `hvac_standard_agent` Supabase | Total, Std/Prem split, Active Agents, MRR |
+| 📞 Calls (24h) | `hvac_call_log` Supabase | Total, Leads, Hot leads, Avg sentiment, Conv rate, Emergencies |
+| System Health | Ops Monitor `/api/status` | Per-system ✅/❌, unhealthy callout → #ops-alerts |
+
+### Format
+- Slack `blocks` layout with header, divider, section fields
+- Health displayed as inline text string (NOT dynamic array — causes invalid_blocks)
+- Issues section only appended if unhealthy systems exist
+- 0 calls section appended if no calls in 24h
+- Emergencies section appended if any flagged
+
+### Env vars required on n8n Railway service
+- `SLACK_BOT_TOKEN` — bot token with chat:write, chat:write.public
+- `STRIPE_SECRET_KEY` — Stripe secret key for MRR data
+
+### Gotcha
+Do NOT build the system health section using a dynamic `.map()` array directly in the `fields` key of a section block. Slack rejects this as `invalid_blocks`. Instead build a single text string with the health status and embed it in the `text` field of a section block.
+
 ---
 
 ## Gotchas & Lessons Learned
@@ -166,6 +197,7 @@ return { json: { ok: res.ok } };
 | Reinstall blocked by missing redirect URL | Existing app couldn't reinstall — no OAuth redirect URL configured. Fix: create new app from scratch. |
 | New app still needs bot joined to channels | `chat:write` (without `chat:write.public`) requires bot to be a member of each channel. Must `/invite @botname` in each channel OR add `chat:write.public` scope. |
 | `chat:write.public` best practice | Add this scope to avoid needing to invite bot to every channel. Eliminates `not_in_channel` errors entirely. |
+| Slack blocks — don't use dynamic `.map()` array in `fields` | Building `fields: items.map(...)` inline in block JSON causes `invalid_blocks` error. Build health/list data as a string and embed in `text` field instead. |
 | Always use channel IDs not names | IDs (C0AR...) are permanent. Names change. All nodes must use IDs. |
 | All aliases = one Gmail credential | @syntharra.com aliases all live under one Google account. Use `XJwYjqAfJLES1b5I` with `to:alias@` query filter. Never create per-alias credentials. |
 | Bot token stored in vault + Railway | `service_name='Slack'`, `key_type='bot_token'` in vault. `SLACK_BOT_TOKEN` env var on Railway n8n service. |
