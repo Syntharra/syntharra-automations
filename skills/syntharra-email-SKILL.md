@@ -277,3 +277,15 @@ Only update this skill when something **fundamental** changes — not during rou
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > Note: HubSpot is NOT used for transactional email sending — SMTP2GO handles all emails. HubSpot is for CRM records, pipeline tracking, and sales activity only.
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Email provider | SMTP2GO | Railway blocks SMTP ports — REST API over HTTPS 443 is only viable option; reliable deliverability | Move off Railway or volume >100k/mo |
+| No base64 SVG | Always hosted PNG | Email clients strip/block base64 encoded SVGs — hosted PNG is universally supported | — |
+| Light theme only | White cards, #F7F7FB bg | Brand standard — dark email themes have inconsistent rendering across clients | Brand refresh |
+| Email fonts | System fonts (Arial/Georgia) in email | Google Fonts don't load in email clients — system font stack is the only reliable option | — |
+| Sender address | noreply@syntharra.com for all automated | Single sender simplifies DKIM/SPF management; reply-to routes to appropriate functional address | — |
