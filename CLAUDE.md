@@ -21,8 +21,50 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 6. Edit files with str_replace — never rewrite from scratch
 7. ONE `<style>` block per HTML page, `overflow-x:clip` on body
 8. Push all changes to GitHub before chat ends
-9. Update relevant skill(s) after any verified work — they auto-sync, no upload needed
+9. **Update relevant skill(s) after ANY verified work — no exceptions, no skipping**
 10. Update `docs/TASKS.md` at end of every chat
+
+## SELF-IMPROVEMENT — MANDATORY, NOT OPTIONAL
+> This is the most important long-term rule. Every session must make Claude smarter.
+> Skill files are the permanent brain. FAILURES.md is the audit trail.
+> If you fixed something, learned something, or hit a gotcha — it goes in the skill. Always.
+
+### Hard trigger rule — if you touched it, you update it
+| If you worked on... | Update this skill |
+|---|---|
+| Railway, n8n, ops monitor, env vars, deploys | `syntharra-infrastructure` |
+| Retell agents, conversation flows, prompts | `syntharra-retell` |
+| Emails, SMTP2GO, alert templates | `syntharra-email` |
+| Stripe, billing, pricing, webhooks | `syntharra-stripe` |
+| HubSpot CRM, pipeline stages, contacts | `syntharra-hubspot` |
+| Website, landing pages, HTML/CSS | `syntharra-website` |
+| HVAC Standard pipeline, onboarding | `hvac-standard` |
+| HVAC Premium pipeline, onboarding | `hvac-premium` |
+| E2E tests, scenario runner, simulators | `e2e-hvac-standard` or `e2e-hvac-premium` |
+| Client dashboard | `syntharra-client-dashboard` |
+| Marketing, lead gen, newsletter | `syntharra-marketing` |
+
+### What goes in a skill update
+- Correct API patterns (with working examples)
+- Things that look right but are wrong (e.g. Railway `where:` vs `input:`)
+- Rate limits, quotas, intervals to stay within
+- Gotchas discovered during debugging
+- Confirmed working mutations/queries
+- Things NOT to do and why
+
+### What goes in FAILURES.md
+Every new failure/fix gets a row: `date | area | what failed | root cause | fix applied | skill updated`
+- Log it even if the fix was trivial
+- Mark skill updated = YES/NO — if NO, update the skill before closing
+
+### Self-improvement checklist — run before EVERY session end
+- [ ] Did I fix a bug? → Root cause in FAILURES.md + gotcha in skill
+- [ ] Did I learn a correct API pattern? → Add to skill with working example
+- [ ] Did I discover something that doesn't work? → Add "do NOT do X" to skill
+- [ ] Did I change any config/IDs/URLs? → Update skill tables
+- [ ] Are skill files richer than when I started this session? → If no, do it now
+
+---
 
 ## Session startup — always load these 3
 ```python
@@ -95,7 +137,7 @@ def load_skill(name):
 | ~~`syntharra-admin`~~ | DEPRECATED — admin dashboard replaced by HubSpot |
 | `syntharra-checkout` | Stripe checkout server — `checkout.syntharra.com` |
 | `syntharra-oauth-server` | Premium OAuth — `auth.syntharra.com` |
-| `syntharra-ops-monitor` | 24/7 monitor (Railway, PAUSED) |
+| `syntharra-ops-monitor` | 24/7 monitor (Railway, ACTIVE) |
 | `syntharra-artifacts` | Claude chat artifact files |
 
 ## CRM — HubSpot (replaced admin dashboard 2026-04-03)
