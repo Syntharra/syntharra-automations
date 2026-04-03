@@ -299,3 +299,14 @@ This includes:
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > After Jotform Premium onboarding completes and the agent goes live, the workflow updates the client contact and creates a deal at **Active** stage in HubSpot automatically.
+
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Same Supabase table as Standard | hvac_standard_agent with plan_type column | Simpler cross-plan queries; Premium extras are nullable columns; confirmed by Dan 2026-04-02 | 10+ Premium-only columns needed |
+| OAuth server | Separate Railway service | Google Calendar and Jobber OAuth require redirect URIs; separate service keeps auth concerns isolated from n8n | — |
+| Multi-notification | notification_email_2/3, notification_sms_2/3 in table | Premium clients often have multiple staff who need call alerts; built into schema from the start | — |
+| Repeat caller detection | In call processor workflow | Premium clients pay for a more intelligent receptionist; repeat caller = existing customer path, warmer tone | — |
