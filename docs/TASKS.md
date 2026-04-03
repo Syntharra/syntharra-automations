@@ -16,14 +16,13 @@
 - All 9 Standard improvements applied to TESTING flow ✅ (incl. code node)
 - Simulator: `tools/openai-agent-simulator-premium.py` ✅
 
-### core_flow result: 9/15 (60%) ❌ — fixes needed before continuing
-Failures:
-- #5  FAQ repetition — agent repeats same info multiple times
-- #7  Booking push — agent tries to book when caller only wants callback
-- #11 Service type order — agent confirms before capturing service type
-- #13 Callback repetition — agent over-confirms callback details
-- #14 Pricing redirect — agent gives pricing instead of redirecting to team
-- #15 Over-eager close — agent over-encourages caller to call back
+### core_flow — fixes applied, partial retest in progress
+- #5  ✅ FIXED & PASSING
+- #7  Booking push — fix applied, retest pending
+- #11 Service type order — fix applied, retest pending
+- #13 Callback repetition — fix applied, retest pending
+- #14 Pricing redirect — fix applied, retest pending
+- #15 Over-eager close — fix applied, retest pending
 
 ### Next session action plan
 1. Fix the 6 core_flow failures (prompt/node edits to TESTING flow)
