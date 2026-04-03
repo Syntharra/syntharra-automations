@@ -110,3 +110,5 @@
 | 2026-04-03 | n8n REST API | PUT /api/v1/workflows rejects `active` field | Field is read-only — must exclude from payload | Removed `active` from PUT payload | No |
 | 2026-04-03 | n8n SDK | .onFalse() used on HTTP Request node | .onFalse() only valid on IF nodes | Used .add(node).to(handler) pattern for error outputs | Yes — syntharra-infrastructure |
 | 2026-04-03 | n8n MCP | MCP access flag resets after SDK workflow update | SDK update overwrites availableInMCP setting | Always run AU8DD5r6i6SlYFnb (Auto-Enable MCP) after any SDK update | Yes — syntharra-infrastructure |
+
+| 2026-04-03 | Slack | Vault key lookup failed — service_name was 'n8n' not 'n8n Railway' | Key name mismatch | Used correct service_name 'n8n Railway' | syntharra-infrastructure |
