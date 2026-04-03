@@ -91,6 +91,7 @@ They only get updated when there is a real learning — not just because a task 
 | HubSpot, CRM, pipeline, contacts | `syntharra-hubspot` |
 | Website, HTML, CSS, pages | `syntharra-website` |
 | HVAC Standard pipeline | `hvac-standard` |
+| HVAC Standard agent simulator / testing | `hvac-standard-agent-testing` |
 | HVAC Premium pipeline | `hvac-premium` |
 | E2E tests, simulators, scenario runner | `e2e-hvac-standard` or `e2e-hvac-premium` |
 | Client dashboard | `syntharra-client-dashboard` |
