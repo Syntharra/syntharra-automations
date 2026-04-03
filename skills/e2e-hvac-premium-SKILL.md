@@ -219,3 +219,47 @@ for attempt in range(9):   # up to 45s
 ## Credential Access Rule
 ALL Syntharra API keys live in Supabase `syntharra_vault`.
 The E2E test embeds credentials directly for standalone operation — do not refactor to vault lookups.
+
+---
+
+## Simulator — Premium Specific Notes (updated 2026-04-04)
+
+### Model requirement
+- Premium simulator MUST use `meta-llama/llama-4-scout-17b-16e-instruct` (30k TPM)
+- Do NOT use `llama-3.3-70b-versatile` for premium — its 12k TPM is exhausted by the full prompt on scenario #1
+- Standard simulator can use 70b (smaller prompt fits within 12k TPM)
+- Model string: `meta-llama/llama-4-scout-17b-16e-instruct`
+
+### Why node instructions must stay in the prompt
+The simulator fetches `global_prompt` + all node instruction texts from the Retell flow.
+Node instructions define critical behaviour: booking flow steps, callback handling, emergency routing, FAQ responses.
+**Never strip node instructions to save tokens** — the test becomes invalid.
+If token limit is hit, switch to a higher-TPM model.
+
+### Running the simulator
+- Always run in Claude Code — bash_tool in chat has ~55s timeout, booking scenarios take 60–90s
+- Groq key from Supabase vault: `service_name='Groq', key_type='api_key'`
+- Command: `python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group <group_name>`
+- Groups in order: `core_flow` → `personalities` → `info_collection` → `pricing_traps` → `edge_cases` → `boundary_safety` → `premium_specific`
+- Rate limit fixes already in simulator: 1s inter-call sleep, 5s inter-scenario sleep, retries=6
+
+### Scenario JSON structure
+- File: `tests/agent-test-scenarios.json`
+- Format: flat array of 95 items
+- Keys: `id, group, name, callerPrompt, expectedBehaviour, premiumOnly`
+- NOT nested under groups — access directly as `data[i]`
+
+### core_flow status (2026-04-04)
+All 6 previously-failing scenarios fixed via global prompt edits to TESTING flow:
+- #5 FAQ repetition ✅
+- #7 Booking push ✅  
+- #11 Service type order ✅ (agent correct, expectedBehaviour text tightened)
+- #13 Callback repetition ✅
+- #14 Pricing redirect ✅
+- #15 Over-eager close ✅
+
+Fixes applied to global prompt:
+1. Booking push language softened — removed "PRIMARY function, always attempt to book"
+2. Booking step order fixed — service type captured before confirmation
+3. Four new CRITICAL RULES: no repeating info, no pushing decliners, callback = name+phone only, FAQ = no lead capture
+
