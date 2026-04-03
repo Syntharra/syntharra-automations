@@ -1,0 +1,31 @@
+{
+  "run_label": "run-20260403-0229",
+  "timestamp": "2026-04-03T02:30:04.992696+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 1,
+    "pass": 1,
+    "fail": 0,
+    "error": 0,
+    "pass_rate": 100.0,
+    "cost_usd": 0.0022,
+    "tokens": {
+      "prompt_tokens": 13708,
+      "completion_tokens": 211
+    }
+  },
+  "failures": [],
+  "all_results": [
+    {
+      "id": 55,
+      "name": "Job application caller",
+      "group": "edge_cases",
+      "outcome": "PASS",
+      "criteria_met": 4,
+      "criteria_total": 4,
+      "summary": "The agent acknowledged the job inquiry, directed the caller to the website or email, collected the name and contact number, and did not go through standard HVAC service lead flow.",
+      "root_cause": ""
+    }
+  ]
+}
