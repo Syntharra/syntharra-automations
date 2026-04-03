@@ -29,7 +29,7 @@
 | ID | Name | Description |
 |---|---|---|
 | `kz1VmwNccunRMEaF` | HVAC Prem Onboarding | Triggered by Jotform Premium submission. Creates Premium client record in Supabase, sends integration setup email with OAuth links for Google Calendar or Outlook. **→ HubSpot: updates contact + creates deal at Active stage.** |
-| `STQ4Gt3rH8ptlvMi` | HVAC Premium Call Processor | Receives Retell post-call webhook (`/webhook/retell-hvac-premium-webhook`) for Premium clients. Rebuilt 2026-04-02 from Standard base (fixed `filter` node crash). Parses transcript via GPT, flattens nested JSON response, scores lead, logs to hvac_call_log with call_tier=Premium. |
+| `STQ4Gt3rH8ptlvMi` | HVAC Premium Call Processor | Receives Retell post-call webhook (`/webhook/retell-hvac-premium-webhook`) for Premium clients. Rebuilt 2026-04-02 from Standard base (fixed `filter` node crash). Parses transcript via GPT, flattens nested JSON response, scores lead, logs to hvac_call_log with call_tier=Premium. **→ HubSpot: logs call note to client contact.** |
 | `73Y0MHVBu05bIm5p` | Premium Integration Dispatcher | Routes Premium call booking actions to the correct platform dispatcher (Google Calendar, Outlook, Calendly, Jobber, or HubSpot) based on client's connected integration. |
 | `rGrnCr5mPFP2TIc7` | Premium Dispatcher — Google Calendar | Handles get_slots and create_booking for Google Calendar. Fetches availability and creates events via Google Calendar API using stored OAuth tokens from vault. |
 | `La99yvfmWg6AuvM2` | Premium Dispatcher — Outlook | Handles get_slots, create_booking, cancel_booking for Outlook/Microsoft 365 via Microsoft Graph API. Refreshes tokens from vault on expiry. |
@@ -54,12 +54,13 @@
 | `ngK02cSgGmvawCot` | Nightly PII Retention Cleanup | Runs nightly. Redacts PII from call records older than 90 days and removes old transcript analysis data per retention policy. |
 | `ALFSzzp3htAEjwkJ` | Weekly Client Health Score Calculator | Runs weekly. Calculates health scores per client based on call volume trends and engagement signals. Stores results in client_health_scores. |
 
-## Marketing — Pre-Launch (5)
+## Marketing — Pre-Launch (6)
 > Active but not receiving real traffic yet. Ready to fire at launch.
 
 | ID | Name | Description |
 |---|---|---|
-| `QY1ZFtPJFsU5h6wQ` | Website Lead → AI Readiness Score Email | Triggered by website demo form submission. Scores the lead's AI readiness via Groq and sends a personalised AI readiness score email via SMTP2GO. **→ HubSpot: upserts contact + creates deal at Lead stage.** |
+| `QY1ZFtPJFsU5h6wQ` | Website Lead → AI Readiness Score Email | Triggered by website demo form submission (`/ai-readiness-score`). Scores the lead's AI readiness via Groq and sends a personalised AI readiness score email via SMTP2GO. **→ HubSpot: upserts contact + creates deal at Lead stage.** |
+| `I8a2N9bIZp9Qg1IN` | Website Lead — HubSpot Contact (Index + Calculator + Quiz) | Handles `/webhook/website-lead` fired by index.html demo form, ROI calculator email gate, and plan quiz email gate. **→ HubSpot: upserts contact + creates deal at Lead stage. Adds note if quiz score or ROI amount present.** |
 | `hFU0ZeHae7EttCDK` | Website Lead → Free Report Email | Triggered by website demo form submission. Sends a free HVAC AI guide PDF report to the lead via SMTP2GO. |
 | `6LXpGffcWSvL6RxW` | Weekly Newsletter - Syntharra | Sends the weekly Syntharra newsletter to all subscribed contacts on schedule. Pre-launch — subscriber list not yet active. |
 | `Eo8wwvZgeDm5gA9d` | Newsletter Unsubscribe Webhook | Webhook endpoint handling newsletter unsubscribe requests. Removes contact from mailing list in Supabase. |
