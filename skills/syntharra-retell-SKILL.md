@@ -286,3 +286,32 @@ Only update this skill when something **fundamental** changes — not during rou
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > After every call, the Retell post-call webhook triggers the Call Processor workflow which logs a structured call note (caller name, service, lead score, sentiment, summary) to the client's HubSpot contact record.
+
+
+---
+
+## Prompt Engineering Lessons (from simulator runs)
+
+### Global prompt length warning
+- >30k chars: model begins ignoring instructions appended at the END of global prompt
+- >35k chars: personality/edge-case instructions at end are effectively invisible
+- Rule: put behavioural instructions in NODE text, not global prompt, for reliability
+
+### Scripted close phrases
+- Soft close ("someone will be in touch") → evaluators and real callers may not register as "scheduled callback"
+- Use explicit scripted language with ⚠️ CRITICAL: do not paraphrase warnings
+- Example: "Perfect — I've scheduled a callback for you. Someone from our team will be in touch with you shortly."
+
+### Emergency routing — 2-step sequence
+- Step 1: "Is your system completely not working?" (urgency assessment)
+- Step 2: "Any burning smell, gas, smoke, water leak?" (safety check)
+- Transfer offer only for EXTREME urgency (freezing, elderly occupants, dangerous cold)
+- Matter-of-fact outage (furnace won't turn on, cold but not dangerous) → high-priority lead capture
+
+### Out-of-area mid-collection
+- When out-of-area fires after name+number already collected: do NOT re-ask
+- Instruction must say "collect only REMAINING details"
+
+### Personality handling placement
+- Must be in NODE instruction text, NOT global prompt
+- Place in nonemergency_leadcapture_node for maximum effect during info collection
