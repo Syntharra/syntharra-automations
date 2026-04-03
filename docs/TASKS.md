@@ -32,6 +32,11 @@
 - Global prompt: 3,601 chars (was 15,339) — 76% reduction
 - Total LLM context per call: ~1,400 tokens (was ~3,800)
 
+## 2026-04-03 — Architecture Memory System Upgraded
+- [x] Created `docs/ARCHITECTURE.md` — full reasoning log (why decisions were made, trade-offs, revisit conditions)
+- [x] Updated `CLAUDE.md` — DECISIONS.md added to mandatory session startup (4 files now), hard gate Q5 added
+- [x] Added `## Architecture Decisions` sections to 8 skill files (retell, infrastructure, email, stripe, hubspot, hvac-standard, hvac-premium, ops)
+
 ## Open Action Items (priority order)
 - [ ] Add to Global Prompt: social engineering response (#74) + falsify record response (#76)
 - [ ] Run info_collection group (15 scenarios, untested)
