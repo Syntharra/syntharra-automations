@@ -361,3 +361,15 @@ return { caller_style_note: note };
 - Leadcapture reads `{{caller_style_note}}` at top of instruction
 - This replaces a large personality table in the prompt — saves ~800 tokens per call
 
+---
+
+## Architecture Decisions
+
+| Decision | Chose | Why | Revisit if |
+|---|---|---|---|
+| Agent lifecycle | PATCH in place, never delete/recreate | Deleting breaks phone binding, Supabase FK, call processor routing, and all call history — Retell has no versioning | Retell adds versioning/backup |
+| One agent per client | Clone from template per client | Phone numbers bind 1:1 to agents; isolation prevents one client's changes affecting others | Retell adds multi-tenant features |
+| Caller style handling | Code node detector → inject short note | 15k char global prompt = personality instructions ignored (below attention window); code node detects style, injects 30-50 char note at TOP of active node; 76% prompt reduction | Retell improves LLM context handling |
+| Code node creation | UI-create then API-patch | Code node type not in REST API validator whitelist as of 2026-04-03 — UI only | Retell updates API whitelist |
+| Prompt style | Commas not dashes | Better AI readability in voice context | — |
+| Publish after every update | Always call publish-agent after any patch | Retell agents are draft until published — unpublished changes have no effect on live calls | — |
