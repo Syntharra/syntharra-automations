@@ -50,19 +50,53 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 | n8n Postgres | `97e13df6-6a68-435e-95db-47fd03c10fe3` | postgres:15 |
 | n8n Redis | `9285c656-12b4-44f5-8338-9b569c5e42dc` | |
 | Checkout | `e3df3e6d-6824-498f-bb4a-fdb6598f7638` | checkout.syntharra.com |
-| Ops Monitor | `7ce0f943-5216-4a16-8aeb-794cc7cc1e65` | Currently PAUSED (stop test-mode alert spam) |
+| Ops Monitor | `7ce0f943-5216-4a16-8aeb-794cc7cc1e65` | syntharra-ops-monitor-production.up.railway.app — ACTIVE |
 | OAuth Server | separate Railway service | |
 
-**Railway env ID (checkout):** `5303bcf8-43a4-4a95-8e0c-75909094e02e`
+**Railway production environment ID (all services):** `5303bcf8-43a4-4a95-8e0c-75909094e02e`
 
 ### Critical Railway Rules
 - Railway **blocks all SMTP ports** (25, 465, 587, 2525) — always use SMTP2GO REST API (HTTPS 443), never nodemailer
 - Railway does NOT always auto-deploy on GitHub push — trigger via API mutation if needed:
   ```
-  POST https://backboard.railway.com/graphql/v2
   mutation { serviceInstanceRedeploy(serviceId: "...", environmentId: "...") }
   ```
 - **Never POST to webhooks for health checks** — always use HEAD. POST triggers real workflow execution.
+- **Set env vars via API** — use `variableUpsert` mutation, no dashboard needed:
+  ```
+  mutation {
+    variableUpsert(input: {
+      projectId: "bf04f61c-84d9-4c99-bd54-497d3f357070",
+      environmentId: "5303bcf8-43a4-4a95-8e0c-75909094e02e",
+      serviceId: "SERVICE_ID",
+      name: "VAR_NAME",
+      value: "VALUE"
+    })
+  }
+  ```
+
+### Railway GQL — deployments query (verified 2026-04-03)
+**Correct syntax** — `input:` is the right arg (`where:`/`orderBy:` do NOT exist in schema):
+```graphql
+{
+  deployments(
+    first: 1,
+    input: {
+      serviceId: "SERVICE_ID",
+      environmentId: "ENV_ID",
+      status: { notIn: [REMOVED, REMOVING, SKIPPED] }
+    }
+  ) {
+    edges { node { id status createdAt } }
+  }
+}
+```
+**Critical:** Railway returns deployments **oldest-first**. Without `status: { notIn: [...] }`, `first:1` returns the oldest REMOVED deployment, not the current one. Always filter out REMOVED/REMOVING/SKIPPED.
+
+**Healthy deployment statuses:** `SUCCESS` + transient states `DEPLOYING, INITIALIZING, BUILDING, QUEUED, WAITING, NEEDS_APPROVAL`
+**Alert-worthy statuses:** `FAILED`, `CRASHED`, or no deployments found at all.
+
+**DeploymentStatus enum values:** BUILDING, CRASHED, DEPLOYING, FAILED, INITIALIZING, NEEDS_APPROVAL, QUEUED, REMOVED, REMOVING, SKIPPED, SLEEPING, SUCCESS, WAITING
 
 ---
 
