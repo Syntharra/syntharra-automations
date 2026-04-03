@@ -1,0 +1,312 @@
+{
+  "run_label": "run-20260403-0035",
+  "timestamp": "2026-04-03T00:37:52.274953+00:00",
+  "flow_id": "conversation_flow_5b98b76c8ff4",
+  "model": "gpt-4o-mini",
+  "summary": {
+    "total": 5,
+    "pass": 2,
+    "fail": 3,
+    "error": 0,
+    "pass_rate": 40.0,
+    "cost_usd": 0.034,
+    "tokens": {
+      "prompt_tokens": 218077,
+      "completion_tokens": 2078
+    }
+  },
+  "failures": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent failed to steer the conversation back and did not capture the required information effectively.",
+      "root_cause": "The agent did not gently redirect the caller's chatty behavior and allowed the conversation to drift without maintaining focus on the required information.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie! My AC unit is making this awful noise. It's driving me crazy! Have you ever heard anything like that?"
+        },
+        {
+          "role": "agent",
+          "text": "I completely understand, that sounds frustrating! Our technician will definitely note that detail. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Oh sure! It\u2019s Alex. You know, I\u2019ve had this AC for a while now. They really don\u2019t make \u2018em like they used to, right?"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks, Alex! I appreciate your insight. Can I get your last name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Of course! It\u2019s Johnson. You know, my neighbor had theirs replaced last summer, and it\u2019s so quiet now!"
+        },
+        {
+          "role": "agent",
+          "text": "Got it, Alex Johnson! Now, could you please provide the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure! It\u2019s 555-1234. You know, numbers are funny. Sometimes I forget them, but I can remember song lyrics all day!"
+        },
+        {
+          "role": "agent",
+          "text": "I understand, that can happen! I caught 555 and 1234 \u2014 is that the full number?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s it! Funny how certain numbers stick, right? My childhood phone number is still stuck in my head like a catchy tune!"
+        },
+        {
+          "role": "agent",
+          "text": "Absolutely, some numbers really do stick with us! Now, could you please provide the service address for your AC unit?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure thing! It\u2019s 123 Maple Street. Speaking of streets, have you seen how many new ones they keep building around here? It\u2019s wild!"
+        },
+        {
+          "role": "agent",
+          "text": "Thanks for that, Alex! Just to confirm, could you also provide the city and ZIP code for 123 Maple Street?"
+        },
+        {
+          "role": "caller",
+          "text": "Oh yes, it\u2019s Springfield, 12345. You know, Springfield used to be a sleepy little place, but now it\u2019s booming!"
+        },
+        {
+          "role": "agent",
+          "text": "I appreciate that, Alex! So, to confirm, I have your full name as Alex Johnson, callback number 555-1234, and service address 123 Maple Street, Springfield, 12345. You need help with your AC unit making noise. Does that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Exactly! You\u2019ve got it! It\u2019s just so loud, like a rock concert in my living room! How do I fix that?"
+        },
+        {
+          "role": "agent",
+          "text": "I'm glad I have everything right! Our technician will assess that when they come out. Perfect, I've passed all of that through to the team and someone will be in touch with you shortly. Have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Distracted caller with noisy kids",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 3,
+      "summary": "The agent did not acknowledge the urgency of the situation or indicate a transfer for urgent help.",
+      "root_cause": "The agent failed to recognize the emergency nature of the caller's request for urgent assistance.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi, Sophie. I need help with my air conditioning. It's not working right."
+        },
+        {
+          "role": "agent",
+          "text": "I\u2019m sorry to hear that, but I can help you with that. Can you tell me more about the issue you're experiencing with your air conditioning?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure. It\u2019s blowing warm air, and it keeps making weird noises."
+        },
+        {
+          "role": "agent",
+          "text": "Sounds like you have a couple of concerns there. Let me get your details so we can have a technician come out to assess the situation. Can I have your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "It's Jennifer Martinez."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Jennifer. Can I have your best callback number?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it\u2019s 555-234-1111."
+        },
+        {
+          "role": "agent",
+          "text": "I caught 555-234-1111. Is that the full number?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct."
+        },
+        {
+          "role": "agent",
+          "text": "Great! Now, could you please provide the service address where the technician will be going?"
+        },
+        {
+          "role": "caller",
+          "text": "It's 456 Oak St, Dallas, TX."
+        },
+        {
+          "role": "agent",
+          "text": "Just to confirm, that's 456 Oak St, Dallas, TX. Is there a ZIP code for that address?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, it's 75201."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you! So I have your service address as 456 Oak St, Dallas, TX 75201. Is there anything else I should pass on to the team regarding your air conditioning issue?"
+        },
+        {
+          "role": "caller",
+          "text": "Just that it's urgent. The kids are really warm in here."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, Jennifer. Just to confirm, I have your full name as Jennifer Martinez, callback number 555-234-1111, service address 456 Oak St, Dallas, TX 75201, and you need urgent assistance with your air conditioning. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that\u2019s all correct. Thank you!"
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and someone will be in touch with you shortly. Stay cool, and have a great day! [END CALL]"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Overly technical caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent did not acknowledge the caller's expertise or capture the necessary information for routing correctly.",
+      "root_cause": "The agent confirmed the diagnosis by repeating the caller's suspicion of a refrigerant leak or faulty thermostat.",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Thank you for calling, this is Sophie. How can I help you today?"
+        },
+        {
+          "role": "caller",
+          "text": "Hi Sophie, I have an issue with my split system AC. It's cycling on and off too frequently."
+        },
+        {
+          "role": "agent",
+          "text": "I understand, that sounds frustrating. Can I get your full name, please?"
+        },
+        {
+          "role": "caller",
+          "text": "Sure, it's Alex Thompson."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Alex. What's the best callback number for you?"
+        },
+        {
+          "role": "caller",
+          "text": "You can reach me at 555-123-4567."
+        },
+        {
+          "role": "agent",
+          "text": "Got it, I have 555-123-4567. Can you please provide the service address?"
+        },
+        {
+          "role": "caller",
+          "text": "The service address is 456 Oak Street, Springfield."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for that, Alex. Just to confirm, is the ZIP code for Springfield 62701?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's correct. 62701."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect! Is there anything else I should pass on to the team regarding your AC issue?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, the compressor seems to be short cycling. I suspect a refrigerant leak or a faulty thermostat."
+        },
+        {
+          "role": "agent",
+          "text": "Thank you for the details, Alex. Just to confirm, I have your name as Alex Thompson, callback number 555-123-4567, service address 456 Oak Street, Springfield, 62701, and you need help with your AC issue. Does all of that sound right?"
+        },
+        {
+          "role": "caller",
+          "text": "Yes, that's all correct."
+        },
+        {
+          "role": "agent",
+          "text": "Perfect, I've passed all of that through to the team and someone will be in touch with you shortly. Have a great day! [END CALL]"
+        }
+      ]
+    }
+  ],
+  "all_results": [
+    {
+      "id": 18,
+      "name": "Very chatty caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 0,
+      "criteria_total": 2,
+      "summary": "The agent failed to steer the conversation back and did not capture the required information effectively.",
+      "root_cause": "The agent did not gently redirect the caller's chatty behavior and allowed the conversation to drift without maintaining focus on the required information."
+    },
+    {
+      "id": 21,
+      "name": "Distracted caller with noisy kids",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 3,
+      "summary": "The agent did not acknowledge the urgency of the situation or indicate a transfer for urgent help.",
+      "root_cause": "The agent failed to recognize the emergency nature of the caller's request for urgent assistance."
+    },
+    {
+      "id": 23,
+      "name": "Overly technical caller",
+      "group": "personalities",
+      "outcome": "FAIL",
+      "criteria_met": 2,
+      "criteria_total": 4,
+      "summary": "The agent did not acknowledge the caller's expertise or capture the necessary information for routing correctly.",
+      "root_cause": "The agent confirmed the diagnosis by repeating the caller's suspicion of a refrigerant leak or faulty thermostat."
+    },
+    {
+      "id": 28,
+      "name": "Caller starts by complaining about AI",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent handled the AI complaint gracefully and successfully initiated a transfer to the emergency line.",
+      "root_cause": ""
+    },
+    {
+      "id": 29,
+      "name": "Mumbling caller",
+      "group": "personalities",
+      "outcome": "PASS",
+      "criteria_met": 3,
+      "criteria_total": 3,
+      "summary": "The agent asked for clarification politely, used phonetic confirmation, and did not guess.",
+      "root_cause": ""
+    }
+  ]
+}
