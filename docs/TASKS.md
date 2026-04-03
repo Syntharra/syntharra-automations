@@ -1,6 +1,6 @@
 # Syntharra — Tasks & Continuity
 > Updated at END of every chat. Load at START after CLAUDE.md. Keep under 60 lines.
-> Last updated: 2026-04-03 — Jotform 429 fixed | Railway GQL fixed | RAILWAY_TOKEN wired | Personalities fix pending
+> Last updated: 2026-04-03 — Jotform backup poller slowed to 60min | 429 graceful handler added | Personalities fix pending
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE | 32 active workflows
 
