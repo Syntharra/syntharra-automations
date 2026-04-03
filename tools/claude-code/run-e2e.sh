@@ -28,7 +28,13 @@ EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then
     echo "PASS — safe to push to production"
+if [ -n "$SLACK_WEBHOOK_OPS" ]; then
+    python3 "$REPO_ROOT/tools/claude-code/slack_notify.py" "#claude-code" ":white_check_mark:" "E2E $TIER — PASSED" "Tier=$TIER"
+fi
 else
     echo "FAIL — do NOT push to production"
+if [ -n "$SLACK_WEBHOOK_OPS" ]; then
+    python3 "$REPO_ROOT/tools/claude-code/slack_notify.py" "#claude-code" ":x:" "E2E $TIER — FAILED" "Tier=$TIER" "Action=Do not push"
+fi
 fi
 exit $EXIT_CODE
