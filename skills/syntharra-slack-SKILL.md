@@ -82,3 +82,17 @@ return $input.all();
 - n8n REST API PUT — do NOT include `active` field (read-only, causes 400 error)
 - .onFalse() only valid on IF nodes — HTTP Request error output: use .add(node).to(errorHandler)
 - Premium Onboarding patched via REST API — too risky to rebuild 21-node complex flow via SDK
+
+
+## Vault Entry (confirmed 2026-04-03)
+```
+service_name: 'Slack'
+key_type: 'webhook_url'
+Lookup: GET /syntharra_vault?service_name=eq.Slack&key_type=eq.webhook_url
+```
+
+## n8n Railway env var
+```
+SLACK_WEBHOOK_OPS = <value from vault>
+```
+Set this in Railway n8n service env vars for use in n8n HTTP nodes as `{{ $env.SLACK_WEBHOOK_OPS }}`.
