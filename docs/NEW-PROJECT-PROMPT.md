@@ -26,9 +26,11 @@ def fetch(path, repo="syntharra-automations"):
     r = requests.get(f"https://api.github.com/repos/Syntharra/{repo}/contents/{path}", headers=H).json()
     return base64.b64decode(r["content"]).decode() if "content" in r else None
 
-# ALWAYS load these two first — every single chat
-claude_md = fetch("CLAUDE.md")        # master rules, brand, skill map, repo map
-tasks_md  = fetch("docs/TASKS.md")   # what's in progress, next, blocked
+# ALWAYS load these three first — every single chat
+claude_md    = fetch("CLAUDE.md")           # master rules, brand, skill map, repo map
+tasks_md     = fetch("docs/TASKS.md")      # open work only — stays under 40 lines
+reference_md = fetch("docs/REFERENCE.md")  # agent IDs, flow IDs, simulator commands
+# If working on marketing: fetch("docs/MARKETING.md")
 ```
 
 Then load ONLY context files relevant to the task from `docs/context/`:
