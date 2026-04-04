@@ -17,7 +17,7 @@
 - [x] Phase 3: Code node added via API ✅ | Extract Dynamic Variable = DAN UI TASK
 - [x] Phase 4A: Phone fallback set to +18563630633, pinned to v20 ✅
 - [ ] Phase 4B: DAN TASK — 5 alerting rules + 5 analytics charts in Retell dashboard
-- [ ] Phase 5: Update both n8n call processors — remove GPT, map Retell webhook fields to Supabase
+- [x] Phase 5: Both n8n call processors rewired — GPT/Groq removed, Retell fields mapped directly ✅
 - [ ] Phase 6: Test calls on both agents, verify all 49 fields populate correctly
 - [ ] Phase 7: Update E2E assertions, run both suites green
 - [ ] Phase 8: Dan review → apply DEMO config to Premium TESTING → MASTER promotion
