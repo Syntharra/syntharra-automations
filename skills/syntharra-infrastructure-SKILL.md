@@ -576,3 +576,10 @@ Upsert pattern: DELETE then INSERT (no ON CONFLICT configured)
 ### Slack vault key
 service_name='Slack', key_type='webhook_url'
 
+
+## n8n Workflow Update — MUST PUBLISH
+- `n8n:update_workflow` saves a DRAFT only — does NOT auto-publish
+- Production webhooks continue running the OLD activeVersion until you publish
+- ALWAYS call `n8n:publish_workflow` immediately after `n8n:update_workflow`
+- Verify: `versionId` must equal `activeVersionId` after publish
+- Discovered 2026-04-04: Phase 6 test hit stale Groq code because draft wasn't published
