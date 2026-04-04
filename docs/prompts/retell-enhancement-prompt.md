@@ -259,6 +259,9 @@ For Standard call processor (Kg576YtPM9yEacKn):
 3. In the Supabase INSERT node, update field mapping to read from
    {{ $json.call_analysis.* }} instead of GPT response fields:
    
+   call_id           → {{ $json.call_id }}
+   agent_id          → {{ $json.agent_id }}
+   company_name      → [from Supabase client lookup by agent_id — already in workflow]
    caller_name       → {{ $json.call_analysis.caller_name }}
    caller_phone      → {{ $json.call_analysis.caller_phone }}
    caller_address    → {{ $json.call_analysis.caller_address }}
@@ -275,6 +278,8 @@ For Standard call processor (Kg576YtPM9yEacKn):
    notes             → {{ $json.call_analysis.notes }}
    call_tier         → "Standard"
    duration_seconds  → {{ Math.round($json.duration_ms / 1000) }}
+   geocode_status    → [populated by geocoding node downstream — leave as-is]
+   geocode_formatted → [populated by geocoding node downstream — leave as-is]
    
 4. Keep untouched: Supabase client lookup, geocoding node, HubSpot note, email node
 5. PUT updated workflow — Publish
@@ -282,6 +287,13 @@ For Standard call processor (Kg576YtPM9yEacKn):
 Repeat for Premium call processor (STQ4Gt3rH8ptlvMi):
 Same removals and same field mapping. call_tier = "Premium".
 Preserve all Premium-specific nodes (dispatcher trigger, OAuth handling).
+
+Important note on SMS node + dispatcher interaction:
+The SMS confirmation node fires AFTER lead data is captured (end of call flow).
+The Premium dispatcher (73Y0MHVBu05bIm5p) fires from the post-call webhook when
+a booking action was triggered mid-call. These are sequential and independent —
+the SMS fires during the call, the dispatcher fires after it ends via webhook.
+There is no conflict. Do NOT modify the dispatcher workflow (73Y0MHVBu05bIm5p).
 
 ✅ Phase 5 complete — both processors updated, GPT nodes removed, published
 
@@ -301,7 +313,34 @@ If any field mapping is null across all 14 fields: stop and report — Phase 5 m
 may have a path error. Do NOT proceed to Premium test call until Standard is confirmed.
 
 Repeat for Premium TESTING agent.
-✅ Phase 6 complete — both test calls verified, Supabase data confirmed correct
+
+Additional downstream verification after both test calls:
+
+1. Weekly Lead Report (iLPb6ByiytisqUJC) — manually trigger for the test client.
+   Confirm it renders correctly with the new field data. Key fields to check:
+   is_lead, lead_score, caller_name, service_requested. If report is blank or broken,
+   the field format from call_analysis may differ — stop and report.
+
+2. Monthly Minutes Calculator (z1DNTjvTDAkExsX8) — check that duration_seconds is
+   correctly populated in hvac_call_log for both test calls. This field drives billing.
+   A null or zero value here is a critical failure — stop and report immediately.
+
+3. Weekly Health Score Calculator (ALFSzzp3htAEjwkJ) — no action needed during this
+   sprint. Runs weekly. Verify it does not error on next run after go-live by checking
+   n8n execution logs the following week.
+
+4. Daily Transcript Analysis (ofoXmXwjW9WwGvL6) — this workflow currently re-analyses
+   transcripts from hvac_call_log with Groq for quality issues and jailbreak detection.
+   It is NOT being retired in this sprint — it reads the raw transcript field which is
+   still present in the Retell webhook payload. Confirm transcript field is still being
+   written to hvac_call_log. No changes needed to this workflow.
+
+5. Slack lead notification — both call processors have a pending Slack notification
+   to #calls when lead_score ≥ 7. This trigger reads lead_score from the Supabase row.
+   Confirm the lead_score field is populated correctly in the test call row. If Slack
+   notifications are already wired in at this point, confirm they fire on the test call.
+
+✅ Phase 6 complete — both test calls verified, all downstream workflows confirmed
 
 ### PHASE 7 — Re-run E2E tests
 
