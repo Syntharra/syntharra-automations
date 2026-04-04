@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "hubspot": {
+      "type": "url",
+      "url": "https://mcp.hubspot.com/anthropic",
+      "description": "HubSpot CRM — lead tracking, pipeline management, contact activity"
+    },
+    "supabase": {
+      "type": "url",
+      "url": "https://mcp.supabase.com/mcp",
+      "description": "Supabase — lead database, content storage, prospect data"
+    },
+    "slack": {
+      "type": "url",
+      "url": "https://mcp.slack.com/mcp",
+      "description": "Slack — weekly report delivery, alerts"
+    },
+    "gmail": {
+      "type": "url",
+      "url": "https://gmail.mcp.claude.com/mcp",
+      "description": "Gmail — email monitoring, outreach tracking"
+    },
+    "google-calendar": {
+      "type": "url",
+      "url": "https://gcal.mcp.claude.com/mcp",
+      "description": "Google Calendar — demo booking tracking"
+    }
+  }
+}
