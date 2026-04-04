@@ -17,10 +17,10 @@ STRIPE_CUSTOMER_ID = ""   # leave empty for test mode
 
 # ── TEST DATA ─────────────────────────────────────────────────────────────────
 TS           = int(time.time())
-TEST_COMPANY = f"Polar Peak HVAC {TS}"
+TEST_COMPANY = f"TestClient HVAC {TS}"
 TEST_AGENT   = "Max"
 TEST_PHONE   = "+15125550199"
-TEST_GREETING= f"Thank you for calling Polar Peak HVAC, this is {TEST_AGENT}, how can I help you today?"
+TEST_GREETING= f"Thank you for calling TestClient HVAC, this is {TEST_AGENT}, how can I help you today?"
 
 results = {}
 cleanup = {"agent_ids": [], "flow_ids": [], "call_ids": []}
@@ -178,7 +178,7 @@ check("company_name",                        row.get('company_name') == TEST_COM
 check("owner_name",                          row.get('owner_name') == 'James Caldwell',             row.get('owner_name'))
 check("client_email",                        row.get('client_email') == TEST_EMAIL,                 row.get('client_email'))
 check("company_phone",                       bool(row.get('company_phone')),                        row.get('company_phone'))
-check("website",                             row.get('website') == 'www.polarpeak.com',             row.get('website'))
+check("website",                             row.get('website') == 'www.syntharra-test.com',             row.get('website'))
 check("years_in_business",                   row.get('years_in_business') == '8',                   row.get('years_in_business'))
 check("timezone",                            row.get('timezone') == 'America/New_York',             row.get('timezone'))
 check("agent_name",                          bool(row.get('agent_name')),                           row.get('agent_name'))
@@ -197,12 +197,12 @@ check("financing_available",                 row.get('financing_available') == '
 check("warranty",                            row.get('warranty') == 'Yes',                          row.get('warranty'))
 check("payment_methods populated",           bool(row.get('payment_methods')),                      (row.get('payment_methods') or '')[:40])
 check("maintenance_plans populated",         bool(row.get('maintenance_plans')),                    (row.get('maintenance_plans') or '')[:40])
-check("membership_program",                  row.get('membership_program') == 'Peak Care Club',     row.get('membership_program'))
+check("membership_program",                  row.get('membership_program') == 'Care Club',     row.get('membership_program'))
 check("lead_contact_method",                 row.get('lead_contact_method') == 'Both',              row.get('lead_contact_method'))
 check("lead_phone",                          bool(row.get('lead_phone')),                           row.get('lead_phone'))
 check("lead_email",                          row.get('lead_email') == TEST_EMAIL,                   row.get('lead_email'))
-check("notification_email_2 saved",          row.get('notification_email_2') == 'dispatcher@polarpeak.com',   row.get('notification_email_2'))
-check("notification_email_3 saved",          row.get('notification_email_3') == 'salesmanager@polarpeak.com', row.get('notification_email_3'))
+check("notification_email_2 saved",          row.get('notification_email_2') == 'dispatcher@syntharra-test.com',   row.get('notification_email_2'))
+check("notification_email_3 saved",          row.get('notification_email_3') == 'salesmanager@syntharra-test.com', row.get('notification_email_3'))
 check("notification_sms_2 saved",            row.get('notification_sms_2') == '+16316330714',               row.get('notification_sms_2'))
 check("notification_sms_3 saved",            row.get('notification_sms_3') == '+16316330715',               row.get('notification_sms_3'))
 check("transfer_phone",                      bool(row.get('transfer_phone')),                       row.get('transfer_phone'))
