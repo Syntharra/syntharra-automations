@@ -49,11 +49,9 @@ Test/Build → Failure Found → Root Cause → Fix → Skill Updated → FAILUR
 - Secrets removed from public repo — safe to stay public
 - Duplicates removed — clean signal-to-noise
 
-### ⚠️ Still Needs Dan's Action
-- Upload 6 missing skills to Claude.ai project settings:
-  `hvac-standard`, `hvac-premium`, `syntharra-testing`, `syntharra-marketing-manager`, `syntharra-social-leads`
-  (admin-dashboard was deleted — was a mislabelled duplicate)
-- Transfer private repos or add collaborator access confirmed working ✅
+### ✅ All Action Items Resolved
+- Skills no longer uploaded to Claude.ai project settings — fetched directly from GitHub at session start
+- Collaborator access confirmed working
 
 ### ✅ Structural Gap — RESOLVED 2026-04-02
 - Skills previously required manual upload to Claude.ai project settings (/mnt/skills/user/)
