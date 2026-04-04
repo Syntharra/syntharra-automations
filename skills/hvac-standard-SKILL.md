@@ -588,3 +588,51 @@ Priority: (q69 == "Yes - dedicated emergency line" && emergencyPhone) ? emergenc
 ### RULE: Never skip Jotform audit when adding questions
 Any new question added to the Jotform MUST be added to Parse JotForm Data in the same session.
 This session's bugs all caused by questions added to form without updating the Parse node.
+
+
+---
+
+## Transfer Number — Authoritative Spec (2026-04-04)
+
+```
+Priority:
+  if (q69 == "Yes - I have a dedicated emergency line" && emergency_phone)
+    → use emergency_phone
+  else
+    → use transfer_phone (q48) || lead_phone
+
+Fallback: '+10000000000' placeholder if all three are blank
+```
+
+| Field | Jotform | Purpose |
+|---|---|---|
+| `transfer_phone` | q48 | Standard live transfer — the client's company number |
+| `emergency_phone` | q21 | Dedicated emergency line — only used if q69 = Yes |
+| `separate_emergency_phone` | q69 | Gate: "Yes" = emergency overrides, "No" = use transfer_phone |
+| `lead_phone` | q32 | Fallback if transfer_phone not provided |
+
+The email "Live Transfer Number" field always shows `transfer_phone` (q48) — the number
+clients give to their customers. The emergency override only applies inside the Retell flow.
+
+---
+
+## Email Builder — Correct Field Names (2026-04-04)
+
+| Email field | Supabase column | Notes |
+|---|---|---|
+| AI Phone Number | `twilio_number` | Telnyx number written here post-provisioning |
+| Live Transfer Number | `transfer_phone` | q48 — client's company number |
+
+Previously `d.ai_phone_number` and `d.transfer_phone_number` — both wrong. Fixed.
+
+---
+
+## Test Data Rule
+
+All E2E test data must use generic values:
+- Website: `www.syntharra-test.com`
+- Notification emails: `*@syntharra-test.com`
+- Membership program: `Care Club` (no company branding)
+- Company name: `TestClient HVAC {timestamp}`
+
+Never use real company names, real domains, or branded plan names in test payloads.
