@@ -24,6 +24,19 @@
 - [ ] Build n8n workflows for 6 new blueprint agents
 - [ ] Set up Supabase tables for expanded agent architecture
 
+### Retell Enhancement Sprint — POST-PREMIUM-PROMOTION ⏸️
+> DO NOT START until Premium TESTING agent hits 95%+ and is promoted to MASTER
+- [ ] Create new TESTING agents for Standard and Premium (separate from existing MASTER and current TESTING)
+- [ ] Add Extract Dynamic Variable node to Standard flow (after nonemergency_leadcapture, before Ending)
+- [ ] Add Extract Dynamic Variable node to Premium flow (same position)
+- [ ] Add Code node (phone number format validation) to Standard + Premium flows
+- [ ] Configure post_call_analysis_data on both MASTER agents via API (replace GPT extraction)
+- [ ] Simplify Standard call processor (Kg576YtPM9yEacKn) — remove GPT node, map Retell webhook fields direct to Supabase
+- [ ] Simplify Premium call processor (STQ4Gt3rH8ptlvMi) — same, remove GPT + JSON flattening node
+- [ ] Update E2E tests to match new call processor field mapping
+- [ ] Re-run Standard E2E after all changes to verify before go-live
+- Reference prompt: docs/prompts/retell-enhancement-sprint.md
+
 ### Housekeeping
 - [ ] Label 1 active unlabelled n8n workflow: `Google Keep → Groq → Slack To-Do List` (`5wxgBfJL7QeNP2ab`)
 - [ ] Review 9 inactive duplicate workflows when convenient
