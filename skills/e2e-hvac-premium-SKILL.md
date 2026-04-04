@@ -9,12 +9,12 @@ description: >
   The test covers the full Premium pipeline: Jotform webhook → n8n Premium onboarding →
   Supabase (plan_type=premium + booking fields) → Retell agent (18 nodes, premium flow) →
   Premium call processor → hvac_call_log (call_tier=Premium).
-  Current status: 89/89 passing. Run with: python3 shared/e2e-test-premium.py
+  Current status: 114 assertions (updated 2026-04-04). Run with: python3 shared/e2e-test-premium.py
 ---
 
 # E2E Test — HVAC Premium Agent
 
-> **Status: 89/89 ✅ — Verified 2026-04-02**
+> **Status: 114 assertions — Updated 2026-04-04 for Retell-native fields + booking assertions. Call processor verified green.**
 > Run: `python3 shared/e2e-test-premium.py`
 > Master test company: FrostKing HVAC (Dallas/Fort Worth, Texas)
 
@@ -22,7 +22,7 @@ description: >
 
 ## What It Tests
 
-Complete Premium pipeline end-to-end, 89 assertions across 8 phases:
+Complete Premium pipeline end-to-end, 114 assertions across 8 phases:
 
 | Phase | What's checked |
 |---|---|
@@ -31,7 +31,7 @@ Complete Premium pipeline end-to-end, 89 assertions across 8 phases:
 | 3 | Supabase `hvac_standard_agent` — 49 fields including Premium-only booking fields |
 | 4 | Retell agent — exists, published, Premium webhook URL, correct voice/language |
 | 5 | Conversation flow — exactly 18 nodes, all Premium nodes present |
-| 6 | Premium call processor — fake call logged + scored in `hvac_call_log` |
+| 6 | Premium call processor — fake call with Retell-native payload + booking fields, 30+ fields verified |
 | 7 | Stripe gate — Twilio correctly skipped in test mode |
 | 8 | Cleanup scheduled — 5 min delayed delete |
 
@@ -51,6 +51,9 @@ Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
 | Premium call processor webhook | `/webhook/retell-hvac-premium-webhook` |
 | Cleanup webhook | `/webhook/e2e-test-cleanup` |
 
+> ⚠️ **Critical**: The fake call in Phase 6 must use an agent_id that has a record in `hvac_standard_agent`.
+> Premium TESTING agent may not have a record — use Premium MASTER agent_id for testing.
+>
 > ⚠️ **Critical**: Premium uses `/webhook/jotform-hvac-premium-onboarding` — NOT the same as Standard (`/webhook/jotform-hvac-onboarding`). Sending to the wrong path provisions a Standard agent instead of Premium.
 
 ---
@@ -135,39 +138,37 @@ All 49 fields verified. Standard fields (inherited) + Premium-only fields:
 
 ---
 
-## Premium Call Processor — Architecture Notes
+## Premium Call Processor — Architecture (Retell-native, post-enhancement 2026-04-04)
 
-The Premium call processor (`STQ4Gt3rH8ptlvMi`) was rebuilt from the Standard base on 2026-04-02 to fix a pre-existing bug where `n8n-nodes-base.filter` caused silent crashes before any node ran. Key differences from original:
-
-- **Filter node**: `n8n-nodes-base.if` (replaced broken `n8n-nodes-base.filter`)
-- **GPT prompt**: Premium-specific with booking fields, returns NESTED JSON with section headers (`CALLER INFORMATION`, `CALL CLASSIFICATION`, `BOOKING DATA`, `LEAD QUALIFICATION`, `ADDITIONAL`)
-- **Parse Lead Data**: Enhanced Standard code that flattens nested GPT response using section header keys
-- **Log Call**: Sets `call_tier: 'Premium'` + includes `booking_attempted`, `booking_success`, `appointment_date`, `appointment_time`, `job_type_booked`, `is_repeat_caller`
-- **SMS node**: Stub (Telnyx disabled) — no `$vars` references
-- **Email node**: Stub — no Gmail credential (uses SMTP2GO pattern)
-
-### Parse Lead Data — Premium-Specific Code
-
-The GPT returns nested JSON. Parse Lead Data flattens it:
-
-```javascript
-const ci = leadData['CALLER INFORMATION'] || {};
-const cc = leadData['CALL CLASSIFICATION'] || {};
-const lq = leadData['LEAD QUALIFICATION'] || {};
-const ad = leadData['ADDITIONAL'] || {};
-const score = lq.lead_score || leadData.lead_score || 0;
-return {
-  ...clientData, ...leadData,
-  caller_name: ci.caller_name || leadData.caller_name || '',
-  caller_phone: ci.caller_phone || leadData.caller_phone || '',
-  service_requested: cc.service_requested || leadData.service_requested || '',
-  summary: ad.summary || lq.summary || leadData.summary || '',
-  lead_score: score,
-  is_lead: score >= 6 || lq.is_lead || leadData.is_lead || false
-};
+```
+Retell POST (call_analyzed event)
+  → Filter: call_analyzed only [IF node]
+  → Extract Call Data [Code — reads call.call_analysis.custom_analysis_data]
+  → Supabase: Lookup Client [HTTP — get company_name by agent_id]
+  → Parse Client Data [Code]
+  → Check Repeat Caller [Code — query hvac_call_log by from_number]
+  → Is Lead? [IF — lead_score >= 5 AND not spam/wrong_number]
+      ├─ Both → Supabase: Log Call [HTTP POST] → HubSpot Note → Slack Alert
+      └─ Error → Alert: Supabase Write Failed
 ```
 
-> ⚠️ **Code length limit**: Parse Lead Data code must stay under ~1100 chars. The n8n instance on Railway has a JS compilation limit. Exceeding it causes silent workflow-level crashes with empty runData. Keep additions terse.
+> **No LLM calls in n8n.** GPT and Groq nodes removed. Retell's post_call_analysis (gpt-4.1-mini)
+> extracts all fields at platform level. n8n reads structured JSON from `custom_analysis_data`.
+> Premium maps the same fields as Standard PLUS: booking_attempted, booking_success,
+> appointment_date, appointment_time_window, job_type_booked. call_tier = "Premium".
+
+### Premium-specific custom_analysis_data fields
+| Field | Description |
+|---|---|
+| `booking_attempted` | True if agent attempted to book (Premium CAN book) |
+| `booking_success` | True if booking was made |
+| `appointment_date` | Date of booked appointment |
+| `appointment_time_window` | Time window of booked appointment |
+| `job_type_booked` | Type of job booked |
+
+### Known issue: HubSpot Code node
+Same as Standard — "access to env vars denied" error after Supabase write succeeds.
+Does not affect call logging. Needs node rewrite to HTTP Request pattern.
 
 ---
 
@@ -198,9 +199,8 @@ for attempt in range(9):   # up to 45s
 | Phase 3: notification fields null | Using wrong Jotform field names | Premium uses q79-q82, NOT q64-q67 |
 | Phase 3: booking fields null | Booking fields missing from payload | Add q87-q92 fields to Jotform payload |
 | Phase 5: 12 nodes instead of 18 | Standard workflow ran instead of Premium | Wrong webhook path (see Phase 1) |
-| Phase 6: exec=error, empty runData | Code node JS compilation crash | Parse Lead Data code too long (>1100 chars) |
-| Phase 6: score=0, fields empty | GPT returned nested JSON, not flattened | Check Parse Lead Data has section-header flattener |
-| Phase 6: workflow never ran | Filter node type wrong | Must be `n8n-nodes-base.if`, not `n8n-nodes-base.filter` |
+| Phase 6: fields empty | Payload missing `custom_analysis_data` | Fake webhook must include full Retell-native payload structure |
+| Phase 6: company_name empty | agent_id has no record in hvac_standard_agent | Use an agent_id that exists in Supabase (e.g. Premium MASTER) |
 | Cleanup doesn't fire | Cleanup workflow paused | Unpause `URbQPNQP26OIdYMo` in n8n |
 
 ---
