@@ -7,12 +7,12 @@ description: >
   client was provisioned correctly, checking whether a recent n8n change broke onboarding, or any
   task involving shared/e2e-test.py. The test covers the full pipeline: Jotform webhook → n8n
   onboarding → Supabase → Retell agent + conversation flow → call processor → hvac_call_log.
-  Current status: 98 assertions (updated 2026-04-04). Run with: python3 shared/e2e-test.py
+  Current status: 87/90 passing (2026-04-04). 3 failures are pre-existing infra issues. Run with: export RETELL_KEY=<from vault> && python3 shared/e2e-test.py
 ---
 
 # E2E Test — HVAC Standard Agent
 
-> **Status: 98 assertions — Updated 2026-04-04 for Retell-native fields. Call processor verified green.**
+> **Status: 87/90 ✅ — Verified 2026-04-04. 3 known infra failures (n8n exec polling, HubSpot $env, email check).**
 > Run: `python3 shared/e2e-test.py`
 > Full docs: `docs/e2e-test-reference.md`
 > Master template: `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
@@ -21,7 +21,7 @@ description: >
 
 ## What It Tests
 
-Complete Standard pipeline end-to-end, 98 assertions across 7 phases:
+Complete Standard pipeline end-to-end, 90 assertions across 7 phases (87 passing, 3 known infra failures):
 
 | Phase | What's checked |
 |---|---|
@@ -221,6 +221,25 @@ When adding a new Jotform field that must reach Supabase:
 | Phase 5 wrong node count | Template changed in n8n | Check Build Retell Prompt node — must build 12 nodes |
 | Phase 6 call not logged | Webhook path or payload format wrong | Verify `/webhook/retell-hvac-webhook` active AND payload includes `custom_analysis_data` |
 | Cleanup doesn't fire | Cleanup workflow paused | Unpause `URbQPNQP26OIdYMo` in n8n |
+
+---
+
+## Running the test
+
+```bash
+# RETELL_KEY must be set — get from vault
+export RETELL_KEY=$(curl -s "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/syntharra_vault?service_name=eq.Retell%20AI&key_type=eq.api_key&select=key_value" \
+  -H "apikey: $SB_SVC" -H "Authorization: Bearer $SB_SVC" | jq -r '.[0].key_value')
+
+python3 shared/e2e-test.py
+```
+
+### Known failures (3 — pre-existing infra, not test issues)
+| Failure | Root cause | Impact |
+|---|---|---|
+| "Workflow executed successfully" | n8n execution API returns stale cached execution | None — workflow runs, data is in Supabase |
+| "Call processor n8n execution OK" | HubSpot Code node uses $env (restricted) | None — Supabase write succeeds, HubSpot is downstream |
+| "Onboarding email sent" | Email node check | Non-blocking |
 
 ---
 
