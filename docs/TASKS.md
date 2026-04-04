@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-04 — Full pipeline audit + test hygiene complete. 90/90 E2E ✅.
+> Updated: 2026-04-05 — Premium E2E 106/106 ✅. bookable_job_types fix applied.
 > Keep this file focused on open work only. Target: under 40 lines.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE
@@ -13,9 +13,9 @@
 - [ ] Add Supabase assertions for greeting_style, after_hours_transfer, separate_emergency_phone
 
 ### Premium Pipeline — TESTING ONLY (no MASTER agent exists yet)
-- [ ] Complete Premium agent testing — must reach 95%+ pass rate before MASTER promotion
-- [ ] Fix bookable_job_types mapping in Premium onboarding workflow
-- [ ] Run Premium E2E test (102/106 was last result — 3 known infra + 1 bookable_job_types)
+- [x] Fix bookable_job_types mapping in Premium onboarding workflow ✅ (2026-04-05)
+- [x] Run Premium E2E test — 106/106 ✅ (2026-04-05)
+- [ ] Complete Premium agent scenario testing (simulator) — must reach 95%+ pass rate
 - [ ] Verify Premium onboarding email matches Standard quality
 - [ ] Only after all above: promote Premium TESTING → MASTER
 
