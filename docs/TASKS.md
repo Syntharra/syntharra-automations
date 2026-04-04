@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-04 — Retell enhancement sprint redesigned. Premium testing cancelled in favour of combined approach.
+> Updated: 2026-04-04 — Retell enhancement sprint in progress. Phases 0-4 complete.
 > Keep this file focused on open work only. Target: under 40 lines.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE
@@ -11,12 +11,12 @@
 ### Retell Enhancement Sprint — READY TO EXECUTE 🚀
 > Prompt: docs/prompts/retell-enhancement-prompt.md (v2.4, 911 lines)
 > Run in: Claude Code
-- [ ] Phase 0: Pre-flight + add disconnection_reason/transcript columns (DONE in this session)
-- [ ] Phase 1: Sync Standard TESTING to MASTER, create Premium DEMO clone
-- [ ] Phase 2: PATCH all Retell features (guardrails, boost keywords, pronunciation, backchannel, reminders, tuning, post_call_analysis, webhook filter)
-- [ ] Phase 3: Dan UI — add Extract Dynamic Variable + Code nodes to Standard TESTING + Premium DEMO flows
-- [ ] Phase 4A: Configure fallback numbers + geo restrictions on phone number
-- [ ] Phase 4B: Dan dashboard — create 5 alerting rules + 5 analytics charts + verify guardrails
+- [x] Phase 0: Pre-flight ✅
+- [x] Phase 1: Premium DEMO clone → `agent_80d6270ab39ed3169f997cb035` / `conversation_flow_82e70e18fef3` ✅
+- [x] Phase 2: All Retell features configured on both agents ✅
+- [x] Phase 3: Code node added via API ✅ | Extract Dynamic Variable = DAN UI TASK
+- [x] Phase 4A: Phone fallback set to +18563630633, pinned to v20 ✅
+- [ ] Phase 4B: DAN TASK — 5 alerting rules + 5 analytics charts in Retell dashboard
 - [ ] Phase 5: Update both n8n call processors — remove GPT, map Retell webhook fields to Supabase
 - [ ] Phase 6: Test calls on both agents, verify all 49 fields populate correctly
 - [ ] Phase 7: Update E2E assertions, run both suites green
