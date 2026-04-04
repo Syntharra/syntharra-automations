@@ -42,14 +42,14 @@
 |---|---|---|
 | `syntharra_vault` | ALL API keys — requires service role key to read | ✓ Live (401 on anon) |
 
-### Not Found (404) — Do Not Reference
-| Table | Notes |
+### Deleted — Do Not Reference
+| Table/View | Notes |
 |---|---|
 | `hvac_premium_agent` | Merged into `hvac_standard_agent` |
 | `hvac_premium_call_log` | Merged into `hvac_call_log` |
-| `e2e_test_results` | Scaffolded but not created — recreate if E2E tests need it |
-| `agent_test_run_summary` | Deleted with Agent Scenario Testing |
-| `agent_test_results` | Deleted with Agent Scenario Testing |
+| `e2e_test_results` | Scaffolded but not created |
+| `agent_test_results` | Dropped 2026-04-04 (0 rows, deprecated testing system) |
+| `agent_test_run_summary` | View dropped 2026-04-04 (depended on agent_test_results) |
 | `agent_pending_fixes` | Deleted with Agent Scenario Testing |
 
 ## Vault Lookup Pattern
