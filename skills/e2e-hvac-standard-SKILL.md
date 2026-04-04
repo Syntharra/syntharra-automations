@@ -351,3 +351,25 @@ Both Build Onboarding Pack HTML and Send Setup Instructions Email now suppress o
 - Recipient: `lead_email` from Supabase row
 - Subject: 'Your AI Receptionist is Live — Welcome to Syntharra 🎉'
 - NO "24 hours" copy — fully automated, no manual follow-up implied
+
+
+---
+
+## Session Update — 2026-04-04 (Post-Audit)
+
+### New fields to add to E2E test payload + assertions
+When the E2E test payload is next extended, add:
+- `q72_greetingStyle`: "Warm"
+- `q73_customGreetingText`: custom greeting text (replaces q38 which is dead)
+- `q68_afterHoursTransfer`: "Only transfer emergency calls after hours"
+- `q69_separateEmergencyPhone`: "Yes - I have a dedicated emergency line"
+
+And add Supabase assertions for:
+- `greeting_style` saved correctly
+- `after_hours_transfer` saved correctly
+- `separate_emergency_phone` saved correctly
+- `custom_greeting` populated from q73 (not blank/wrong)
+
+### RETELL_KEY embedded as fallback
+e2e-test.py now has RETELL_KEY default fallback embedded — no env var needed.
+Key ends `66445`. If Retell key rotates, update both n8n credentials AND this file.
