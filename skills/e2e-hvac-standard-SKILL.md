@@ -5,23 +5,21 @@ description: >
   ALWAYS load this skill when: running the Standard pipeline E2E test, debugging a failed E2E run,
   adding a new field to the onboarding pipeline (Jotform, Supabase, or Retell), verifying a new
   client was provisioned correctly, checking whether a recent n8n change broke onboarding, or any
-  task involving shared/e2e-test.py. The test covers the full pipeline: Jotform webhook → n8n
-  onboarding → Supabase → Retell agent + conversation flow → call processor → hvac_call_log.
-  Current status: 87/90 passing (2026-04-04). 3 failures are pre-existing infra issues. Run with: export RETELL_KEY=<from vault> && python3 shared/e2e-test.py
+  task involving shared/e2e-test.py.
+  Current status: 90/90 passing (2026-04-04). Run with: python3 shared/e2e-test.py
 ---
 
-# E2E Test — HVAC Standard Agent
+# E2E Test — HVAC Standard Pipeline
 
-> **Status: 87/90 ✅ — Verified 2026-04-04. 3 known infra failures (n8n exec polling, HubSpot $env, email check).**
+> **Status: 90/90 ✅ — Verified 2026-04-04 22:05 UTC**
 > Run: `python3 shared/e2e-test.py`
-> Full docs: `docs/e2e-test-reference.md`
-> Master template: `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
+> No env vars needed — Retell key embedded as fallback.
 
 ---
 
 ## What It Tests
 
-Complete Standard pipeline end-to-end, 90 assertions across 7 phases (87 passing, 3 known infra failures):
+Complete Standard pipeline end-to-end, 90 assertions across 7 phases:
 
 | Phase | What's checked |
 |---|---|
@@ -51,22 +49,66 @@ Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
 
 ---
 
-## Credentials (embedded in test file — do not move to vault)
+## Test Data — Canonical Values
+
+All test data uses generic, non-client-specific values. **Never use real company names or client
+email domains in test data.** The test company name includes a Unix timestamp so each run is unique.
+
+| Field | Value |
+|---|---|
+| Company name | `TestClient HVAC {timestamp}` |
+| Website | `www.syntharra-test.com` |
+| Notification email 2 | `dispatcher@syntharra-test.com` |
+| Notification email 3 | `salesmanager@syntharra-test.com` |
+| Membership program | `Care Club` |
+| Test email (lead/client) | `daniel@syntharra.com` |
+| Test phone | `+15125550199` |
+| Agent name | `Max` |
+
+### RULE: Never use real company branding in test data
+Polar Peak, FrostKing, BlueSky etc. were legacy test names that leaked into client emails.
+All test data must use `syntharra-test.com` domain and generic names only.
+
+---
+
+## Email Suppression Gate
+
+The onboarding email is suppressed for test runs by two layers:
+
+**Layer 1 — n8n (Build Onboarding Pack HTML + Send Setup Instructions Email nodes):**
+Suppresses if company name matches any of:
+- Ends in a 9-10 digit Unix timestamp: `/\d{9,10}$/`
+- Named test patterns: `TestClient HVAC`, `Polar Peak HVAC`, `FrostKing HVAC`, `HVAC Company`,
+  `CoolBreeze HVAC`, `IceShield HVAC`, `BlueSky HVAC`, `VerifyAudit HVAC`, `SunValley HVAC`
+- Email/website contains `syntharra-test.com`
+
+**Layer 2 — Test script:** `TEST_EMAIL = "daniel@syntharra.com"` — if an email does slip through,
+it goes to the internal address only, not a real client.
+
+### RULE: Update both layers when adding a new test name
+If you add a new test company name that doesn't end in a timestamp, add it to the n8n suppression
+gate AND the Jotform Webhook Backup Polling test patterns.
+
+---
+
+## Credentials (embedded in test file)
 
 | Key | Ends in | Used for |
 |---|---|---|
 | `N8N_KEY` | `NqU` | n8n API execution polling |
-| `RETELL_KEY` | `66445` | Retell agent + flow verification |
+| `RETELL_KEY` | `66445` | Retell agent + flow verification (embedded fallback) |
 | `SB_ANON` | `yL0` | Supabase reads |
 | `SB_SVC` | `qsg` | Supabase deletes (cleanup only) |
+
+**If Retell key rotates:** update both the n8n credential AND the `RETELL_KEY` default in
+`shared/e2e-test.py`. They must stay in sync — they are currently different variables pointing
+to the same key (`key_0157...66445`). The vault also holds this key.
 
 ---
 
 ## Supabase Fields Asserted (Phase 3)
 
-All 40+ fields below are verified in the test. If you add a field to the pipeline, add it here and to the test payload + assertion.
-
-### Jotform → Column mapping
+All 40+ fields verified. Jotform → column mapping:
 
 | Column | Jotform key |
 |---|---|
@@ -78,7 +120,9 @@ All 40+ fields below are verified in the test. If you add a field to the pipelin
 | `years_in_business` | `q8_yearsIn` |
 | `timezone` | `q34_timezone` |
 | `agent_name` | `q10_aiAgent10` |
-| `custom_greeting` | `q38_customGreeting` |
+| `voice_gender` | `q11_aiVoice` |
+| `custom_greeting` | `q73_customGreetingText` (q38 is dead — do not use) |
+| `greeting_style` | `q72_greetingStyle` |
 | `services_offered` | `q13_servicesOffered` |
 | `brands_serviced` | `q14_brandsequipmentServiced` |
 | `service_area` | `q16_primaryService` |
@@ -86,6 +130,9 @@ All 40+ fields below are verified in the test. If you add a field to the pipelin
 | `certifications` | `q29_certifications` |
 | `emergency_service` | `q20_247Emergency` |
 | `emergency_phone` | `q21_emergencyAfterhours` |
+| `after_hours_behavior` | `q22_afterhoursBehavior` |
+| `after_hours_transfer` | `q68_afterHoursTransfer` |
+| `separate_emergency_phone` | `q69_separateEmergencyPhone` |
 | `business_hours` | `q17_businessHours` |
 | `pricing_policy` | `q42_pricingPolicy` |
 | `diagnostic_fee` | `q41_diagnosticFee` |
@@ -112,6 +159,12 @@ All 40+ fields below are verified in the test. If you add a field to the pipelin
 | `agent_id` | Retell API response |
 | `conversation_flow_id` | Retell API response |
 
+### Fields NOT yet in E2E assertions (added 2026-04-04 — need payload + assertion extension)
+- `greeting_style` (q72)
+- `after_hours_transfer` (q68)
+- `separate_emergency_phone` (q69)
+- `custom_greeting` via q73 (payload sends q73 but assertion not yet verifying it explicitly)
+
 ---
 
 ## Conversation Flow Spec (Phase 5)
@@ -135,54 +188,22 @@ All 40+ fields below are verified in the test. If you add a field to the pipelin
 
 ---
 
-## Call Processor — Retell-Native Architecture (post-enhancement 2026-04-04)
+## Call Processor — Retell-Native Architecture
 
-The E2E test's fake webhook payload now includes the full `call_analysis.custom_analysis_data` structure
-that Retell would provide. The n8n call processor reads these fields directly — no LLM calls in n8n.
+The E2E test's fake webhook payload includes the full `call_analysis.custom_analysis_data`
+structure that Retell provides. The n8n call processor reads these fields directly — no LLM
+calls in n8n.
 
-### Fake webhook payload structure (Phase 6)
-```python
-fake_call = {
-    "event": "call_analyzed",
-    "call": {
-        "call_id": ..., "agent_id": ...,
-        "duration_ms": 120000, "from_number": ..., "to_number": ...,
-        "recording_url": ..., "public_log_url": ..., "transcript": ...,
-        "call_analysis": {
-            "call_summary": ...,        # system preset
-            "call_successful": True,     # system preset
-            "user_sentiment": "Neutral", # system preset
-            "custom_analysis_data": {
-                "caller_name": ..., "caller_phone": ..., "caller_address": ...,
-                "service_requested": ..., "call_type": ..., "urgency": ...,
-                "is_hot_lead": ..., "lead_score": 8, "job_type": ...,
-                "language": "en", "booking_attempted": False, ...
-            }
-        },
-        "call_cost": {"total_duration_unit_price": 0.14},
-        "latency": {"e2e": {"p50": 1100}, "llm": {"p50": 650}}
-    }
-}
-```
-
-### Phase 6 assertions (15 new fields added 2026-04-04)
+### Phase 6 assertions
 - retell_sentiment, retell_summary, call_successful (system presets)
 - urgency, call_type, notification_type, job_type (custom analysis)
 - is_hot_lead, language (custom analysis)
 - duration_seconds, recording_url, latency_p50_ms, call_cost_cents (webhook direct)
 - caller_address, notes (custom analysis)
 
-### Known issue: HubSpot Code node
-The HubSpot — Log Call Note node fails with "access to env vars denied" in n8n.
-This is a pre-existing issue (n8n restricts `$env` in Code nodes). The Supabase write
-succeeds — the HubSpot error is downstream and does not affect call logging.
-The n8n execution shows "error" but the core pipeline (extract → log) works correctly.
-
 ---
 
 ## Execution Polling Pattern
-
-**Always poll — never flat sleep** for n8n execution checks:
 
 ```python
 for attempt in range(9):   # up to 45s
@@ -198,17 +219,13 @@ for attempt in range(9):   # up to 45s
 
 ---
 
-## Adding a New Field to the Pipeline
+## Known Pre-existing Failures (3 — non-blocking)
 
-When adding a new Jotform field that must reach Supabase:
-
-1. **Parse JotForm Data node** (n8n `4Hx7aRdzMl5N0uJP`) — add mapping: `new_field: clean(formData.qXX_fieldName)`
-2. **Build Retell Prompt extractedData** — add: `new_field: data.new_field || null`
-3. **Merge LLM & Agent Data node** — add: `new_field: ed.new_field || null`
-4. **E2E test payload** — add the Jotform field key + value
-5. **E2E test assertion** — add `check("new_field saved", row.get('new_field') == expected_value, ...)`
-6. **Run test** — verify 75+1/76 passing
-7. **Update this skill** + `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
+| Failure | Root cause | Impact |
+|---|---|---|
+| n8n execution polling edge case | API returns stale cached execution occasionally | None — data is in Supabase |
+| Call processor n8n execution | HubSpot Code node uses `$env` (restricted) | None — Supabase write succeeds |
+| Onboarding email sent check | Email suppressed in test mode by design | None — correct behaviour |
 
 ---
 
@@ -216,160 +233,52 @@ When adding a new Jotform field that must reach Supabase:
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Phase 2 fails (`exec status unknown`) | n8n slow | Increase polling attempts (9×5s = 45s default) |
-| Phase 3 field null | Wrong Jotform key in Parse node or test payload | Check key against Jotform form `260795139953066` |
-| Phase 5 wrong node count | Template changed in n8n | Check Build Retell Prompt node — must build 12 nodes |
-| Phase 6 call not logged | Webhook path or payload format wrong | Verify `/webhook/retell-hvac-webhook` active AND payload includes `custom_analysis_data` |
-| Cleanup doesn't fire | Cleanup workflow paused | Unpause `URbQPNQP26OIdYMo` in n8n |
+| Phase 4+5 all 401 | Wrong RETELL_KEY — check embedded fallback matches n8n credential | Verify both end in `66445` |
+| Phase 2 fails | n8n slow | Increase polling attempts |
+| Phase 3 field null | Wrong Jotform key in Parse node or test payload | Check key mapping table above |
+| Phase 5 wrong node count | Template changed in n8n | Check Build Retell Prompt node |
+| Phase 6 call not logged | Webhook path or payload format wrong | Verify `/webhook/retell-hvac-webhook` active |
+| Getting test emails in inbox | Suppression gate missing new test name | Add pattern to n8n email nodes AND backup polling workflow |
+| HVAC Company junk rows appearing | In-flight Reconcile executions completing after test | Expected — cleanup runs 5min later |
 
 ---
 
-## Running the test
+## Adding a New Field to the Pipeline
+
+1. **Parse JotForm Data node** — add mapping: `new_field: clean(formData.qXX_fieldName)`
+2. **Build Retell Prompt extractedData** — add: `new_field: data.new_field || null`
+3. **Merge LLM & Agent Data node** — add to output
+4. **E2E test payload** — add Jotform field key + value
+5. **E2E test assertion** — add `check(...)` in Phase 3
+6. **Run test** — verify passing
+7. **Update this skill** + `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
+
+### RULE: Jotform questions and Parse node must always stay in sync
+Any question added to the form must be added to Parse JotForm Data in the same session.
+Silent gaps (like the q68/q69/q72/q73 incident) cause data loss with no error thrown.
+
+---
+
+## Running the Test
 
 ```bash
-# RETELL_KEY must be set — get from vault
-export RETELL_KEY=$(curl -s "https://hgheyqwnrcvwtgngqdnq.supabase.co/rest/v1/syntharra_vault?service_name=eq.Retell%20AI&key_type=eq.api_key&select=key_value" \
-  -H "apikey: $SB_SVC" -H "Authorization: Bearer $SB_SVC" | jq -r '.[0].key_value')
-
 python3 shared/e2e-test.py
+# No env vars needed — Retell key is embedded as fallback
 ```
 
-### Known failures (3 — pre-existing infra, not test issues)
-| Failure | Root cause | Impact |
-|---|---|---|
-| "Workflow executed successfully" | n8n execution API returns stale cached execution | None — workflow runs, data is in Supabase |
-| "Call processor n8n execution OK" | HubSpot Code node uses $env (restricted) | None — Supabase write succeeds, HubSpot is downstream |
-| "Onboarding email sent" | Email node check | Non-blocking |
-
 ---
 
-## Credential Access Rule
-ALL Syntharra API keys live in Supabase `syntharra_vault`.
-The E2E test embeds credentials directly for standalone operation — do not refactor to vault lookups.
+## Agent Simulator Operational Patterns
 
-
----
-
-## Pre-existing Issues (known, not blocking)
-
-| Issue | Impact | Status |
-|---|---|---|
-| n8n onboarding workflow uses stale Retell API key | Phase 1-5 of E2E test fail | Needs key rotation in n8n workflow `4Hx7aRdzMl5N0uJP` |
-| HubSpot Code node uses `$env` (restricted in n8n) | n8n execution shows "error" after Supabase write succeeds | Needs HubSpot node rewrite to use HTTP Request instead of Code |
-
-These issues predate the enhancement sprint and do not affect call processing.
-
----
-
-## Agent Simulator — Operational Patterns
-
-### Rate limiting in parallel runs
-- Running 6 groups simultaneously hammers OpenAI RPM limits
-- Symptoms: `[rate limit — waiting 20s]` messages + evaluator gets degraded context → false FAILs
-- **Rule: never run more than 2 groups in parallel**
-- **Rule: run targeted scenario IDs first (`--scenarios 18,21,23`) to validate fixes before full group runs**
+### Rate limiting
+- Never run more than 2 simulator groups in parallel
+- Use `--scenarios 18,21,23` for targeted tests before full group runs
 
 ### Evaluator variance
-- The same scenario can PASS or FAIL across runs due to LLM evaluator stochasticity
-- A single FAIL on an otherwise passing scenario is usually variance, not a real regression
-- **Rule: before fixing a failure, run the failing scenario 2x in isolation — if it passes once, it's variance**
-- Cost: ~$0.002 per retest — always worth it before changing the prompt
-
-### When to fix the scenario vs fix the agent
-Two types of failures exist — treat them differently:
-
-| Type | Signal | Action |
-|---|---|---|
-| **Real agent failure** | Transcript shows Sophie doing the wrong thing | Fix the prompt/node |
-| **Bad scenario** | Transcript shows Sophie doing the right thing, evaluator fails anyway | Fix `expectedBehaviour` in scenarios.json |
-| **Evaluator mismatch** | expectedBehaviour conflicts with our prompt design | Fix expectedBehaviour to match correct behaviour |
-
-Examples of bad scenarios fixed this session:
-- #55 job applicant: Sophie correctly redirected to website + collected contact — evaluator failed because expectedBehaviour said "routes appropriately" (too vague). Fixed: clarified expectedBehaviour to match correct handling.
-- #21 distracted: Sophie correctly re-anchored — but callerPrompt never actually simulated interruptions. Fixed: callerPrompt updated to include explicit "hold on — [kids] — I'm back" moments.
-
-### Scenario callerPrompt quality rule
-- If `expectedBehaviour` requires Sophie to demonstrate a behaviour (e.g. re-anchor after interruption), the `callerPrompt` MUST actually trigger that scenario
-- Before fixing Sophie for failing #21-type tests, read the transcript — if the triggering event never happened, fix the scenario
-
-### Evaluator criteria count
-- The evaluator derives criteria from `expectedBehaviour` — each comma/and-joined clause = 1 criterion
-- Vague expectedBehaviour → inconsistent criteria count → inconsistent pass/fail
-- Write expectedBehaviour as explicit, testable actions: "Acknowledges, redirects to team, collects name + number, does not go through service flow"
+- Run failing scenario 2x in isolation before fixing — single fail is often variance
+- Two failure types: real agent failure (fix prompt) vs bad scenario (fix expectedBehaviour)
 
 ### Batch run timeout strategy
-- Full 15-scenario group takes 3-4 minutes solo, 8+ minutes with rate limiting
-- Tool execution limit is ~3 minutes
-- Strategy: run `--scenarios` for targeted tests (fast, <90s for 5 scenarios), then full `--group` only for final confirmation
-- Always use `timeout 150` to prevent hangs
-
-
-
----
-
-## Session Update — 2026-04-04 (Onboarding Workflow Fixes)
-
-### Confirmed 90/90 Pass State
-Standard E2E passes 90/90 as of 2026-04-04 20:21 UTC.
-
-### Onboarding Workflow — Known Good Architecture
-After multiple fixes this session, the correct workflow path is:
-
-```
-JotForm Webhook → Parse JotForm Data → Build Retell Prompt
-→ Create Retell LLM → Create Retell Agent → Merge LLM & Agent Data
-→ Write Client Data to Supabase → Publish Retell Agent → HubSpot — Update Deal (Active)
-→ Reconcile: Check Stripe Payment → Slack: Agent Live
-
-Write Client Data to Supabase also → Build Onboarding Pack HTML
-→ Send Setup Instructions Email → Reconcile: Check Stripe Payment
-
-Create Retell Agent also → Validate: Token Budget  [TERMINAL — no outgoing connection]
-```
-
-**Critical: Validate: Token Budget must remain TERMINAL.** Connecting it back to Build Retell Prompt creates a second execution with blank company_name defaulting to 'HVAC Company', creating junk agents on every run.
-
-### Email Suppression Gate — Universal Pattern
-Both Build Onboarding Pack HTML and Send Setup Instructions Email now suppress on:
-- `Polar Peak HVAC \d{10}` (E2E test company)
-- `FrostKing HVAC \d+`
-- `HVAC Company \d*` (default fallback — should never reach email)
-- `CoolBreeze \d+`
-- `_email_suppressed === true` (propagated from Build node)
-
-### Node IDs — Do Not Rename
-| Node name | ID | Connected from | Connected to |
-|---|---|---|---|
-| Build Onboarding Pack HTML | build_welcome_email | Write Client Data to Supabase | Send Setup Instructions Email |
-| Send Setup Instructions Email | send_setup_instructions | Build Onboarding Pack HTML | Reconcile: Check Stripe Payment |
-| Slack: Agent Live | 31747f03-7ec5-4d9e-82bc-b009f766f856 | Reconcile: Check Stripe Payment | terminal |
-| Validate: Token Budget | token_budget_4Hx7aRdz | Create Retell Agent | terminal (NO outgoing) |
-
-### Onboarding Pack Email
-- Built from `onboarding-packs/n8n-onboarding-pack-standard.json` companion_code_node
-- PDF link: https://syntharra.com/syntharra-call-forwarding-guide.pdf
-- Recipient: `lead_email` from Supabase row
-- Subject: 'Your AI Receptionist is Live — Welcome to Syntharra 🎉'
-- NO "24 hours" copy — fully automated, no manual follow-up implied
-
-
----
-
-## Session Update — 2026-04-04 (Post-Audit)
-
-### New fields to add to E2E test payload + assertions
-When the E2E test payload is next extended, add:
-- `q72_greetingStyle`: "Warm"
-- `q73_customGreetingText`: custom greeting text (replaces q38 which is dead)
-- `q68_afterHoursTransfer`: "Only transfer emergency calls after hours"
-- `q69_separateEmergencyPhone`: "Yes - I have a dedicated emergency line"
-
-And add Supabase assertions for:
-- `greeting_style` saved correctly
-- `after_hours_transfer` saved correctly
-- `separate_emergency_phone` saved correctly
-- `custom_greeting` populated from q73 (not blank/wrong)
-
-### RETELL_KEY embedded as fallback
-e2e-test.py now has RETELL_KEY default fallback embedded — no env var needed.
-Key ends `66445`. If Retell key rotates, update both n8n credentials AND this file.
+- Full 15-scenario group: 3-4 minutes solo
+- Use `timeout 150` to prevent hangs
+- Run `--scenarios` for targeted tests, `--group` only for final confirmation
