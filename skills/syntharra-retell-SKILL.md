@@ -184,6 +184,46 @@ To record a demo call (VSL Scene 3):
 
 ---
 
+
+## 🔧 Conversation Flow API — Verified Patterns (2026-04-04)
+
+### Cloning a flow
+When creating a new conversation flow from an existing one:
+- GET the source flow
+- POST to `create-conversation-flow` with: `start_speaker`, `nodes`, `global_prompt`, `tools`, `model_choice`, `tool_call_strict_mode`, `knowledge_base_ids`
+- `start_speaker` is REQUIRED but NOT obvious from GET response — always include it (usually `"agent"`)
+- `edges` field in GET is always 0 — edges are embedded inside node objects
+- Remove read-only fields: `conversation_flow_id`, `version`, `is_published`, `kb_config`, `begin_tag_display_position`
+
+### Code nodes CAN be created via API
+- Type: `code`
+- Required fields: `id`, `type`, `name`, `code`, `edges`, `else_edge`, `speak_during_execution`, `wait_for_result`, `display_position`
+- CRITICAL: `else_edge` MUST be an object (not null). Use: `{"destination_node_id": "node-ending", "id": "edge-xxx-else", "transition_condition": {"type": "prompt", "prompt": "Else"}}`
+- `edges` is an array of conditional edges (can be empty `[]`)
+
+### Extract Dynamic Variable nodes are UI-ONLY
+- Cannot be created via API — returns validation error
+- Dan must create these in the Retell dashboard manually
+- Place between lead capture node and ending/code nodes
+
+### Node types supported by API
+- `conversation` — standard conversation nodes (require `instruction`)
+- `code` — JavaScript execution nodes
+- `end` — end call nodes
+- `transfer_call` — call transfer nodes (require `transfer_destination`)
+- `extract_variable` — NOT supported via API (UI-only)
+
+### Phone number configuration
+- `fallback_number` field works via PATCH update-phone-number
+- `fallback_destination` also accepted but `fallback_number` is what persists
+- Geo restrictions (`allowed_inbound_country_list`) — dashboard only
+- `inbound_agent_version` auto-updates when agent is patched
+
+### List agents returns versions, not unique agents
+- `GET /list-agents` returns every published version as a separate entry
+- 5 unique agents may return 90+ entries
+- Filter by unique `agent_id` to get actual agent count
+
 ## 🔑 Syntharra Vault — Credential Access
 
 ALL Syntharra API keys and secrets are stored in the Supabase table `syntharra_vault`.
