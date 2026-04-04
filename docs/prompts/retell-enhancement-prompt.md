@@ -301,6 +301,14 @@ PATCH Standard TESTING with the FULL post_call_analysis_data array:
     "description": "True if this is a genuine HVAC emergency (no heat in winter, no AC with vulnerable occupant, gas smell, CO detector)." },
   { "type": "string",  "name": "notification_type",
     "description": "Notification priority routing. One of: emergency, hot_lead, general_lead, follow_up_required, existing_customer, spam, nonemergency_lead." },
+  { "type": "string",  "name": "job_type",
+    "description": "Category of the job. One of: repair, install, maintenance, quote, emergency, existing_customer, general_inquiry, other." },
+  { "type": "string",  "name": "language",
+    "description": "Language the caller spoke. One of: en, es, other." },
+  { "type": "boolean", "name": "booking_attempted",
+    "description": "Was a booking or appointment attempted? For Standard plan calls this is always false." },
+  { "type": "boolean", "name": "booking_success",
+    "description": "Was a booking successfully made? For Standard plan calls this is always false." },
   { "type": "string",  "name": "notes",
     "description": "Additional details not captured elsewhere — equipment brand, model, access notes, preferred callback time, anything relevant." }
 ]
@@ -308,12 +316,13 @@ PATCH Standard TESTING with the FULL post_call_analysis_data array:
 Set post_call_analysis_model = "gpt-4.1-mini" on both.
 
 For Premium TESTING: PATCH the SAME custom fields as above, PLUS keep its existing
-Premium-specific fields (booking_attempted, booking_success, appointment_date,
-appointment_time_window, job_type_booked, reschedule_or_cancel, caller_email).
+Premium-specific fields (appointment_date, appointment_time_window, job_type_booked,
+reschedule_or_cancel, caller_email). For Premium, update the booking_attempted and
+booking_success descriptions to remove the "always false" note — Premium CAN book.
 Merge, do not replace — the Premium array should be a superset of Standard.
 
-Verify: GET each agent, confirm custom fields present. Standard should have ~17 entries.
-Premium should have ~22 entries (Standard fields + Premium booking fields).
+Verify: GET each agent, confirm custom fields present. Standard should have ~20 entries.
+Premium should have ~25 entries (Standard fields + Premium booking fields).
 
 
 B) GUARDRAILS — real-time content moderation + jailbreak detection
@@ -636,41 +645,60 @@ The webhook fires event "call_analyzed" with this structure:
 
 FIELD MAPPING — Supabase INSERT for hvac_call_log:
 
+--- FROM RETELL WEBHOOK (direct fields) ---
 call_id              → {{ $json.call.call_id }}
 agent_id             → {{ $json.call.agent_id }}
-company_name         → [from Supabase client lookup by agent_id — KEEP EXISTING NODE]
+from_number          → {{ $json.call.from_number }}
+duration_seconds     → {{ Math.round($json.call.duration_ms / 1000) }}
+recording_url        → {{ $json.call.recording_url }}
+public_log_url       → {{ $json.call.public_log_url }}
+disconnection_reason → {{ $json.call.disconnection_reason }}
+transcript           → {{ $json.call.transcript }}
+latency_p50_ms       → {{ $json.call.latency?.e2e?.p50 }}
+call_cost_cents      → {{ Math.round(($json.call.call_cost?.total_duration_unit_price || 0) * $json.call.duration_ms / 60000 * 100) }}
+
+--- FROM RETELL SYSTEM PRESETS (call_analysis root level) ---
+retell_sentiment     → {{ $json.call.call_analysis.user_sentiment }}
+                        ⚠️ Map to retell_sentiment column (TEXT), NOT caller_sentiment (INTEGER)
+call_successful      → {{ $json.call.call_analysis.call_successful }}
+summary              → {{ $json.call.call_analysis.call_summary }}
+retell_summary       → {{ $json.call.call_analysis.call_summary }}
+
+--- FROM RETELL CUSTOM POST-CALL ANALYSIS (call_analysis.custom_analysis_data) ---
 caller_name          → {{ $json.call.call_analysis.custom_analysis_data.caller_name }}
 caller_phone         → {{ $json.call.call_analysis.custom_analysis_data.caller_phone }}
 caller_address       → {{ $json.call.call_analysis.custom_analysis_data.caller_address }}
 service_requested    → {{ $json.call.call_analysis.custom_analysis_data.service_requested }}
-job_type             → [keep from existing logic or derive from call_type]
+job_type             → {{ $json.call.call_analysis.custom_analysis_data.job_type }}
 urgency              → {{ $json.call.call_analysis.custom_analysis_data.urgency }}
 is_lead              → {{ $json.call.call_analysis.custom_analysis_data.is_hot_lead }}
-lead_score           → {{ $json.call.call_analysis.custom_analysis_data.lead_score }}
-retell_sentiment     → {{ $json.call.call_analysis.user_sentiment }}
-                        ⚠️ Map to retell_sentiment column (TEXT), NOT caller_sentiment (INTEGER)
+lead_score           → {{ Math.round($json.call.call_analysis.custom_analysis_data.lead_score || 0) }}
+is_hot_lead          → {{ $json.call.call_analysis.custom_analysis_data.is_hot_lead }}
 transfer_attempted   → {{ $json.call.call_analysis.custom_analysis_data.transfer_attempted }}
 transfer_success     → {{ $json.call.call_analysis.custom_analysis_data.transfer_success }}
 vulnerable_occupant  → {{ $json.call.call_analysis.custom_analysis_data.vulnerable_occupant }}
-summary              → {{ $json.call.call_analysis.call_summary }}
-retell_summary       → {{ $json.call.call_analysis.call_summary }}
-notes                → {{ $json.call.call_analysis.custom_analysis_data.notes }}
-call_tier            → "Standard"
-duration_seconds     → {{ Math.round($json.call.duration_ms / 1000) }}
-recording_url        → {{ $json.call.recording_url }}
-public_log_url       → {{ $json.call.public_log_url }}
-from_number          → {{ $json.call.from_number }}
-call_type            → {{ $json.call.call_analysis.custom_analysis_data.call_type }}
-is_hot_lead          → {{ $json.call.call_analysis.custom_analysis_data.is_hot_lead }}
-call_successful      → {{ $json.call.call_analysis.call_successful }}
-notification_type    → {{ $json.call.call_analysis.custom_analysis_data.notification_type }}
 emergency            → {{ $json.call.call_analysis.custom_analysis_data.emergency }}
-disconnection_reason → {{ $json.call.disconnection_reason }}  [NEW — add to INSERT]
-latency_p50_ms       → {{ $json.call.latency?.e2e?.p50 }}
-call_cost_cents      → {{ Math.round(($json.call.call_cost?.total_duration_unit_price || 0) * $json.call.duration_ms / 60000 * 100) }}
-transcript           → {{ $json.call.transcript }}
+call_type            → {{ $json.call.call_analysis.custom_analysis_data.call_type }}
+notification_type    → {{ $json.call.call_analysis.custom_analysis_data.notification_type }}
+language             → {{ $json.call.call_analysis.custom_analysis_data.language }}
+booking_attempted    → {{ $json.call.call_analysis.custom_analysis_data.booking_attempted }}
+booking_success      → {{ $json.call.call_analysis.custom_analysis_data.booking_success }}
+notes                → {{ $json.call.call_analysis.custom_analysis_data.notes }}
+
+--- FROM EXISTING N8N NODES (keep these — cannot be done by Retell) ---
+company_name         → [from Supabase client lookup by agent_id — KEEP EXISTING NODE]
+call_tier            → "Standard"
 geocode_status       → [populated by geocoding node downstream — KEEP AS-IS]
 geocode_formatted    → [populated by geocoding node downstream — KEEP AS-IS]
+
+--- N8N-COMPUTED FIELDS (add new logic nodes to the workflow) ---
+is_repeat_caller     → Add a Supabase query BEFORE the INSERT:
+                        SELECT count(*) FROM hvac_call_log
+                        WHERE from_number = {{ from_number }} AND from_number IS NOT NULL
+                        If count > 0: true, else: false
+repeat_call_count    → Same query, use the count value directly
+notification_sent    → Set to true AFTER the notification email/Slack node fires.
+                        Default false in the INSERT, update to true after notification.
 
 4. Keep untouched: Supabase client lookup, geocoding node, HubSpot note, email node,
    Slack notification node
