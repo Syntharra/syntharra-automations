@@ -275,3 +275,73 @@
 > Add a new `## [date] — [area]: [title]` section above this line.
 > Fill in all 6 fields. One paragraph each is enough.
 > The goal: future Claude (and Dan) can read this and understand the system's shape without re-litigating it.
+
+
+## 2026-04-04 — Retell Enhancement Sprint Design Decisions
+
+### Retell guardrails for live protection + Groq for post-hoc quality
+- Retell guardrails (guardrail_config) provide real-time jailbreak detection and content
+  moderation during the call (~50ms latency). Our Daily Transcript Analysis (Groq) stays
+  for post-hoc quality reporting, tone drift detection, and subtler issues guardrails miss.
+- Two-layer protection: Retell blocks attacks live, Groq catches quality degradation daily.
+
+### Retell alerting replaces syntharra-ops-monitor for call monitoring
+- Retell's native alerting (10 rules, email + webhook) supersedes our paused Railway
+  ops-monitor service for all call-level metrics. The ops-monitor may still be useful for
+  non-call infrastructure health (n8n, Supabase, Railway) — keep paused, don't delete.
+
+### Retell versioning is primary rollback, GitHub JSON is secondary
+- Retell's agent versioning creates immutable snapshots on publish. Phone numbers can be
+  pinned to specific versions for instant rollback. GitHub JSON backups in retell-agents/
+  become secondary archival, not primary rollback mechanism.
+
+### Sentiment field: retell_sentiment (TEXT) is canonical
+- caller_sentiment (INTEGER) is a legacy column from the GPT extraction era.
+  retell_sentiment (TEXT) stores Retell's user_sentiment system preset output.
+  The client dashboard reads retell_sentiment. Do not write to caller_sentiment.
+
+### Fallback numbers default to lead_phone
+- Every client phone number should have fallback_number set to the client's lead_phone
+  from hvac_standard_agent. Both onboarding workflows (Standard + Premium) must set this
+  when provisioning new client numbers.
+
+### SMS via Telnyx, not Retell's built-in Twilio
+- Retell's SMS node requires their Twilio infrastructure + A2P 10DLC registration ($4-$45
+  + 2-3 week wait). We use Telnyx (pending approval) via n8n post-call workflows instead.
+  Do NOT use Retell SMS nodes in conversation flows.
+
+### Premium TESTING preservation — DEMO clone pattern
+- When making significant changes, clone Premium TESTING to a DEMO agent rather than
+  modifying TESTING directly. TESTING holds all tested core_flow fixes. Apply verified
+  DEMO config back to TESTING→MASTER after E2E passes.
+
+### Webhook payload structure: custom_analysis_data is nested
+- Retell's call_analyzed webhook puts system presets (call_summary, user_sentiment,
+  call_successful) at call_analysis root level. Custom post_call_analysis fields go
+  inside call_analysis.custom_analysis_data. This nesting was verified against a real
+  call object from the Retell API.
+
+### Post-call analysis field parity
+- The current GPT processor populates fields the enhancement prompt initially missed:
+  is_repeat_caller, repeat_call_count (require Supabase lookup — n8n only),
+  notification_sent (workflow state flag — n8n only), language, booking_attempted,
+  booking_success (Standard always false), job_type. All now accounted for.
+
+### Retell features adopted (free, no additional cost)
+- guardrail_config, boosted_keywords, pronunciation_dictionary, enable_backchannel,
+  reminder_trigger_ms, normalize_for_speech, responsiveness tuning, voice_speed,
+  end_call_after_silence_ms, max_call_duration_ms, fallback_number, geo restrictions,
+  alerting rules, analytics charts, agent versioning. All verified against live API.
+
+### Retell features evaluated and deferred
+- Knowledge Base: token-heavy, not cost effective for our use case.
+- Flex Mode: more natural topic-jumping but significantly higher LLM costs.
+- AI QA: $0.10/min vs Groq at ~$0.002/call — 50x more expensive.
+- MCP Node: Premium calendar functions already work via custom function tools.
+- Two-way SMS chat agents: evaluate Retell vs Telnyx after launch.
+
+### Database cleanup 2026-04-04
+- Dropped agent_test_results table (0 rows, deprecated) and agent_test_run_summary view.
+- Added disconnection_reason (text) and transcript (text) columns to hvac_call_log.
+- hvac_call_log has 49 columns (was documented as 22 — SUPABASE.md updated).
+- hvac_standard_agent has 105 columns — all legitimate, maps to Jotform + OAuth config.
