@@ -22,7 +22,7 @@ Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MOD
 7. ONE `<style>` block per HTML page, `overflow-x:clip` on body
 8. Push all changes to GitHub before chat ends
 9. **Update relevant skill(s) after ANY verified work — no exceptions, no skipping**
-10. Update `docs/TASKS.md` at end of every chat
+10. Update `docs/TASKS.md` at end of every chat — open work only, under 40 lines. Agent IDs/reference data → REFERENCE.md. Marketing state → MARKETING.md.
 11. **Document architectural reasoning in `docs/ARCHITECTURE.md` whenever a non-obvious choice is made**
 12. **Every new/modified n8n workflow MUST be labelled before session close** — see `docs/STANDARDS.md`
 13. **Route execution tasks to Claude Code, not Chat** — see `docs/STANDARDS.md` for routing rules
@@ -157,11 +157,13 @@ The correct fix (switch to a higher-TPM model) was already known — it just was
 ## Session startup — always load these 6
 ```python
 claude_md     = fetch("CLAUDE.md")            # operating rules — always first
-tasks_md      = fetch("docs/TASKS.md")        # current state + open items
+tasks_md      = fetch("docs/TASKS.md")        # open work only — stays under 40 lines
+reference_md  = fetch("docs/REFERENCE.md")    # agent IDs, flow IDs, simulator commands, n8n registry
 failures_md   = fetch("docs/FAILURES.md")     # what broke before — scan before touching anything
 decisions_md  = fetch("docs/DECISIONS.md")    # why things are built the way they are
 standards_md  = fetch("docs/STANDARDS.md")    # labelling rules + Claude Code routing
 arch_md       = fetch("docs/ARCHITECTURE.md") # non-obvious decisions — MANDATORY, read before acting
+# If working on marketing: fetch("docs/MARKETING.md")
 ```
 
 > ARCHITECTURE.md is mandatory every session — not optional, not "when relevant".
@@ -171,7 +173,8 @@ arch_md       = fetch("docs/ARCHITECTURE.md") # non-obvious decisions — MANDAT
 ## Context files — load what you need
 | What you're working on | File to fetch |
 |---|---|
-| Any session (always) | `docs/TASKS.md`, `docs/FAILURES.md`, `docs/DECISIONS.md`, `docs/STANDARDS.md` |
+| Any session (always) | `docs/TASKS.md`, `docs/REFERENCE.md`, `docs/FAILURES.md`, `docs/DECISIONS.md`, `docs/STANDARDS.md` |
+| Marketing system | `docs/MARKETING.md` |
 | Full reasoning behind decisions | `docs/ARCHITECTURE.md` |
 | Agents, calls, Retell | `docs/context/AGENTS.md` |
 | n8n workflows | `docs/context/WORKFLOWS.md` |
