@@ -9,12 +9,12 @@ description: >
   The test covers the full Premium pipeline: Jotform webhook → n8n Premium onboarding →
   Supabase (plan_type=premium + booking fields) → Retell agent (18 nodes, premium flow) →
   Premium call processor → hvac_call_log (call_tier=Premium).
-  Current status: 114 assertions (updated 2026-04-04). Run with: python3 shared/e2e-test-premium.py
+  Current status: 103/106 passing (2026-04-04). 3 failures are pre-existing infra issues. Run with: export RETELL_KEY=<from vault> && python3 shared/e2e-test-premium.py
 ---
 
 # E2E Test — HVAC Premium Agent
 
-> **Status: 114 assertions — Updated 2026-04-04 for Retell-native fields + booking assertions. Call processor verified green.**
+> **Status: 103/106 ✅ — Verified 2026-04-04. 3 known infra failures (n8n exec polling, HubSpot $env, email check).**
 > Run: `python3 shared/e2e-test-premium.py`
 > Master test company: FrostKing HVAC (Dallas/Fort Worth, Texas)
 
@@ -22,7 +22,7 @@ description: >
 
 ## What It Tests
 
-Complete Premium pipeline end-to-end, 114 assertions across 8 phases:
+Complete Premium pipeline end-to-end, 106 assertions across 8 phases (103 passing, 3 known infra failures):
 
 | Phase | What's checked |
 |---|---|
@@ -213,6 +213,22 @@ for attempt in range(9):   # up to 45s
 4. **E2E test assertion** — add `check("new_field saved", row.get('new_field') == expected, ...)`
 5. **Run test** — verify 89+1/90 passing
 6. **Update this skill** + `docs/context/SUPABASE.md`
+
+---
+
+## Running the test
+
+```bash
+export RETELL_KEY=<from vault: service_name='Retell AI', key_type='api_key'>
+python3 shared/e2e-test-premium.py
+```
+
+### Known failures (3 — same as Standard, pre-existing infra)
+| Failure | Root cause |
+|---|---|
+| "Premium onboarding workflow executed successfully" | n8n execution API cache |
+| "Premium call processor n8n execution OK" | HubSpot Code node $env |
+| "Integration setup email sent" | Email node check |
 
 ---
 
