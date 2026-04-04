@@ -12,10 +12,12 @@
 - [ ] Add q72/q68/q69/q73 fields to E2E test Jotform payload
 - [ ] Add Supabase assertions for greeting_style, after_hours_transfer, separate_emergency_phone
 
-### Premium Pipeline
-- [ ] Run Premium E2E test (102/106 was last result — 3 known infra + 1 bookable_job_types)
+### Premium Pipeline — TESTING ONLY (no MASTER agent exists yet)
+- [ ] Complete Premium agent testing — must reach 95%+ pass rate before MASTER promotion
 - [ ] Fix bookable_job_types mapping in Premium onboarding workflow
+- [ ] Run Premium E2E test (102/106 was last result — 3 known infra + 1 bookable_job_types)
 - [ ] Verify Premium onboarding email matches Standard quality
+- [ ] Only after all above: promote Premium TESTING → MASTER
 
 ### Retell Enhancement Sprint — Phase 8 pending
 - [ ] Phase 4B: DAN TASK — 5 alerting rules + 5 analytics charts in Retell dashboard
