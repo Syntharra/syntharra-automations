@@ -161,17 +161,20 @@ print("\n[2] N8N EXECUTION — PREMIUM ONBOARDING")
 exec_status = 'unknown'
 exec_id     = '?'
 prem_onboard_wf_id = "kz1VmwNccunRMEaF"
+test_start_iso = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(TS))
 for attempt in range(9):
     time.sleep(5)
     _, execs = http(
-        f"https://n8n.syntharra.com/api/v1/executions?workflowId={prem_onboard_wf_id}&limit=3",
+        f"https://n8n.syntharra.com/api/v1/executions?workflowId={prem_onboard_wf_id}&limit=5",
         headers={"X-N8N-API-KEY": N8N_KEY})
     candidates = [e for e in (execs.get('data') or [])
-                  if e.get('status') in ('success', 'error', 'crashed')]
-    if candidates:
-        latest      = candidates[0]
-        exec_status = latest.get('status', 'unknown')
-        exec_id     = latest.get('id', '?')
+                  if e.get('status') in ('success', 'error', 'crashed')
+                  and (e.get('startedAt', '') >= test_start_iso)]
+    successes = [e for e in candidates if e.get('status') == 'success']
+    pick = successes[0] if successes else (candidates[0] if candidates else None)
+    if pick:
+        exec_status = pick.get('status', 'unknown')
+        exec_id     = pick.get('id', '?')
         break
 check("Premium onboarding workflow executed successfully", exec_status == 'success',
       f"exec {exec_id} → {exec_status}")
@@ -428,13 +431,16 @@ if agent_id:
     for attempt in range(6):
         time.sleep(5)
         _, cp = http(
-            f"https://n8n.syntharra.com/api/v1/executions?workflowId={prem_cp_wf_id}&limit=3",
+            f"https://n8n.syntharra.com/api/v1/executions?workflowId={prem_cp_wf_id}&limit=5",
             headers={"X-N8N-API-KEY": N8N_KEY})
         cp_cands = [e for e in (cp.get('data') or [])
-                    if e.get('status') in ('success', 'error', 'crashed')]
-        if cp_cands:
-            cp_status = cp_cands[0].get('status', 'unknown')
-            cp_id     = cp_cands[0].get('id', '?')
+                    if e.get('status') in ('success', 'error', 'crashed')
+                    and (e.get('startedAt', '') >= test_start_iso)]
+        cp_successes = [e for e in cp_cands if e.get('status') == 'success']
+        cp_pick = cp_successes[0] if cp_successes else (cp_cands[0] if cp_cands else None)
+        if cp_pick:
+            cp_status = cp_pick.get('status', 'unknown')
+            cp_id     = cp_pick.get('id', '?')
             break
     check("Premium call processor n8n execution OK", cp_status == 'success',
           f"exec {cp_id} → {cp_status}")
