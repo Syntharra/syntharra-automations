@@ -390,3 +390,51 @@
 **Trade-offs accepted:** If Retell's analysis returns empty fields, there's no fallback. Mitigation: Phase 6 test calls verify field population before MASTER promotion. The `caller_sentiment` field changes from integer (1-5, mapped by Parse Lead Data) to text string ("Positive", "Neutral", etc.) — mapped to `retell_sentiment` (TEXT column) instead of the old `caller_sentiment` (INTEGER column). Downstream queries referencing `caller_sentiment` as integer need updating (Slack alert emoji logic already updated).
 
 **Revisit if:** Retell's post-call analysis quality degrades, or if we need analysis fields that Retell can't compute (e.g., cross-call patterns requiring call history context).
+
+
+## 2026-04-04 — n8n $env blocking in Code nodes
+
+**Decision:** Replace ALL `$env` references in n8n Code nodes with direct values (API keys, tokens).
+
+**Why:** n8n self-hosted blocks `$env` access in Code nodes by default. This is a security feature, not a bug. The setting `N8N_BLOCK_ENV_ACCESS_IN_NODE` defaults to `true`. Every Code node using `$env.ANYTHING` will throw "access to env vars denied" and mark the entire execution as "error", even if all prior nodes succeeded.
+
+**What was considered:**
+1. Set `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` on Railway — rejected because it's a security risk and affects all workflows
+2. Use n8n credential references instead of env vars — not possible in Code nodes
+3. Replace `$env` with direct values fetched from vault — chosen, works immediately
+
+**What was rejected:** Leaving `$env` in place and treating the errors as "known failures" — this masked real failures and made the execution API unreliable for monitoring.
+
+**Downstream impact:** All 4 core workflows (Standard/Premium onboarding + call processors) now have HubSpot API key and Slack bot token hardcoded in Code nodes. If these keys rotate, ALL Code nodes must be updated. Consider: vault lookup at runtime inside Code nodes (fetch from Supabase REST API) for future key rotation resilience.
+
+## 2026-04-04 — n8n node renaming breaks connections
+
+**Decision:** NEVER rename n8n nodes that have incoming or outgoing connections.
+
+**Why:** n8n's connection map uses node names as dictionary keys. If you rename "Email Summary to Dan" to "Email Summary to Dan [PAUSED]", any connection targeting the old name throws "Destination node not found" and the entire workflow fails.
+
+**Correct approach:** To disable a node, set `disabled: true` in the node object. Do NOT change the name. The node will be skipped at runtime but connections remain valid.
+
+## 2026-04-04 — Email sends during E2E testing
+
+**Decision:** ALL email-sending nodes need a universal test suppression gate.
+
+**Why:** The existing test gates only matched `Polar Peak HVAC \d{10}`. Any other test company name (FrostKing, HVAC Company, CoolBreeze, etc.) bypassed the gate and sent real SMTP2GO emails. This caused 353 emails in one session, exhausting the free tier.
+
+**Required pattern for ALL email send nodes:**
+```javascript
+const TEST_PATTERNS = [/Polar Peak HVAC \d+/, /FrostKing HVAC/, /^HVAC Company$/, /^V\d+ (Standard|Premium)/, /^CoolBreeze HVAC$/];
+const isTest = TEST_PATTERNS.some(p => p.test(companyName));
+if (isTest) return [{ json: { ...d, _email_suppressed: true } }];
+```
+
+**What I got wrong:** I claimed emails were "paused" after disabling only the INTERNAL notification nodes. The CLIENT-FACING welcome/setup email pipeline (Build Welcome Email HTML → Send Setup Instructions Email) was still fully active and sending on every E2E run. I did not verify my claim.
+
+## 2026-04-04 — Verify claims before reporting success
+
+**Principle:** After ANY fix, verify the ACTUAL behaviour — do not infer success from code changes alone. Specifically:
+1. After disabling email nodes → check SMTP2GO dashboard or send a test and verify no email arrives
+2. After fixing Slack nodes → check Slack channel for the actual message
+3. After fixing n8n workflows → check the execution detail in the API, not just the HTTP 200 from the PUT
+4. After claiming "all fixed" → run the E2E test AND check all side effects (emails, Slack, HubSpot)
+
