@@ -50,8 +50,8 @@ Then load ONLY context files relevant to the task from `docs/context/`:
 
 At the end of EVERY chat that changes ANYTHING:
 
-1. Update `docs/TASKS.md` — what changed, what's next, what's blocked
-2. Update relevant `docs/context/` file(s) if IDs, URLs, or state changed
+1. Update `docs/TASKS.md` — open work only, under 40 lines. Reference data → `docs/REFERENCE.md`. Marketing → `docs/MARKETING.md`.
+2. Update `docs/REFERENCE.md` if agent IDs, flow IDs, or n8n registry changed. Update relevant `docs/context/` file(s) if URLs or state changed.
 3. Update relevant `skills/` file(s) if patterns or learnings were discovered
 4. Push a session log to `docs/session-logs/YYYY-MM-DD-topic.md`
 5. Back up any changed Retell agents to `retell-agents/`
@@ -87,7 +87,7 @@ When you discover a new gotcha, pattern, mistake, or better approach:
 |---|---|---|
 | `syntharra-automations` | Skills, docs, context files, agent backups | — |
 | `syntharra-website` | syntharra.com | GitHub Pages |
-| `syntharra-admin` | admin.syntharra.com | Railway |
+| ~~`syntharra-admin`~~ | DEPRECATED — replaced by HubSpot | — |
 | `syntharra-checkout` | checkout.syntharra.com | Railway |
 | `syntharra-oauth-server` | auth.syntharra.com | Railway |
 | `syntharra-ops-monitor` | 24/7 monitoring (PAUSED) | Railway |
@@ -264,7 +264,7 @@ daniel@ = NEVER in any workflow, email, or website
 
 ## SKILL FILES (load before starting work)
 
-All in syntharra-automations/skills/:
+All in syntharra-automations/skills/: (load with load_skill(name) — fetch from GitHub, never /mnt)
 - syntharra-admin — admin.syntharra.com
 - syntharra-client-dashboard — client portal
 - syntharra-website — syntharra.com
@@ -276,6 +276,13 @@ All in syntharra-automations/skills/:
 - syntharra-marketing — lead gen, VSL, demo
 - hvac-standard — Standard pipeline
 - hvac-premium — Premium pipeline
+- e2e-hvac-standard — E2E test suite (Standard)
+- e2e-hvac-premium — E2E test suite (Premium)
+- syntharra-slack — Slack notifications
+- syntharra-brand — Visual identity
+- syntharra-social-leads — Social lead system
+- syntharra-hubspot — HubSpot CRM
+- ai-receptionist — New vertical reference library
 
 After any verified work: update the relevant skill file.
 
