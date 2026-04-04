@@ -264,13 +264,50 @@ if agent_id:
         "call": {
             "call_id":          fake_call_id,
             "agent_id":         agent_id,
-            "call_status":      "ended",
+            "call_type":        "phone_call",
             "from_number":      "+16316330713",
             "to_number":        "+18129944371",
+            "direction":        "inbound",
+            "duration_ms":      120000,
             "start_timestamp":  int(time.time()*1000) - 120000,
             "end_timestamp":    int(time.time()*1000),
             "disconnection_reason": "user_hangup",
-            "call_analysis":    {},
+            "recording_url":    "https://retell-utils-public.s3.us-west-2.amazonaws.com/test_recording.wav",
+            "public_log_url":   "https://beta.retellai.com/call-details/test_" + fake_call_id,
+            "call_analysis": {
+                "call_summary":     "Caller Daniel Blackmore reported heating system failure. Agent collected name, callback number 631-633-0713, and service address 45 Park Avenue Manhattan NY. Passed to team for callback.",
+                "call_successful":  True,
+                "user_sentiment":   "Positive",
+                "in_voicemail":     False,
+                "custom_analysis_data": {
+                    "caller_name":        "Daniel Blackmore",
+                    "caller_phone":       "+16316330713",
+                    "caller_address":     "45 Park Avenue, Manhattan, New York",
+                    "service_requested":  "Heating system repair",
+                    "call_type":          "new_service",
+                    "urgency":            "high",
+                    "is_hot_lead":        True,
+                    "lead_score":         8,
+                    "transfer_attempted": False,
+                    "transfer_success":   False,
+                    "vulnerable_occupant": False,
+                    "emergency":          False,
+                    "notification_type":  "hot_lead",
+                    "job_type":           "repair",
+                    "language":           "en",
+                    "booking_attempted":  False,
+                    "booking_success":    False,
+                    "notes":              "Heating stopped working last night"
+                }
+            },
+            "call_cost": {
+                "total_duration_unit_price": 0.14,
+                "product_costs": []
+            },
+            "latency": {
+                "e2e": {"p50": 1100, "p90": 1500, "p95": 1800, "p99": 2400, "max": 3000, "min": 800, "num": 12},
+                "llm": {"p50": 650, "p90": 900, "p95": 1100, "p99": 1500, "max": 2000, "min": 400, "num": 12}
+            },
             "transcript": (
                 f"Agent: {TEST_GREETING} "
                 "Caller: Hi, my heating system stopped working last night. "
@@ -286,8 +323,8 @@ if agent_id:
     }
     s, _ = http("https://n8n.syntharra.com/webhook/retell-hvac-webhook", "POST", fake_call)
     check("Call processor webhook accepted", s == 200,                                              f"HTTP {s}")
-    print("  Waiting for GPT analysis (polling up to 30s)...")
-    time.sleep(15)  # initial wait for Groq to process transcript
+    print("  Waiting for call processor (polling up to 20s)...")
+    time.sleep(10)  # Retell post-call analysis already done — just need n8n processing
 
     rows = sb(f"hvac_call_log?call_id=eq.{fake_call_id}&select=*")
     call = rows[0] if rows else {}
@@ -299,6 +336,23 @@ if agent_id:
     check("is_lead = true",                  call.get('is_lead') == True)
     check("summary populated",               bool(call.get('summary')),                            (call.get('summary') or '')[:60])
     check("company_name in log",             call.get('company_name') == TEST_COMPANY,             call.get('company_name'))
+
+    # Phase 5 — new Retell-native field assertions
+    check("retell_sentiment populated",     bool(call.get('retell_sentiment')),                   call.get('retell_sentiment'))
+    check("retell_summary populated",       bool(call.get('retell_summary')),                     (call.get('retell_summary') or '')[:60])
+    check("call_successful is boolean",     call.get('call_successful') in [True, False],         str(call.get('call_successful')))
+    check("urgency populated",             call.get('urgency') in ['emergency','high','medium','low'], call.get('urgency'))
+    check("call_type populated",           call.get('call_type') in ['new_service','emergency','callback','existing_customer','general_question','spam','wrong_number'], call.get('call_type'))
+    check("notification_type populated",   bool(call.get('notification_type')),                   call.get('notification_type'))
+    check("job_type populated",            bool(call.get('job_type')),                            call.get('job_type'))
+    check("is_hot_lead is boolean",        call.get('is_hot_lead') in [True, False],              str(call.get('is_hot_lead')))
+    check("language populated",            bool(call.get('language')),                             call.get('language'))
+    check("duration_seconds > 0",          (call.get('duration_seconds') or 0) > 0,               f"{call.get('duration_seconds')}s")
+    check("recording_url populated",       bool(call.get('recording_url')),                       (call.get('recording_url') or '')[:60])
+    check("latency_p50_ms populated",      call.get('latency_p50_ms') is not None,                str(call.get('latency_p50_ms')))
+    check("call_cost_cents populated",     (call.get('call_cost_cents') or 0) > 0,                f"{call.get('call_cost_cents')} cents")
+    check("caller_address captured",       bool(call.get('caller_address')),                      call.get('caller_address'))
+    check("notes populated",              bool(call.get('notes')),                                (call.get('notes') or '')[:60])
 
     # Dedup check — send same call_id again, should not create a second row
     http("https://n8n.syntharra.com/webhook/retell-hvac-webhook", "POST", fake_call)
