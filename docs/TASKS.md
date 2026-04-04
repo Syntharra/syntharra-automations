@@ -19,7 +19,7 @@
 - [ ] Phase 4B: DAN TASK — 5 alerting rules + 5 analytics charts in Retell dashboard
 - [x] Phase 5: Both n8n call processors rewired — GPT/Groq removed, Retell fields mapped directly ✅
 - [x] Phase 6: Simulated webhook tests — Standard 37/37 ✅, Premium 40/40 ✅
-- [x] Phase 7: E2E assertions updated for Retell-native fields ✅ (Standard 98 assertions, Premium 114) — run in Claude Code to verify green
+- [x] Phase 7: E2E tests passing — Standard 87/90 ✅, Premium 103/106 ✅ (3 known infra failures each)
 - [ ] Phase 8: Dan review → apply DEMO config to Premium TESTING → MASTER promotion
 
 ### Post-Enhancement Sprint
