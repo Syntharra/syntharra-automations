@@ -72,7 +72,7 @@ payload = {
     "q54_ownerName":              "James Caldwell",
     "q6_mainCompany":             TEST_PHONE,
     "q5_emailAddress":            TEST_EMAIL,
-    "q7_companyWebsite":          "www.polarpeak.com",
+    "q7_companyWebsite":          "www.syntharra-test.com",
     "q8_yearsIn":                 "8",
     "q34_timezone":               "America/New_York",
     "q13_servicesOffered":        ["AC Repair","Heating Repair","AC Installation","Heating Installation","Maintenance","Duct Cleaning","Air Quality"],
@@ -84,7 +84,7 @@ payload = {
     # AI Config
     "q10_aiAgent10":              TEST_AGENT,
     "q11_aiVoice":                "Male",
-    "q38_customGreeting":         TEST_GREETING,
+    "q73_customGreetingText":      TEST_GREETING,
     "q39_companyTagline":         "New York City's Most Trusted HVAC",
     # Hours & Availability
     "q17_businessHours":          "Monday to Friday 7am to 7pm, Saturday 8am to 4pm",
@@ -102,8 +102,8 @@ payload = {
     "q26_serviceWarranties":      "Yes",
     "q27_warrantyDetails":        "5 years parts, 2 years labour on all repairs",
     "q45_paymentMethods":         ["Cash","Credit Card","Check","Financing","Zelle"],
-    "q46_maintenancePlans":       "Yes - Peak Care Club $249/year, includes 2 tune-ups, priority scheduling, 10% discount on repairs",
-    "q58_membershipProgramName":  "Peak Care Club",
+    "q46_maintenancePlans":       "Yes - Care Club $249/year, includes 2 tune-ups, priority scheduling, 10% discount on repairs",
+    "q58_membershipProgramName":  "Care Club",
     # Lead & Transfer
     "q31_leadContact":            "Both",
     "q32_leadNotification":       "+16316330713",
@@ -111,8 +111,8 @@ payload = {
     # Multi-notification contacts (Jotform q64-q67)
     "q64_notifSms2":              "+16316330714",
     "q65_notifSms3":              "+16316330715",
-    "q66_notifEmail2":            "dispatcher@polarpeak.com",
-    "q67_notifEmail3":            "salesmanager@polarpeak.com",
+    "q66_notifEmail2":            "dispatcher@syntharra-test.com",
+    "q67_notifEmail3":            "salesmanager@syntharra-test.com",
     "q48_transferPhone":          TEST_PHONE,
     "q49_transferTriggers":       ["Customer is angry","Legal threat","Complex billing dispute","Customer requests manager"],
     "q50_transferBehavior":       "Try once - take message if no answer",
