@@ -454,3 +454,160 @@ Retell stores em-dashes as a 3-char garbled sequence: `\xe2\u20ac\u201d`
 When doing str.replace() on Retell prompt content in Python, use this exact sequence — not `—` or `\u2014`
 Always fetch the prompt fresh and inspect with repr() before attempting replacements.
 
+
+
+---
+
+## API Endpoint Patterns — VERIFIED 2026-04-04
+
+⚠️ Retell API has INCONSISTENT URL patterns:
+
+| Operation | Endpoint | /v2/ prefix? |
+|---|---|---|
+| GET agent | `GET /get-agent/{agent_id}` | NO |
+| PATCH agent | `PATCH /update-agent/{agent_id}` | NO |
+| Publish agent | `POST /publish-agent/{agent_id}` | NO |
+| Create agent | `POST /create-agent` | NO |
+| List calls | `POST /v2/list-calls` | YES |
+| Get call | `GET /v2/get-call/{call_id}` | YES |
+| GET phone number | `GET /get-phone-number/{number}` | NO |
+| PATCH phone number | `PATCH /update-phone-number/{number}` | NO |
+
+---
+
+## Agent Configuration Fields — VERIFIED WORKING VIA API
+
+All of these were tested live with PATCH + GET + revert on 2026-04-04:
+
+```
+guardrail_config: {
+  output_topics: ["harassment", "self_harm", "sexual_exploitation", "violence",
+                   "child_safety_and_exploitation", "illicit_and_harmful_activity",
+                   "regulated_professional_advice"],
+  input_topics: ["platform_integrity_jailbreaking"]
+}
+
+boosted_keywords: ["HVAC", "compressor", "Trane", "Lennox", ...]
+pronunciation_dictionary: [{ word: "HVAC", alphabet: "ipa", phoneme: "eɪtʃ viː eɪ siː" }]
+enable_backchannel: true
+backchannel_frequency: 0.8
+backchannel_words: ["yeah", "uh-huh", "got it", "okay", "right"]
+reminder_trigger_ms: 15000
+reminder_max_count: 2
+normalize_for_speech: true
+responsiveness: 0.85
+voice_speed: 1.05
+end_call_after_silence_ms: 30000
+max_call_duration_ms: 600000
+```
+
+Phone number fields (also verified):
+```
+fallback_number: "+1XXXXXXXXXX" (E.164, external only)
+allowed_inbound_country_list: ["US"]
+allowed_outbound_country_list: ["US"]
+```
+
+---
+
+## Guardrails — Key Notes
+
+- guardrail_config field does NOT appear in GET response until it has been SET
+- Once set, it persists and appears in all subsequent GET calls
+- Adds ~50ms latency per call
+- gambling and defense_and_national_security: omit for HVAC (irrelevant)
+- regulated_professional_advice: ENABLE (agent must not give pricing/legal advice)
+- platform_integrity_jailbreaking: ENABLE (real-time prompt injection detection)
+- If API PATCH doesn't work, Dan can enable in dashboard: Agent > Security & Fallback
+
+---
+
+## Webhook Payload Structure — VERIFIED FROM REAL CALL
+
+The call_analyzed webhook wraps everything under `call`:
+```json
+{
+  "event": "call_analyzed",
+  "call": {
+    "call_id": "...",
+    "agent_id": "...",
+    "from_number": "+1...",        // only on phone_call type
+    "to_number": "+1...",          // only on phone_call type
+    "direction": "inbound",        // only on phone_call type
+    "duration_ms": 95000,
+    "disconnection_reason": "user_hangup",
+    "recording_url": "https://...",
+    "public_log_url": "https://...",
+    "transcript": "...",
+    "call_analysis": {
+      "in_voicemail": false,
+      "call_summary": "...",           // system preset — root level
+      "user_sentiment": "Neutral",     // system preset — root level (capitalised)
+      "call_successful": true,         // system preset — root level
+      "custom_analysis_data": {
+        "caller_name": "...",          // our custom fields — NESTED
+        "lead_score": 8,
+        "is_hot_lead": true,
+        ...
+      }
+    },
+    "latency": { "e2e": { "p50": 1098 }, "llm": { "p50": 646 } },
+    "call_cost": { "total_duration_unit_price": 0.20 }
+  }
+}
+```
+
+CRITICAL: System presets at call_analysis root. Custom fields NESTED in custom_analysis_data.
+
+---
+
+## Sentiment Field Mapping
+
+- Retell sends: `call_analysis.user_sentiment` (text, e.g. "Neutral", "Positive")
+- Map to: `retell_sentiment` column (TEXT) in hvac_call_log
+- DO NOT map to: `caller_sentiment` column (INTEGER) — this is legacy/deprecated
+- The client dashboard reads `retell_sentiment`
+
+---
+
+## Premium DEMO Clone Pattern
+
+When making significant changes to Premium, don't modify Premium TESTING directly:
+1. Clone Premium TESTING via `POST /create-agent` with its full config
+2. Clone its conversation flow via `POST /create-conversation-flow`
+3. Work on the DEMO clone
+4. After verification, apply DEMO config back to Premium TESTING → MASTER
+
+---
+
+## Conversation Flow Node Types (complete list)
+
+| Node Type | Can Create via API? | Purpose |
+|---|---|---|
+| Conversation | No (UI only, patchable after) | Main dialogue node |
+| Extract Dynamic Variable | No (UI only) | Extract caller info mid-call |
+| Code | No (UI only) | Run JavaScript mid-flow |
+| SMS | No (UI only) | Send SMS (Retell Twilio only — we use Telnyx instead) |
+| Function | No (UI only) | Call external APIs/webhooks |
+| Logic Split | No (UI only) | Instant branching on conditions |
+| Call Transfer | No (UI only) | Transfer to phone number |
+| Agent Transfer | No (UI only) | Transfer to another AI agent (near-instant) |
+| Press Digit (DTMF) | No (UI only) | Touchtone input |
+| MCP | No (UI only) | Call MCP server tools |
+| End | No (UI only) | Terminate call |
+| Global Node | No (UI only) | Universal handler from any point in flow |
+| Component | No (UI only) | Reusable sub-flow shareable across agents |
+
+⚠️ Existing call_style_detector code nodes in both flows must NOT be removed.
+
+---
+
+## Retell Dashboard-Only Features (not in API)
+
+- Alerting rules (10 max) — email + webhook notifications
+- Analytics charts — custom post_call_analysis fields supported
+- Guardrails toggle (backup if API doesn't work)
+- Session history — stored indefinitely, searchable, filterable
+- Finetune examples — per-node transcript examples for response + transition
+- Flex Mode — compiles flow into single prompt (higher cost, more natural)
+- Version comparison — diff between agent versions
