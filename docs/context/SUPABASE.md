@@ -74,9 +74,34 @@ lead_phone, lead_email, services_offered, service_area, business_hours,
 emergency_service, stripe_customer_id, subscription_id,
 notification_email_2, notification_email_3, notification_sms_2, notification_sms_3`
 
-## Key hvac_call_log Columns
-`agent_id, call_id, company_name, created_at, caller_name, caller_phone,
-caller_address, service_requested, job_type, urgency, lead_score, is_lead,
-call_tier, caller_sentiment, summary, notes, transfer_attempted,
-transfer_success, vulnerable_occupant, geocode_status, geocode_formatted,
-duration_seconds`
+## Key hvac_call_log Columns (49 total — audited 2026-04-04)
+
+### Core call data
+`id, call_id, agent_id, company_name, call_timestamp, created_at, call_tier,
+duration_seconds, from_number, disconnection_reason, transcript`
+
+### Retell system presets (from call_analysis root)
+`retell_sentiment (TEXT — maps from user_sentiment), call_successful (BOOLEAN),
+retell_summary (TEXT — maps from call_summary), recording_url, public_log_url,
+latency_p50_ms, call_cost_cents`
+
+### Retell custom post-call analysis (from call_analysis.custom_analysis_data)
+`caller_name, caller_phone, caller_address, service_requested, job_type,
+urgency, lead_score (INTEGER), is_lead (BOOLEAN), is_hot_lead (BOOLEAN),
+transfer_attempted (BOOLEAN), transfer_success (BOOLEAN),
+vulnerable_occupant (BOOLEAN), emergency (BOOLEAN), call_type,
+notification_type, language, booking_attempted (BOOLEAN),
+booking_success (BOOLEAN), notes, summary`
+
+### n8n-computed fields (set by call processor workflow, not Retell)
+`is_repeat_caller (BOOLEAN), repeat_call_count (INTEGER),
+notification_sent (BOOLEAN), notification_priority`
+
+### Geocoding (set by geocoding node downstream)
+`geocode_status, geocode_formatted`
+
+### Premium booking fields (from Premium post-call analysis)
+`appointment_date, appointment_time, job_type_booked, booking_reference`
+
+### Deprecated — do not write to
+`caller_sentiment (INTEGER) — replaced by retell_sentiment (TEXT)`
