@@ -9,12 +9,12 @@ description: >
   The test covers the full Premium pipeline: Jotform webhook → n8n Premium onboarding →
   Supabase (plan_type=premium + booking fields) → Retell agent (18 nodes, premium flow) →
   Premium call processor → hvac_call_log (call_tier=Premium).
-  Current status: 103/106 passing (2026-04-04). 3 failures are pre-existing infra issues. Run with: export RETELL_KEY=<from vault> && python3 shared/e2e-test-premium.py
+  Current status: 106/106 passing (2026-04-05). All assertions green. Run with: export RETELL_KEY=<from vault> && python3 shared/e2e-test-premium.py
 ---
 
 # E2E Test — HVAC Premium Agent
 
-> **Status: 103/106 ✅ — Verified 2026-04-04. 3 known infra failures (n8n exec polling, HubSpot $env, email check).**
+> **Status: 106/106 ✅ — Verified 2026-04-05. All passing.**
 > Run: `python3 shared/e2e-test-premium.py`
 > Master test company: FrostKing HVAC (Dallas/Fort Worth, Texas)
 
@@ -279,3 +279,16 @@ Fixes applied to global prompt:
 2. Booking step order fixed — service type captured before confirmation
 3. Four new CRITICAL RULES: no repeating info, no pushing decliners, callback = name+phone only, FAQ = no lead capture
 
+---
+
+## GOTCHA: n8n PUT Wipes Credential Bindings (discovered 2026-04-05)
+
+When updating an n8n workflow via `PUT /api/v1/workflows/{id}`, the nodes from `GET` do NOT
+include credential bindings. If you PUT with those nodes, all HTTP Request node credentials
+are wiped and the workflow fails with "Credentials not found."
+
+**Correct pattern:** Source nodes from a SUCCESSFUL execution's `workflowData.nodes` (via
+`GET /api/v1/executions/{id}?includeData=true`), which preserves credential bindings.
+Apply your code changes to those nodes, then PUT.
+
+**Wrong pattern:** GET workflow → modify node code → PUT back. This strips credentials.
