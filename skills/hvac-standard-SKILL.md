@@ -11,7 +11,7 @@ description: >
   Sub-skills: e2e-hvac-standard | standard-call-processor-testing | hvac-standard-agent-testing
 ---
 
-> **Last verified: 2026-04-04** — all three test suites confirmed passing
+> **Last verified: 2026-04-04** — Retell Enhancement Sprint complete (Phases 0-7). Call processor now Retell-native — no GPT/Groq.
 > **System status: PRE-LAUNCH — ready for live calls. SMS pending Telnyx approval.**
 
 # HVAC Standard — Master Pipeline Reference
@@ -26,8 +26,18 @@ Client pays (Stripe)
     → n8n: provision Retell agent + conversation flow
       → Retell agent live on client's phone number
         → Caller rings → Sophie answers → lead captured
-          → n8n call processor: Groq analysis → Supabase log → email/SMS alert
-            → HubSpot: call note logged on client contact
+          → Retell post-call analysis (gpt-4.1-mini) extracts all fields
+            → n8n call processor: extract fields → Supabase log → email/Slack alert
+              → HubSpot: call note logged on client contact
+```
+
+> **Architecture change (2026-04-04):** GPT/Groq transcript analysis removed from n8n.
+> Retell's built-in `post_call_analysis_data` (21 custom fields + 3 system presets) now
+> extracts all call data at the platform level. n8n just reads the structured output.
+> This eliminates LLM API costs, rate limits, and parsing failures from the call pipeline.
+
+```
+Note: the above ``` closes the architecture note block. Remove if rendering is odd.
 ```
 
 One Retell agent per client. All config stored in `hvac_standard_agent` (Supabase).
@@ -53,6 +63,21 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 | Jake (male demo) | `agent_b9d169e5290c609a8734e0bb45` |
 | Sophie (female demo) | `agent_2723c07c83f65c71afd06e1d50` |
 
+### Enhancement Sprint Features (applied 2026-04-04)
+| Feature | Setting |
+|---|---|
+| Post-call analysis | 21 custom fields + 3 presets, gpt-4.1-mini |
+| Guardrails | Output: 7 topics, Input: jailbreak detection |
+| Boost keywords | 40+ HVAC terms (brands, refrigerants, components) |
+| Pronunciation dictionary | HVAC, SEER, Trane, Rheem, Daikin, Lennox |
+| Backchannel | Enabled, frequency 0.8 |
+| Reminders | 15s trigger, max 2 |
+| Voice tuning | responsiveness 0.85, speed 1.05, dynamic |
+| Call limits | 30s silence hangup, 10min max |
+| Webhook filter | call_analyzed only |
+| Fallback number | +18563630633 |
+| Phone geo lock | US-only inbound/outbound |
+
 ### HARD RULES — read before any Retell work
 1. **NEVER delete or recreate a Retell agent.** `agent_id` is the FK tying Retell, Supabase, call processor, and phone number together. Always patch in place.
 2. **Always publish after any agent update:** `POST https://api.retellai.com/publish-agent/{agent_id}` — returns 200 empty body.
@@ -62,7 +87,7 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 
 ---
 
-## Conversation Flow — 12 Nodes
+## Conversation Flow — 15 Nodes
 
 `greeting` → `identify_call` → `nonemergency_leadcapture` → `verify_emergency`
 → `callback` → `existing_customer` → `general_questions` → `spam_robocall`
@@ -194,7 +219,7 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 | Client config table | `hvac_standard_agent` |
 | Call log table | `hvac_call_log` |
 
-### `hvac_call_log` Fields (18 total)
+### `hvac_call_log` Fields (30+ — Retell-native extraction since 2026-04-04)
 
 | Field | Type | Source | Notes |
 |---|---|---|---|
@@ -202,59 +227,76 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 | `agent_id` | text | Retell | FK to `hvac_standard_agent` |
 | `company_name` | text | Supabase lookup | From client record |
 | `call_tier` | text | Parse Lead Data | Default "Standard" |
-| `caller_name` | text | Groq | Null if not captured |
-| `caller_phone` | text | Groq | Falls back to `from_number` |
-| `caller_address` | text | Groq | Empty string if not given |
-| `service_requested` | text | Groq | Free text |
-| `job_type` | text | Groq → normalised | See enum below |
-| `lead_score` | int | Groq | 1–10 |
-| `is_lead` | bool | Groq + overrides | See logic below |
-| `urgency` | text | Groq | Low/Medium/High/Emergency |
-| `caller_sentiment` | int | Groq → mapped | 2=Positive 3=Neutral 4=Frustrated 5=Angry |
-| `vulnerable_occupant` | bool | Groq | True if elderly/child/medical |
-| `transfer_attempted` | bool | Groq | True if live transfer initiated |
-| `summary` | text | Groq | 1–2 sentence summary |
-| `notes` | text | Groq | Extra context |
-| `duration_seconds` | int | Retell | Call length |
+| `caller_name` | text | Retell custom analysis | Full name as stated |
+| `caller_phone` | text | Retell custom analysis | Falls back to `from_number` |
+| `caller_address` | text | Retell custom analysis | Full service address |
+| `service_requested` | text | Retell custom analysis | Short description |
+| `job_type` | text | Retell custom analysis | repair, install, maintenance, quote, emergency, etc |
+| `lead_score` | int | Retell custom analysis | 1–10 |
+| `is_lead` | bool | n8n computed | lead_score >= 5 AND not spam/wrong_number |
+| `urgency` | text | Retell custom analysis | emergency, high, medium, low |
+| `retell_sentiment` | text | Retell system preset | "Positive", "Neutral", "Negative" (TEXT not int) |
+| `vulnerable_occupant` | bool | Retell custom analysis | Elderly, children, medical equipment |
+| `transfer_attempted` | bool | Retell custom analysis | True if live transfer initiated |
+| `summary` | text | Retell system preset | call_summary — 2-3 sentence summary |
+| `notes` | text | Retell custom analysis | Additional context |
+| `duration_seconds` | int | Retell webhook | `Math.round(duration_ms / 1000)` |
+| `from_number` | text | Retell webhook | Caller ID |
+| `recording_url` | text | Retell webhook | S3 URL to recording |
+| `public_log_url` | text | Retell webhook | Retell dashboard link |
+| `disconnection_reason` | text | Retell webhook | user_hangup, agent_hangup, etc |
+| `transcript` | text | Retell webhook | Full call transcript |
+| `latency_p50_ms` | int | Retell webhook | e2e latency p50 |
+| `call_cost_cents` | int | n8n computed | unit_price * duration / 60000 * 100 |
+| `retell_summary` | text | Retell system preset | Same as summary (compatibility) |
+| `call_successful` | bool | Retell system preset | Conversation completed naturally |
+| `call_type` | text | Retell custom analysis | new_service, emergency, callback, etc |
+| `is_hot_lead` | bool | Retell custom analysis | Wants service soon + gave contact |
+| `transfer_success` | bool | Retell custom analysis | Transfer connected |
+| `emergency` | bool | Retell custom analysis | Genuine HVAC emergency |
+| `notification_type` | text | Retell custom analysis | Routing: emergency, hot_lead, etc |
+| `language` | text | Retell custom analysis | en, es, other |
+| `booking_attempted` | bool | Retell custom analysis | Always false for Standard |
+| `booking_success` | bool | Retell custom analysis | Always false for Standard |
+| `is_repeat_caller` | bool | n8n computed | from_number seen before |
+| `repeat_call_count` | int | n8n computed | Count of prior calls |
 
-### job_type enum
-`Repair` · `Installation` · `Maintenance` · `Emergency` · `General Enquiry` · `Wrong Number` · `Spam` · `Vendor` · `Job Application` · `Other`
-
-### is_lead logic
+### is_lead logic (n8n Extract Call Data node)
+```javascript
+const NON_LEAD_TYPES = ['spam', 'wrong_number'];
+const is_lead = NON_LEAD_TYPES.includes(call_type) ? false : (lead_score >= 5);
 ```
-is_lead = False  if job_type in [Wrong Number, Spam, Vendor, Job Application]
-is_lead = False  if job_type == General Enquiry AND lead_score < 6
-is_lead = Groq value  otherwise
-```
 
-### caller_sentiment — ALWAYS integer, never string
-`2` Positive · `3` Neutral · `4` Frustrated · `5` Angry
+### retell_sentiment — TEXT string, NOT integer
+> **Breaking change from pre-enhancement:** Old system used integer `caller_sentiment`.
+> New system stores Retell's native text in `retell_sentiment`: "Positive", "Neutral", "Negative".
 
 ---
 
-## Call Processor — Architecture
+## Call Processor — Architecture (Retell-native, post-enhancement 2026-04-04)
 
 ```
-Retell POST → Filter (call_analyzed only) → Extract Call Data
-  → Supabase Lookup Client → Parse Client Data
-  → Check Repeat Caller (dedup gate)
-  → Build Groq Request [Code] → Groq: Analyze Transcript [HTTP]
-  → Parse Lead Data [Code: normalise all fields]
-  → Is Lead? [IF]
-      ├─ TRUE  → SMS + Gmail Lead Email + Supabase: Log Call → HubSpot Note
-      └─ FALSE → Log Non-Lead + Supabase: Log Call → HubSpot Note
+Retell POST (call_analyzed event)
+  → Filter: call_analyzed only [IF node]
+  → Extract Call Data [Code — reads call.call_analysis.custom_analysis_data]
+  → Supabase: Lookup Client [HTTP — get company_name by agent_id]
+  → Parse Client Data [Code]
+  → Check Repeat Caller [Code — query hvac_call_log by from_number]
+  → Is Lead? [IF — lead_score >= 5 AND not spam/wrong_number]
+      ├─ Both → Supabase: Log Call [HTTP POST] → HubSpot Note [Code] → Slack Alert [Code]
+      └─ Error → Alert: Supabase Write Failed [Code]
 ```
 
-### Groq Config
+> **No LLM calls in n8n.** All field extraction done by Retell post_call_analysis (gpt-4.1-mini).
+> GPT and Groq HTTP nodes removed. n8n reads structured JSON from webhook.
+
+### Retell Post-Call Analysis
 | Item | Value |
 |---|---|
-| Provider | Groq (`api.groq.com/openai/v1/chat/completions`) |
-| Model | `llama-3.3-70b-versatile` |
-| Temperature | 0.2 · Max tokens: 600 |
-| Credential | `UfljdfOxkfTm76LE` (httpHeaderAuth) |
-| Retry | 3× / 2s backoff |
-
-> ⚠️ **NEVER use OpenAI credential `1uzBYwyR7Q7bdkZe`** — expired key, was silently breaking all call processing.
+| Model | `gpt-4.1-mini` (set on Retell agent) |
+| Custom fields | 21 (all call data) |
+| System presets | call_summary, call_successful, user_sentiment |
+| webhook_events | call_analyzed only |
 
 ---
 
@@ -325,7 +367,7 @@ Three independent test suites. All must pass before any production change. Run o
 ## TEST SUITE 1 — E2E Pipeline Test
 
 **Script:** `python3 shared/e2e-test.py`
-**Status: 75/75 ✅ — Verified 2026-04-02**
+**Status: 98 assertions — Updated 2026-04-04 for Retell-native fields**
 **Sub-skill:** `e2e-hvac-standard` (load for deep detail)
 
 Tests the full provisioning pipeline: Jotform → n8n → Supabase → Retell → Call Processor.
@@ -337,7 +379,7 @@ Tests the full provisioning pipeline: Jotform → n8n → Supabase → Retell �
 | 3 | Supabase `hvac_standard_agent` — all 40+ fields populated | 40+ field checks |
 | 4 | Retell agent exists, published, correct voice/webhook/language | Agent health |
 | 5 | Conversation flow — exactly 12 nodes, correct structure | Node count + IDs |
-| 6 | Call processor — fake call logged + scored in `hvac_call_log` | Row present + scored |
+| 6 | Call processor — fake call with Retell post-call analysis payload, all 30+ fields verified | Row + 15 new field assertions |
 | 7 | Stripe gate — SMS correctly skipped in test mode | Gate check |
 
 Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
@@ -444,22 +486,23 @@ python3 tests/call-processor-test.py
 ```
 
 ### Call Processor Gotchas
-- **NEVER use OpenAI credential `1uzBYwyR7Q7bdkZe`** — expired, breaks everything silently
+- **No LLM calls in call processor** — Groq/OpenAI removed. All extraction by Retell post_call_analysis.
+- **`retell_sentiment` is TEXT** — "Positive"/"Neutral"/"Negative". Old `caller_sentiment` INTEGER deprecated.
 - **`fetch()` not defined in n8n Code nodes** — split into Code (build body) + HTTP Request (fire)
 - **IIFE expressions fail in n8n jsonBody** — put all logic in Code node, keep jsonBody as `$json.field` refs
-- **`caller_sentiment` is INTEGER** — never write string to this column (22P02 error)
-- **Groq free tier: ~30 RPM** — space test calls 12s+ apart, never >5 in 60s
 - **SB_ANON key has RLS restrictions** — always use SB_SVC (service role) for test reads
 - **Dedup via `call_id`** — same call_id resent = early exit, no second row
+- **Fake webhooks must include `custom_analysis_data`** — n8n reads directly from this, not from transcript
+- **is_lead computed in n8n** — `lead_score >= 5 AND call_type not in [spam, wrong_number]`
 
-### Assertion calibration (correct Groq behaviour — do not over-tighten)
+### Assertion calibration (Retell-native — deterministic extraction)
 | Field | Groq behaviour | Correct assertion |
 |---|---|---|
-| `caller_address` | Stores street line only, city not always included | Assert `present`, not `contains city` |
-| `job_type` (distressed caller) | May return "Emergency" for a non-emergency repair | Assert `present`, accept either value |
-| `urgency` (no-heat, no gas) | Returns "High" — "Emergency" reserved for gas/fire/safety | Assert `present` or `in ["High","Emergency"]` |
-| `geocode_status` | Async — may not populate within 25s test read window | Do not assert in timed tests |
-| `is_lead` (no address, vague) | Correctly returns False | Expect False |
+| `caller_address` | Full address as stated during call | Assert `present` (non-empty string) |
+| `urgency` | One of: emergency, high, medium, low | Assert `in list` |
+| `call_type` | One of 7 defined values | Assert `in list` |
+| `retell_sentiment` | Capitalised text | Assert `present` and is string |
+| `lead_score` | Integer 1-10 | Assert `>= 1` |
 
 ---
 
@@ -488,7 +531,7 @@ Before go-live:
 | Caller style detection | Code node injects `caller_style_note` at leadcapture top | Long global prompt had style instructions ignored at bottom of context |
 | Transfer fallback | `transfer_failed` node | If live transfer fails, agent collects contact — never dead-ends caller |
 | Single TESTING agent | Separate from MASTER | All prompt experiments on TESTING; MASTER never touched until ≥95% pass rate |
-| Groq over OpenAI | Groq (`llama-3.3-70b-versatile`) | OpenAI credential expired silently; Groq is cheaper, faster, and reliable |
+| Retell-native over Groq/OpenAI | Retell `post_call_analysis_data` (gpt-4.1-mini) | Eliminates LLM costs + rate limits from n8n; extraction at platform level |
 | Lean global prompt | ~4,000 chars | Instructions beyond ~15k chars fall outside model attention window |
 | All pricing redirected | Team callback only | No specific fees in prompt — prevents Sophie quoting wrong amounts |
 | SMS disabled at launch | `SMS_ENABLED=false` | Telnyx approval pending — Twilio never |
