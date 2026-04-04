@@ -46,3 +46,37 @@ Documented in ARCHITECTURE.md: why Groq chain was removed in favour of Retell na
 6. **Unverified assumption:** The `call.duration_ms` field — assumed it exists based on Retell docs. Phase 6 test call will confirm. If it's actually `end_timestamp - start_timestamp`, the Extract Call Data node handles both patterns.
 
 Labels: no new workflows created — existing workflows modified only ✅
+
+
+## Phase 6 — Simulated Webhook Verification
+
+### Approach
+Instead of live Retell calls ($0.15-0.45/call), used Python scripts and n8n manual execution
+to POST fake `call_analyzed` webhook payloads. This tests the entire pipeline from webhook
+intake through Supabase write — the processor doesn't know or care if the payload came from
+a real call or a simulation.
+
+### Standard Processor (Kg576YtPM9yEacKn)
+- **Result: 37/37 fields passed ✅**
+- Used MASTER agent_id (has client row in hvac_standard_agent)
+- All shared fields populated correctly
+- Supabase write confirmed with return=representation
+- HubSpot failed in manual mode ($env not available) — expected, works in production
+
+### Premium Processor (STQ4Gt3rH8ptlvMi)
+- **Result: 40/40 fields passed ✅**
+- Premium-specific fields verified: appointment_date, appointment_time, job_type_booked, booking_attempted, booking_success
+- Client lookup resolved to V7 Premium FrostKing HVAC
+- Same HubSpot manual mode limitation — expected
+
+### Bug Found & Fixed
+- n8n:update_workflow saves a DRAFT but does NOT publish
+- First webhook test hit the OLD published version (still had Groq chain)
+- Fix: Always call n8n:publish_workflow after update_workflow
+- Added to FAILURES.md
+
+### Updated Reflection
+1. **What did I get wrong?** Assumed n8n update_workflow would auto-publish. It doesn't — draft and active versions are separate. Cost: one wasted test cycle.
+2. **Pattern for future:** After ANY n8n:update_workflow call, immediately call n8n:publish_workflow. Verify versionId == activeVersionId.
+3. **Testing pattern:** Simulated webhooks are the correct approach for field mapping verification. No need for live Retell calls until Phase 7 (E2E assertions) and Phase 8 (real behaviour testing).
+4. **TESTING agent limitation:** TESTING agents don't have rows in hvac_standard_agent, so client lookup returns empty → pipeline stops. Use MASTER agent_ids for pipeline testing. This is correct production behaviour (unknown agents shouldn't log calls).
