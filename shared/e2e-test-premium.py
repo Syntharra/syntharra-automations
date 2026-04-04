@@ -274,14 +274,14 @@ else:
     check("Agent exists in Retell", False, "No agent_id")
 
 # ══════════════════════════════════════════════════════════════
-print("\n[5] RETELL — PREMIUM CONVERSATION FLOW (18 nodes)")
+print("\n[5] RETELL — PREMIUM CONVERSATION FLOW (20 nodes)")
 # ══════════════════════════════════════════════════════════════
 if flow_id:
     flow  = retell(f"get-conversation-flow/{flow_id}")
     nodes = flow.get('nodes', [])
     names = [n['name'] for n in nodes]
     check("Flow exists in Retell",            bool(flow.get('conversation_flow_id')))
-    check("18 nodes present",                 len(nodes) == 18,                                    f"{len(nodes)} nodes")
+    check("20 nodes present",                 len(nodes) == 20,                                    f"{len(nodes)} nodes")
     check("flex_mode off",                    flow.get('flex_mode') in [False, None])
     check("start_speaker = agent",            flow.get('start_speaker') == 'agent')
     # Standard nodes (inherited)
