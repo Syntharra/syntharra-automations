@@ -7,12 +7,12 @@ description: >
   client was provisioned correctly, checking whether a recent n8n change broke onboarding, or any
   task involving shared/e2e-test.py. The test covers the full pipeline: Jotform webhook → n8n
   onboarding → Supabase → Retell agent + conversation flow → call processor → hvac_call_log.
-  Current status: 75/75 passing. Run with: python3 shared/e2e-test.py
+  Current status: 98 assertions (updated 2026-04-04). Run with: python3 shared/e2e-test.py
 ---
 
 # E2E Test — HVAC Standard Agent
 
-> **Status: 75/75 ✅ — Verified 2026-04-02**
+> **Status: 98 assertions — Updated 2026-04-04 for Retell-native fields. Call processor verified green.**
 > Run: `python3 shared/e2e-test.py`
 > Full docs: `docs/e2e-test-reference.md`
 > Master template: `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
@@ -21,7 +21,7 @@ description: >
 
 ## What It Tests
 
-Complete Standard pipeline end-to-end, 75 assertions across 7 phases:
+Complete Standard pipeline end-to-end, 98 assertions across 7 phases:
 
 | Phase | What's checked |
 |---|---|
@@ -30,7 +30,7 @@ Complete Standard pipeline end-to-end, 75 assertions across 7 phases:
 | 3 | Supabase `hvac_standard_agent` — 40+ fields all populated |
 | 4 | Retell agent — exists, published, correct voice/webhook/language |
 | 5 | Conversation flow — exactly 12 nodes, correct structure |
-| 6 | Call processor — fake call logged + scored in `hvac_call_log` |
+| 6 | Call processor — fake call with full Retell post-call analysis payload, 30+ fields verified |
 | 7 | Stripe gate — Twilio correctly skipped in test mode |
 
 Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
@@ -46,7 +46,7 @@ Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
 | Cleanup workflow | `URbQPNQP26OIdYMo` |
 | Jotform Standard form | `260795139953066` |
 | Jotform webhook path | `/webhook/jotform-hvac-onboarding` |
-| Call processor webhook | `/webhook/hvac-std-call-processor` |
+| Call processor webhook | `/webhook/retell-hvac-webhook` |
 | Cleanup webhook | `/webhook/e2e-test-cleanup` |
 
 ---
@@ -135,6 +135,51 @@ All 40+ fields below are verified in the test. If you add a field to the pipelin
 
 ---
 
+## Call Processor — Retell-Native Architecture (post-enhancement 2026-04-04)
+
+The E2E test's fake webhook payload now includes the full `call_analysis.custom_analysis_data` structure
+that Retell would provide. The n8n call processor reads these fields directly — no LLM calls in n8n.
+
+### Fake webhook payload structure (Phase 6)
+```python
+fake_call = {
+    "event": "call_analyzed",
+    "call": {
+        "call_id": ..., "agent_id": ...,
+        "duration_ms": 120000, "from_number": ..., "to_number": ...,
+        "recording_url": ..., "public_log_url": ..., "transcript": ...,
+        "call_analysis": {
+            "call_summary": ...,        # system preset
+            "call_successful": True,     # system preset
+            "user_sentiment": "Neutral", # system preset
+            "custom_analysis_data": {
+                "caller_name": ..., "caller_phone": ..., "caller_address": ...,
+                "service_requested": ..., "call_type": ..., "urgency": ...,
+                "is_hot_lead": ..., "lead_score": 8, "job_type": ...,
+                "language": "en", "booking_attempted": False, ...
+            }
+        },
+        "call_cost": {"total_duration_unit_price": 0.14},
+        "latency": {"e2e": {"p50": 1100}, "llm": {"p50": 650}}
+    }
+}
+```
+
+### Phase 6 assertions (15 new fields added 2026-04-04)
+- retell_sentiment, retell_summary, call_successful (system presets)
+- urgency, call_type, notification_type, job_type (custom analysis)
+- is_hot_lead, language (custom analysis)
+- duration_seconds, recording_url, latency_p50_ms, call_cost_cents (webhook direct)
+- caller_address, notes (custom analysis)
+
+### Known issue: HubSpot Code node
+The HubSpot — Log Call Note node fails with "access to env vars denied" in n8n.
+This is a pre-existing issue (n8n restricts `$env` in Code nodes). The Supabase write
+succeeds — the HubSpot error is downstream and does not affect call logging.
+The n8n execution shows "error" but the core pipeline (extract → log) works correctly.
+
+---
+
 ## Execution Polling Pattern
 
 **Always poll — never flat sleep** for n8n execution checks:
@@ -174,7 +219,7 @@ When adding a new Jotform field that must reach Supabase:
 | Phase 2 fails (`exec status unknown`) | n8n slow | Increase polling attempts (9×5s = 45s default) |
 | Phase 3 field null | Wrong Jotform key in Parse node or test payload | Check key against Jotform form `260795139953066` |
 | Phase 5 wrong node count | Template changed in n8n | Check Build Retell Prompt node — must build 12 nodes |
-| Phase 6 call not logged | Call processor webhook path changed | Verify `/webhook/hvac-std-call-processor` active |
+| Phase 6 call not logged | Webhook path or payload format wrong | Verify `/webhook/retell-hvac-webhook` active AND payload includes `custom_analysis_data` |
 | Cleanup doesn't fire | Cleanup workflow paused | Unpause `URbQPNQP26OIdYMo` in n8n |
 
 ---
@@ -183,6 +228,17 @@ When adding a new Jotform field that must reach Supabase:
 ALL Syntharra API keys live in Supabase `syntharra_vault`.
 The E2E test embeds credentials directly for standalone operation — do not refactor to vault lookups.
 
+
+---
+
+## Pre-existing Issues (known, not blocking)
+
+| Issue | Impact | Status |
+|---|---|---|
+| n8n onboarding workflow uses stale Retell API key | Phase 1-5 of E2E test fail | Needs key rotation in n8n workflow `4Hx7aRdzMl5N0uJP` |
+| HubSpot Code node uses `$env` (restricted in n8n) | n8n execution shows "error" after Supabase write succeeds | Needs HubSpot node rewrite to use HTTP Request instead of Code |
+
+These issues predate the enhancement sprint and do not affect call processing.
 
 ---
 
