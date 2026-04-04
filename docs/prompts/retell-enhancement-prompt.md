@@ -217,17 +217,21 @@ After each step output: ✅ [step name] — [what was confirmed]
 
 1. Fetch Retell API key from syntharra_vault
 2. GET Standard MASTER — confirm 200 and is_published status
-3. GET Premium MASTER — check if still 404. If 404, log as critical blocker in
-   FAILURES.md and proceed with Premium TESTING only. Report to Dan.
+3. GET Premium MASTER — this may 404 because it hasn't been published yet
+   (testing still in progress). This is expected, not a bug. Log status and move on.
 4. GET both TESTING agents — confirm 200
 5. Read FAILURES.md — check for any Retell-area failures not yet in context
 6. Back up both MASTER agent JSONs to retell-agents/ in GitHub
-   (if Premium MASTER is 404, back up whatever the API returns)
+   (if Premium MASTER returns 404, skip its backup — nothing to back up yet)
 7. Verify Supabase column types for hvac_call_log:
    Run: SELECT column_name, data_type FROM information_schema.columns
         WHERE table_name = 'hvac_call_log' ORDER BY ordinal_position;
    Confirm: lead_score=integer, is_lead=boolean, retell_sentiment=text,
    recording_url=text, from_number=text exist.
+8. Add missing columns (verified missing as of 2026-04-04):
+   ALTER TABLE hvac_call_log ADD COLUMN IF NOT EXISTS disconnection_reason text;
+   ALTER TABLE hvac_call_log ADD COLUMN IF NOT EXISTS transcript text;
+   These are needed for the Phase 5 field mapping.
 
 ✅ Pre-flight complete
 
