@@ -374,3 +374,19 @@
   Supabase RLS policies, n8n credential scoping, and Retell webhook filtering.
 - These are already in place and serve the same deterministic enforcement role.
 - No Claude Code hooks needed for the agentic marketing system — wrong execution layer.
+
+---
+
+## 2026-04-04 — n8n Call Processors: Retell Native Post-Call Analysis vs Groq/GPT Chain
+
+**Problem:** Both call processors (Standard `Kg576YtPM9yEacKn` and Premium `STQ4Gt3rH8ptlvMi`) used a 3-node GPT/Groq chain to analyse transcripts post-call: Build Groq Request → Groq: Analyze Transcript → Parse Lead Data. This added latency, cost, a point of failure (Groq rate limits, JSON parsing errors), and duplicated logic that Retell now handles natively.
+
+**Options considered:** (A) Keep Groq chain as fallback alongside Retell. (B) Remove Groq chain entirely, trust Retell `post_call_analysis` with `gpt-4.1-mini`. (C) Replace Groq with OpenAI direct call.
+
+**Chose:** (B) Remove Groq chain entirely.
+
+**Because:** Retell's `post_call_analysis` runs during the call with full context (not post-hoc on transcript text). It uses `gpt-4.1-mini` which is more capable than `llama-3.1-8b-instant` (Groq). The custom fields are structured — no JSON parsing needed. All 21 custom fields come back typed (string, boolean, number) in `call_analysis.custom_analysis_data`. The system presets (`call_summary`, `user_sentiment`, `call_successful`) come from `call_analysis` root. This eliminates 3 nodes per workflow, removes the Groq API dependency, and removes all the brittle JSON regex parsing.
+
+**Trade-offs accepted:** If Retell's analysis returns empty fields, there's no fallback. Mitigation: Phase 6 test calls verify field population before MASTER promotion. The `caller_sentiment` field changes from integer (1-5, mapped by Parse Lead Data) to text string ("Positive", "Neutral", etc.) — mapped to `retell_sentiment` (TEXT column) instead of the old `caller_sentiment` (INTEGER column). Downstream queries referencing `caller_sentiment` as integer need updating (Slack alert emoji logic already updated).
+
+**Revisit if:** Retell's post-call analysis quality degrades, or if we need analysis fields that Retell can't compute (e.g., cross-call patterns requiring call history context).
