@@ -25,7 +25,7 @@
 ### Post-Enhancement Sprint
 - [ ] Update onboarding workflows: set fallback_number = lead_phone on new client phone provision
 - [ ] Telnyx SMS: post-call confirmation SMS via n8n (pending Telnyx approval)
-- [ ] Update E2E skills + testing skills for new field types and assertions
+- [x] Update E2E skills + testing skills for new field types and assertions ✅
 - [ ] 3-5 live smoke calls to +18129944371
 
 ### Next Sprint — Flow Improvements
