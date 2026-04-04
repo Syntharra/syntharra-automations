@@ -52,10 +52,12 @@ Agent IDs (verified 2026-04-04 — always re-fetch live before using):
 - Premium MASTER:           agent_9822f440f5c3a13bc4d283ea90 (not yet published — expected)
 - Standard MASTER flow:     conversation_flow_34d169608460
 - Premium MASTER flow:      conversation_flow_1dd3458b13a7
-- Standard TESTING agent:   agent_731f6f4d59b749a0aa11c26929 (working)
-- Premium TESTING agent:    agent_2cffe3d86d7e1990d08bea068f (working)
+- Standard TESTING agent:   agent_731f6f4d59b749a0aa11c26929 (working — enhancement target)
+- Premium TESTING agent:    agent_2cffe3d86d7e1990d08bea068f (⛔ DO NOT MODIFY — preserved)
+- Premium DEMO agent:       CREATED IN PHASE 1 (clone of Premium TESTING — enhancement target)
 - Standard TESTING flow:    conversation_flow_5b98b76c8ff4 (15 nodes)
-- Premium TESTING flow:     conversation_flow_2ded0ed4f808 (19 nodes)
+- Premium TESTING flow:     conversation_flow_2ded0ed4f808 (19 nodes — DO NOT MODIFY)
+- Premium DEMO flow:        CREATED IN PHASE 1 (clone of Premium TESTING flow)
 
 n8n workflow IDs:
 - Standard call processor:  Kg576YtPM9yEacKn
@@ -75,7 +77,7 @@ and create the perfect replicable template agent for any trade business.
 
 Changes in this sprint:
 1. Replace GPT-based post-call extraction with Retell's native post_call_analysis_data
-2. Add Extract Dynamic Variable and Code nodes to both TESTING flows for data reliability
+2. Add Extract Dynamic Variable and Code nodes to Standard TESTING + Premium DEMO flows for data reliability
 3. Strip GPT out of both n8n call processors and map webhook fields directly to Supabase
 4. Enable guardrails (jailbreak + content moderation) on both agents via API
 5. Add HVAC boost keywords for speech recognition accuracy
@@ -182,6 +184,9 @@ Phone number configured:
 
 - NEVER delete or recreate any Retell agent
 - NEVER touch MASTER agents without Dan's explicit go-ahead
+- NEVER PATCH, modify, or touch Premium TESTING agent (agent_2cffe3d86d7e1990d08bea068f)
+  or its flow (conversation_flow_2ded0ed4f808) — it is preserved as the current best
+  Premium agent. All Premium work targets the DEMO agent created in Phase 1.
 - NEVER push to MASTER flows without passing E2E first
 - NEVER hardcode API keys — always fetch from syntharra_vault
 - NEVER POST to n8n webhooks — HEAD only for health checks
@@ -197,7 +202,7 @@ Phone number configured:
 
 ## Stop Conditions — Pause and report to Dan when:
 
-- Any MASTER agent GET returns non-200 (⚠️ Premium MASTER already 404 — investigate first)
+- Any MASTER agent GET returns non-200 (Premium MASTER may 404 — that's expected, not yet published)
 - Retell API returns an unexpected schema on any PATCH
 - A TESTING flow GET shows the Extract/Code nodes are missing
   (Dan needs to create them in the UI first — mandatory UI step)
@@ -219,7 +224,7 @@ After each step output: ✅ [step name] — [what was confirmed]
 2. GET Standard MASTER — confirm 200 and is_published status
 3. GET Premium MASTER — this may 404 because it hasn't been published yet
    (testing still in progress). This is expected, not a bug. Log status and move on.
-4. GET both TESTING agents — confirm 200
+4. GET Standard TESTING + Premium DEMO agents — confirm 200
 5. Read FAILURES.md — check for any Retell-area failures not yet in context
 6. Back up both MASTER agent JSONs to retell-agents/ in GitHub
    (if Premium MASTER returns 404, skip its backup — nothing to back up yet)
@@ -235,24 +240,44 @@ After each step output: ✅ [step name] — [what was confirmed]
 
 ✅ Pre-flight complete
 
-### PHASE 1 — Sync TESTING agents to clean MASTER copies
+### PHASE 1 — Prepare agents for enhancement work
 
-For Standard TESTING: fetch Standard MASTER config and PATCH TESTING to match
-(name, voice_id, prompt, all settings).
+STANDARD TESTING (agent_731f6f4d59b749a0aa11c26929):
+Fetch Standard MASTER config and PATCH TESTING to match (name, voice_id, prompt, all settings).
 Set agent_name = "HVAC Standard (ENHANCEMENT TESTING)"
 Publish after PATCH.
 
-For Premium TESTING: if Premium MASTER is accessible, sync from it.
-If Premium MASTER is 404, keep Premium TESTING as-is (it already has 18 custom fields).
-Set agent_name = "HVAC Premium (ENHANCEMENT TESTING)"
-Publish after PATCH.
+PREMIUM — DO NOT TOUCH PREMIUM TESTING. It is the most up-to-date Premium agent
+with all core_flow fixes and 18 custom post_call_analysis fields. Preserve it.
 
-Update docs/context/AGENTS.md with new agent names.
+Instead, CREATE a new agent by cloning Premium TESTING:
+POST https://api.retellai.com/create-agent with Premium TESTING's full config.
+Set agent_name = "HVAC Premium (DEMO)"
+This new agent gets a new agent_id — record it.
+
+Also clone Premium TESTING's conversation flow for the DEMO agent:
+POST https://api.retellai.com/create-conversation-flow with Premium TESTING flow config.
+Attach the new flow to the DEMO agent via response_engine.conversation_flow_id.
+Publish the DEMO agent.
+
+Record the new DEMO agent_id and flow_id. ALL Premium enhancement work in this sprint
+targets the DEMO agent, never Premium TESTING.
+
+After the sprint, the verified DEMO config gets applied BACK to Premium TESTING
+(which then becomes Premium MASTER). The DEMO agent can be kept for future testing
+or deleted after promotion.
+
+Update docs/context/AGENTS.md with:
+- Standard TESTING: "HVAC Standard (ENHANCEMENT TESTING)"
+- Premium TESTING: UNCHANGED — preserved as-is
+- Premium DEMO: new agent_id, new flow_id, "HVAC Premium (DEMO)"
+
 ✅ Phase 1 complete
 
-### PHASE 2 — Configure agent features via API on both TESTING agents
+### PHASE 2 — Configure agent features via API
 
-Apply ALL of the following via PATCH to BOTH TESTING agents.
+Apply ALL of the following via PATCH to Standard TESTING and Premium DEMO.
+⚠️ Do NOT PATCH Premium TESTING — it stays untouched.
 PATCH endpoint: https://api.retellai.com/update-agent/{agent_id}
 Publish both agents after all PATCHes.
 
@@ -327,7 +352,7 @@ Premium should have ~25 entries (Standard fields + Premium booking fields).
 
 B) GUARDRAILS — real-time content moderation + jailbreak detection
 
-PATCH both TESTING agents with:
+PATCH Standard TESTING + Premium DEMO agents with:
 {
   "guardrail_config": {
     "output_topics": [
@@ -352,7 +377,7 @@ Verify: GET each agent, confirm guardrail_config field is present with correct t
 
 C) BOOST KEYWORDS — HVAC vocabulary for speech recognition
 
-PATCH both TESTING agents with:
+PATCH Standard TESTING + Premium DEMO agents with:
 {
   "boosted_keywords": [
     "HVAC", "compressor", "condenser", "furnace", "AC", "air conditioning",
@@ -373,7 +398,7 @@ Verify: GET each agent, confirm boosted_keywords array populated.
 
 D) PRONUNCIATION DICTIONARY
 
-PATCH both TESTING agents with:
+PATCH Standard TESTING + Premium DEMO agents with:
 {
   "pronunciation_dictionary": [
     { "word": "HVAC", "alphabet": "ipa", "phoneme": "eɪtʃ viː eɪ siː" },
@@ -388,7 +413,7 @@ PATCH both TESTING agents with:
 
 E) BACKCHANNEL + REMINDERS
 
-PATCH both TESTING agents with:
+PATCH Standard TESTING + Premium DEMO agents with:
 {
   "enable_backchannel": true,
   "backchannel_frequency": 0.8,
@@ -405,7 +430,7 @@ reminder_max_count 2: max 2 reminders before end_call_after_silence kicks in.
 
 F) VOICE & CONVERSATION TUNING
 
-PATCH both TESTING agents with:
+PATCH Standard TESTING + Premium DEMO agents with:
 {
   "responsiveness": 0.85,
   "voice_speed": 1.05,
@@ -459,7 +484,7 @@ Standard already has this. Premium was getting all events (call_started, call_en
 transcript_updated, etc) — wasteful. We only need call_analyzed for our processing.
 
 
-After ALL PATCHes: Publish both TESTING agents.
+After ALL PATCHes: Publish Standard TESTING + Premium DEMO agents.
 Verify: GET each agent, check every field from A-H is correctly set.
 
 ✅ Phase 2 complete — all agent features configured
@@ -495,9 +520,10 @@ Standard TESTING flow (conversation_flow_5b98b76c8ff4):
 
    Store response variables: phone_normalized, phone_valid, phone_flag
 
-Premium TESTING flow (conversation_flow_2ded0ed4f808):
+Premium DEMO flow (the NEW flow created in Phase 1 — use the recorded flow_id):
 Same Extract Dynamic Variable and Code node — identical config.
 ⚠️ Do NOT remove the existing call_style_detector code node — it stays here too.
+⚠️ Do NOT modify Premium TESTING flow (conversation_flow_2ded0ed4f808) — leave it untouched.
 
 Tell Claude Code when UI steps are done and which nodes were successfully added.
 
@@ -569,7 +595,7 @@ RETELL ALERTING (Settings > Alerting tab) — create 5 rules:
 
 RETELL GUARDRAILS (Agent > Security & Fallback — EACH agent):
 If guardrail_config PATCH in Phase 2 didn't work, Dan must enable guardrails
-manually in the dashboard for both TESTING agents:
+manually in the dashboard for Standard TESTING + Premium DEMO agents:
 - Output: harassment, self_harm, sexual_exploitation, violence,
   child_safety, illicit_activity, regulated_professional_advice → all ON
 - Input: jailbreaking → ON
@@ -744,7 +770,7 @@ If any critical field is null when it shouldn't be, check the webhook payload
 structure by inspecting the n8n execution log raw input. The JSON path might be
 different — adjust the field mapping and re-test.
 
-Repeat for Premium TESTING agent.
+Repeat for Premium DEMO agent (use the new agent_id from Phase 1).
 
 Downstream verification:
 1. Weekly Lead Report (iLPb6ByiytisqUJC) — manually trigger. Verify it renders
@@ -778,13 +804,13 @@ Both must be green before Phase 8.
 Stop here. Present Dan with:
 - Phase 7 E2E results
 - Sample hvac_call_log rows from test calls showing field quality
-- Confirmation both TESTING agents are working correctly
+- Confirmation Standard TESTING + Premium DEMO agents are working correctly
 
 Wait for explicit Dan approval.
 
 After approval:
 
-STANDARD MASTER:
+STANDARD:
 1. PATCH Standard MASTER with all Phase 2 config (post_call_analysis_data, guardrails,
    boost keywords, pronunciation, backchannel, reminders, tuning, handbook)
 2. Publish via API
@@ -792,17 +818,28 @@ STANDARD MASTER:
 4. Pin phone number to the new version number
 5. Dan adds Extract Dynamic Variable + Code nodes to Standard MASTER flow in UI
 
-PREMIUM MASTER:
-- Premium MASTER has not been published before. First publish will make it accessible.
-- PATCH Premium MASTER with all Phase 2 config
-- Publish via API, then Dan publishes via Deployment button
-- Dan adds Extract Dynamic Variable + Code nodes to Premium MASTER flow in UI
+PREMIUM:
+The verified DEMO config now needs to be applied to Premium TESTING, which then
+becomes Premium MASTER.
 
-6. Dan adds Extract Dynamic Variable + Code nodes to Premium MASTER flow in UI
+1. GET Premium DEMO agent — capture full config
+2. PATCH Premium TESTING (agent_2cffe3d86d7e1990d08bea068f) with the DEMO config:
+   - All Phase 2 settings (guardrails, boost keywords, pronunciation, backchannel,
+     reminders, tuning, handbook, post_call_analysis_data, webhook_events filter)
+   - Keep Premium TESTING's existing prompt, voice_id, and conversation flow
+     (these have the tested core_flow fixes)
+   - Set agent_name = "HVAC Premium" (drop the TESTING label — it's now MASTER)
+3. Publish Premium TESTING via API — this is its first publish as MASTER
+4. Dan publishes via "Deployment" button to create versioned snapshot
+5. Dan adds Extract Dynamic Variable + Code nodes to the Premium MASTER flow
+   (conversation_flow_2ded0ed4f808) in the UI
+6. The Premium DEMO agent can be kept for future testing or archived
+
 7. Confirm both MASTER agents published successfully
 8. n8n processors are already live (not agent-specific — already updated in Phase 5)
 
 Document version numbers in docs/context/AGENTS.md.
+Update REFERENCE.md with new Premium MASTER status.
 ✅ Phase 8 complete
 
 
