@@ -8,10 +8,10 @@
 ## Agent Registry
 | Agent | ID | Status |
 |---|---|---|
-| HVAC Standard Template | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE |
-| HVAC Premium Template | `agent_9822f440f5c3a13bc4d283ea90` | ✅ MASTER — needs behaviour testing |
+| HVAC Standard | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE |
 | HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | ✅ Synced with MASTER |
-| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🔧 TESTING — core_flow fixes needed |
+| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🧪 TESTING ONLY — not promoted, testing incomplete |
+| HVAC Premium (DEMO) | `agent_80d6270ab39ed3169f997cb035` | 🧪 Enhancement testing |
 | Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
 
