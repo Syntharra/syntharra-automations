@@ -10,7 +10,7 @@ description: >
   Premium email sequences, or the 4-step Premium onboarding email flow.
 ---
 
-> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+> **Last verified: 2026-04-04** — Retell Enhancement Sprint complete (Phases 0-7). Call processor now Retell-native — no GPT/Groq.
 
 # HVAC Premium Pipeline — Full Reference
 
@@ -21,7 +21,7 @@ description: >
 | Workflow | ID | Detail |
 |---|---|---|
 | HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | 13 nodes, 17 PCA, 4 tools |
-| HVAC Prem Call Processor | `STQ4Gt3rH8ptlvMi` | 15 nodes, repeat caller detection |
+| HVAC Prem Call Processor | `STQ4Gt3rH8ptlvMi` | Retell-native — reads call_analysis.custom_analysis_data directly, no LLM calls |
 | HVAC Prem Dispatcher | `73Y0MHVBu05bIm5p` | 4 nodes — Google Cal + Jobber |
 
 - n8n instance: `https://n8n.syntharra.com`
@@ -63,7 +63,7 @@ description: >
 
 - Supabase URL: `hgheyqwnrcvwtgngqdnq.supabase.co`
 
-### `hvac_premium_agent` additional columns (superset of standard)
+### Premium-specific columns in `hvac_standard_agent` (both plans share one table)
 - `crm_platform` — e.g. `"Jobber"`
 - `crm_status` — `"pending"` → `"active"` after OAuth
 - `calendar_platform` — e.g. `"Google Calendar"`
@@ -101,6 +101,38 @@ Annual = 2 months free.
 
 ---
 
+## Call Processor — Architecture (Retell-native, post-enhancement 2026-04-04)
+
+```
+Retell POST (call_analyzed event)
+  → Filter: call_analyzed only [IF node]
+  → Extract Call Data [Code — reads call.call_analysis.custom_analysis_data]
+  → Supabase: Lookup Client [HTTP — get company_name by agent_id]
+  → Parse Client Data [Code]
+  → Check Repeat Caller [Code — query hvac_call_log by from_number]
+  → Is Lead? [IF — lead_score >= 5 AND not spam/wrong_number]
+      ├─ Both → Supabase: Log Call [HTTP POST] → HubSpot Note [Code] → Slack Alert [Code]
+      └─ Error → Alert: Supabase Write Failed [Code]
+```
+
+> **No LLM calls in n8n.** All field extraction done by Retell post_call_analysis (gpt-4.1-mini).
+> GPT and Groq HTTP nodes removed. n8n reads structured JSON from webhook.
+> Premium call processor maps same fields as Standard PLUS: appointment_date, appointment_time,
+> job_type_booked, booking_attempted, booking_success. call_tier = "Premium".
+
+### Premium-specific call_analysis.custom_analysis_data fields
+| Field | Description |
+|---|---|
+| `booking_attempted` | True if agent attempted to book (Premium CAN book) |
+| `booking_success` | True if booking was made |
+| `appointment_date` | Date of booked appointment |
+| `appointment_time_window` | Time window of booked appointment |
+| `job_type_booked` | Type of job booked |
+| `reschedule_or_cancel` | If caller wanted to reschedule or cancel |
+| `caller_email` | Email if provided during call |
+
+---
+
 ## Email Flow (Premium Clients — 4 emails)
 
 1. Stripe welcome email
@@ -135,10 +167,32 @@ Same Retell API key and rules as Standard: `{{RETELL_API_KEY}}`
 - Dynamic variables: `{{agent_name}}`, `{{company_name}}`, `{{COMPANY_INFO_BLOCK}}`
 - **Use commas not dashes** in all prompts
 
+### Enhancement Sprint Features (applied 2026-04-04)
+| Feature | Setting |
+|---|---|
+| Post-call analysis | 21 custom fields + 5 Premium-specific + 3 presets, gpt-4.1-mini |
+| Guardrails | Output: 7 topics, Input: jailbreak detection |
+| Boost keywords | 40+ HVAC terms (brands, refrigerants, components) |
+| Pronunciation dictionary | HVAC, SEER, Trane, Rheem, Daikin, Lennox |
+| Backchannel | Enabled, frequency 0.8 |
+| Reminders | 15s trigger, max 2 |
+| Voice tuning | responsiveness 0.85, speed 1.05, dynamic |
+| Call limits | 30s silence hangup, 10min max |
+| Webhook filter | call_analyzed only |
+| Handbook config | echo_verification, scope_boundaries, nato_phonetic, high_empathy |
+
 ### Premium Agent & Flow IDs
-- Agent ID: `agent_c6d7493d164a0616e9d8469370`
-- Conversation flow ID: `conversation_flow_dba336752525`
-- Current flow version: **24** (as of March 2026)
+| Agent | ID | Status |
+|---|---|---|
+| Premium MASTER | `agent_9822f440f5c3a13bc4d283ea90` | Not yet published — awaiting Phase 8 promotion |
+| Premium TESTING | `agent_2cffe3d86d7e1990d08bea068f` | Preserved — core_flow fixes applied |
+| Premium DEMO | Created in Phase 1 of enhancement sprint | Enhancement target — verified config |
+
+| Flow | ID | Bound to |
+|---|---|---|
+| Premium MASTER flow | `conversation_flow_1dd3458b13a7` | Premium MASTER agent |
+| Premium TESTING flow | `conversation_flow_2ded0ed4f808` | Premium TESTING agent (DO NOT MODIFY) |
+| Premium DEMO flow | Created in Phase 1 | Premium DEMO agent |
 - Flow tools point to: `https://n8n.syntharra.com/webhook/retell-integration-dispatch` (live) or `https://n8n.syntharra.com/webhook/retell-tool-stub` (testing stub)
 
 ### Language Setting
@@ -309,4 +363,5 @@ This includes:
 | Same Supabase table as Standard | hvac_standard_agent with plan_type column | Simpler cross-plan queries; Premium extras are nullable columns; confirmed by Dan 2026-04-02 | 10+ Premium-only columns needed |
 | OAuth server | Separate Railway service | Google Calendar and Jobber OAuth require redirect URIs; separate service keeps auth concerns isolated from n8n | — |
 | Multi-notification | notification_email_2/3, notification_sms_2/3 in table | Premium clients often have multiple staff who need call alerts; built into schema from the start | — |
-| Repeat caller detection | In call processor workflow | Premium clients pay for a more intelligent receptionist; repeat caller = existing customer path, warmer tone | — |
+| Repeat caller detection | In call processor workflow | Premium clients pay for a more intelligent receptionist; repeat caller = existing customer path, warmer tone |
+| Retell-native over Groq/OpenAI | Retell `post_call_analysis_data` (gpt-4.1-mini) | Eliminates LLM costs + rate limits from n8n; extraction at platform level; 21 custom + 5 Premium-specific fields | — |
