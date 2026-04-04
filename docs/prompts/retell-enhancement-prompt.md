@@ -1,4 +1,4 @@
-# Syntharra — Retell Enhancement Sprint
+# Syntharra — Retell Enhancement Sprint (v2)
 ## Claude Code Implementation Prompt (built with prompt-master v1.5.0 — Template H: ReAct + Stop Conditions)
 
 > **STATUS: LOCKED**
@@ -14,7 +14,7 @@
 ```
 ## Context (carry forward)
 
-You are working on Syntharra — an AI phone receptionist product for HVAC trade businesses.
+You are working on Syntharra — an AI phone receptionist product for trade businesses.
 The stack is: Retell AI (voice agents) + n8n on Railway (workflows) + Supabase (database) +
 GitHub (syntharra-automations repo).
 
@@ -24,65 +24,141 @@ Established decisions you MUST NOT relitigate:
 - MASTER agents are NEVER deleted or recreated — always PATCH in place.
 - Always publish after any agent update.
 - All secrets come from syntharra_vault in Supabase — never hardcode.
-- Node types (Extract Dynamic Variable, Code node, SMS node) can only be CREATED
+- Node types (Extract Dynamic Variable, Code node) can only be CREATED
   in the Retell UI — they can be patched via API once created. Dan handles UI steps.
-- SMS confirmation node (Premium only) sends a callback confirmation, NOT a booking link.
+- SMS is handled via Telnyx (pending approval), NOT Retell's built-in Twilio SMS.
+  Do NOT use Retell SMS nodes in conversation flows. SMS confirmations fire from n8n
+  after the call ends, via Telnyx, once approval is granted.
+- Fallback phone number for any client = their lead_phone from hvac_standard_agent.
+  Both Standard and Premium clients are in the same table (hvac_standard_agent).
 
 Prior failures to avoid:
 - Do NOT run simulators inside this session — they exceed the timeout wall.
 - Do NOT use the anon Supabase key for vault lookups — use the service role key.
 - Do NOT POST to n8n webhooks for health checks — HEAD only.
 - Do NOT touch MASTER agents until all TESTING work is verified and Dan approves.
+- PATCH endpoint is https://api.retellai.com/update-agent/{agent_id} (NO /v2/ prefix)
+- GET endpoint is https://api.retellai.com/get-agent/{agent_id} (NO /v2/ prefix)
+- List calls is POST https://api.retellai.com/v2/list-calls (HAS /v2/ prefix)
+
+Premium MASTER agent (agent_9822f440f5c3a13bc4d283ea90) does not have a published
+version yet — Premium testing is still in progress. GET on this agent will 404 until
+Premium testing is complete and the agent is published for the first time. This is
+expected. This sprint runs on TESTING agents only. Premium MASTER promotion happens
+in Phase 8 after all testing is green.
 
 Agent IDs (verified 2026-04-04 — always re-fetch live before using):
-- Standard MASTER:          agent_4afbfdb3fcb1ba9569353af28d
-- Premium MASTER:           agent_9822f440f5c3a13bc4d283ea90
+- Standard MASTER:          agent_4afbfdb3fcb1ba9569353af28d (published, live)
+- Premium MASTER:           agent_9822f440f5c3a13bc4d283ea90 (not yet published — expected)
 - Standard MASTER flow:     conversation_flow_34d169608460
 - Premium MASTER flow:      conversation_flow_1dd3458b13a7
-- Standard TESTING agent:   agent_731f6f4d59b749a0aa11c26929
-- Premium TESTING agent:    agent_2cffe3d86d7e1990d08bea068f
-- Standard TESTING flow:    conversation_flow_5b98b76c8ff4
-- Premium TESTING flow:     conversation_flow_2ded0ed4f808
+- Standard TESTING agent:   agent_731f6f4d59b749a0aa11c26929 (working)
+- Premium TESTING agent:    agent_2cffe3d86d7e1990d08bea068f (working)
+- Standard TESTING flow:    conversation_flow_5b98b76c8ff4 (15 nodes)
+- Premium TESTING flow:     conversation_flow_2ded0ed4f808 (19 nodes)
 
 n8n workflow IDs:
 - Standard call processor:  Kg576YtPM9yEacKn
 - Premium call processor:   STQ4Gt3rH8ptlvMi
+
+Phone number:
+- +18129944371 — currently pinned to Standard MASTER version 10
+  No fallback number. No geo restrictions. SMS not enabled.
 
 ---
 
 ## Objective
 
 Implement the Retell Enhancement Sprint across Standard and Premium HVAC agents.
-This sprint: (1) replaces GPT-based post-call extraction with Retell's native
-post_call_analysis_data, (2) adds Extract Dynamic Variable and Code nodes to both
-TESTING flows for better lead data reliability, (3) adds an SMS confirmation node
-to the Premium TESTING flow only, (4) strips GPT out of both n8n call processors
-and maps Retell webhook fields directly to Supabase, and (5) re-runs E2E tests
-to confirm everything is green before anything touches MASTER.
+This sprint maximises Retell's built-in features to reduce our own processing load
+and create the perfect replicable template agent for any trade business.
+
+Changes in this sprint:
+1. Replace GPT-based post-call extraction with Retell's native post_call_analysis_data
+2. Add Extract Dynamic Variable and Code nodes to both TESTING flows for data reliability
+3. Strip GPT out of both n8n call processors and map webhook fields directly to Supabase
+4. Enable guardrails (jailbreak + content moderation) on both agents via API
+5. Add HVAC boost keywords for speech recognition accuracy
+6. Add pronunciation dictionary for commonly mispronounced terms
+7. Enable backchannel ("uh-huh", "yeah") for natural conversation feel
+8. Configure reminder triggers for silent callers
+9. Tune voice speed, responsiveness, and silence timeout
+10. Configure fallback numbers and geo restrictions on phone number
+11. Map all new webhook fields to Supabase to populate the client dashboard
+12. Re-run E2E tests to confirm everything green before MASTER promotion
 
 ---
 
-## Starting State
+## Starting State (verified live 2026-04-04)
 
-- Both MASTER agents: fully tested, published, live
-- Standard TESTING agent: synced with Standard MASTER post-Premium promotion
-- Premium TESTING agent: just promoted to MASTER — TESTING agent now available for this sprint
-- Both n8n call processors: currently use GPT node to extract call data from transcript
-- E2E test suite: passing on Standard (80/80), Premium (89/89) — pre-enhancement baseline
+Standard TESTING agent:
+- post_call_analysis_data: 3 system presets (call_summary, call_successful, user_sentiment)
+- No custom analysis fields
+- No boosted_keywords
+- No guardrail_config
+- end_call_after_silence_ms: 30000 (already set)
+- max_call_duration_ms: 600000 (already set)
+- enable_dynamic_voice_speed: true (already set)
+- handbook_config: echo_verification, scope_boundaries, natural_filler_words, nato_phonetic,
+  high_empathy, smart_matching all enabled
+- Flow: 15 nodes (12 conversation + transfer + end + call_style_detector code node)
+- webhook_events: ["call_analyzed"]
+- responsiveness: 0.9
+- voice_speed: 1
+
+Premium TESTING agent:
+- post_call_analysis_data: 18 fields (3 system presets + 15 custom)
+  Custom fields include: booking_attempted, booking_success, appointment_date,
+  appointment_time_window, job_type_booked, reschedule_or_cancel, caller_name,
+  caller_phone, caller_email, caller_address, service_requested, call_type,
+  urgency, is_hot_lead, lead_score
+- No boosted_keywords
+- No guardrail_config
+- No handbook_config (empty {})
+- end_call_after_silence_ms: null (NOT set — differs from Standard)
+- max_call_duration_ms: 600000
+- enable_dynamic_voice_speed: true
+- webhook_events: null (not filtered — gets all events)
+- Flow: 19 nodes (booking/scheduling nodes + call_style_detector code node)
+- responsiveness: 0.9
+- voice_speed: 1
+
+Supabase hvac_call_log: 47 columns (many more than documented). Key columns already
+exist for: recording_url, from_number, retell_sentiment, is_hot_lead, notification_type,
+call_type, booking_success, booking_attempted, call_successful, latency_p50_ms,
+public_log_url, call_cost_cents, disconnection_reason, etc.
+
+IMPORTANT — Sentiment column conflict:
+- caller_sentiment column = INTEGER type (old numeric approach)
+- retell_sentiment column = TEXT type (what the client dashboard reads)
+- Retell's system preset returns user_sentiment as text (e.g. "Neutral")
+Map Retell's user_sentiment → retell_sentiment column. Do NOT write to caller_sentiment.
 
 ---
 
 ## Target State
 
-- Both TESTING agents have post_call_analysis_data configured via API (14 fields)
-- Both TESTING flows have Extract Dynamic Variable node after lead capture node
-- Both TESTING flows have Code node (phone validation) after extract node
-- Premium TESTING flow has SMS confirmation node (after phone validation, before Ending)
-- Both n8n call processors no longer call GPT — field mapping comes directly from
-  Retell webhook call_analysis payload
-- E2E tests pass on both TESTING agents with new field mapping
-- MASTER agents updated only after Dan's explicit go-ahead
-- All changes pushed to GitHub, session log written, TASKS.md updated
+Both TESTING agents configured as the "perfect replicable template" with:
+- Full post_call_analysis_data (system presets + custom fields matching Supabase)
+- Guardrails enabled (jailbreak + content moderation)
+- HVAC boost keywords (35+ terms)
+- Pronunciation dictionary for commonly mispronounced trade terms
+- Backchannel enabled for natural conversation
+- Reminder triggers for silent callers
+- Tuned voice speed, responsiveness, silence timeout
+- Extract Dynamic Variable node in flows
+- Code node for phone validation in flows
+
+Both n8n call processors updated:
+- GPT nodes removed
+- Field mapping from webhook call_analysis + call metadata directly to Supabase
+- All 47 hvac_call_log columns populated where data is available
+- Client dashboard fully populated with no empty fields
+
+Phone number configured:
+- Fallback number set (lead_phone from client config)
+- Geo restricted to US only
+- Outage mode ready to toggle
 
 ---
 
@@ -98,34 +174,33 @@ to confirm everything is green before anything touches MASTER.
 - Make HEAD requests to n8n webhooks to verify they are live (never POST)
 - Trigger a single test call on TESTING agents only for verification
 - Write session log to docs/session-logs/
-- Update docs/TASKS.md, docs/FAILURES.md, docs/context/AGENTS.md
+- Update docs/TASKS.md, docs/FAILURES.md, docs/REFERENCE.md, docs/context/AGENTS.md
 
 ---
 
 ## Forbidden Actions
 
 - NEVER delete or recreate any Retell agent
-- NEVER touch MASTER agents (agent_4afb... or agent_9822...) without Dan's explicit
-  go-ahead in this chat session — even if the phase plan says to promote
+- NEVER touch MASTER agents without Dan's explicit go-ahead
 - NEVER push to MASTER flows without passing E2E first
 - NEVER hardcode API keys — always fetch from syntharra_vault
 - NEVER POST to n8n webhooks — HEAD only for health checks
 - NEVER modify the Premium calendar OAuth dispatcher workflows
-  (rGrnCr5mPFP2TIc7, La99yvfmWg6AuvM2, b9xRG7wtqCZ5fdxo, BxnR17qUfAb5BZCz, msEy13eRz66LPxW6)
-- NEVER add booking links to Standard or Premium SMS node
+- NEVER add booking links to any agent or workflow
 - NEVER run the agent simulator in this session — it will timeout
 - NEVER modify Railway env vars without explicit Dan instruction
 - NEVER touch Stripe
 - NEVER skip E2E before promoting to MASTER
+- NEVER remove the existing call_style_detector code node from either flow
 
 ---
 
 ## Stop Conditions — Pause and report to Dan when:
 
-- Any MASTER agent GET returns non-200
-- Retell API returns an unexpected schema on post_call_analysis_data PATCH
-- A TESTING flow GET shows the Extract/Code/SMS nodes are missing
-  (Dan needs to create them in the UI first — this is a mandatory UI step)
+- Any MASTER agent GET returns non-200 (⚠️ Premium MASTER already 404 — investigate first)
+- Retell API returns an unexpected schema on any PATCH
+- A TESTING flow GET shows the Extract/Code nodes are missing
+  (Dan needs to create them in the UI first — mandatory UI step)
 - A test call fires but hvac_call_log shows null in more than 3 call_analysis fields
 - E2E suite reports any failure after call processor changes
 - Any n8n workflow PUT returns non-200
@@ -140,60 +215,242 @@ After each step output: ✅ [step name] — [what was confirmed]
 
 ### PHASE 0 — Pre-flight
 
-1. Fetch Retell API key from syntharra_vault (service_name='Retell AI', key_type='api_key')
-2. GET both MASTER agents — confirm 200 and is_published=true
-3. GET both TESTING agents — confirm 200
-4. Read FAILURES.md — check for any Retell-area failures not yet in context
-5. Manually back up both MASTER agent JSONs:
-   - GET agent_4afbfdb3fcb1ba9569353af28d → push to retell-agents/hvac-standard-master-backup-[date].json
-   - GET agent_9822f440f5c3a13bc4d283ea90 → push to retell-agents/hvac-premium-master-backup-[date].json
-6. ✅ Pre-flight complete — both MASTER agents healthy, backups pushed
+1. Fetch Retell API key from syntharra_vault
+2. GET Standard MASTER — confirm 200 and is_published status
+3. GET Premium MASTER — check if still 404. If 404, log as critical blocker in
+   FAILURES.md and proceed with Premium TESTING only. Report to Dan.
+4. GET both TESTING agents — confirm 200
+5. Read FAILURES.md — check for any Retell-area failures not yet in context
+6. Back up both MASTER agent JSONs to retell-agents/ in GitHub
+   (if Premium MASTER is 404, back up whatever the API returns)
+7. Verify Supabase column types for hvac_call_log:
+   Run: SELECT column_name, data_type FROM information_schema.columns
+        WHERE table_name = 'hvac_call_log' ORDER BY ordinal_position;
+   Confirm: lead_score=integer, is_lead=boolean, retell_sentiment=text,
+   recording_url=text, from_number=text exist.
+
+✅ Pre-flight complete
 
 ### PHASE 1 — Sync TESTING agents to clean MASTER copies
 
-For each TESTING agent, fetch the corresponding MASTER agent config and PATCH the
-TESTING agent to match it exactly (name, voice_id, prompt, all settings).
-This ensures both TESTING agents are a known-good baseline before changes begin.
-
-PATCH Standard TESTING (agent_731f...) to mirror Standard MASTER config.
+For Standard TESTING: fetch Standard MASTER config and PATCH TESTING to match
+(name, voice_id, prompt, all settings).
 Set agent_name = "HVAC Standard (ENHANCEMENT TESTING)"
 Publish after PATCH.
 
-PATCH Premium TESTING (agent_2cffe...) to mirror Premium MASTER config.
+For Premium TESTING: if Premium MASTER is accessible, sync from it.
+If Premium MASTER is 404, keep Premium TESTING as-is (it already has 18 custom fields).
 Set agent_name = "HVAC Premium (ENHANCEMENT TESTING)"
 Publish after PATCH.
 
-Update docs/context/AGENTS.md with the new agent names.
-✅ Phase 1 complete — TESTING agents synced, named, published
+Update docs/context/AGENTS.md with new agent names.
+✅ Phase 1 complete
 
-### PHASE 2 — Configure post_call_analysis_data on both TESTING agents
+### PHASE 2 — Configure agent features via API on both TESTING agents
 
-PATCH both TESTING agents with the following post_call_analysis_data array.
-Set post_call_analysis_model = "gpt-4.1-mini"
-Publish both agents after PATCH.
+Apply ALL of the following via PATCH to BOTH TESTING agents.
+PATCH endpoint: https://api.retellai.com/update-agent/{agent_id}
+Publish both agents after all PATCHes.
 
-Fields to configure (apply identically to both agents):
+A) POST-CALL ANALYSIS DATA
+
+Standard TESTING currently has 3 system presets only.
+Premium TESTING already has 18 fields.
+
+Standard needs custom fields added to match Premium + our Supabase columns.
+PATCH Standard TESTING with the FULL post_call_analysis_data array:
 
 [
-  { type: "string",  name: "caller_name",         description: "Full name of the caller as stated during the call.", examples: ["John Smith", "Maria Garcia"], required: false },
-  { type: "string",  name: "caller_phone",         description: "Phone number the caller provided for callback. May differ from caller ID.", examples: ["+15551234567", "555-867-5309"], required: false },
-  { type: "string",  name: "caller_address",       description: "Full service address including street, city, state.", examples: ["123 Main St, Austin TX"], required: false },
-  { type: "string",  name: "service_requested",    description: "The specific HVAC service or problem described.", examples: ["AC not cooling", "furnace won't start", "annual tune-up"], required: false },
-  { type: "enum",    name: "job_type",              description: "Category of the job.", choices: ["repair","install","maintenance","quote","emergency","existing_customer","general_inquiry","other"], required: false },
-  { type: "enum",    name: "urgency",               description: "How urgently service is needed.", choices: ["emergency","urgent","routine","flexible"], required: false },
-  { type: "boolean", name: "is_lead",               description: "True if caller is a potential new customer requesting service.", required: false },
-  { type: "number",  name: "lead_score",            description: "Score 1-10. 9-10: emergency. 7-8: repair/install. 5-6: maintenance. 3-4: low intent. 1-2: spam/wrong number.", required: false },
-  { type: "enum",    name: "caller_sentiment",      description: "Overall emotional tone of the caller.", choices: ["positive","neutral","frustrated","distressed","angry"], required: false },
-  { type: "boolean", name: "transfer_attempted",    description: "True if agent attempted to transfer the call.", required: false },
-  { type: "boolean", name: "transfer_success",      description: "True if transfer was successfully connected.", required: false },
-  { type: "boolean", name: "vulnerable_occupant",   description: "True if caller mentioned elderly, children, medical equipment, or other vulnerable person affected.", required: false },
-  { type: "string",  name: "summary",               description: "2-3 sentence summary: what caller needed, what was captured, what the next step is.", required: false },
-  { type: "string",  name: "notes",                 description: "Additional details not captured elsewhere — equipment brand, access notes, preferred callback time.", required: false }
+  { "type": "system-presets", "name": "call_summary",
+    "description": "Write a 2-3 sentence summary: what caller needed, what was captured, what the next step is." },
+  { "type": "system-presets", "name": "call_successful",
+    "description": "True if agent completed the conversation naturally without errors or caller frustration." },
+  { "type": "system-presets", "name": "user_sentiment",
+    "description": "Evaluate caller sentiment and satisfaction." },
+  { "type": "string",  "name": "caller_name",
+    "description": "Full name of the caller as stated during the call. Empty string if not provided.",
+    "examples": ["John Smith", "Maria Garcia"] },
+  { "type": "string",  "name": "caller_phone",
+    "description": "Phone number the caller provided for callback. May differ from caller ID. Empty string if not provided.",
+    "examples": ["+15551234567", "555-867-5309"] },
+  { "type": "string",  "name": "caller_address",
+    "description": "Full service address including street, city, state. Empty string if not provided.",
+    "examples": ["123 Main St, Austin TX"] },
+  { "type": "string",  "name": "service_requested",
+    "description": "The specific HVAC service or problem described. Short description.",
+    "examples": ["AC not cooling", "furnace won't start", "annual tune-up"] },
+  { "type": "string",  "name": "call_type",
+    "description": "Type of call. One of: new_service, emergency, callback, existing_customer, general_question, spam, wrong_number." },
+  { "type": "string",  "name": "urgency",
+    "description": "Urgency level: emergency, high, medium, low." },
+  { "type": "boolean", "name": "is_hot_lead",
+    "description": "True if this is a hot lead — caller wants service soon and provided contact details." },
+  { "type": "number",  "name": "lead_score",
+    "description": "Score 1-10. 9-10: emergency needing immediate service. 7-8: active repair/install request. 5-6: maintenance/quote. 3-4: low intent. 1-2: spam/wrong number/robocall." },
+  { "type": "boolean", "name": "transfer_attempted",
+    "description": "True if agent attempted to transfer the call to a human." },
+  { "type": "boolean", "name": "transfer_success",
+    "description": "True if transfer was successfully connected. False if transfer failed." },
+  { "type": "boolean", "name": "vulnerable_occupant",
+    "description": "True if caller mentioned elderly, children, medical equipment, or other vulnerable person affected by the HVAC issue." },
+  { "type": "boolean", "name": "emergency",
+    "description": "True if this is a genuine HVAC emergency (no heat in winter, no AC with vulnerable occupant, gas smell, CO detector)." },
+  { "type": "string",  "name": "notification_type",
+    "description": "Notification priority routing. One of: emergency, hot_lead, general_lead, follow_up_required, existing_customer, spam, nonemergency_lead." },
+  { "type": "string",  "name": "notes",
+    "description": "Additional details not captured elsewhere — equipment brand, model, access notes, preferred callback time, anything relevant." }
 ]
 
-Verify: GET each TESTING agent after PATCH and confirm post_call_analysis_data is present
-and has 14 entries.
-✅ Phase 2 complete — post_call_analysis_data confirmed on both TESTING agents
+Set post_call_analysis_model = "gpt-4.1-mini" on both.
+
+For Premium TESTING: PATCH the SAME custom fields as above, PLUS keep its existing
+Premium-specific fields (booking_attempted, booking_success, appointment_date,
+appointment_time_window, job_type_booked, reschedule_or_cancel, caller_email).
+Merge, do not replace — the Premium array should be a superset of Standard.
+
+Verify: GET each agent, confirm custom fields present. Standard should have ~17 entries.
+Premium should have ~22 entries (Standard fields + Premium booking fields).
+
+
+B) GUARDRAILS — real-time content moderation + jailbreak detection
+
+PATCH both TESTING agents with:
+{
+  "guardrail_config": {
+    "output_topics": [
+      "harassment", "self_harm", "sexual_exploitation", "violence",
+      "child_safety_and_exploitation", "illicit_and_harmful_activity",
+      "regulated_professional_advice"
+    ],
+    "input_topics": [
+      "platform_integrity_jailbreaking"
+    ]
+  }
+}
+
+Note: gambling + defense_and_national_security omitted — irrelevant to HVAC.
+regulated_professional_advice included — agent must NOT give pricing or legal advice.
+Jailbreak detection blocks prompt injection attempts in real-time.
+Adds ~50ms latency — acceptable tradeoff.
+Our Daily Transcript Analysis workflow STAYS for post-hoc quality reporting.
+
+Verify: GET each agent, confirm guardrail_config field is present with correct topics.
+
+
+C) BOOST KEYWORDS — HVAC vocabulary for speech recognition
+
+PATCH both TESTING agents with:
+{
+  "boosted_keywords": [
+    "HVAC", "compressor", "condenser", "furnace", "AC", "air conditioning",
+    "Trane", "Lennox", "Carrier", "Rheem", "Goodman", "York", "Daikin",
+    "Amana", "Bryant", "American Standard", "Ruud", "Mitsubishi",
+    "R-410A", "R-22", "refrigerant", "Freon",
+    "mini split", "ductless", "heat pump", "air handler", "evaporator",
+    "thermostat", "Honeywell", "Nest", "Ecobee", "Trane XL",
+    "tonnage", "SEER", "SEER2", "BTU", "EER",
+    "ductwork", "capacitor", "blower motor", "drain line", "coil",
+    "tune up", "maintenance", "annual service",
+    "Syntharra", "callback"
+  ]
+}
+
+Verify: GET each agent, confirm boosted_keywords array populated.
+
+
+D) PRONUNCIATION DICTIONARY
+
+PATCH both TESTING agents with:
+{
+  "pronunciation_dictionary": [
+    { "word": "HVAC", "alphabet": "ipa", "phoneme": "eɪtʃ viː eɪ siː" },
+    { "word": "SEER", "alphabet": "ipa", "phoneme": "sɪr" },
+    { "word": "Trane", "alphabet": "ipa", "phoneme": "treɪn" },
+    { "word": "Rheem", "alphabet": "ipa", "phoneme": "riːm" },
+    { "word": "Daikin", "alphabet": "ipa", "phoneme": "daɪkɪn" },
+    { "word": "Lennox", "alphabet": "ipa", "phoneme": "lɛnəks" }
+  ]
+}
+
+
+E) BACKCHANNEL + REMINDERS
+
+PATCH both TESTING agents with:
+{
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.8,
+  "backchannel_words": ["yeah", "uh-huh", "got it", "okay", "right"],
+  "reminder_trigger_ms": 15000,
+  "reminder_max_count": 2
+}
+
+enable_backchannel: agent says "uh-huh" etc while caller talks — more natural.
+backchannel_frequency 0.8: fairly frequent but not every sentence.
+reminder_trigger_ms 15000: if caller goes silent for 15s, agent gives a gentle nudge.
+reminder_max_count 2: max 2 reminders before end_call_after_silence kicks in.
+
+
+F) VOICE & CONVERSATION TUNING
+
+PATCH both TESTING agents with:
+{
+  "responsiveness": 0.85,
+  "voice_speed": 1.05,
+  "end_call_after_silence_ms": 30000,
+  "max_call_duration_ms": 600000,
+  "normalize_for_speech": true,
+  "enable_dynamic_voice_speed": true,
+  "enable_dynamic_responsiveness": true
+}
+
+responsiveness 0.85: slightly faster response for direct trade callers.
+voice_speed 1.05: marginally brisker, professional not rushed.
+end_call_after_silence_ms 30000: auto-hangup after 30s dead air (saves billing).
+max_call_duration_ms 600000: hard cap at 10 minutes (prevents runaway calls).
+normalize_for_speech: improves how numbers and addresses are spoken aloud.
+Dynamic speed + responsiveness: agent matches caller's pace automatically.
+
+
+G) HANDBOOK CONFIG (Standard already has this, Premium doesn't)
+
+PATCH Premium TESTING agent only with:
+{
+  "handbook_config": {
+    "echo_verification": true,
+    "speech_normalization": false,
+    "default_personality": false,
+    "scope_boundaries": true,
+    "natural_filler_words": true,
+    "nato_phonetic_alphabet": true,
+    "high_empathy": true,
+    "ai_disclosure": false,
+    "smart_matching": true
+  }
+}
+
+echo_verification: agent confirms back what it heard (critical for addresses/names).
+scope_boundaries: agent stays in HVAC scope, won't answer unrelated questions.
+nato_phonetic_alphabet: spells back names/codes clearly.
+high_empathy: appropriate for stressed callers with HVAC emergencies.
+ai_disclosure: off — agent does not proactively say it's AI.
+
+
+H) WEBHOOK EVENTS FILTER
+
+PATCH Premium TESTING agent with:
+{
+  "webhook_events": ["call_analyzed"]
+}
+
+Standard already has this. Premium was getting all events (call_started, call_ended,
+transcript_updated, etc) — wasteful. We only need call_analyzed for our processing.
+
+
+After ALL PATCHes: Publish both TESTING agents.
+Verify: GET each agent, check every field from A-H is correctly set.
+
+✅ Phase 2 complete — all agent features configured
+
 
 ### PHASE 3 — UI steps required from Dan (pause here)
 
@@ -211,8 +468,9 @@ Standard TESTING flow (conversation_flow_5b98b76c8ff4):
    Configure to extract: caller_name, caller_phone, caller_address, service_requested
 3. Add a "Code" node — name it: validate_phone
    Place it between: extract_lead_data → validate_phone → Ending
+   ⚠️ Do NOT remove the existing call_style_detector code node — it stays.
    Paste this JavaScript into the code editor:
-   
+
    const raw = dv.caller_phone || "";
    const digits = raw.replace(/\D/g, "");
    let phone_normalized = raw, phone_valid = false, phone_flag = "";
@@ -221,19 +479,12 @@ Standard TESTING flow (conversation_flow_5b98b76c8ff4):
    else if (digits.length < 7) { phone_flag = "incomplete_number"; }
    else { phone_flag = "unusual_format"; phone_valid = true; }
    return { phone_normalized, phone_valid, phone_flag };
-   
+
    Store response variables: phone_normalized, phone_valid, phone_flag
 
 Premium TESTING flow (conversation_flow_2ded0ed4f808):
 Same Extract Dynamic Variable and Code node — identical config.
-Additionally:
-4. Check if +18129944371 has SMS enabled (Claude Code will check this via API)
-   If yes: Add an "SMS" node — name it: send_confirmation_sms
-   Place it: after validate_phone, before Ending
-   SMS type: Static
-   Message: "Thanks for calling {{company_name}}. We've got your details and our
-   team will be in touch shortly. — {{agent_name}}"
-   Destination: caller's number (default)
+⚠️ Do NOT remove the existing call_style_detector code node — it stays here too.
 
 Tell Claude Code when UI steps are done and which nodes were successfully added.
 
@@ -242,142 +493,286 @@ Tell Claude Code when UI steps are done and which nodes were successfully added.
 After Dan confirms: verify all nodes exist via GET on each flow.
 ✅ Phase 3 complete — all UI nodes confirmed present in both flows
 
-### PHASE 4 — Check SMS eligibility
 
-Before Dan adds the SMS node to Premium flow:
-GET https://api.retellai.com/get-phone-number/+18129944371
-Check sms_enabled field.
-If false: log as blocked, skip SMS node, note in TASKS.md. Move on.
-If true: confirm to Dan that SMS node can be added.
-✅ Phase 4 complete — SMS eligibility confirmed [enabled/blocked]
+### PHASE 4 — Configure fallback numbers, geo restrictions, fraud protection
+
+Configure safety features on phone number +18129944371:
+
+First, look up the client's lead_phone from hvac_standard_agent:
+  SELECT lead_phone FROM hvac_standard_agent
+  WHERE agent_id = 'agent_4afbfdb3fcb1ba9569353af28d';
+
+If lead_phone exists, use it as fallback. If null, use +18563630633 (transfer dest).
+
+PATCH https://api.retellai.com/update-phone-number/+18129944371 with:
+{
+  "fallback_number": "<lead_phone or +18563630633>",
+  "allowed_inbound_country_list": ["US"],
+  "allowed_outbound_country_list": ["US"]
+}
+
+This configures:
+- Fallback: if outage mode toggled, inbound routes to client's office number
+- Geo restriction: only US callers (prevents IRSF fraud)
+- Outbound locked to US
+
+Do NOT enable outage mode — just configure so it's ready.
+Dan can toggle from Retell dashboard (Settings > Reliability) when needed.
+
+NOTE FOR ONBOARDING WORKFLOWS: After this sprint, update BOTH onboarding workflows
+(4Hx7aRdzMl5N0uJP Standard, kz1VmwNccunRMEaF Premium) to set fallback_number
+to lead_phone whenever a new client phone number is provisioned. Add to TASKS.md.
+
+Verify: GET phone number, confirm fallback_number and country lists set.
+
+✅ Phase 4A complete
+
+
+### PHASE 4B — Dan dashboard tasks (alerting + analytics charts)
+
+Present to Dan as a task list — these are DASHBOARD-ONLY:
+
+RETELL ALERTING (Settings > Alerting tab) — create 5 rules:
+
+1. "Call Volume Spike"
+   Metric: Call Count | Relative > 200% vs previous | Window: 1 hour | Freq: 5 min
+   Notify: alerts@syntharra.com
+
+2. "Transfer Failures"
+   Metric: Transfer Call Failure Count | Absolute > 3 | Window: 1 hour | Freq: 5 min
+   Notify: alerts@syntharra.com
+
+3. "Daily Cost Cap"
+   Metric: Total Call Cost | Absolute > $50 | Window: 24 hours | Freq: 1 hour
+   Notify: alerts@syntharra.com
+
+4. "Negative Sentiment"
+   Metric: Negative Sentiment Rate | Absolute > 30% | Window: 12 hours | Freq: 1 hour
+   Notify: alerts@syntharra.com
+
+5. "API Errors"
+   Metric: API Error Count | Absolute > 5 | Window: 1 hour | Freq: 5 min
+   Notify: alerts@syntharra.com
+
+RETELL GUARDRAILS (Agent > Security & Fallback — EACH agent):
+If guardrail_config PATCH in Phase 2 didn't work, Dan must enable guardrails
+manually in the dashboard for both TESTING agents:
+- Output: harassment, self_harm, sexual_exploitation, violence,
+  child_safety, illicit_activity, regulated_professional_advice → all ON
+- Input: jailbreaking → ON
+
+RETELL ANALYTICS (Analytics tab) — create 5 charts:
+1. Lead Score Distribution (donut, post_call field: lead_score)
+2. Daily Call Volume (line chart)
+3. Urgency Breakdown (donut, post_call field: urgency)
+4. Caller Sentiment Trend (line, system preset: user_sentiment)
+5. Is Hot Lead Rate (number, post_call field: is_hot_lead)
+
+After creation: syntharra-ops-monitor Railway service can remain PAUSED permanently.
+
+✅ Phase 4B complete
+
 
 ### PHASE 5 — Simplify n8n call processors
 
 For Standard call processor (Kg576YtPM9yEacKn):
 1. GET the workflow via n8n API
 2. Identify and remove: OpenAI/GPT HTTP node, JSON parse/flatten nodes
-3. In the Supabase INSERT node, update field mapping to read from
-   {{ $json.call_analysis.* }} instead of GPT response fields:
-   
-   call_id           → {{ $json.call_id }}
-   agent_id          → {{ $json.agent_id }}
-   company_name      → [from Supabase client lookup by agent_id — already in workflow]
-   caller_name       → {{ $json.call_analysis.caller_name }}
-   caller_phone      → {{ $json.call_analysis.caller_phone }}
-   caller_address    → {{ $json.call_analysis.caller_address }}
-   service_requested → {{ $json.call_analysis.service_requested }}
-   job_type          → {{ $json.call_analysis.job_type }}
-   urgency           → {{ $json.call_analysis.urgency }}
-   is_lead           → {{ $json.call_analysis.is_lead }}
-   lead_score        → {{ $json.call_analysis.lead_score }}
-   caller_sentiment  → {{ $json.call_analysis.caller_sentiment }}
-   transfer_attempted→ {{ $json.call_analysis.transfer_attempted }}
-   transfer_success  → {{ $json.call_analysis.transfer_success }}
-   vulnerable_occupant→{{ $json.call_analysis.vulnerable_occupant }}
-   summary           → {{ $json.call_analysis.summary }}
-   notes             → {{ $json.call_analysis.notes }}
-   call_tier         → "Standard"
-   duration_seconds  → {{ Math.round($json.duration_ms / 1000) }}
-   geocode_status    → [populated by geocoding node downstream — leave as-is]
-   geocode_formatted → [populated by geocoding node downstream — leave as-is]
-   
-4. Keep untouched: Supabase client lookup, geocoding node, HubSpot note, email node
+3. In the Supabase INSERT node, update field mapping.
+
+The webhook fires event "call_analyzed" with this structure:
+{
+  "event": "call_analyzed",
+  "call": {
+    "call_id": "...",
+    "call_type": "phone_call",
+    "agent_id": "...",
+    "agent_version": 10,
+    "from_number": "+15551234567",      ← only on phone calls
+    "to_number": "+18129944371",        ← only on phone calls
+    "direction": "inbound",             ← only on phone calls
+    "disconnection_reason": "user_hangup",
+    "duration_ms": 95000,
+    "recording_url": "https://...",
+    "public_log_url": "https://...",
+    "transcript": "...",
+    "call_analysis": {
+      "in_voicemail": false,
+      "call_summary": "...",            ← system preset
+      "user_sentiment": "Neutral",      ← system preset (capitalised text)
+      "call_successful": true,          ← system preset
+      "custom_analysis_data": {
+        "caller_name": "John Smith",    ← our custom fields
+        "caller_phone": "+15551234567",
+        "caller_address": "123 Main St",
+        "service_requested": "AC not cooling",
+        "call_type": "new_service",
+        "urgency": "high",
+        "is_hot_lead": true,
+        "lead_score": 8,
+        "transfer_attempted": false,
+        "transfer_success": false,
+        "vulnerable_occupant": false,
+        "emergency": false,
+        "notification_type": "hot_lead",
+        "notes": "Trane unit, 5 years old"
+      }
+    },
+    "call_cost": {
+      "total_duration_unit_price": 0.20,
+      "product_costs": [...]
+    },
+    "latency": {
+      "e2e": { "p50": 1098, ... },
+      "llm": { "p50": 646, ... }
+    },
+    "collected_dynamic_variables": { "current_node": "Ending", ... }
+  }
+}
+
+FIELD MAPPING — Supabase INSERT for hvac_call_log:
+
+call_id              → {{ $json.call.call_id }}
+agent_id             → {{ $json.call.agent_id }}
+company_name         → [from Supabase client lookup by agent_id — KEEP EXISTING NODE]
+caller_name          → {{ $json.call.call_analysis.custom_analysis_data.caller_name }}
+caller_phone         → {{ $json.call.call_analysis.custom_analysis_data.caller_phone }}
+caller_address       → {{ $json.call.call_analysis.custom_analysis_data.caller_address }}
+service_requested    → {{ $json.call.call_analysis.custom_analysis_data.service_requested }}
+job_type             → [keep from existing logic or derive from call_type]
+urgency              → {{ $json.call.call_analysis.custom_analysis_data.urgency }}
+is_lead              → {{ $json.call.call_analysis.custom_analysis_data.is_hot_lead }}
+lead_score           → {{ $json.call.call_analysis.custom_analysis_data.lead_score }}
+retell_sentiment     → {{ $json.call.call_analysis.user_sentiment }}
+                        ⚠️ Map to retell_sentiment column (TEXT), NOT caller_sentiment (INTEGER)
+transfer_attempted   → {{ $json.call.call_analysis.custom_analysis_data.transfer_attempted }}
+transfer_success     → {{ $json.call.call_analysis.custom_analysis_data.transfer_success }}
+vulnerable_occupant  → {{ $json.call.call_analysis.custom_analysis_data.vulnerable_occupant }}
+summary              → {{ $json.call.call_analysis.call_summary }}
+retell_summary       → {{ $json.call.call_analysis.call_summary }}
+notes                → {{ $json.call.call_analysis.custom_analysis_data.notes }}
+call_tier            → "Standard"
+duration_seconds     → {{ Math.round($json.call.duration_ms / 1000) }}
+recording_url        → {{ $json.call.recording_url }}
+public_log_url       → {{ $json.call.public_log_url }}
+from_number          → {{ $json.call.from_number }}
+call_type            → {{ $json.call.call_analysis.custom_analysis_data.call_type }}
+is_hot_lead          → {{ $json.call.call_analysis.custom_analysis_data.is_hot_lead }}
+call_successful      → {{ $json.call.call_analysis.call_successful }}
+notification_type    → {{ $json.call.call_analysis.custom_analysis_data.notification_type }}
+emergency            → {{ $json.call.call_analysis.custom_analysis_data.emergency }}
+disconnection_reason → {{ $json.call.disconnection_reason }}  [NEW — add to INSERT]
+latency_p50_ms       → {{ $json.call.latency?.e2e?.p50 }}
+call_cost_cents      → {{ Math.round(($json.call.call_cost?.total_duration_unit_price || 0) * $json.call.duration_ms / 60000 * 100) }}
+transcript           → {{ $json.call.transcript }}
+geocode_status       → [populated by geocoding node downstream — KEEP AS-IS]
+geocode_formatted    → [populated by geocoding node downstream — KEEP AS-IS]
+
+4. Keep untouched: Supabase client lookup, geocoding node, HubSpot note, email node,
+   Slack notification node
 5. PUT updated workflow — Publish
 
 Repeat for Premium call processor (STQ4Gt3rH8ptlvMi):
-Same removals and same field mapping. call_tier = "Premium".
-Preserve all Premium-specific nodes (dispatcher trigger, OAuth handling).
+Same field mapping. call_tier = "Premium".
+ADDITIONALLY map Premium-specific fields:
+booking_attempted    → {{ $json.call.call_analysis.custom_analysis_data.booking_attempted }}
+booking_success      → {{ $json.call.call_analysis.custom_analysis_data.booking_success }}
+appointment_date     → {{ $json.call.call_analysis.custom_analysis_data.appointment_date }}
+appointment_time     → {{ $json.call.call_analysis.custom_analysis_data.appointment_time_window }}
+job_type_booked      → {{ $json.call.call_analysis.custom_analysis_data.job_type_booked }}
+booking_reference    → [from dispatcher workflow if booking was created — KEEP AS-IS]
 
-Important note on SMS node + dispatcher interaction:
-The SMS confirmation node fires AFTER lead data is captured (end of call flow).
-The Premium dispatcher (73Y0MHVBu05bIm5p) fires from the post-call webhook when
-a booking action was triggered mid-call. These are sequential and independent —
-the SMS fires during the call, the dispatcher fires after it ends via webhook.
-There is no conflict. Do NOT modify the dispatcher workflow (73Y0MHVBu05bIm5p).
+Preserve all Premium-specific nodes (dispatcher trigger, OAuth handling).
 
 ✅ Phase 5 complete — both processors updated, GPT nodes removed, published
 
+
 ### PHASE 6 — Verification test calls
 
-Trigger a test call on Standard TESTING agent (agent_731f...).
-Wait for webhook to fire.
-Query hvac_call_log for the test record (filter by agent_id = Standard TESTING).
+Trigger a test call on Standard TESTING agent.
+Wait for call_analyzed webhook to fire.
+Query hvac_call_log for the test record.
+
 Confirm:
-- call_analysis fields are populated (not null) for at least 8 of 14 fields
-- duration_seconds populated
-- geocode ran on caller_address if address was given
+- call_analysis custom fields are populated (not null) for at least 10 of 17 fields
+- duration_seconds populated and > 0
+- recording_url is not null and starts with "https://"
+- retell_sentiment is not null and is a text string (e.g. "Neutral")
+- call_successful is boolean, not null
+- call_type is one of our defined values
+- lead_score is an integer
+- notification_type is not null
+- geocode ran if address was provided
 - HubSpot note was logged (check n8n execution log)
 - Client email did not fire (TESTING agent has no real client email)
+- latency_p50_ms populated
+- from_number populated (only if phone call — will be null for web call test)
 
-If any field mapping is null across all 14 fields: stop and report — Phase 5 mapping
-may have a path error. Do NOT proceed to Premium test call until Standard is confirmed.
+If any critical field is null when it shouldn't be, check the webhook payload
+structure by inspecting the n8n execution log raw input. The JSON path might be
+different — adjust the field mapping and re-test.
 
 Repeat for Premium TESTING agent.
 
-Additional downstream verification after both test calls:
-
-1. Weekly Lead Report (iLPb6ByiytisqUJC) — manually trigger for the test client.
-   Confirm it renders correctly with the new field data. Key fields to check:
-   is_lead, lead_score, caller_name, service_requested. If report is blank or broken,
-   the field format from call_analysis may differ — stop and report.
-
-2. Monthly Minutes Calculator (z1DNTjvTDAkExsX8) — check that duration_seconds is
-   correctly populated in hvac_call_log for both test calls. This field drives billing.
-   A null or zero value here is a critical failure — stop and report immediately.
-
-3. Weekly Health Score Calculator (ALFSzzp3htAEjwkJ) — no action needed during this
-   sprint. Runs weekly. Verify it does not error on next run after go-live by checking
-   n8n execution logs the following week.
-
-4. Daily Transcript Analysis (ofoXmXwjW9WwGvL6) — this workflow currently re-analyses
-   transcripts from hvac_call_log with Groq for quality issues and jailbreak detection.
-   It is NOT being retired in this sprint — it reads the raw transcript field which is
-   still present in the Retell webhook payload. Confirm transcript field is still being
-   written to hvac_call_log. No changes needed to this workflow.
-
-5. Slack lead notification — both call processors have a pending Slack notification
-   to #calls when lead_score ≥ 7. This trigger reads lead_score from the Supabase row.
-   Confirm the lead_score field is populated correctly in the test call row. If Slack
-   notifications are already wired in at this point, confirm they fire on the test call.
+Downstream verification:
+1. Weekly Lead Report (iLPb6ByiytisqUJC) — manually trigger. Verify it renders
+   with the new data. lead_score is now integer (was sometimes string) — confirm.
+2. Monthly Minutes Calculator (z1DNTjvTDAkExsX8) — confirm duration_seconds populated.
+3. Daily Transcript Analysis (ofoXmXwjW9WwGvL6) — confirm transcript field still written.
+4. Slack notification — if wired, confirm fires on lead_score >= 7 test call.
 
 ✅ Phase 6 complete — both test calls verified, all downstream workflows confirmed
 
+
 ### PHASE 7 — Re-run E2E tests
 
-Run Standard E2E:
-python3 shared/e2e-test.py
+Update E2E test assertions BEFORE running:
+1. lead_score: accept integer (was sometimes string from GPT)
+2. is_lead: accept boolean (was sometimes string)
+3. Add assertions for new fields: recording_url not null, retell_sentiment not null,
+   call_type in defined values, notification_type not null, is_hot_lead boolean
+4. Remove GPT-specific response format assertions
+5. Add guardrail check: GET agent, confirm guardrail_config present
 
-Review results. Any failures:
-- If failure is a field assertion: update the assertion to match new Retell field format
-- If failure is agent behaviour: stop and report — do not patch MASTER
-- Re-run until green
-
-Run Premium E2E only after Standard is green:
-python3 shared/e2e-test-premium.py
+Run Standard E2E: python3 shared/e2e-test.py
+Run Premium E2E: python3 shared/e2e-test-premium.py
 
 Both must be green before Phase 8.
 ✅ Phase 7 complete — Standard E2E: [X/X] ✅ | Premium E2E: [X/X] ✅
+
 
 ### PHASE 8 — Promote to MASTER (requires Dan go-ahead)
 
 Stop here. Present Dan with:
 - Phase 7 E2E results
-- Sample of 3 hvac_call_log rows from test calls showing field quality
-- Confirmation that both TESTING agents are working correctly
+- Sample hvac_call_log rows from test calls showing field quality
+- Confirmation both TESTING agents are working correctly
 
-Wait for explicit Dan approval before continuing.
+Wait for explicit Dan approval.
 
-After Dan approval:
-1. PATCH Standard MASTER with post_call_analysis_data (same 14 fields, same model)
-   Publish Standard MASTER
-2. Dan adds Extract Dynamic Variable + Code nodes to Standard MASTER flow in UI
-3. PATCH Premium MASTER with post_call_analysis_data
-   Publish Premium MASTER
-4. Dan adds Extract Dynamic Variable + Code + SMS nodes to Premium MASTER flow in UI
-5. Confirm both MASTER agents publish successfully
-6. Confirm n8n processors are already live (they are not agent-specific — already updated)
+After approval:
 
-✅ Phase 8 complete — both MASTER agents updated and published
+STANDARD MASTER:
+1. PATCH Standard MASTER with all Phase 2 config (post_call_analysis_data, guardrails,
+   boost keywords, pronunciation, backchannel, reminders, tuning, handbook)
+2. Publish via API
+3. Dan publishes via "Deployment" button in dashboard to create versioned snapshot
+4. Pin phone number to the new version number
+5. Dan adds Extract Dynamic Variable + Code nodes to Standard MASTER flow in UI
+
+PREMIUM MASTER:
+- Premium MASTER has not been published before. First publish will make it accessible.
+- PATCH Premium MASTER with all Phase 2 config
+- Publish via API, then Dan publishes via Deployment button
+- Dan adds Extract Dynamic Variable + Code nodes to Premium MASTER flow in UI
+
+6. Dan adds Extract Dynamic Variable + Code nodes to Premium MASTER flow in UI
+7. Confirm both MASTER agents published successfully
+8. n8n processors are already live (not agent-specific — already updated in Phase 5)
+
+Document version numbers in docs/context/AGENTS.md.
+✅ Phase 8 complete
+
 
 ---
 
@@ -386,19 +781,42 @@ After Dan approval:
 Before ending:
 1. Append any new failures/fixes to docs/FAILURES.md
 2. Update syntharra-retell-SKILL.md with:
-   - post_call_analysis_data pattern and field list
-   - Confirmed: Extract/Code/SMS nodes require UI creation (cannot create via API)
-   - New field mapping pattern for n8n call processors
-3. Update docs/TASKS.md — mark completed phases, note any blocked items
-4. Update docs/context/AGENTS.md with final agent names and node info
-5. Push session log to docs/session-logs/YYYY-MM-DD-retell-enhancement-sprint.md
-6. Confirm all changes pushed to GitHub — never end session with unpushed work
+   - post_call_analysis_data pattern and full field list
+   - Guardrail configuration (guardrail_config with output_topics and input_topics)
+   - Boost keywords pattern and HVAC vocabulary list
+   - Pronunciation dictionary pattern
+   - Backchannel + reminder configuration
+   - Responsiveness/voice_speed/silence_timeout settings
+   - Fallback number configuration (default to lead_phone)
+   - Versioning workflow (Deployment button → version pin → rollback)
+   - Correct PATCH endpoint: /update-agent/ (no /v2/)
+   - Correct list calls endpoint: /v2/list-calls (HAS /v2/)
+   - Webhook payload structure with correct JSON paths
+   - Note: custom_analysis_data is nested inside call_analysis
+   - Note: user_sentiment maps to retell_sentiment column (text, not integer)
+   - Note: guardrails add ~50ms latency
+   - Note: existing call_style_detector code node must NOT be removed
+3. Update docs/ARCHITECTURE.md with decisions:
+   - Retell guardrails for live protection + Groq for post-hoc quality
+   - Retell alerting replaces syntharra-ops-monitor for call monitoring
+   - Retell versioning is primary rollback, GitHub JSON is secondary
+   - recording_url stored in Supabase but Retell holds recordings indefinitely
+   - Sentiment: retell_sentiment (text) is canonical; caller_sentiment (integer) is deprecated
+   - Fallback number defaults to lead_phone from hvac_standard_agent
+   - Onboarding workflows must set fallback_number on new client phone numbers
+4. Update docs/TASKS.md with:
+   - Onboarding workflow update: set fallback_number = lead_phone on phone provision
+   - Telnyx SMS integration: post-call confirmation SMS via n8n once Telnyx approved
+   - Inbound webhook for caller context injection (FUTURE SPRINT)
+   - Two-way SMS evaluation: Retell native vs Telnyx (DECISION NEEDED)
+   - Retell HubSpot native integration evaluation (FUTURE)
+   - A/B testing for prompt/voice variants (POST-LAUNCH)
+5. Update docs/REFERENCE.md if agent versions changed
+6. Update docs/context/AGENTS.md with final agent config
+7. Update docs/context/SUPABASE.md — document ALL 47 columns of hvac_call_log
+8. Push session log to docs/session-logs/
+9. Back up any changed Retell agents to retell-agents/
+10. Confirm ALL changes pushed to GitHub
 
-Session log must include mandatory reflection:
-1. What did I get wrong or do inefficiently, and why?
-2. What assumption did I make that turned out to be incorrect?
-3. What would I do differently if this exact task came up again?
-4. What pattern emerged that future-me needs to know?
-5. What was added to skill files / ARCHITECTURE.md and what was the specific lesson?
-6. Did I do anything "because that's how it's done" that I haven't verified?
+Session log must include mandatory reflection (1-6 from CLAUDE.md rules).
 ```
