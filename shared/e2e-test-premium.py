@@ -311,20 +311,52 @@ if agent_id:
         "call": {
             "call_id":          fake_call_id,
             "agent_id":         agent_id,
-            "call_status":      "ended",
+            "call_type":        "phone_call",
             "from_number":      "+16316330721",
             "to_number":        "+15125550288",
+            "direction":        "inbound",
+            "duration_ms":      150000,
             "start_timestamp":  int(time.time() * 1000) - 150000,
             "end_timestamp":    int(time.time() * 1000),
             "disconnection_reason": "user_hangup",
+            "recording_url":    "https://retell-utils-public.s3.us-west-2.amazonaws.com/test_recording.wav",
+            "public_log_url":   "https://beta.retellai.com/call-details/test_" + fake_call_id,
             "call_analysis": {
+                "call_summary":     "Caller Maria Rodriguez reported AC unit stopped cooling. Agent booked same-day 10am AC repair at 1200 Main Street Dallas TX. Confirmation email to be sent.",
+                "call_successful":  True,
+                "user_sentiment":   "Positive",
+                "in_voicemail":     False,
                 "custom_analysis_data": {
-                    "booking_attempted": True,
-                    "booking_success":   True,
-                    "appointment_date":  "2026-04-10",
-                    "appointment_time":  "10:00 AM",
-                    "job_type_booked":   "AC Repair"
+                    "caller_name":          "Maria Rodriguez",
+                    "caller_phone":         "+16316330721",
+                    "caller_address":       "1200 Main Street, Dallas, Texas",
+                    "service_requested":    "AC not cooling",
+                    "call_type":            "new_service",
+                    "urgency":              "high",
+                    "is_hot_lead":          True,
+                    "lead_score":           9,
+                    "transfer_attempted":   False,
+                    "transfer_success":     False,
+                    "vulnerable_occupant":  False,
+                    "emergency":            False,
+                    "notification_type":    "hot_lead",
+                    "job_type":             "repair",
+                    "language":             "en",
+                    "booking_attempted":    True,
+                    "booking_success":      True,
+                    "appointment_date":     "2026-04-10",
+                    "appointment_time_window": "10:00 AM",
+                    "job_type_booked":      "AC Repair",
+                    "notes":                "AC unit stopped cooling last night, same-day appointment booked"
                 }
+            },
+            "call_cost": {
+                "total_duration_unit_price": 0.14,
+                "product_costs": []
+            },
+            "latency": {
+                "e2e": {"p50": 1050, "p90": 1400, "p95": 1700, "p99": 2200, "max": 2800, "min": 750, "num": 15},
+                "llm": {"p50": 600, "p90": 850, "p95": 1000, "p99": 1400, "max": 1800, "min": 350, "num": 15}
             },
             "transcript": (
                 f"Agent: FrostKing HVAC, this is {TEST_AGENT} speaking, how may I assist you? "
@@ -348,8 +380,8 @@ if agent_id:
     # retell-hvac-premium-webhook → workflow STQ4Gt3rH8ptlvMi
     s, _ = http("https://n8n.syntharra.com/webhook/retell-hvac-premium-webhook", "POST", fake_call)
     check("Premium call processor webhook accepted", s == 200, f"HTTP {s}")
-    print("  Waiting for Groq analysis (polling up to 30s)...")
-    time.sleep(15)
+    print("  Waiting for call processor (polling up to 20s)...")
+    time.sleep(10)  # Retell post-call analysis already done — just need n8n processing
 
     rows = sb(f"hvac_call_log?call_id=eq.{fake_call_id}&select=*")
     call = rows[0] if rows else {}
@@ -362,6 +394,27 @@ if agent_id:
     check("summary populated",                bool(call.get('summary')),                           (call.get('summary') or '')[:60])
     check("company_name in log",              call.get('company_name') == TEST_COMPANY,            call.get('company_name'))
     check("call_tier = Premium",              call.get('call_tier') == 'Premium',                  call.get('call_tier'))
+
+    # Phase 5 — new Retell-native field assertions
+    check("retell_sentiment populated",      bool(call.get('retell_sentiment')),                   call.get('retell_sentiment'))
+    check("retell_summary populated",        bool(call.get('retell_summary')),                     (call.get('retell_summary') or '')[:60])
+    check("call_successful is boolean",      call.get('call_successful') in [True, False],         str(call.get('call_successful')))
+    check("urgency populated",              call.get('urgency') in ['emergency','high','medium','low'], call.get('urgency'))
+    check("call_type populated",            call.get('call_type') in ['new_service','emergency','callback','existing_customer','general_question','spam','wrong_number'], call.get('call_type'))
+    check("notification_type populated",    bool(call.get('notification_type')),                   call.get('notification_type'))
+    check("job_type populated",             bool(call.get('job_type')),                            call.get('job_type'))
+    check("is_hot_lead is boolean",         call.get('is_hot_lead') in [True, False],              str(call.get('is_hot_lead')))
+    check("language populated",             bool(call.get('language')),                             call.get('language'))
+    check("duration_seconds > 0",           (call.get('duration_seconds') or 0) > 0,               f"{call.get('duration_seconds')}s")
+    check("recording_url populated",        bool(call.get('recording_url')),                       (call.get('recording_url') or '')[:60])
+    check("latency_p50_ms populated",       call.get('latency_p50_ms') is not None,                str(call.get('latency_p50_ms')))
+    check("call_cost_cents populated",      (call.get('call_cost_cents') or 0) > 0,                f"{call.get('call_cost_cents')} cents")
+    check("caller_address captured",        bool(call.get('caller_address')),                      call.get('caller_address'))
+    check("notes populated",               bool(call.get('notes')),                                (call.get('notes') or '')[:60])
+
+    # Premium-specific booking assertions
+    check("booking_attempted = True",       call.get('booking_attempted') == True)
+    check("booking_success = True",         call.get('booking_success') == True)
 
     # Dedup check
     http("https://n8n.syntharra.com/webhook/retell-hvac-premium-webhook", "POST", fake_call)
