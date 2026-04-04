@@ -438,3 +438,106 @@ if (isTest) return [{ json: { ...d, _email_suppressed: true } }];
 3. After fixing n8n workflows → check the execution detail in the API, not just the HTTP 200 from the PUT
 4. After claiming "all fixed" → run the E2E test AND check all side effects (emails, Slack, HubSpot)
 
+
+
+---
+
+## 2026-04-04 — Pipeline Audit & Test Hygiene Session
+
+### Decision: Universal timestamp suppression pattern for test emails
+**Problem:** Named test company patterns (Polar Peak, FrostKing etc.) required manual updates
+every time a new test name was used. Inevitably fell out of sync — causing real test emails
+to reach the developer's inbox and creating confusion about pipeline state.
+
+**Decision:** Replace specific named patterns with a universal catch-all:
+`/\d{9,10}$/` — matches any company name ending in a Unix timestamp.
+All E2E test runs append `int(time.time())` to the company name, so this catches every test
+automatically regardless of what name was chosen.
+
+Named patterns kept as belt-and-braces but the timestamp pattern is the primary gate.
+
+**What was rejected:** Relying on named patterns only — maintenance burden is too high and
+the cost of a gap (developer receives client-style emails during every test) is real confusion.
+
+---
+
+### Decision: Jotform field audit protocol — mandatory before any pipeline work
+**Problem:** 4 live Jotform questions (q68, q69, q72, q73) were silently ignored by the
+Parse JotForm Data node. They had been added to the form after the node was last written.
+No error was thrown — data simply wasn't captured.
+
+**Root causes:**
+1. No audit protocol — no one compared form vs node after adding questions
+2. q38 (custom greeting) was removed from the form but the node still read it — dead field
+3. q73 (replacement for q38) was on the form but not read by the node
+
+**Decision:** Establish hard rule: any Jotform question addition must update Parse JotForm Data
+in the same session. Document the full field map in the e2e-hvac-standard skill so there's
+always a single source of truth to audit against.
+
+---
+
+### Decision: Transfer number priority — q69 gate is authoritative
+**Problem:** Transfer number logic was written without the q69 gate, so emergency_phone was
+always overriding transfer_phone regardless of client intent.
+
+**Correct spec (now live):**
+```
+rawTransferPhone = (q69 == "Yes - dedicated emergency line" && emergencyPhone)
+                   ? emergencyPhone
+                   : (transferPhone || leadPhone)
+```
+
+**Why this matters:** transfer_phone (q48) is the client's standard company number — what
+their customers call. emergency_phone (q21) is only relevant when the client has a separate
+24/7 emergency line and explicitly opts in via q69. Conflating them routes non-emergency calls
+to an after-hours line, which is incorrect behaviour.
+
+**What was rejected:** Using emergency_phone as the default override (original incorrect logic).
+
+---
+
+### Decision: Jotform Webhook Backup Polling — keep but gate on Stripe
+**Problem:** Backup poller was firing the onboarding webhook for test submissions, creating
+hundreds of "HVAC Company" junk rows every few seconds.
+
+**Root cause analysis:**
+- The poller compared Jotform submissions against Supabase by email
+- Test submissions used `daniel@syntharra.com` — not in Supabase post-cleanup
+- Poller treated them as unmatched real clients and re-fired the onboarding webhook
+- Onboarding workflow was active, so it processed every one
+
+**Decision:** Keep the poller — silent missed submissions post-launch are a serious risk.
+But add Stripe payment gate: only flag as missing if there's a matching Stripe payment.
+No Stripe payment = not a real client = ignore.
+
+**What was rejected:** Deleting the poller. The safety value outweighs the complexity.
+
+---
+
+### Lesson: Test pollution compounds into false debugging signals
+**Root cause of entire session complexity:**
+When test runs leave artifacts (junk Supabase rows, in-flight executions, stale Retell agents)
+and email suppression isn't airtight, every subsequent session starts with noise that looks
+like real bugs. This session spent significant time debugging things that were actually just
+test pollution — stale Polar Peak emails, HVAC Company rows, 401s from a wrong Retell key
+in the test env var.
+
+**Pattern to enforce going forward:**
+1. Test data must be fully generic — no real company branding anywhere
+2. Suppression gates must be maintained in sync with test names
+3. The E2E test is the source of truth for pipeline state — if it says 90/90, the pipeline is good
+4. Emails in your inbox during testing are suppression gate failures, not pipeline failures
+
+---
+
+### Lesson: Read the existing code comment before changing logic
+The original Build Retell Prompt code had a comment:
+`// Transfer number: use lead_phone by default, emergency_phone as override`
+
+This was partially correct but missed q49 (transfer_phone). The correct comment and logic
+was adjacent in the Jotform field list but not connected to the code. Two incorrect fixes
+were applied before the q69 gate was found and the correct spec established.
+
+**Rule:** Before changing any prioritisation or fallback logic, find all the related Jotform
+questions first. The form is the spec — the code should implement it, not the other way around.
