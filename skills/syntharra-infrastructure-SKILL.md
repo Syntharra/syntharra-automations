@@ -596,3 +596,11 @@ If you PUT those nodes back, all HTTP Request credentials are wiped → "Credent
 4. PUT back with credentials preserved
 
 **Unsafe pattern:** GET workflow → edit → PUT. Always loses credentials.
+
+
+## n8n Workflow Update — Execution-Sourced Node Gotcha (2026-04-05)
+When using execution-sourced nodes to preserve credential bindings:
+- Execution data contains a SNAPSHOT of all workflow nodes at the time of that execution
+- If you source nodes from an old execution, you will REVERT any changes made to OTHER nodes after that execution
+- ALWAYS check ALL nodes for regressions after pushing execution-sourced updates, not just the node you intentionally changed
+- Safest approach: Use GET response nodes (which now include credential bindings in n8n v1.x), only fall back to execution-sourced nodes if GET truly strips credentials
