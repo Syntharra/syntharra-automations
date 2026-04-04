@@ -553,3 +553,38 @@ When any task touches this skill's domain, update this file before chat ends:
 - Stripe product/price change → update Stripe section
 - New test suite result → update test suite section
 - New gotcha discovered → add to relevant gotchas section
+
+
+---
+
+## Session Update — 2026-04-04 (Full Pipeline Audit)
+
+### Jotform → Parse → Supabase — Verified Field Map
+
+All 55 data questions on form `260795139953066` audited against Parse JotForm Data node.
+
+**Fixes applied this session:**
+
+| Jotform | Field | Status |
+|---|---|---|
+| q73_customGreetingText | custom_greeting | ✅ Fixed — was reading dead q38 |
+| q72_greetingStyle | greeting_style | ✅ Fixed — was not parsed at all |
+| q68_afterHoursTransfer | after_hours_transfer | ✅ Fixed — was not parsed at all |
+| q69_separateEmergencyPhone | separate_emergency_phone | ✅ Fixed — was not parsed at all |
+
+### Transfer Number Logic — Correct Spec
+```
+Priority: (q69 == "Yes - dedicated emergency line" && emergencyPhone) ? emergencyPhone
+          : (transferPhone || leadPhone)
+```
+- q48 transfer_phone = standard live transfer destination (company/office number)
+- q21 emergency_phone = ONLY overrides if client explicitly answers q69 = "Yes"
+- Fallback = lead_phone
+
+### Email Builder — Correct Field Names
+- AI Phone Number: `d.twilio_number` (Telnyx number written here post-provisioning)
+- Live Transfer Number: `d.transfer_phone` (q48 — client's company number)
+
+### RULE: Never skip Jotform audit when adding questions
+Any new question added to the Jotform MUST be added to Parse JotForm Data in the same session.
+This session's bugs all caused by questions added to form without updating the Parse node.
