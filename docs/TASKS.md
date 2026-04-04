@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-04 — Restructured. Reference data moved to REFERENCE.md. Marketing moved to MARKETING.md.
+> Updated: 2026-04-04 — Retell enhancement sprint redesigned. Premium testing cancelled in favour of combined approach.
 > Keep this file focused on open work only. Target: under 40 lines.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE
@@ -8,43 +8,45 @@
 
 ## Open Work
 
-### Premium HVAC — IN PROGRESS 🔧
-- [ ] Fix 6 core_flow failures on Premium TESTING flow
-- [ ] Run remaining 6 simulator groups (personalities → info_collection → pricing_traps → edge_cases → boundary_safety → premium_specific)
-- [ ] Target 95%+ across all groups, then promote TESTING → MASTER
-- Simulator ready: `tools/openai-agent-simulator-premium.py` — see REFERENCE.md for run command
+### Retell Enhancement Sprint — READY TO EXECUTE 🚀
+> Prompt: docs/prompts/retell-enhancement-prompt.md (v2.4, 911 lines)
+> Run in: Claude Code
+- [ ] Phase 0: Pre-flight + add disconnection_reason/transcript columns (DONE in this session)
+- [ ] Phase 1: Sync Standard TESTING to MASTER, create Premium DEMO clone
+- [ ] Phase 2: PATCH all Retell features (guardrails, boost keywords, pronunciation, backchannel, reminders, tuning, post_call_analysis, webhook filter)
+- [ ] Phase 3: Dan UI — add Extract Dynamic Variable + Code nodes to Standard TESTING + Premium DEMO flows
+- [ ] Phase 4A: Configure fallback numbers + geo restrictions on phone number
+- [ ] Phase 4B: Dan dashboard — create 5 alerting rules + 5 analytics charts + verify guardrails
+- [ ] Phase 5: Update both n8n call processors — remove GPT, map Retell webhook fields to Supabase
+- [ ] Phase 6: Test calls on both agents, verify all 49 fields populate correctly
+- [ ] Phase 7: Update E2E assertions, run both suites green
+- [ ] Phase 8: Dan review → apply DEMO config to Premium TESTING → MASTER promotion
 
-### Standard HVAC — Go-Live Gate
-- [ ] 3–5 live smoke calls to +18129944371
-- [ ] Unpause ops-monitor
-- [ ] Set SMS_ENABLED=true
-- All testing complete: 80/80 ✅ | 75/75 ✅ | 20/20 ✅
+### Post-Enhancement Sprint
+- [ ] Update onboarding workflows: set fallback_number = lead_phone on new client phone provision
+- [ ] Telnyx SMS: post-call confirmation SMS via n8n (pending Telnyx approval)
+- [ ] Update E2E skills + testing skills for new field types and assertions
+- [ ] 3-5 live smoke calls to +18129944371
+
+### Next Sprint — Flow Improvements
+- [ ] Global nodes: add "callback request" handler to both flows (catches it from any node)
+- [ ] Components: package lead capture, emergency detection, callback as reusable sub-flows
+- [ ] Logic Split nodes: evaluate for cleaner urgent/emergency routing
+- [ ] Finetune examples: add per-node after collecting real call data
 
 ### Marketing — see docs/MARKETING.md
 - [ ] Build n8n workflows for 6 new blueprint agents
 - [ ] Set up Supabase tables for expanded agent architecture
 
-### Retell Enhancement Sprint — POST-PREMIUM-PROMOTION ⏸️
-> DO NOT START until Premium TESTING → MASTER promotion is complete
-> Full implementation prompt: docs/prompts/retell-enhancement-prompt.md
-- [ ] Phase 0: Pre-flight checks — verify both MASTER agents healthy, backup to retell-agents/
-- [ ] Phase 1: Sync TESTING agents to clean MASTER copies (PATCH in place, never recreate)
-- [ ] Phase 2: Configure post_call_analysis_data via API on both TESTING agents (replaces GPT)
-- [ ] Phase 3: Dan adds Extract Dynamic Variable nodes in UI (Standard + Premium TESTING flows)
-- [ ] Phase 4: Dan adds Code node (phone validation) in UI (both flows)
-- [ ] Phase 5: Check SMS eligibility on +18129944371 → add SMS confirmation node to Premium only
-- [ ] Phase 6: Simplify n8n call processors — remove GPT, map Retell webhook fields to Supabase
-- [ ] Phase 7: Re-run E2E — Standard first, then Premium — both must be green
-- [ ] Phase 8: Dan review → explicit go-ahead → promote changes to MASTER
 ### Housekeeping
 - [ ] Label 1 active unlabelled n8n workflow: `Google Keep → Groq → Slack To-Do List` (`5wxgBfJL7QeNP2ab`)
-- [ ] Review 9 inactive duplicate workflows when convenient
 
 ---
 
-## Completed This Sprint
-- Standard HVAC: ALL TESTING ✅
+## Completed
+- Standard HVAC testing: 80/80 ✅ | 75/75 ✅ | 20/20 ✅
 - Premium E2E: 89/89 ✅
 - HubSpot CRM: LIVE ✅
 - Marketing Blueprint (APEX): DELIVERED ✅
-- Cowork Marketing Plugin: DELIVERED ✅
+- Supabase cleanup: dropped agent_test_results + view, added 2 columns ✅
+- Retell Enhancement Sprint prompt: v2.4 designed and verified ✅
