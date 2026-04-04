@@ -583,3 +583,16 @@ service_name='Slack', key_type='webhook_url'
 - ALWAYS call `n8n:publish_workflow` immediately after `n8n:update_workflow`
 - Verify: `versionId` must equal `activeVersionId` after publish
 - Discovered 2026-04-04: Phase 6 test hit stale Groq code because draft wasn't published
+
+## GOTCHA: n8n REST API PUT Strips Credential Bindings (2026-04-05)
+
+`GET /api/v1/workflows/{id}` returns nodes WITHOUT credential bindings.
+If you PUT those nodes back, all HTTP Request credentials are wiped → "Credentials not found."
+
+**Safe pattern:**
+1. `GET /api/v1/executions/{id}?includeData=true` from a SUCCESSFUL execution
+2. Extract `workflowData.nodes` (these HAVE credential bindings)
+3. Apply code changes to those nodes
+4. PUT back with credentials preserved
+
+**Unsafe pattern:** GET workflow → edit → PUT. Always loses credentials.
