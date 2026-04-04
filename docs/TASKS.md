@@ -25,18 +25,17 @@
 - [ ] Set up Supabase tables for expanded agent architecture
 
 ### Retell Enhancement Sprint — POST-PREMIUM-PROMOTION ⏸️
-> DO NOT START until Premium TESTING agent hits 95%+ and is promoted to MASTER
-- [ ] Create new TESTING agents for Standard and Premium (separate from existing MASTER and current TESTING)
-- [ ] Add Extract Dynamic Variable node to Standard flow (after nonemergency_leadcapture, before Ending)
-- [ ] Add Extract Dynamic Variable node to Premium flow (same position)
-- [ ] Add Code node (phone number format validation) to Standard + Premium flows
-- [ ] Configure post_call_analysis_data on both MASTER agents via API (replace GPT extraction)
-- [ ] Simplify Standard call processor (Kg576YtPM9yEacKn) — remove GPT node, map Retell webhook fields direct to Supabase
-- [ ] Simplify Premium call processor (STQ4Gt3rH8ptlvMi) — same, remove GPT + JSON flattening node
-- [ ] Update E2E tests to match new call processor field mapping
-- [ ] Re-run Standard E2E after all changes to verify before go-live
-- Reference prompt: docs/prompts/retell-enhancement-sprint.md
-
+> DO NOT START until Premium TESTING → MASTER promotion is complete
+> Full implementation prompt: docs/prompts/retell-enhancement-prompt.md
+- [ ] Phase 0: Pre-flight checks — verify both MASTER agents healthy, backup to retell-agents/
+- [ ] Phase 1: Sync TESTING agents to clean MASTER copies (PATCH in place, never recreate)
+- [ ] Phase 2: Configure post_call_analysis_data via API on both TESTING agents (replaces GPT)
+- [ ] Phase 3: Dan adds Extract Dynamic Variable nodes in UI (Standard + Premium TESTING flows)
+- [ ] Phase 4: Dan adds Code node (phone validation) in UI (both flows)
+- [ ] Phase 5: Check SMS eligibility on +18129944371 → add SMS confirmation node to Premium only
+- [ ] Phase 6: Simplify n8n call processors — remove GPT, map Retell webhook fields to Supabase
+- [ ] Phase 7: Re-run E2E — Standard first, then Premium — both must be green
+- [ ] Phase 8: Dan review → explicit go-ahead → promote changes to MASTER
 ### Housekeeping
 - [ ] Label 1 active unlabelled n8n workflow: `Google Keep → Groq → Slack To-Do List` (`5wxgBfJL7QeNP2ab`)
 - [ ] Review 9 inactive duplicate workflows when convenient
