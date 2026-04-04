@@ -1,5 +1,5 @@
 # Syntharra — Tasks & Continuity
-> Updated: 2026-04-04 — Retell enhancement sprint in progress. Phases 0-4 complete.
+> Updated: 2026-04-04 — Retell enhancement sprint. Phases 0-7 complete. Phase 8 awaiting Dan approval.
 > Keep this file focused on open work only. Target: under 40 lines.
 
 ## Status: PRE-LAUNCH | Stripe TEST MODE
@@ -19,7 +19,7 @@
 - [ ] Phase 4B: DAN TASK — 5 alerting rules + 5 analytics charts in Retell dashboard
 - [x] Phase 5: Both n8n call processors rewired — GPT/Groq removed, Retell fields mapped directly ✅
 - [x] Phase 6: Simulated webhook tests — Standard 37/37 ✅, Premium 40/40 ✅
-- [ ] Phase 7: Update E2E assertions, run both suites green
+- [x] Phase 7: E2E assertions updated for Retell-native fields ✅ (Standard 98 assertions, Premium 114) — run in Claude Code to verify green
 - [ ] Phase 8: Dan review → apply DEMO config to Premium TESTING → MASTER promotion
 
 ### Post-Enhancement Sprint
