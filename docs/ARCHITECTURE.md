@@ -345,3 +345,32 @@
 - Added disconnection_reason (text) and transcript (text) columns to hvac_call_log.
 - hvac_call_log has 49 columns (was documented as 22 — SUPABASE.md updated).
 - hvac_standard_agent has 105 columns — all legitimate, maps to Jotform + OAuth config.
+
+### Claude Code Hooks — design decisions (2026-04-04)
+- Hooks are deterministic (100%) vs CLAUDE.md instructions (~80%). Used only where
+  a single mistake causes irreversible or hard-to-detect damage.
+- 4 hooks implemented in `.claude/hooks/`:
+  1. `pre_retell_write.py` — Blocks any bash command targeting a MASTER agent ID with
+     a write signal. Fails open on hook error (never blocks legitimate work on a bug).
+  2. `pre_token_scan.py` — Scans git commit/push commands for raw token patterns
+     (ghp_, sk_live_, xoxb-, etc). Only fires on git write ops to keep overhead minimal.
+  3. `post_n8n_webhook.py` — Blocks POST to n8n.syntharra.com/webhook paths.
+     Health checks must be HEAD only — POST triggers live production workflows.
+  4. `stop_session_log.py` — Warning-only (exit 0) at session Stop. Checks GitHub for
+     a today-dated log. Cannot block (session may end for legitimate reasons mid-task)
+     but prints a clear reminder if log is missing.
+- Hooks intentionally fail open (exit 0) on any exception — a broken hook must never
+  block legitimate work. The value is catching careless errors, not being a hard wall.
+- Did NOT hook every CLAUDE.md rule — only the 4 where cost of error is irreversible.
+  Over-hooking adds maintenance burden and friction without safety benefit.
+- Hook config: `.claude/settings.json` in syntharra-automations repo root.
+- GITHUB_TOKEN env var must be set in Claude Code environment for session log hook
+  to verify against GitHub (gracefully degrades to warning if not set).
+
+### Hooks in agentic systems — why n8n/Retell/marketing agents don't use Claude Code hooks
+- Claude Code hooks only fire inside Claude Code sessions. The 18-agent marketing system
+  and all n8n workflows run independently of Claude Code.
+- The equivalent enforcement layer for those systems is: n8n error handlers (catch node),
+  Supabase RLS policies, n8n credential scoping, and Retell webhook filtering.
+- These are already in place and serve the same deterministic enforcement role.
+- No Claude Code hooks needed for the agentic marketing system — wrong execution layer.
