@@ -303,3 +303,51 @@ Examples of bad scenarios fixed this session:
 - Strategy: run `--scenarios` for targeted tests (fast, <90s for 5 scenarios), then full `--group` only for final confirmation
 - Always use `timeout 150` to prevent hangs
 
+
+
+---
+
+## Session Update — 2026-04-04 (Onboarding Workflow Fixes)
+
+### Confirmed 90/90 Pass State
+Standard E2E passes 90/90 as of 2026-04-04 20:21 UTC.
+
+### Onboarding Workflow — Known Good Architecture
+After multiple fixes this session, the correct workflow path is:
+
+```
+JotForm Webhook → Parse JotForm Data → Build Retell Prompt
+→ Create Retell LLM → Create Retell Agent → Merge LLM & Agent Data
+→ Write Client Data to Supabase → Publish Retell Agent → HubSpot — Update Deal (Active)
+→ Reconcile: Check Stripe Payment → Slack: Agent Live
+
+Write Client Data to Supabase also → Build Onboarding Pack HTML
+→ Send Setup Instructions Email → Reconcile: Check Stripe Payment
+
+Create Retell Agent also → Validate: Token Budget  [TERMINAL — no outgoing connection]
+```
+
+**Critical: Validate: Token Budget must remain TERMINAL.** Connecting it back to Build Retell Prompt creates a second execution with blank company_name defaulting to 'HVAC Company', creating junk agents on every run.
+
+### Email Suppression Gate — Universal Pattern
+Both Build Onboarding Pack HTML and Send Setup Instructions Email now suppress on:
+- `Polar Peak HVAC \d{10}` (E2E test company)
+- `FrostKing HVAC \d+`
+- `HVAC Company \d*` (default fallback — should never reach email)
+- `CoolBreeze \d+`
+- `_email_suppressed === true` (propagated from Build node)
+
+### Node IDs — Do Not Rename
+| Node name | ID | Connected from | Connected to |
+|---|---|---|---|
+| Build Onboarding Pack HTML | build_welcome_email | Write Client Data to Supabase | Send Setup Instructions Email |
+| Send Setup Instructions Email | send_setup_instructions | Build Onboarding Pack HTML | Reconcile: Check Stripe Payment |
+| Slack: Agent Live | 31747f03-7ec5-4d9e-82bc-b009f766f856 | Reconcile: Check Stripe Payment | terminal |
+| Validate: Token Budget | token_budget_4Hx7aRdz | Create Retell Agent | terminal (NO outgoing) |
+
+### Onboarding Pack Email
+- Built from `onboarding-packs/n8n-onboarding-pack-standard.json` companion_code_node
+- PDF link: https://syntharra.com/syntharra-call-forwarding-guide.pdf
+- Recipient: `lead_email` from Supabase row
+- Subject: 'Your AI Receptionist is Live — Welcome to Syntharra 🎉'
+- NO "24 hours" copy — fully automated, no manual follow-up implied
