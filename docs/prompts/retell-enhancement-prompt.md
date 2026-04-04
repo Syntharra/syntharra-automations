@@ -843,6 +843,25 @@ Before ending:
    - Two-way SMS evaluation: Retell native vs Telnyx (DECISION NEEDED)
    - Retell HubSpot native integration evaluation (FUTURE)
    - A/B testing for prompt/voice variants (POST-LAUNCH)
+   - GLOBAL NODES: Add a global "callback request" node to both flows — catches
+     "just call me back" / "I need to go" at ANY point in conversation, collects
+     name + number, routes to ending. Currently this only works if caller says it
+     at specific flow points. Global node catches it everywhere. (NEXT SPRINT)
+   - COMPONENTS: Package reusable sub-flows (lead capture, emergency detection,
+     callback handling) as Retell Components. When we expand to plumbing/electrical/
+     cleaning verticals, components let us update once and propagate to all agents.
+     Critical for the replicable template goal. (NEXT SPRINT)
+   - FINETUNE EXAMPLES: After collecting real call data post-launch, add finetune
+     examples to nodes where the agent struggles. Retell supports example transcripts
+     per node for both response and transition finetuning. (POST-LAUNCH)
+   - LOGIC SPLIT NODES: Evaluate replacing some multi-condition conversation nodes
+     with Logic Split nodes for instant branching on dynamic variables (e.g.
+     urgency == emergency → immediate transfer). Cleaner flow, faster routing. (NEXT SPRINT)
+   - AGENT TRANSFER NODE: Evaluate for Spanish routing — transfer to a Spanish-
+     specialised agent mid-call instead of handling it in the same flow. Near-instant,
+     no new phone call needed. (FUTURE)
+   - Premium calendar functions already working via flow-level tools (check_availability,
+     create_booking). DO NOT replace with MCP nodes — current approach is proven.
 5. Update docs/REFERENCE.md if agent versions changed
 6. Update docs/context/AGENTS.md with final agent config
 7. Update docs/context/SUPABASE.md — document ALL 47 columns of hvac_call_log
