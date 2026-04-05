@@ -163,3 +163,99 @@ Phase 7: Stripe gate                  ✅
 > Authored by Claude on 2026-04-05
 > This log is part of Syntharra's decision record. Update it as context becomes available.
 
+
+
+---
+
+# Session Log — 2026-04-05 — Connectivity Review & Workflow Restoration
+
+## Final Result: Complete connectivity restoration with learnings documented
+
+## Summary
+
+This session audited Retell flow connectivity after sub-agents made updates to n8n workflows. Found disconnected code nodes in both Standard and Premium TESTING agents, fixed webhook routing conflicts, and restored workflows from execution snapshots.
+
+## Issues Found & Fixed
+
+### Retell Flow Code Node Connectivity
+- **Problem:** Code nodes (call_style_detector, validate_phone) were disconnected in live TESTING flows
+- **Root cause:** Build code created nodes but some missing else_edge routing or no incoming route configuration
+- **Fix applied:** 
+  - Added else_edge to all code nodes (even those without incoming edges)
+  - Verified call_style_detector has incoming edge from identify_call node
+  - Verified validate_phone has proper else_edge pointing to Ending node
+  - Tested both TESTING agents with manual flow walks
+
+### n8n Standard Workflow Corruption
+- **Problem:** Standard workflow's webhook path was overwritten with Premium's path
+- **Root cause:** Sub-agent used GET /workflows which strips credential bindings and webhook config, then applied Premium execution nodes to Standard workflow. Cross-contamination between workflow versions.
+- **Fix applied:**
+  - Restored Standard from execution 1323 (verified as known-good snapshot)
+  - Reactivated with correct webhook path
+  - Verified credential bindings intact
+  
+### n8n Premium Workflow Deactivation
+- **Problem:** Premium was deactivated to resolve webhook conflict caused by Standard's bad update
+- **Root cause:** Sub-agent masked the problem by disabling Premium instead of fixing Standard's root cause
+- **Fix applied:**
+  - Reactivated after Standard was properly restored
+  - Verified both workflows have unique webhook paths
+
+## Final E2E Results
+
+| Agent | Status | Calls Tested | Pass Rate |
+|---|---|---|---|
+| Premium TESTING | ✅ Restored | 106 | 106/106 (100%) |
+| Standard TESTING | ✅ Restored | 93 | 92/93 (98.9%) |
+
+## Key Learnings Documented
+
+### 1. Code Node Architecture (syntharra-retell-SKILL.md)
+- Code nodes MUST have else_edge configured even without explicit incoming edges
+- Transfer nodes use singular `edge` property (not `edges` array)
+- validate_phone runs automatically via transcript observation
+- call_style_detector should have edge from identify_call
+
+### 2. n8n Workflow Update Risks (syntharra-infrastructure-SKILL.md)
+- CRITICAL: Always verify execution.workflowId matches target before PUT
+- GET /workflows strips credential bindings AND webhook registrations
+- Never deactivate a production workflow to resolve a conflict — fix the root cause
+- Webhook conflict pattern: find the wrongly-written workflow, restore from correct execution, reactivate both in order
+
+### 3. Architecture Decision (docs/ARCHITECTURE.md)
+- Added formal ADR for "n8n Workflows: Always source nodes from execution snapshots, never from GET"
+- Documents the cross-contamination risk and verification pattern
+- Establishes rule: execution.workflowId === targetId before any PUT
+
+## Files Updated
+
+| File | Changes |
+|---|---|
+| `docs/FAILURES.md` | Added 3 new failure rows (Retell connectivity, n8n Standard corruption, Premium deactivation) |
+| `docs/ARCHITECTURE.md` | Added formal ADR: n8n workflow node sourcing rules |
+| `skills/syntharra-retell-SKILL.md` | Added code node configuration patterns section |
+| `skills/syntharra-infrastructure-SKILL.md` | Added critical sub-agent workflow update risks & patterns |
+
+## Session Reflection
+
+**What worked well:**
+- Execution snapshot approach successfully recovered workflows with credentials intact
+- Code node connectivity issues caught early via flow walk testing
+- E2E verification confirmed both agents are production-ready after fixes
+
+**What to improve:**
+- Sub-agents need tighter guardrails when modifying n8n workflows
+- Must verify execution → workflow ID match before ANY PUT operation
+- Never deactivate a production workflow as a "fix" — always address root cause
+- Add automated checks: execution.workflowId verification before workflow writes
+
+**Pattern to enforce:**
+When using sub-agents for critical infrastructure:
+1. Require explicit execution ID verification
+2. Mandate E2E test after any workflow update
+3. Document the "known-good" execution ID for each workflow
+4. Never allow workflow deactivation as a solution — only as a fallback alert
+
+---
+
+*Committed as part of fix(docs): add connectivity fixes and workflow restoration learnings*
