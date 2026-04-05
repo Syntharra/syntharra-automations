@@ -244,14 +244,17 @@ if flow_id:
     nodes = flow.get('nodes', [])
     names = [n['name'] for n in nodes]
     check("Flow exists in Retell",           bool(flow.get('conversation_flow_id')))
-    check("12 nodes present",                len(nodes) == 12,                                      f"{len(nodes)} nodes")
+    check("15 nodes present",                len(nodes) == 15,                                      f"{len(nodes)} nodes")
     check("flex_mode off",                   flow.get('flex_mode') in [False, None])
     check("start_speaker = agent",           flow.get('start_speaker') == 'agent')
     check("Greeting node present",           'greeting_node' in names)
-    check("Lead capture node present",       'nonemergency_leadcapture_node' in names)
+    check("Lead capture node present",       'fallback_leadcapture_node' in names)
     check("Emergency node present",          'verify_emergency_node' in names)
     check("Callback node present",           'callback_node' in names)
     check("Spam node present",               'spam_robocall_node' in names)
+    check("Call style detector node present", 'call_style_detector' in names)
+    check("Validate phone node present",     'validate_phone' in names)
+    check("Emergency Transfer node present", 'Emergency Transfer' in names)
     greeting = next((n for n in nodes if n['name'] == 'greeting_node'), None)
     gt = (greeting or {}).get('instruction', {}).get('text', '')
     check("Greeting has agent name",         TEST_AGENT in gt,                                      gt[:60])
@@ -447,3 +450,4 @@ else:
     for name, val in results.items():
         if not val: print(f"   ❌ {name}")
 print("=" * 60)
+
