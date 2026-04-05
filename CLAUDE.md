@@ -1,3 +1,25 @@
+## MANDATORY SESSION PROTOCOL — NON-NEGOTIABLE
+
+### Session Start (run FIRST, every session, no exceptions)
+```bash
+python /sessions/happy-intelligent-goodall/mnt/Cowork/session_start.py
+```
+This loads live TASKS.md, REFERENCE.md, and FAILURES.md from GitHub. Working without it = working blind.
+
+### Session End (run BEFORE closing, every session)
+```bash
+python /sessions/happy-intelligent-goodall/mnt/Cowork/session_end.py --topic "TOPIC" --summary "SUMMARY" --tasks "task1|task2"
+```
+Pushes session log to GitHub. Logs open tasks to Supabase admin_tasks.
+
+### GitHub Operations (use github_helper.py for all GitHub work)
+```python
+import sys; sys.path.insert(0, '/sessions/happy-intelligent-goodall/mnt/Cowork')
+from github_helper import gh_fetch, gh_push, gh_append, gh_get_sha
+```
+
+---
+
 # Syntharra — Cowork Workspace Rules
 # Always mount: C:\Users\danie\OneDrive\Desktop\Cowork
 
@@ -65,6 +87,7 @@ These are live and authenticated. Use without asking:
 
 | MCP | Tools Available | Use For |
 |---|---|---|
+| **GitHub** (`mcp__562ca274-ff68-4873-8410-8ecc5c606bd6__*`) | get_file_contents, create_or_update_file, push_files, search_code, list_commits, create_branch, create_pull_request | All GitHub reads/writes — session logs, TASKS.md, REFERENCE.md, FAILURES.md, code pushes |
 | **Gmail** | search, read, draft | Emails, threads, inbox triage |
 | **Google Calendar** | list, create, update, find free time | Scheduling, meetings, availability |
 | **Google Drive** | search, fetch | Find/read documents and files |
@@ -203,9 +226,23 @@ Use GSD agent roles when spawning subagents for complex tasks. Reference `gsd-pl
 
 ---
 
-## End-of-Session Task Logging
+## END-OF-SESSION ENFORCEMENT — NON-NEGOTIABLE
 
-Insert any tasks discussed but **not completed** into `admin_tasks` Supabase table (project `hgheyqwnrcvwtgngqdnq`):
+**Every session MUST end with all of the following. No exceptions. No skipping.**
+
+### 1. Push Session Log to GitHub
+```python
+import sys; sys.path.insert(0, '/sessions/happy-intelligent-goodall/mnt/Cowork')
+from github_helper import gh_push
+# Push to: docs/session-logs/YYYY-MM-DD-topic.md
+```
+Or via GitHub MCP: `mcp__562ca274-ff68-4873-8410-8ecc5c606bd6__create_or_update_file`
+
+### 2. Update TASKS.md on GitHub
+Push the current open task list to `docs/TASKS.md` in `Syntharra/syntharra-automations`. Under 40 lines. Open work only.
+
+### 3. Log Incomplete Tasks to Supabase
+Use Supabase MCP (`mcp__0e5f1d37-9510-4d3f-87c0-0808af0ce81d__execute_sql`) to insert any tasks discussed but not completed:
 
 ```sql
 INSERT INTO public.admin_tasks (title, category, priority) VALUES ('...', '...', '...');
@@ -213,3 +250,19 @@ INSERT INTO public.admin_tasks (title, category, priority) VALUES ('...', '...',
 
 Categories: `Pre-Launch`, `Agent Testing`, `Infrastructure`, `Marketing`, `Operations`
 Priorities: `critical`, `high`, `medium`, `low`
+
+### 4. Update FAILURES.md (if any bugs fixed this session)
+Append one row per fix: `date | area | what failed | root cause | fix applied | skill updated`
+
+### 5. Update REFERENCE.md (if any IDs changed)
+Push to `docs/REFERENCE.md` if any agent IDs, flow IDs, workflow IDs, or URLs changed.
+
+### 6. Push ALL Changed Files
+Every file edited this session must be pushed to GitHub before closing. **Never end a session with unpushed work.**
+
+### 7. Update Auto-Memory (if significant decisions made)
+Write to `/sessions/happy-intelligent-goodall/mnt/.auto-memory/` if anything material was learned, decided, or discovered.
+
+---
+
+**FAILURE TO PUSH = SESSION NOT CLOSED.** If GitHub writes are blocked (403), note it explicitly and give Dan the exact files + content to push manually. Do not silently skip.
