@@ -207,6 +207,28 @@ def fetch_agent_prompt(agent_type):
 
     return global_prompt + "\n\n---\nNODE INSTRUCTIONS:\n\n" + "\n\n".join(sections)
 
+
+def fetch_agent_prompt_compressed(agent_type):
+    """
+    Token-efficient agent summary for simulation (~1200 tokens vs ~4500 for full prompt).
+    Keeps global_prompt (core behaviour) + node names only (routing intent).
+    Omits full component instructions and routing edge conditions — not needed by the simulator.
+    Reduces daily token consumption by ~3x, allowing Standard + Premium runs within 500K TPD limit.
+    """
+    flow = fetch_flow(agent_type)
+    global_prompt = flow.get("global_prompt", "")
+
+    node_names = []
+    for node in flow["nodes"]:
+        if node.get("type") == "end":
+            continue
+        name = node.get("name", "")
+        if name:
+            node_names.append(f"- {name}")
+
+    node_list = "\n".join(node_names)
+    return f"{global_prompt}\n\n---\nAGENT CAPABILITIES (routing nodes):\n{node_list}"
+
 # =============================================================================
 # GROQ API  (rate-gated, exponential backoff on 429)
 # =============================================================================
@@ -233,7 +255,8 @@ def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=
             r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=45)
             if r.status_code == 429:
                 wait = 63 + 30 * attempt
-                print(f" [429 — wait {wait}s] ", end="", flush=True)
+                err_msg = r.json().get('error', {}).get('message', r.text[:200]) if r.headers.get('content-type','').startswith('application/json') else r.text[:200]
+                print(f" [429 — wait {wait}s | {err_msg[:100]}] ", end="", flush=True)
                 time.sleep(wait)
                 rate_gate("retry")
                 continue
@@ -407,7 +430,8 @@ def phase_diagnose(api_key, scenarios, agent_type):
     n = len(scenarios)
     print(f"\n[PHASE 1] DIAGNOSE — {n} scenarios ({agent_type})")
 
-    agent_prompt = fetch_agent_prompt(agent_type)
+    # Use compressed prompt for simulation (~1200 tokens vs ~4500) to stay within Groq 500K TPD
+    agent_prompt = fetch_agent_prompt_compressed(agent_type)
     results = []
     n_pass = n_fail = n_err = 0
 
@@ -464,7 +488,7 @@ def phase_triage(api_key, failures, agent_type):
     n = len(failures)
     print(f"\n[PHASE 2] TRIAGE — {n} failures")
 
-    agent_prompt = fetch_agent_prompt(agent_type)
+    agent_prompt = fetch_agent_prompt_compressed(agent_type)
     triaged = []
 
     for failure in failures:
