@@ -41,6 +41,26 @@ from github_helper import gh_fetch, gh_push, gh_append, gh_get_sha
 - Always add a verification/QA subagent pass at the end before presenting results.
 - Use the GSD agent library in `get-shit-done/agents/` for specialised subagent roles (debugger, planner, executor, researcher, UI auditor, etc.)
 
+### GSD Role Routing — Mandatory for Subagent Spawning
+
+Always assign GSD roles when spawning subagents. Never spawn a generic "do this" agent when a specialist role exists.
+
+| Task type | Lead agent | Parallel agents | Final check |
+|---|---|---|---|
+| Build new feature / workflow | `gsd-planner` | `gsd-executor` per workstream | `gsd-verifier` |
+| Debug a bug | `gsd-debugger` | — | `gsd-verifier` |
+| Research + document | `gsd-phase-researcher` | `gsd-doc-writer` | `gsd-doc-verifier` |
+| n8n workflow build/fix | `gsd-planner` | `gsd-executor` + `gsd-integration-checker` | `gsd-verifier` |
+| Retell agent/prompt update | `gsd-planner` | `gsd-executor` | `gsd-verifier` |
+| Security / code audit | `gsd-security-auditor` | `gsd-ui-auditor` (if UI) | `gsd-verifier` |
+| Multi-domain task (e.g. Stripe + HubSpot + n8n) | Orchestrator | One `gsd-executor` per domain, all parallel | `gsd-verifier` |
+| Marketing batch | Orchestrator | One agent per channel/format, all parallel | `gsd-verifier` |
+| Plan with assumptions | `gsd-planner` | `gsd-assumptions-analyzer` | `gsd-plan-checker` |
+
+**Pattern is always: Planner → [Parallel Executors] → Verifier.**
+
+Role files: `get-shit-done/agents/gsd-{role}.md` — read the role file before spawning that agent type.
+
 When to go agentic without being asked:
 - Research → one subagent per source/topic, in parallel
 - Document creation → research + writing + formatting agents simultaneously
