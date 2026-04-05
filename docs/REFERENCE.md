@@ -73,3 +73,23 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 | confirm_booking | `conversation_flow_component_20ac85a7954c` |
 | reschedule | `conversation_flow_component_4b3d107fd73a` |
 | cancel_appointment | `conversation_flow_component_eb20b4cd1d8d` |
+
+
+## Testing Tools
+
+| Tool | Path | Purpose |
+|---|---|---|
+| Agentic Test Engine | `tools/agentic-test-fix.py` | Full scenario suite + triage + self-fix |
+| Standard Simulator | `tools/openai-agent-simulator.py` | Legacy per-scenario pass/fail |
+| Premium Simulator | `tools/openai-agent-simulator-premium.py` | Legacy per-scenario pass/fail (Premium) |
+| Standard E2E | `shared/e2e-test.py` | Full pipeline E2E (93 assertions) |
+| Premium E2E | `shared/e2e-test-premium.py` | Full pipeline E2E (106 assertions) |
+| Scenarios | `tests/agent-test-scenarios.json` | 108 scenarios, 7 groups |
+| Results | `tests/results/` | Timestamped JSON results |
+
+### Groq Budget (free tier)
+- Model: `meta-llama/llama-4-scout-17b-16e-instruct`
+- Rate: 30 req/min, 14,400 req/day, 30,000 TPM
+- Standard full run: ~1,547 calls (10.7% daily)
+- Premium full run: ~1,836 calls (12.8% daily)
+- Combined: ~3,383 calls (23.5% daily) — fits comfortably in one day
