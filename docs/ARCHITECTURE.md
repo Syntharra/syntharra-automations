@@ -635,3 +635,16 @@ If activation fails with "conflict with one of the webhooks":
 3. Restore the INCORRECT workflow from a known-good execution
 4. Verify the execution is from the CORRECT workflow before PUT
 5. Reactivate both workflows in order (the one with the earlier creation date first)
+
+
+## 2026-04-05: Library Component Node Type Constraints
+
+**Decision:** Multi-node Library Components can only contain conversation, subagent, extract_dynamic_variables, and end nodes. Code, tool_call, and transfer_call nodes are NOT allowed inside components.
+
+**Why:** Verified by API testing. Retell's oneOf schema for component nodes restricts to these types. Code nodes (call_style_detector, validate_phone) must remain as single-node Library Components, referenced via nested subagent inside multi-node components.
+
+**Impact:** The Premium booking path CANNOT be consolidated into a single component because it requires tool_call nodes for calendar integration. The realistic consolidation scope is: Intake (2 nodes), Capture/Standard (2 nodes), Close (2 nodes). Premium booking stays as inline nodes.
+
+**What was rejected:** Original plan to create a 5-node Booking Component. Also rejected: Support Component bundling callback + existing_customer + general_questions (no start_node_id support means you can't route to a specific internal node).
+
+**Unverified:** Whether nested subagent referencing a code-type Library Component works correctly 2 levels deep inside a multi-node component. Must test before implementing.
