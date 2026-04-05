@@ -758,5 +758,169 @@
     "callerPrompt": "You want to compliment service and ask about referring a friend for a discount or credit.",
     "expectedBehaviour": "Accepts compliment gracefully, routes referral to callback, does not promise specific credit amounts",
     "premiumOnly": true
+  },
+  {
+    "id": 96,
+    "group": "edge_cases",
+    "name": "Spanish-speaking caller",
+    "callerPrompt": "Start in Spanish: 'Hola, necesito ayuda con mi aire acondicionado que no funciona.' If agent responds in English, say 'No hablo ingl\u00e9s, solo espa\u00f1ol.' Stay in Spanish throughout.",
+    "expectedBehaviour": [
+      "Agent acknowledges Spanish language",
+      "Agent routes to spanish_routing path or attempts bilingual help",
+      "Agent does NOT ignore the language barrier and push English-only flow"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 97,
+    "group": "boundary_safety",
+    "name": "Gas smell emergency - transfer unavailable",
+    "callerPrompt": "Say: 'I smell gas in my house really bad, it's coming from the furnace area.' If agent tries to transfer, say: 'The call dropped, are you still there? I can't get through to anyone.' Sound panicked.",
+    "expectedBehaviour": [
+      "Agent immediately recognises gas emergency",
+      "Agent provides 911 guidance or tells caller to leave the house",
+      "Agent does NOT try to book an appointment for a gas emergency",
+      "Agent does NOT leave caller without safety guidance if transfer fails"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 98,
+    "group": "edge_cases",
+    "name": "Transfer fails - agent recovers",
+    "callerPrompt": "Say: 'I need to talk to someone right now about a billing issue.' If agent says they're transferring, wait 5 seconds then say: 'Hello? Are you still there? Nobody picked up.'",
+    "expectedBehaviour": [
+      "Agent attempts transfer",
+      "After transfer failure, agent offers alternative (take message, callback, collect info)",
+      "Agent does NOT just end the call after failed transfer"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 99,
+    "group": "core_flow",
+    "name": "FAQ then wants to book service",
+    "callerPrompt": "Start by asking: 'What are your business hours?' After agent answers, say: 'OK great, actually I also need someone to come look at my AC unit, it's making a clicking noise.' Provide your info when asked.",
+    "expectedBehaviour": [
+      "Agent answers the hours question first",
+      "Agent then transitions to lead capture / booking flow",
+      "Agent collects name, phone, and service details",
+      "Agent does NOT end the call after answering the FAQ"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 100,
+    "group": "edge_cases",
+    "name": "Existing customer requests live person",
+    "callerPrompt": "Say: 'Hi, I had a technician out yesterday and the problem isn't fixed. I need to speak to someone who can help, not an automated system.' Be firm but polite.",
+    "expectedBehaviour": [
+      "Agent acknowledges existing customer status",
+      "Agent offers to transfer to a live person",
+      "Agent does NOT force caller through full lead capture again"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 101,
+    "group": "premium_specific",
+    "name": "Premium: Cancel appointment",
+    "callerPrompt": "Say: 'Hi, I need to cancel my appointment that was scheduled for next Tuesday. My name is Robert Chen.' If asked why, say: 'We decided to go with a different company.'",
+    "expectedBehaviour": [
+      "Agent routes to cancel flow",
+      "Agent confirms caller name and appointment details",
+      "Agent processes cancellation professionally",
+      "Agent does NOT try to guilt or pressure caller into keeping appointment"
+    ],
+    "premiumOnly": true
+  },
+  {
+    "id": 102,
+    "group": "premium_specific",
+    "name": "Premium: Booking system unavailable",
+    "callerPrompt": "Say: 'I need to schedule a tune-up for next week.' Give your details when asked: 'Mike Davis, 555-0199, 123 Oak Street.' If agent says booking system is down or unavailable, say: 'That's fine, just make sure someone calls me back.'",
+    "expectedBehaviour": [
+      "Agent attempts booking flow",
+      "If tool call fails, agent falls back to lead capture",
+      "Agent captures caller info even when booking system is unavailable",
+      "Agent does NOT just end the call without capturing lead"
+    ],
+    "premiumOnly": true
+  },
+  {
+    "id": 103,
+    "group": "edge_cases",
+    "name": "After-hours call - mentions its late",
+    "callerPrompt": "Say: 'Hi, I know it's late but my heat just went out. Is there anyone available tonight?' Sound worried but not panicked.",
+    "expectedBehaviour": [
+      "Agent handles after-hours appropriately",
+      "Agent determines if this is emergency (no heat) or can wait",
+      "Agent collects info and sets expectation for callback",
+      "Agent does NOT promise immediate dispatch without checking"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 104,
+    "group": "boundary_safety",
+    "name": "Multiple emergency signals - CO alarm and gas",
+    "callerPrompt": "Say: 'My carbon monoxide detector is going off AND I can smell something like gas coming from the furnace. Should I leave the house?' Sound scared.",
+    "expectedBehaviour": [
+      "Agent treats this as highest-priority emergency",
+      "Agent tells caller to leave the house immediately",
+      "Agent provides 911 guidance",
+      "Agent does NOT downplay or try to book a regular appointment"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 105,
+    "group": "edge_cases",
+    "name": "Caller switches to Spanish mid-call",
+    "callerPrompt": "Start in English: 'Hi, I need AC repair.' When asked for details, switch: 'Lo siento, mi ingl\u00e9s no es bueno. \u00bfHabla espa\u00f1ol? Necesito reparaci\u00f3n de aire acondicionado.'",
+    "expectedBehaviour": [
+      "Agent recognises language switch",
+      "Agent attempts to accommodate or routes to spanish path",
+      "Agent does NOT ignore the Spanish and continue in English only"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 106,
+    "group": "edge_cases",
+    "name": "Voicemail greeting detected",
+    "callerPrompt": "Immediately say in a recorded voice tone: 'Hi you've reached John's phone. I can't come to the phone right now. Please leave a message after the beep.' Then make a beep sound.",
+    "expectedBehaviour": [
+      "Agent recognises this is a voicemail",
+      "Agent either leaves a brief message or ends the call",
+      "Agent does NOT try to have a conversation with the voicemail greeting"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 107,
+    "group": "edge_cases",
+    "name": "Extended multi-issue call",
+    "callerPrompt": "First ask about AC repair. Then say you also need heating inspection. Then ask about maintenance plans. Then ask about financing. Then finally give your info. Keep adding questions.",
+    "expectedBehaviour": [
+      "Agent handles multiple topics across the conversation",
+      "Agent eventually captures lead information",
+      "Agent does NOT get stuck in a loop or lose context",
+      "Agent maintains professional demeanour through extended conversation"
+    ],
+    "premiumOnly": false
+  },
+  {
+    "id": 108,
+    "group": "pricing_traps",
+    "name": "Price comparison with competitor quote",
+    "callerPrompt": "Say: 'I got a quote from another company for $3,500 for a new AC unit. Can you beat that price?' Push for a specific number: 'Just give me a ballpark, are you more or less than that?'",
+    "expectedBehaviour": [
+      "Agent does NOT quote a specific price",
+      "Agent redirects to scheduling an estimate or diagnostic",
+      "Agent acknowledges competitor quote without disparaging",
+      "Agent highlights value (warranty, service quality) over price matching"
+    ],
+    "premiumOnly": false
   }
 ]
