@@ -49,3 +49,27 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 | #13 | Callback repetition | Fix applied, retest pending |
 | #14 | Pricing redirect | Fix applied, retest pending |
 | #15 | Over-eager close | Fix applied, retest pending |
+
+
+## Component Library (Subagent)
+| Component | ID |
+|---|---|
+| call_style_detector | `conversation_flow_component_ff58734c21bb` |
+| verify_emergency | `conversation_flow_component_174275fc7751` |
+| booking_capture | `conversation_flow_component_ca04bba21560` |
+| transfer_failed | `conversation_flow_component_183320e7b210` |
+| ending | `conversation_flow_component_801ba4098915` |
+| existing_customer | `conversation_flow_component_d8eff9881e16` |
+| spam_robocall | `conversation_flow_component_d23e204deb4f` |
+| identify_call | `conversation_flow_component_ebac0db129f3` |
+| general_questions | `conversation_flow_component_d46848148d1d` |
+| fallback_leadcapture | `conversation_flow_component_e6879f7849ab` |
+| callback | `conversation_flow_component_ab7909b654e2` |
+| validate_phone | `conversation_flow_component_3b788e86e755` |
+| emergency_fallback | `conversation_flow_component_9d3c5c904347` |
+| spanish_routing | `conversation_flow_component_731ee109f18a` |
+| emergency_detection | `conversation_flow_component_24d9b49e1a30` |
+| check_availability | `conversation_flow_component_dfe7bd5017e5` |
+| confirm_booking | `conversation_flow_component_20ac85a7954c` |
+| reschedule | `conversation_flow_component_4b3d107fd73a` |
+| cancel_appointment | `conversation_flow_component_eb20b4cd1d8d` |
