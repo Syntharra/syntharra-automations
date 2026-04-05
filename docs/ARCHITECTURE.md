@@ -319,7 +319,28 @@
 
 ---
 
-> ## How to add entries
+> 
+## [2026-04-05] — Infrastructure: GitHub writes via direct API, not Copilot MCP proxy
+
+**Problem:** GitHub MCP (connected via `api.githubcopilot.com/mcp`) returned 403 on all write operations (`create_or_update_file`, `push_files`) despite the PAT having full `repo` scope.
+
+**Options considered:**
+1. Fix the PAT scopes (already maxed out — not the issue)
+2. Authorize PAT for org SSO (no SSO on Syntharra org — not applicable)
+3. Use Python `requests` directly to `api.github.com` (bypasses Copilot proxy entirely)
+4. Use a fine-grained token instead of classic PAT
+
+**Chose:** Option 3 — Python `requests` to `api.github.com` directly via `github_helper.py`
+
+**Because:** The PAT has every possible scope including `repo` (full control). The 403 comes from `api.githubcopilot.com/mcp` acting as a restricted proxy for non-Copilot subscribers — it allows reads but blocks writes. Direct calls to `api.github.com` with the same PAT succeed immediately (201 Created confirmed). No PAT changes needed.
+
+**Trade-offs accepted:** GitHub MCP (`mcp__562ca274-ff68-4873-8410-8ecc5c606bd6__*`) is now reads-only in practice. All writes (session logs, TASKS.md, FAILURES.md, CLAUDE.md) go through `github_helper.py`. This adds a Python dependency but it's already built and tested.
+
+**Rule going forward:** GitHub MCP for in-context reads (fast, no subprocess). `github_helper.py` for all writes. Never route writes through the Copilot MCP proxy.
+
+**Revisit if:** Dan gets a GitHub Copilot subscription, which may unlock write access through the MCP proxy endpoint.
+
+## How to add entries
 > Add a new `## [date] — [area]: [title]` section above this line.
 > Fill in all 6 fields. One paragraph each is enough.
 > The goal: future Claude (and Dan) can read this and understand the system's shape without re-litigating it.
