@@ -604,3 +604,60 @@ When using execution-sourced nodes to preserve credential bindings:
 - If you source nodes from an old execution, you will REVERT any changes made to OTHER nodes after that execution
 - ALWAYS check ALL nodes for regressions after pushing execution-sourced updates, not just the node you intentionally changed
 - Safest approach: Use GET response nodes (which now include credential bindings in n8n v1.x), only fall back to execution-sourced nodes if GET truly strips credentials
+
+## CRITICAL: n8n Sub-Agent Workflow Updates — Cross-Contamination Risk (2026-04-05)
+
+When using sub-agents to update n8n workflows, there is a CRITICAL risk of cross-workflow contamination:
+
+### The Attack Vector
+1. Sub-agent is tasked to fix Workflow A
+2. Sub-agent sources nodes from Workflow B's execution (by mistake or lack of verification)
+3. Nodes from Workflow B are PUT into Workflow A
+4. Workflow A's credentials are lost, webhooks are wrong, activation fails
+5. Workflow B's production traffic is now routed to Workflow A's broken webhook
+
+### Example from 2026-04-05
+- Standard (workflow id: …123) had a bad webhook path
+- Sub-agent was tasked to fix it
+- Sub-agent sourced nodes from execution 405, which was from Premium (workflow id: …456)
+- PUT wrote Premium's nodes (with Premium's webhook) into Standard
+- Standard's webhook path was overwritten with Premium's path
+- Activation failed: "conflict with one of the webhooks" because both workflows now had the same path
+- Sub-agent then deactivated Premium to "resolve" the conflict, but never verified the fix
+
+### The Prevention Rule — NON-NEGOTIABLE
+**BEFORE ANY PUT TO AN n8n WORKFLOW, VERIFY THE EXECUTION BELONGS TO THE CORRECT WORKFLOW:**
+```javascript
+if (execution.workflowId !== targetWorkflowId) {
+  throw new Error(`Execution ${executionId} is from workflow ${execution.workflowId}, not target ${targetWorkflowId}`);
+}
+```
+
+### Safe Execution Sourcing Pattern
+1. Identify the target workflow ID (e.g., Standard workflow ID from Supabase)
+2. Get the list of executions: `GET /api/v1/workflows/{id}/executions?limit=1&status=success`
+3. Use the MOST RECENT successful execution of that workflow
+4. Verify: `execution.workflowId === targetWorkflowId`
+5. Extract nodes: `execution.workflowData.nodes`
+6. Apply changes (e.g., fix code node)
+7. PUT back with verification step above
+8. Verify via E2E: run a test call to confirm the fix worked
+
+### Webhook Conflict Resolution (When It Happens)
+If activation fails with "conflict with one of the webhooks":
+1. GET all active workflows: `GET /api/v1/workflows?active=true`
+2. Scan each workflow's nodes to find duplicate webhook_path values
+3. The workflow with the WRONG webhook path (not originally assigned to it) is the corrupted one
+4. Deactivate the corrupted workflow (the one that was mistakenly written to)
+5. Restore from a known-good execution of that workflow
+6. VERIFY execution.workflowId before PUT
+7. Reactivate both in order
+
+### Never Deactivate Production to Resolve Conflicts
+**WRONG:** "Let me deactivate Premium to clear the conflict"
+**RIGHT:** "Let me restore Standard from the correct execution and fix the webhook path"
+
+Deactivating a workflow masks the problem — it doesn't fix the root cause (wrong execution used).
+Always fix the corrupted workflow's source, never just disable the other one.
+
+---
