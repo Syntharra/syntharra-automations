@@ -1,18 +1,20 @@
 # TASKS — Open Work Only
 
 ## COMPLETED THIS SESSION (2026-04-05)
-- [x] Build COMPONENTS architecture (14 shared instruction functions)
-- [x] Deploy COMPONENTS to Premium Build code (v2)
-- [x] Deploy COMPONENTS to Standard Build code (v2)
-- [x] Add call_style_detector and validate_phone code nodes to both tiers
-- [x] Upgrade Standard to warm_transfer (was cold_transfer)
-- [x] Upgrade Standard post-call analysis to 17 fields (match Premium)
-- [x] Fix Supabase 409 conflict on hvac_call_log (Prefer: resolution=merge-duplicates)
-- [x] Update e2e-hvac-standard assertions for 15 nodes (was 12)
-- [x] Verify Premium E2E 106/106 passing
-- [x] Verify Standard E2E 93/93 passing
+- [x] Restored COMPONENTS object in Standard + Premium build codes (v4)
+- [x] Added 3 global nodes + 1 extract variables node to both tiers
+- [x] Fixed Premium HTTP body double-stringify bug
+- [x] Fixed Premium code node else_edge prompt (must be "Else")
+- [x] Added global nodes to Premium TESTING flow (20→24 nodes)
+- [x] Standard E2E: 98/99 passing (1 cosmetic)
+- [x] Premium E2E: 110/112 passing (2 test-timing artifacts)
+- [x] Verified multi-node Library Components work via API test
+- [x] Wrote sub-flow component architecture plan
 
 ## OPEN WORK
+- [ ] Execute sub-flow component architecture (consolidate 12→5 components)
+- [ ] Add Slack notification to Premium onboarding workflow
+- [ ] Fix Standard E2E cosmetic failure (custom_greeting agent name check)
 - [ ] Scenario testing for both Premium and Standard agents
 - [ ] Telnyx SMS integration (pending approval)
 - [ ] HubSpot Code node rewrite to HTTP Request pattern (both call processors)
