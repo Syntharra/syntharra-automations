@@ -10,7 +10,7 @@ description: >
   Premium email sequences, or the 4-step Premium onboarding email flow.
 ---
 
-> **Last verified: 2026-04-04** — Retell Enhancement Sprint complete (Phases 0-7). Call processor now Retell-native — no GPT/Groq.
+> **Last verified: 2026-04-05** — COMPONENTS architecture deployed, Premium E2E 106/106 passing, token usage optimized to ~2,670/turn.
 
 # HVAC Premium Pipeline — Full Reference
 
@@ -20,7 +20,7 @@ description: >
 
 | Workflow | ID | Detail |
 |---|---|---|
-| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | 13 nodes, 17 PCA, 4 tools |
+| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | Build code v2: COMPONENTS architecture, 20 nodes (15 conv + 2 transfer + 2 code + 1 end), 17 PCA |
 | HVAC Prem Call Processor | `STQ4Gt3rH8ptlvMi` | Retell-native — reads call_analysis.custom_analysis_data directly, no LLM calls |
 | HVAC Prem Dispatcher | `73Y0MHVBu05bIm5p` | 4 nodes — Google Cal + Jobber |
 
@@ -353,6 +353,47 @@ This includes:
 - Pipeline: "Syntharra Sales" — Lead → Demo Booked → Paid Client → Active
 
 > After Jotform Premium onboarding completes and the agent goes live, the workflow updates the client contact and creates a deal at **Active** stage in HubSpot automatically.
+
+---
+
+## COMPONENTS Architecture (v2 Build Code — 2026-04-05)
+
+**Build code location:** n8n workflow `kz1VmwNccunRMEaF`, "Build Premium Prompt + Flow" node (Code node v2)
+
+Premium now uses a shared **COMPONENTS object** with 14 reusable instruction functions:
+1. `identify_call` — Classify call type (new service, emergency, callback, spam, wrong number)
+2. `verify_emergency` — Emergency detection with safe vs urgent routing
+3. `callback_node` — Existing customer callback handling
+4. `existing_customer_node` — Identified repeat customer workflow
+5. `general_questions_node` — FAQ and product questions
+6. `spam_robocall_node` — Spam/robocall handling
+7. `transfer_failed_node` — Failed transfer recovery
+8. `ending_node` — Call conclusion
+9. `call_style_detector` — Classify caller personality (chatty/technical/distracted/abrupt/neutral)
+10. `validate_phone` — Phone number validation
+11. `warm_transfer_summary` — Warm transfer preamble
+12. `emergency_transfer_summary` — Emergency transfer preamble
+13. `booking_capture_node` — Premium-specific: booking capture with appointment scheduling
+14. `fallback_leadcapture_node` — Fallback lead capture when premium features unavailable
+
+**Why COMPONENTS:** Single source of truth for all node instructions. Both Premium and Standard reference the same 14 functions. Functions accept parameters (`primaryCaptureNode`, `pricingInstr`, `bookingAvailable`) to adapt behavior for each tier.
+
+### Flow Structure — Premium (20 nodes total)
+- 15 conversation nodes (use COMPONENTS functions)
+- 2 code nodes (call_style_detector, validate_phone)
+- 2 transfer nodes (warm_transfer, emergency_transfer)
+- 1 end node (End Call)
+
+### Token Usage — Premium v2
+- Per-turn: ~2,670 tokens (37% reduction from v1)
+- Global prompt: ~1,500 tokens
+- Largest node instruction: ~1,100 tokens (booking_capture_node)
+- Well within 4k target
+
+### Post-Call Analysis — Premium
+17 custom fields including:
+- Standard: call_type, lead_score, urgency, sentiment, summary, notes
+- Premium-specific: booking_attempted, booking_success, appointment_date, appointment_time, job_type_booked, reschedule_or_cancel, caller_email
 
 ---
 

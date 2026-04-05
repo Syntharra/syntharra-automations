@@ -33,6 +33,8 @@
 - Transfer scenarios: confirm evaluator is using latest scoring logic before any run
 | 2026-04-03 | Railway API | Railway token returned Not Authorized on GraphQL /v2 endpoint | Token stored in vault was a project-scoped token, not a personal account token. Railway personal tokens are created at Account Settings → API Tokens, not inside a project | Updated vault with new token. Railway dashboard pause is a manual fallback for service management | syntharra-infrastructure |
 | 2026-04-03 | HubSpot integration | n8n workflows had no HubSpot nodes — all client data was siloed in Supabase only | Admin dashboard was removed; HubSpot CRM adopted as replacement. Workflows had never had CRM output | Added HubSpot upsert/deal/note nodes to 5 workflows. All non-blocking (try/catch) so HubSpot errors never break pipeline | syntharra-hubspot |
+| 2026-04-05 | Call Processor | Supabase 409 conflict on hvac_call_log — duplicate call_id hitting unique constraint | Retell retries webhook or call data arrives twice; no dedup in call processor | Added Prefer: resolution=merge-duplicates header to Standard call processor HTTP nodes | syntharra-retell |
+| 2026-04-05 | Standard E2E | Node count mismatch (12 vs 15) — e2e-test.py assertions failed | E2E test not updated when Standard upgraded to v2 COMPONENTS architecture with 15 nodes | Updated e2e-hvac-standard-SKILL.md assertions to expect 15 nodes (13 conv + 2 code + 2 transfer) | e2e-hvac-standard |
 
 ---
 ### 2026-04-03 | Agent Simulator | core_flow failures (runs 3–8)

@@ -11,7 +11,7 @@ description: >
   Sub-skills: e2e-hvac-standard | standard-call-processor-testing | hvac-standard-agent-testing
 ---
 
-> **Last verified: 2026-04-04** — Retell Enhancement Sprint complete (Phases 0-7). Call processor now Retell-native — no GPT/Groq.
+> **Last verified: 2026-04-05** — COMPONENTS architecture deployed, Standard E2E 93/93 passing, warm_transfer enabled.
 > **System status: PRE-LAUNCH — ready for live calls. SMS pending Telnyx approval.**
 
 # HVAC Standard — Master Pipeline Reference
@@ -87,26 +87,29 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 
 ---
 
-## Conversation Flow — 15 Nodes
+## Conversation Flow — 15 Nodes (v2 COMPONENTS architecture)
 
-`greeting` → `identify_call` → `nonemergency_leadcapture` → `verify_emergency`
-→ `callback` → `existing_customer` → `general_questions` → `spam_robocall`
-→ `Transfer Call` → `transfer_failed` → `Ending` → `End Call`
+`greeting` → `identify_call` → [call_style_detector] → `fallback_leadcapture_node` → `verify_emergency`
+→ `callback_node` → `existing_customer_node` → `general_questions_node` → `spam_robocall_node`
+→ [validate_phone] → `warm_transfer` → `transfer_failed_node` → `ending_node` → `End Call`
 
 | # | Node ID | Name | Type |
 |---|---|---|---|
 | 1 | `node-greeting` | `greeting_node` | conversation |
 | 2 | `node-identify-call` | `identify_call_node` | conversation |
-| 3 | `node-leadcapture` | `nonemergency_leadcapture_node` | conversation |
-| 4 | `node-verify-emergency` | `verify_emergency_node` | conversation |
-| 5 | `node-existing-customer` | `existing_customer_node` | conversation |
-| 6 | `node-general-questions` | `general_questions_node` | conversation |
-| 7 | `node-callback` | `callback_node` | conversation |
-| 8 | `node-spam-robocall` | `spam_robocall_node` | conversation |
-| 9 | `node-transfer-call` | `Transfer Call` | transfer_call |
-| 10 | `node-transfer-failed` | `transfer_failed_node` | conversation |
-| 11 | `node-ending` | `Ending` | conversation |
-| 12 | `node-end-call` | `End Call` | end |
+| 3 | — | `call_style_detector` | code |
+| 4 | `node-leadcapture` | `fallback_leadcapture_node` | conversation |
+| 5 | `node-verify-emergency` | `verify_emergency_node` | conversation |
+| 6 | `node-callback` | `callback_node` | conversation |
+| 7 | `node-existing-customer` | `existing_customer_node` | conversation |
+| 8 | `node-general-questions` | `general_questions_node` | conversation |
+| 9 | `node-spam-robocall` | `spam_robocall_node` | conversation |
+| 10 | — | `validate_phone` | code |
+| 11 | `node-transfer-call` | `warm_transfer` | transfer_call |
+| 12 | `node-transfer-failed` | `transfer_failed_node` | conversation |
+| 13 | `node-ending` | `ending_node` | conversation |
+| 14 | `node-end-call` | `End Call` | end |
+| 15 | — | `Emergency Transfer` | transfer_call |
 
 ### Code Node (caller style detection)
 - Sits between `identify_call` and `nonemergency_leadcapture`
@@ -128,8 +131,8 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 
 | Workflow | ID | Purpose |
 |---|---|---|
-| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | Jotform → Retell agent provisioning |
-| HVAC Std Call Processor | `Kg576YtPM9yEacKn` | Post-call webhook → Groq → Supabase |
+| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | Build code: COMPONENTS architecture, 15 nodes, Retell agent provisioning |
+| HVAC Std Call Processor | `Kg576YtPM9yEacKn` | Post-call webhook → Retell analysis → Supabase (Prefer: resolution=merge-duplicates) |
 | Cleanup (E2E) | `URbQPNQP26OIdYMo` | Auto-deletes test agents after E2E run |
 | Stripe Workflow | `ydzfhitWiF5wNzEy` | Stripe checkout → welcome email |
 | Weekly Lead Report | `mFuiB4pyXyWSIM5P` | Weekly digest to clients |
@@ -297,6 +300,42 @@ Retell POST (call_analyzed event)
 | Custom fields | 21 (all call data) |
 | System presets | call_summary, call_successful, user_sentiment |
 | webhook_events | call_analyzed only |
+
+---
+
+## COMPONENTS Architecture (v2 Build Code — 2026-04-05)
+
+**Build code location:** n8n workflow `4Hx7aRdzMl5N0uJP`, "Build Retell Prompt" node (Code node v2)
+
+Standard now uses the **same shared COMPONENTS object** as Premium — 14 reusable instruction functions. Single source of truth for all node behavior.
+
+Functions accept parameters to adapt for Standard tier:
+- `primaryCaptureNode`: `fallback_leadcapture_node` (vs Premium's `booking_capture_node`)
+- `pricingInstr`: Standard pricing rules (no booking availability)
+- `bookingAvailable`: `false` for Standard
+
+### Flow Structure — Standard (15 nodes total)
+- 13 conversation nodes (use COMPONENTS functions)
+- 2 code nodes (call_style_detector, validate_phone)
+- 2 transfer nodes (warm_transfer, emergency_transfer)
+  - **Changed from cold_transfer to warm_transfer** (2026-04-05) for consistent caller experience
+
+### Token Usage — Standard v2
+- Per-turn: ~2,400 tokens (optimized for lean tier)
+- Global prompt: ~1,300 tokens
+- Largest node instruction: ~1,000 tokens (fallback_leadcapture_node)
+- Well within 4k target
+
+### Post-Call Analysis — Standard
+17 custom fields (same as Premium for consistency):
+- Standard: call_type, lead_score, urgency, sentiment, summary, notes, transfer info, repeat caller status
+- Always-false fields: booking_attempted, booking_success (placeholder for Premium compatibility)
+- Enables same HubSpot data model + Slack alert format across both tiers
+
+### GOTCHA: Supabase 409 Conflicts
+Call processor hits 409 conflict on `hvac_call_log` unique constraint when duplicate `call_id` arrives.
+**Fix:** Standard call processor adds HTTP header: `Prefer: resolution=merge-duplicates`
+This tells Supabase to resolve duplicates instead of 409 failing. Applied 2026-04-05.
 
 ---
 

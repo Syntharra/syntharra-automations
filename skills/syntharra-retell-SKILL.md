@@ -10,7 +10,7 @@ description: >
   Retell configuration — never rely on memory alone for agent IDs or API patterns.
 ---
 
-> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+> **Last verified: 2026-04-05** — COMPONENTS architecture deployed both tiers, Supabase 409 fix applied
 
 # Syntharra — Retell AI Reference
 
@@ -52,6 +52,30 @@ These 3 are the only agents hardcoded here because they're system-level, not cli
 
 ### Flow Nodes (in order)
 `greeting` → `identify_call` → `nonemergency_leadcapture` → `verify_emergency` → `callback` → `existing_customer` → `general_questions` → `spam_robocall` → `Transfer Call` → `transfer_failed` → `Ending` → `End Call`
+
+---
+
+## GOTCHAs
+
+### Supabase 409 Conflict on hvac_call_log
+When the call processor receives a duplicate `call_id`, Supabase 409 fails on the unique constraint.
+This happens when Retell retries the webhook or the same call data arrives twice.
+
+**Fix:** Add HTTP header to Supabase requests in call processor:
+```
+Prefer: resolution=merge-duplicates
+```
+
+This tells Supabase to resolve duplicates instead of 409 failing. Applied to Standard call processor 2026-04-05.
+
+### COMPONENTS Architecture — Shared Instructions Across Tiers
+Both Premium and Standard now reference the same 14 COMPONENTS functions. This is a SINGLE SOURCE OF TRUTH pattern.
+
+If you update node instructions, you update ONE place — the COMPONENTS object in the build code. Both tiers automatically use the new instructions.
+
+Functions accept parameters to adapt for tier differences:
+- `primaryCaptureNode` — `fallback_leadcapture_node` (Standard) vs `booking_capture_node` (Premium)
+- `bookingAvailable` — `false` (Standard) vs `true` (Premium)
 
 ---
 

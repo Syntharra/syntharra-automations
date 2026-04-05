@@ -30,7 +30,7 @@ Complete Premium pipeline end-to-end, 106 assertions across 8 phases (103 passin
 | 2 | n8n Premium onboarding workflow → `success` (polling, up to 45s) |
 | 3 | Supabase `hvac_standard_agent` — 49 fields including Premium-only booking fields |
 | 4 | Retell agent — exists, published, Premium webhook URL, correct voice/language |
-| 5 | Conversation flow — exactly 18 nodes, all Premium nodes present |
+| 5 | Conversation flow — exactly 20 nodes (15 conv + 2 transfer + 2 code + 1 end), COMPONENTS architecture verified |
 | 6 | Premium call processor — fake call with Retell-native payload + booking fields, 30+ fields verified |
 | 7 | Stripe gate — Twilio correctly skipped in test mode |
 | 8 | Cleanup scheduled — 5 min delayed delete |

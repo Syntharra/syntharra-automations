@@ -6,12 +6,12 @@ description: >
   adding a new field to the onboarding pipeline (Jotform, Supabase, or Retell), verifying a new
   client was provisioned correctly, checking whether a recent n8n change broke onboarding, or any
   task involving shared/e2e-test.py.
-  Current status: 90/90 passing (2026-04-04). Run with: python3 shared/e2e-test.py
+  Current status: 93/93 passing (2026-04-05). COMPONENTS architecture v2 build code verified. Run with: python3 shared/e2e-test.py
 ---
 
 # E2E Test — HVAC Standard Pipeline
 
-> **Status: 90/90 ✅ — Verified 2026-04-04 22:05 UTC**
+> **Status: 93/93 ✅ — Verified 2026-04-05. All passing.**
 > Run: `python3 shared/e2e-test.py`
 > No env vars needed — Retell key embedded as fallback.
 
@@ -19,7 +19,7 @@ description: >
 
 ## What It Tests
 
-Complete Standard pipeline end-to-end, 90 assertions across 7 phases:
+Complete Standard pipeline end-to-end, 93 assertions across 7 phases (updated for v2 COMPONENTS architecture):
 
 | Phase | What's checked |
 |---|---|
@@ -27,8 +27,8 @@ Complete Standard pipeline end-to-end, 90 assertions across 7 phases:
 | 2 | n8n onboarding workflow → `success` (polling, up to 45s) |
 | 3 | Supabase `hvac_standard_agent` — 40+ fields all populated |
 | 4 | Retell agent — exists, published, correct voice/webhook/language |
-| 5 | Conversation flow — exactly 12 nodes, correct structure |
-| 6 | Call processor — fake call with full Retell post-call analysis payload, 30+ fields verified |
+| 5 | Conversation flow — exactly 15 nodes (13 conv + 2 code + 2 transfer), COMPONENTS architecture verified |
+| 6 | Call processor — fake call with full Retell post-call analysis payload, 17 fields verified (includes warm_transfer support) |
 | 7 | Stripe gate — Twilio correctly skipped in test mode |
 
 Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
@@ -169,22 +169,25 @@ All 40+ fields verified. Jotform → column mapping:
 
 ## Conversation Flow Spec (Phase 5)
 
-**Target: 12 nodes exactly**
+**Target: 15 nodes exactly** (updated 2026-04-05 for COMPONENTS v2)
 
 | # | Node ID | Name | Type |
 |---|---|---|---|
 | 1 | `node-greeting` | `greeting_node` | conversation |
 | 2 | `node-identify-call` | `identify_call_node` | conversation |
-| 3 | `node-leadcapture` | `nonemergency_leadcapture_node` | conversation |
-| 4 | `node-verify-emergency` | `verify_emergency_node` | conversation |
-| 5 | `node-existing-customer` | `existing_customer_node` | conversation |
-| 6 | `node-general-questions` | `general_questions_node` | conversation |
-| 7 | `node-callback` | `callback_node` | conversation |
-| 8 | `node-spam-robocall` | `spam_robocall_node` | conversation |
-| 9 | `node-transfer-call` | `Transfer Call` | transfer_call |
-| 10 | `node-transfer-failed` | `transfer_failed_node` | conversation |
-| 11 | `node-ending` | `Ending` | conversation |
-| 12 | `node-end-call` | `End Call` | end |
+| 3 | — | `call_style_detector` | code |
+| 4 | `node-leadcapture` | `fallback_leadcapture_node` | conversation |
+| 5 | `node-verify-emergency` | `verify_emergency_node` | conversation |
+| 6 | `node-callback` | `callback_node` | conversation |
+| 7 | `node-existing-customer` | `existing_customer_node` | conversation |
+| 8 | `node-general-questions` | `general_questions_node` | conversation |
+| 9 | `node-spam-robocall` | `spam_robocall_node` | conversation |
+| 10 | — | `validate_phone` | code |
+| 11 | `node-transfer-call` | `warm_transfer` | transfer_call |
+| 12 | `node-transfer-failed` | `transfer_failed_node` | conversation |
+| 13 | `node-ending` | `ending_node` | conversation |
+| 14 | `node-end-call` | `End Call` | end |
+| 15 | — | `Emergency Transfer` | transfer_call |
 
 ---
 

@@ -271,6 +271,54 @@
 
 ---
 
+## [2026-04-05] — Prompt Engineering: COMPONENTS Architecture for Shared Instructions
+
+**Problem:** Premium and Standard agents need similar node instructions (identify_call, emergency handling, etc) but different behaviours at capture (booking vs fallback lead capture). Duplicating instruction text across two places creates maintenance burden — update one, forget the other, inconsistency.
+
+**Options considered:**
+1. Copy-paste node instructions in both tiers (status quo pre-2026-04-05)
+2. Store instructions in GitHub as versioned template files, import at build time
+3. Create a COMPONENTS object (JavaScript) with 14 parameterized functions, load from build code
+
+**Chose:** COMPONENTS object — option 3
+
+**Because:** Instructions live in the source of truth (n8n build code node). No additional versioning layer. Functions accept tier-specific parameters (`primaryCaptureNode`, `bookingAvailable`, `pricingInstr`) so both Premium and Standard call the SAME functions but get tier-appropriate output. Single source of truth reduces maintenance from 6 update points to 1.
+
+**What each COMPONENTS function does:**
+- 14 total functions (identify_call, verify_emergency, callback_node, existing_customer_node, general_questions_node, spam_robocall_node, transfer_failed_node, ending_node, call_style_detector, validate_phone, warm_transfer_summary, emergency_transfer_summary, booking_capture_node, fallback_leadcapture_node)
+- Each accepts parameters to adapt for tier
+- Function output becomes node instruction text in Retell prompt
+
+**Trade-offs accepted:** If COMPONENTS logic becomes complex, JavaScript in the code node could become hard to debug. Mitigation: keep functions simple, test both tiers after changes.
+
+**Revisit if:** A third tier (plumbing, electrical) is added — may reveal refactoring needs in COMPONENTS structure.
+
+---
+
+## [2026-04-05] — Call Processor: Warm Transfer Standard for Consistent UX
+
+**Decision:** Standard agents now use `warm_transfer` (was `cold_transfer`). Both Premium and Standard offer warm transfers.
+
+**Why:** Caller experience should be consistent across tiers. A warm transfer (agent talks to the human before handing off) feels less abandoned and sets expectations. Standard callers (budget-conscious) aren't second-class — they still get a professional transfer experience. Retell handles both transfer types identically from a backend cost perspective (no cost difference).
+
+**Impact:** Standard transfer node name changed from `Transfer Call` to `warm_transfer`. Node type remains `transfer_call`. Retell conversation flow updated (Phase 5 of E2E test).
+
+**Trade-offs accepted:** None material — no cost, no technical complexity change.
+
+---
+
+## [2026-04-05] — Data Schema: Unified Call Log with 17 Fields Across Tiers
+
+**Decision:** Both Premium and Standard now log 17 identical custom fields to `hvac_call_log`. Premium-only fields (booking_attempted, booking_success, appointment_date, appointment_time, job_type_booked) are nullable and always empty for Standard.
+
+**Why:** Consistent HubSpot data model — same Slack alert format, same reporting logic, same analysis. Standard clients get data parity with Premium without duplication. Supabase schema is simpler (one table, nullable columns) than per-tier column subsets.
+
+**What changed:** Standard upgraded from 3 system presets (call_summary, call_successful, sentiment) to 17 custom + 3 presets. Full Retell post-call analysis data now captured for all calls, enabling better leads and reporting later.
+
+**Impact:** Slack alerts, HubSpot notes, and analysis dashboards work identically across both tiers. No per-tier business logic needed in post-call workflows.
+
+---
+
 > ## How to add entries
 > Add a new `## [date] — [area]: [title]` section above this line.
 > Fill in all 6 fields. One paragraph each is enough.
