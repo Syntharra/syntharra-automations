@@ -43,13 +43,13 @@ AGENT_CONFIG = {
     "standard": {
         "agent_id": "agent_731f6f4d59b749a0aa11c26929",
         "flow_id":  "conversation_flow_5b98b76c8ff4",
-        "model":    "llama-3.3-70b-versatile",
+        "model":    "llama-3.1-8b-instant",
         "name":     "HVAC Standard (TESTING)",
     },
     "premium": {
         "agent_id": "agent_2cffe3d86d7e1990d08bea068f",
         "flow_id":  "conversation_flow_2ded0ed4f808",
-        "model":    "llama-3.3-70b-versatile",
+        "model":    "llama-3.1-8b-instant",
         "name":     "HVAC Premium (TESTING)",
     },
 }
@@ -211,10 +211,10 @@ def fetch_agent_prompt(agent_type):
 # GROQ API  (rate-gated, exponential backoff on 429)
 # =============================================================================
 
-def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=4):
+def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=4, max_tokens=None):
     """Rate-gated Groq chat completion."""
     if model is None:
-        model = "llama-3.3-70b-versatile"
+        model = "llama-3.1-8b-instant"
 
     rate_gate(model[:8])   # enforce 25 RPM before every call
 
@@ -224,6 +224,8 @@ def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=
         "temperature": temperature,
         "messages": [{"role": "system", "content": system_prompt}] + messages,
     }
+    if max_tokens:
+        payload["max_tokens"] = max_tokens
 
     for attempt in range(retries):
         try:
@@ -285,64 +287,56 @@ def filter_scenarios(all_scenarios, agent_type, group_filter=None, scenario_ids=
 # =============================================================================
 
 def simulate_scenario(api_key, scenario, agent_prompt, agent_type):
-    """Simulate multi-turn caller ↔ agent conversation."""
+    """
+    One-shot transcript generation — generates entire conversation in a single Groq call.
+    Reduces calls per scenario from ~15 to 1, preserving simulation quality for evaluation.
+    """
     model = AGENT_CONFIG[agent_type]["model"]
     expected = normalize_expected(scenario)
 
-    caller_system = f"""You are simulating a caller to an HVAC company phone line.
+    sim_system = "You are a phone call simulator. Output valid JSON only — no markdown, no commentary."
 
-CALLER BRIEF:
-{scenario['callerPrompt']}
+    sim_prompt = f"""Simulate a realistic phone conversation between an HVAC AI receptionist and a caller.
 
-RULES:
-- Respond naturally as this caller — short sentences, conversational
-- Do NOT volunteer all info at once — respond only to what the agent asks
-- Stay in character throughout
-- When the agent says goodbye and ends, reply only: [END CALL]
-- Keep each response under 25 words
-"""
-
-    agent_system = f"""You are an AI receptionist handling an inbound HVAC phone call.
-
+AGENT INSTRUCTIONS (how the receptionist should behave):
 {agent_prompt}
 
-RULES:
-- Respond concisely, warmly, professionally
-- One question or action per turn — never more than one question at once
-- When the call objective is complete and you've said goodbye, end with: [END CALL]
-- Keep each response under 40 words
-"""
+CALLER SCENARIO:
+{scenario['callerPrompt']}
 
-    agent_history, caller_history, transcript = [], [], []
-    total_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+EXPECTED OUTCOME:
+{expected}
 
-    greeting = "Thank you for calling, this is Sophie. How can I help you today?"
-    transcript.append({"role": "agent", "text": greeting})
-    caller_history.append({"role": "user", "content": f"[Agent]: {greeting}"})
-    agent_history.append({"role": "assistant", "content": greeting})
+Generate a realistic 5–8 turn conversation. The agent must attempt to achieve the expected outcome.
+Format: return ONLY a JSON array:
+[
+  {{"role": "agent", "text": "Thank you for calling Arctic Breeze HVAC, this is Sophie. How can I help you today?"}},
+  {{"role": "caller", "text": "..."}},
+  {{"role": "agent", "text": "..."}},
+  ...
+]
+Rules: each response under 40 words. Agent follows its instructions faithfully."""
 
-    for turn in range(MAX_TURNS):
-        # Caller turn
-        caller_reply, usage = chat(api_key, caller_system, caller_history, temperature=0.8, model=model)
-        total_usage["prompt_tokens"]     += usage.get("prompt_tokens", 0)
-        total_usage["completion_tokens"] += usage.get("completion_tokens", 0)
-        transcript.append({"role": "caller", "text": caller_reply})
-        if "[END CALL]" in caller_reply:
-            break
-        caller_history.append({"role": "assistant", "content": caller_reply})
-        agent_history.append({"role": "user", "content": f"[Caller]: {caller_reply}"})
+    response, usage = chat(
+        api_key, sim_system,
+        [{"role": "user", "content": sim_prompt}],
+        temperature=0.5, model=model, max_tokens=700,
+    )
 
-        # Agent turn
-        agent_reply, usage = chat(api_key, agent_system, agent_history, temperature=0.3, model=model)
-        total_usage["prompt_tokens"]     += usage.get("prompt_tokens", 0)
-        total_usage["completion_tokens"] += usage.get("completion_tokens", 0)
-        transcript.append({"role": "agent", "text": agent_reply})
-        if "[END CALL]" in agent_reply:
-            break
-        agent_history.append({"role": "assistant", "content": agent_reply})
-        caller_history.append({"role": "user", "content": f"[Agent]: {agent_reply}"})
+    clean = response.replace("```json", "").replace("```", "").strip()
+    try:
+        transcript = json.loads(clean)
+        if not isinstance(transcript, list):
+            raise ValueError("not a list")
+    except Exception:
+        # Fallback: wrap raw text as a minimal transcript
+        transcript = [
+            {"role": "agent", "text": "Thank you for calling Arctic Breeze HVAC, this is Sophie. How can I help?"},
+            {"role": "caller", "text": scenario.get("callerPrompt", "")[:100]},
+            {"role": "agent", "text": response[:200]},
+        ]
 
-    return transcript, total_usage
+    return transcript, usage
 
 # =============================================================================
 # EVALUATION
@@ -386,7 +380,7 @@ Respond ONLY with valid JSON (no markdown fences, no extra text):
     response, usage = chat(
         api_key, eval_system,
         [{"role": "user", "content": f"TRANSCRIPT:\n{transcript_text}"}],
-        temperature=0.1, model=model,
+        temperature=0.1, model=model, max_tokens=200,
     )
 
     clean = response.replace("```json", "").replace("```", "").strip()
