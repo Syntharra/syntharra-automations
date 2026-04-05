@@ -589,3 +589,49 @@ were applied before the q69 gate was found and the correct spec established.
 
 **Rule:** Before changing any prioritisation or fallback logic, find all the related Jotform
 questions first. The form is the spec — the code should implement it, not the other way around.
+
+---
+
+## 2026-04-05 — n8n Workflows: Always source nodes from execution snapshots, never from GET /workflows
+
+**Problem:** After sub-agents updated n8n workflows to fix bugs, node credentials and webhook registrations disappeared, causing cross-workflow contamination.
+
+**Root cause:**
+- n8n GET /workflows API strips credential bindings and webhook registrations from the response
+- When a PUT request is sent with nodes sourced from GET, it overwrites the full workflow with incomplete node data
+- If the wrong execution was used (from a different workflow), nodes from Workflow A get PUT into Workflow B
+- Result: Workflow B's webhooks conflict with Workflow A, credentials are lost, and the workflow becomes broken
+
+**Example from session:**
+1. Sub-agent was tasked to fix Premium workflow's webhook path
+2. Agent used GET /workflows to read Standard workflow nodes (not execution nodes)
+3. GET stripped the credential bindings and webhook config
+4. PUT wrote stripped nodes to Standard
+5. Standard's webhook path was overwritten with Premium's path, causing activation conflict
+6. Webhook conflict triggered a cascade: agent deactivated Premium to resolve it, then tried to restore without verifying execution.workflowId
+
+**Chose:** Always source workflow nodes from execution snapshots via `execution.workflowData.nodes`, never from GET /workflows
+
+**Because:**
+- Execution snapshots preserve the full node configuration including credentials and webhooks
+- Execution data is immutable — it's a snapshot from a moment in time when the workflow was known-good
+- Verification is explicit: check that `execution.workflowId === targetWorkflow.id` before any PUT
+
+**Trade-offs accepted:** Execution-based updates require keeping track of which execution is "good" for the target workflow. Must document this (e.g., "execution 1323 is the known-good snapshot for Standard workflow").
+
+**Revisit if:** n8n implements a "clone workflow" API that preserves full node configuration in GET responses.
+
+**CRITICAL RULE FOR SUB-AGENTS:**
+When using sub-agents to manage n8n workflows:
+1. Always verify the execution belongs to the CORRECT workflow before PUT: `execution.workflowId === targetId`
+2. Never deactivate a production workflow to resolve a conflict — fix the root cause instead
+3. After PUT, visually inspect a few nodes to verify credentials and webhooks are intact
+4. Never assume the fix is complete without E2E verification (run a test call)
+
+**Webhook conflict resolution pattern:**
+If activation fails with "conflict with one of the webhooks":
+1. Check all active workflows for duplicate webhook paths (via GET /workflows and scan all active workflows)
+2. The INCORRECT workflow (that has the wrong webhook path) should be deactivated
+3. Restore the INCORRECT workflow from a known-good execution
+4. Verify the execution is from the CORRECT workflow before PUT
+5. Reactivate both workflows in order (the one with the earlier creation date first)
