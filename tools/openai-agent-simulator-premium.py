@@ -23,17 +23,63 @@ OPENAI_URL   = "https://api.groq.com/openai/v1/chat/completions"
 MODEL        = "meta-llama/llama-4-scout-17b-16e-instruct"  # 30k TPM — required for full prompt + node instructions
 MAX_TURNS    = 10
 
+def fetch_component_instructions(component_id, rh):
+    """Fetch the full instruction text from a subagent component."""
+    try:
+        cr = requests.get(f"https://api.retellai.com/get-conversation-flow-component/{component_id}", headers=rh).json()
+        sections = []
+        for cnode in cr.get("nodes", []):
+            cname = cnode.get("name", "")
+            ctext = cnode.get("instruction", {}).get("text", "")
+            if ctext:
+                sections.append(ctext)
+        return "\n\n".join(sections)
+    except Exception:
+        return ""
+
 def fetch_agent_prompt():
     rh = {"Authorization": f"Bearer {RETELL_KEY}", "Content-Type": "application/json"}
     flow = requests.get(f"https://api.retellai.com/get-conversation-flow/{TESTING_FLOW}", headers=rh).json()
     global_prompt = flow["global_prompt"]
+
+    # Build node ID → name map for edge resolution
+    id_map = {}
+    for node in flow["nodes"]:
+        id_map[node["id"]] = node.get("name", "")
+
     node_sections = []
     for node in flow["nodes"]:
         name  = node.get("name", "")
         text  = node.get("instruction", {}).get("text", "")
         ntype = node.get("type", "")
-        if text and ntype != "end":
+
+        if ntype == "end":
+            continue
+
+        # For subagent nodes, fetch the component's internal instructions
+        if ntype == "subagent":
+            comp_id = node.get("component_id", "")
+            if comp_id:
+                comp_text = fetch_component_instructions(comp_id, rh)
+                if comp_text:
+                    text = comp_text
+
+        # Append edge routing info for nodes with edges (helps LLM understand flow)
+        edges = node.get("edges", [])
+        if edges:
+            edge_lines = []
+            for e in edges:
+                dest_name = id_map.get(e.get("destination_node_id", ""), "unknown")
+                cond = e.get("transition_condition", {})
+                cond_text = cond.get("prompt", "") if cond.get("type") == "prompt" else ""
+                if cond_text and "DISABLED" not in cond_text:
+                    edge_lines.append(f"  → {dest_name}: {cond_text}")
+            if edge_lines:
+                text += "\n\nROUTING EDGES:\n" + "\n".join(edge_lines)
+
+        if text:
             node_sections.append(f"[NODE: {name}]\n{text}")
+
     return global_prompt + "\n\n---\nNODE INSTRUCTIONS:\n\n" + "\n\n".join(node_sections)
 
 def fetch_scenarios():
@@ -179,7 +225,7 @@ def run_scenarios(api_key, scenarios_to_run, agent_prompt, max_turns=MAX_TURNS):
         print(f"  [{i+1:02d}/{len(scenarios_to_run)}] #{scenario['id']:02d} {scenario['name'][:55]}...", end=" ", flush=True)
         try:
             time.sleep(5)  # inter-scenario cooldown
-        transcript, sim_usage = simulate_scenario(api_key, scenario, agent_prompt, max_turns)
+            transcript, sim_usage = simulate_scenario(api_key, scenario, agent_prompt, max_turns)
             evaluation = evaluate_transcript(api_key, scenario, transcript)
             outcome = evaluation.get("overall", "ERROR")
             met     = evaluation.get("criteria_met", 0)
