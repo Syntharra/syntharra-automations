@@ -1,0 +1,283 @@
+{
+  "agent_id": "agent_731f6f4d59b749a0aa11c26929",
+  "channel": "voice",
+  "last_modification_timestamp": 1775380542899,
+  "agent_name": "HVAC Standard (TESTING)",
+  "response_engine": {
+    "type": "conversation-flow",
+    "version": 46,
+    "conversation_flow_id": "conversation_flow_5b98b76c8ff4"
+  },
+  "webhook_url": "https://n8n.syntharra.com/webhook/retell-hvac-webhook",
+  "language": "multi",
+  "data_storage_setting": "everything",
+  "opt_in_signed_url": false,
+  "end_call_after_silence_ms": 30000,
+  "version": 46,
+  "is_published": false,
+  "post_call_analysis_model": "gpt-4.1-mini",
+  "pii_config": {
+    "mode": "post_call",
+    "categories": []
+  },
+  "guardrail_config": {
+    "output_topics": [
+      "harassment",
+      "self_harm",
+      "sexual_exploitation",
+      "violence",
+      "child_safety_and_exploitation",
+      "illicit_and_harmful_activity",
+      "regulated_professional_advice"
+    ],
+    "input_topics": [
+      "platform_integrity_jailbreaking"
+    ]
+  },
+  "handbook_config": {
+    "echo_verification": true,
+    "speech_normalization": false,
+    "default_personality": false,
+    "scope_boundaries": true,
+    "natural_filler_words": true,
+    "nato_phonetic_alphabet": true,
+    "high_empathy": true,
+    "ai_disclosure": false,
+    "smart_matching": true
+  },
+  "analysis_successful_prompt": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail.",
+  "analysis_summary_prompt": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call.",
+  "analysis_user_sentiment_prompt": "Evaluate user's sentiment, mood and satisfaction level.",
+  "post_call_analysis_data": [
+    {
+      "type": "system-presets",
+      "name": "call_summary",
+      "description": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call."
+    },
+    {
+      "type": "system-presets",
+      "name": "call_successful",
+      "description": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail."
+    },
+    {
+      "type": "system-presets",
+      "name": "user_sentiment",
+      "description": "Evaluate user's sentiment, mood and satisfaction level."
+    },
+    {
+      "name": "caller_name",
+      "description": "Full name of the caller as stated during the call. Empty string if not provided.",
+      "type": "string",
+      "examples": [
+        "John Smith",
+        "Maria Garcia"
+      ]
+    },
+    {
+      "name": "caller_phone",
+      "description": "Phone number the caller provided for callback. May differ from caller ID. Empty string if not provided.",
+      "type": "string",
+      "examples": [
+        "+15551234567",
+        "555-867-5309"
+      ]
+    },
+    {
+      "name": "caller_address",
+      "description": "Full service address including street, city, state. Empty string if not provided.",
+      "type": "string",
+      "examples": [
+        "123 Main St, Austin TX"
+      ]
+    },
+    {
+      "name": "service_requested",
+      "description": "The specific HVAC service or problem described. Short description.",
+      "type": "string",
+      "examples": [
+        "AC not cooling",
+        "furnace won't start",
+        "annual tune-up"
+      ]
+    },
+    {
+      "type": "string",
+      "name": "call_type",
+      "description": "Type of call. One of: new_service, emergency, callback, existing_customer, general_question, spam, wrong_number."
+    },
+    {
+      "type": "string",
+      "name": "urgency",
+      "description": "Urgency level: emergency, high, medium, low."
+    },
+    {
+      "type": "boolean",
+      "name": "is_hot_lead",
+      "description": "True if this is a hot lead \u2014 caller wants service soon and provided contact details."
+    },
+    {
+      "type": "number",
+      "name": "lead_score",
+      "description": "Score 1-10. 9-10: emergency needing immediate service. 7-8: active repair/install request. 5-6: maintenance/quote. 3-4: low intent. 1-2: spam/wrong number/robocall."
+    },
+    {
+      "type": "boolean",
+      "name": "transfer_attempted",
+      "description": "True if agent attempted to transfer the call to a human."
+    },
+    {
+      "type": "boolean",
+      "name": "transfer_success",
+      "description": "True if transfer was successfully connected. False if transfer failed."
+    },
+    {
+      "type": "boolean",
+      "name": "vulnerable_occupant",
+      "description": "True if caller mentioned elderly, children, medical equipment, or other vulnerable person affected by the HVAC issue."
+    },
+    {
+      "type": "boolean",
+      "name": "emergency",
+      "description": "True if this is a genuine HVAC emergency (no heat in winter, no AC with vulnerable occupant, gas smell, CO detector)."
+    },
+    {
+      "type": "string",
+      "name": "notification_type",
+      "description": "Notification priority routing. One of: emergency, hot_lead, general_lead, follow_up_required, existing_customer, spam, nonemergency_lead."
+    },
+    {
+      "type": "string",
+      "name": "job_type",
+      "description": "Category of the job. One of: repair, install, maintenance, quote, emergency, existing_customer, general_inquiry, other."
+    },
+    {
+      "type": "string",
+      "name": "language",
+      "description": "Language the caller spoke. One of: en, es, other."
+    },
+    {
+      "type": "boolean",
+      "name": "booking_attempted",
+      "description": "Was a booking or appointment attempted? For Standard plan calls this is always false."
+    },
+    {
+      "type": "boolean",
+      "name": "booking_success",
+      "description": "Was a booking successfully made? For Standard plan calls this is always false."
+    },
+    {
+      "type": "string",
+      "name": "notes",
+      "description": "Additional details not captured elsewhere \u2014 equipment brand, model, access notes, preferred callback time, anything relevant."
+    }
+  ],
+  "voice_id": "retell-Sloane",
+  "voice_temperature": 1,
+  "voice_speed": 1.05,
+  "enable_dynamic_voice_speed": true,
+  "volume": 1,
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.8,
+  "backchannel_words": [
+    "yeah",
+    "uh-huh",
+    "got it",
+    "okay",
+    "right"
+  ],
+  "reminder_trigger_ms": 15000,
+  "reminder_max_count": 2,
+  "max_call_duration_ms": 600000,
+  "interruption_sensitivity": 0.9,
+  "boosted_keywords": [
+    "HVAC",
+    "compressor",
+    "condenser",
+    "furnace",
+    "AC",
+    "air conditioning",
+    "Trane",
+    "Lennox",
+    "Carrier",
+    "Rheem",
+    "Goodman",
+    "York",
+    "Daikin",
+    "Amana",
+    "Bryant",
+    "American Standard",
+    "Ruud",
+    "Mitsubishi",
+    "R-410A",
+    "R-22",
+    "refrigerant",
+    "Freon",
+    "mini split",
+    "ductless",
+    "heat pump",
+    "air handler",
+    "evaporator",
+    "thermostat",
+    "Honeywell",
+    "Nest",
+    "Ecobee",
+    "Trane XL",
+    "tonnage",
+    "SEER",
+    "SEER2",
+    "BTU",
+    "EER",
+    "ductwork",
+    "capacitor",
+    "blower motor",
+    "drain line",
+    "coil",
+    "tune up",
+    "maintenance",
+    "annual service",
+    "Syntharra",
+    "callback"
+  ],
+  "ambient_sound": "call-center",
+  "ambient_sound_volume": 0.7,
+  "responsiveness": 0.85,
+  "enable_dynamic_responsiveness": true,
+  "pronunciation_dictionary": [
+    {
+      "word": "HVAC",
+      "alphabet": "ipa",
+      "phoneme": "e\u026at\u0283 vi\u02d0 e\u026a si\u02d0"
+    },
+    {
+      "word": "SEER",
+      "alphabet": "ipa",
+      "phoneme": "s\u026ar"
+    },
+    {
+      "word": "Trane",
+      "alphabet": "ipa",
+      "phoneme": "tre\u026an"
+    },
+    {
+      "word": "Rheem",
+      "alphabet": "ipa",
+      "phoneme": "ri\u02d0m"
+    },
+    {
+      "word": "Daikin",
+      "alphabet": "ipa",
+      "phoneme": "da\u026ak\u026an"
+    },
+    {
+      "word": "Lennox",
+      "alphabet": "ipa",
+      "phoneme": "l\u025bn\u0259ks"
+    }
+  ],
+  "normalize_for_speech": true,
+  "allow_user_dtmf": true,
+  "user_dtmf_options": {},
+  "webhook_events": [
+    "call_analyzed"
+  ]
+}
