@@ -736,3 +736,31 @@ They CAN be referenced as nested subagent nodes inside multi-node components.
 **Code components as subagent:** When referencing a code-type Library Component, the subagent node carries: code, else_edge, speak_during_execution, wait_for_result fields.
 
 **else_edge prompt MUST be exactly "Else"** — any other value causes Retell API 400.
+
+---
+
+## Retell API Patterns (verified 2026-04-05)
+
+### Endpoint Format
+- GET: `https://api.retellai.com/get-agent/{agent_id}`, `get-conversation-flow/{flow_id}`
+- PATCH: `https://api.retellai.com/update-agent/{agent_id}`, `update-conversation-flow/{flow_id}`, `update-conversation-flow-component/{comp_id}`
+- POST: `https://api.retellai.com/create-conversation-flow-component`
+- DELETE: `https://api.retellai.com/delete-conversation-flow-component/{comp_id}`
+- LIST: `https://api.retellai.com/list-agents`, `list-conversation-flow-components`
+
+### Component API
+- Components are global — shared across all flows
+- Create: POST /create-conversation-flow-component with {name, nodes[], start_node_id}
+- Each component needs at least: one start node + one end node
+- Nodes inside a component use normal types: conversation, code, end
+- To use a component in a flow: set node type to "subagent" and add "conversation_flow_component_id"
+
+### Transfer Numbers
+- Must be valid E.164 format — +1XXXXXXXXXX
+- 555- numbers are NOT valid and will be rejected
+- For TESTING agents, use +18563630633 (Syntharra test transfer line)
+
+### Tool Calls
+- All Premium booking tools POST to: https://n8n.syntharra.com/webhook/retell-integration-dispatch
+- Action routing via "action" const field in params
+- Always include error handling guidance in the component that uses the tool
