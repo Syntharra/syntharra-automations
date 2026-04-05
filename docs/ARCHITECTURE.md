@@ -700,3 +700,33 @@ If activation fails with "conflict with one of the webhooks":
 - Cannot have different component versions for different agents — all share the same version
 
 **Revisit if:** Retell adds component versioning (allowing A/B testing of component variants) or if different HVAC verticals need fundamentally different call handling logic that can't be parameterized.
+
+
+---
+
+## Weekly Review — 2026-04-05
+
+### Decisions flagged for revisit
+
+1. **2026-03 — Retell: Never Delete/Recreate Agents (partial trigger)**
+   - *Revisit if:* "Retell introduces versioning/backup features that make recreation recoverable."
+   - **Status: CONDITION PARTIALLY MET.** The 2026-04-04 Enhancement Sprint notes confirm Retell now has native agent versioning — "Retell's agent versioning creates immutable snapshots on publish. Phone numbers can be pinned to specific versions for instant rollback." The core rule (never delete/recreate) remains correct because agent_id is still the foreign key in Supabase + n8n call routing. But the *risk* that justified the rule has reduced — recovery from a broken agent state is now possible via version rollback rather than being a total loss. Recommend: update the ADR to note that Retell versioning mitigates the worst-case recovery scenario, while keeping the rule in place.
+
+2. **2026-04 — CRM: HubSpot — maintenance signal**
+   - *Revisit if:* "the Supabase + HubSpot sync becomes a maintenance burden."
+   - **Status: EARLY SIGNAL.** TASKS.md Priority 2 item: "Fix HubSpot Code node in call processors ($env access denied) — rewrite to HTTP Request." A known broken sync node exists in production call processors. Not a blocker yet (nodes are non-blocking/try-catch), but confirms the sync has a maintenance cost. Monitor — not yet trigger threshold.
+
+### Gaps identified (decisions not yet documented)
+
+1. **Agentic Test Architecture (not in ADR)**
+   - A full agentic test suite with 108 Premium + 93 Standard scenarios is now live (AGENTIC-TESTING-PLAN.md published 2026-04-05). The decision to use LLM-as-evaluator over rule-based assertion was a significant architectural choice (tradeoff: flexibility vs evaluator reliability — open question still unresolved per [2026-04-04] entry). The open question about majority-vote scoring (run 3x, fail if 2/3 fail) should be resolved and documented once tested.
+
+2. **Supabase Dedup Pattern (not in ADR)**
+   - The `Prefer: resolution=merge-duplicates` header on call_log upserts (added 2026-04-05, FAILURES.md) is an operational data integrity decision worth documenting. Root cause: Retell retries webhooks on timeout, causing duplicate call_id hits on unique constraint. The header approach was chosen over idempotency keys or dedup logic in n8n because it's a single-line fix in the HTTP node. Should be captured as an ADR entry for future call processor modifications.
+
+3. **n8n Subagent Component Library (not in ADR)**
+   - 19 reusable n8n components were built and deployed (2026-04-05, from TASKS.md). The decision to create a shared component library for n8n workflows — rather than building bespoke nodes per workflow — is architecturally significant for maintainability as Syntharra scales to new verticals. Not yet documented.
+
+### Architecture health
+
+Solid. All major platform choices (Retell, Railway, Supabase, SMTP2GO, HubSpot) remain well-reasoned and no "Revisit if" conditions are fully triggered. The system has matured significantly this week — COMPONENTS architecture, unified call logging, and full E2E test coverage are the most material improvements. One open question (evaluator false-fail rate) should be resolved and closed in the next test cycle.
