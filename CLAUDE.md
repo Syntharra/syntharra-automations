@@ -1,295 +1,215 @@
-# Syntharra — Claude Master Brief
+# Syntharra — Cowork Workspace Rules
+# Always mount: C:\Users\danie\OneDrive\Desktop\Cowork
 
-> Fetch this file **first** at the start of every Syntharra chat session.
-> It is intentionally short. It tells you exactly which context files to load next.
-
-## Who you are working with
-**Dan** — Founder & CEO of Syntharra. Prefers concise direct responses.
-OCD about brand consistency. Delegates all technical work to Claude.
-
-## What Syntharra is
-Global AI Solutions company. Core product: fully automated AI phone receptionist
-for trade businesses (HVAC, plumbing, electrical etc). Built on Retell AI.
-Sold as Standard ($497/mo) and Premium ($997/mo). Currently pre-launch, TEST MODE.
-
-## Non-negotiable rules (memorise these)
-1. NEVER delete or recreate a Retell agent — always patch in place
-2. ALWAYS publish after any Retell API update
-3. ALL emails LIGHT THEME — white cards, #F7F7FB outer bg, #1A1A2E text, #6C63FF accent
-4. NEVER use `daniel@syntharra.com` in any workflow, email, or website
-5. NEVER use base64 SVG in emails — always hosted PNG
-6. Edit files with str_replace — never rewrite from scratch
-7. ONE `<style>` block per HTML page, `overflow-x:clip` on body
-8. Push all changes to GitHub before chat ends
-9. **Update relevant skill(s) after ANY verified work — no exceptions, no skipping**
-10. Update `docs/TASKS.md` at end of every chat — open work only, under 40 lines. Agent IDs/reference data → REFERENCE.md. Marketing state → MARKETING.md.
-11. **Document architectural reasoning in `docs/ARCHITECTURE.md` whenever a non-obvious choice is made**
-12. **Every new/modified n8n workflow MUST be labelled before session close** — see `docs/STANDARDS.md`
-13. **Route execution tasks to Claude Code, not Chat** — see `docs/STANDARDS.md` for routing rules
-
-## Claude Code — Safe Operating Rules
-> Claude Code is the execution layer for session tasks. It complements this workflow — never replaces or overrides it.
-> All rules in this file apply inside Claude Code sessions without exception.
-
-### What Claude Code is used for
-- Running E2E tests automatically after any agent or workflow change
-- Self-healing loop: run test → see failure → fix → re-test → repeat until green
-- Pushing session logs to GitHub at session close
-- Verifying GitHub pushes completed correctly
-
-### Hard limits — non-negotiable inside Claude Code
-1. **TESTING agents only** — never touch MASTER agents (`agent_4afbfdb3fcb1ba9569353af28d`, `agent_9822f440f5c3a13bc4d283ea90`)
-2. **No production changes without E2E pass** — every change must pass `shared/e2e-test.py` before any live push
-3. **Self-healing loop max 10 iterations** — if not green after 10 cycles, stop and report to Dan
-4. **3 consecutive failures on any step = stop** — do not retry indefinitely, surface the blocker
-5. **Never delete or recreate Retell agents** — same as everywhere else, no exceptions
-6. **Read before write** — always fetch current file before any edit
-7. **Session log must be pushed before Claude Code session closes**
-8. **Never wipe or rewrite a file from scratch** — always str_replace on fetched current content
-
-### What Claude Code will NOT do
-- Touch any MASTER agent
-- Push to GitHub without a passing E2E test
-- Modify live production n8n workflows without test verification
-- Run the self-healing loop against anything other than the TESTING agent
-
-## SELF-IMPROVEMENT PROTOCOL — NON-NEGOTIABLE
-
-This is not an end-of-session checklist. It is an active loop running throughout every session.
-Skills, FAILURES.md, and ARCHITECTURE.md are Claude's permanent compounding memory.
-Every session must leave them more accurate and useful than they were at the start.
-
-### The compounding intelligence loop
-```
-Observe → Question assumptions → Act → Reflect → Document → Next session starts smarter
-```
-This loop runs on EVERY non-trivial action — not just when things break.
-
-### When to update a skill file
-- A bug was diagnosed and fixed → add root cause + correct pattern
-- An API call failed before working → add what was wrong and what works
-- A gotcha was discovered (wrong arg, wrong order, wrong assumption) → document it
-- A rate limit, quota, or interval constraint was hit → document the limit and safe threshold
-- Something was tried that doesn't work → add "do NOT do X" entry
-- A correct pattern was confirmed by testing → add it as a verified working pattern
-
-**Do NOT update a skill just because you used it normally with no issues.**
-**Do NOT add entries that don't contain a real lesson.**
-
-### When to update FAILURES.md
-- Every time a bug is fixed — one row per fix
-- Format: `date | area | what failed | root cause | fix applied | skill updated (yes/no)`
-- Only log once the fix is verified working — not while still debugging
-
-### When to update ARCHITECTURE.md
-- Any non-obvious decision was made → document WHY, what was considered, what was rejected
-- A "quick fix" was tempting but a better path was chosen → document both and why
-- A constraint was discovered (API limit, token limit, timeout) → document with correct workaround
-- An assumption was tested and confirmed or disproved → document the result
-
-### Mandatory session-end REFLECTION — written into session log every single session
-Before closing, write and answer every line of this block honestly in the session log:
-
-```
-## Session Reflection
-1. What did I get wrong or do inefficiently, and why?
-2. What assumption did I make that turned out to be incorrect?
-3. What would I do differently if this exact task came up again?
-4. What pattern emerged that future-me needs to know?
-5. What was added to ARCHITECTURE.md / skill files, and what was the specific lesson?
-6. Did I do anything "because that's how it's done" that I haven't actually verified?
-   If yes → add to ARCHITECTURE.md as an open question to test next session.
-```
-
-**This reflection is not optional. Shallow answers are not acceptable.**
-**If it isn't in the session log, the session is not closed.**
-
-### Compounding intelligence rule
-Any time Claude catches itself doing something "because that's how it's done" — stop.
-Ask: has this assumption been tested and verified on this project?
-- Verified → add to skill file as confirmed pattern
-- Not verified → flag in ARCHITECTURE.md as open question, test next opportunity
-- Proven wrong → add to FAILURES.md, correct the skill file, never repeat it
-
-### Which skill to update — global, covers all skills
-| System touched | Skill to update |
-|---|---|
-| Railway, deploys, env vars, ops monitor | `syntharra-infrastructure` |
-| Retell agents, flows, prompts, calls | `syntharra-retell` |
-| n8n workflows, webhooks, nodes | `syntharra-infrastructure` |
-| Emails, SMTP2GO, templates, alerts | `syntharra-email` |
-| Stripe, billing, products, prices | `syntharra-stripe` |
-| HubSpot, CRM, pipeline, contacts | `syntharra-hubspot` |
-| Website, HTML, CSS, pages | `syntharra-website` |
-| HVAC Standard pipeline | `hvac-standard` |
-| HVAC Standard agent simulator / testing | `hvac-standard-agent-testing` |
-| HVAC Premium pipeline | `hvac-premium` |
-| E2E tests, simulators, scenario runner | `e2e-hvac-standard` or `e2e-hvac-premium` |
-| Client dashboard | `syntharra-client-dashboard` |
-| Marketing, lead gen, newsletter | `syntharra-marketing` |
-| Slack notifications, channels, alerts | `syntharra-slack` |
+## Who I Am
+- **Dan Blackmore**, Founder & CEO of **Syntharra** — a global AI Solutions company providing AI Receptionists to trade industry businesses worldwide.
+- Primary focus: HVAC-first US launch, expanding to plumbing, electrical, cleaning.
+- Platform: Windows 11 | Tools: Cowork (desktop), Claude web.
 
 ---
 
-## PRE-ACTION PROTOCOL — mandatory before every non-trivial decision
+## Agent Behaviour — Always Parallel & Agentic
 
-Before taking any action that involves changing a model, prompt, config, test, or fix — especially under time pressure — answer these 3 questions explicitly in your response:
+**Default to multi-agent execution. Never single-thread when parallel is possible.**
 
-1. **WHY am I doing it this way?** — Is this fixing the root cause or just a symptom?
-2. **WHAT would be invalidated if I'm wrong?** — What breaks downstream if this assumption is incorrect?
-3. **Does this decision belong in ARCHITECTURE.md or a skill file?** — If yes, write it there before closing the session.
+- For any task with 2+ independent workstreams, spawn subagents in parallel immediately — no asking.
+- Pattern: **Orchestrator → Specialist Subagents**. One lead coordinates; specialists execute simultaneously.
+- Break complex tasks into a DAG. Identify what can run concurrently and launch it all at once.
+- Do work proactively — make a reasonable call and move forward rather than stopping to clarify.
+- Always add a verification/QA subagent pass at the end before presenting results.
+- Use the GSD agent library in `get-shit-done/agents/` for specialised subagent roles (debugger, planner, executor, researcher, UI auditor, etc.)
 
-**If you cannot answer question 1 clearly — stop and diagnose further before acting.**
-
-### Why this rule exists
-On 2026-04-04, the simulator was hitting Groq TPM limits. The "quick fix" was to strip node instructions from the prompt to reduce token count. Question 1 answer was "saves tokens" — technically true. But question 2 was never asked: *"What does stripping node instructions invalidate?"* — Answer: the entire test. Node instructions define how the agent behaves at each stage of the call. Testing without them means testing an incomplete agent. The fix was wrong and had to be reverted.
-
-The correct fix (switch to a higher-TPM model) was already known — it just wasn't reached because the shortcut was taken first.
-
-### The pattern to break
-> Task is hard → quick fix appears → quick fix is taken → quick fix causes a new problem → revert → do it properly
-
-### The pattern to enforce
-> Task is hard → ask WHY → ask WHAT BREAKS → take the right action → document the decision
+When to go agentic without being asked:
+- Research → one subagent per source/topic, in parallel
+- Document creation → research + writing + formatting agents simultaneously
+- Competitive analysis → one agent per competitor, all at once
+- Marketing batch → all channels/formats in parallel
+- Code + tests → write and test in parallel
+- Any GSD command from `get-shit-done/commands/` → use the relevant workflow
 
 ---
 
-## Session startup — always load these 6
-```python
-claude_md     = fetch("CLAUDE.md")            # operating rules — always first
-tasks_md      = fetch("docs/TASKS.md")        # open work only — stays under 40 lines
-reference_md  = fetch("docs/REFERENCE.md")    # agent IDs, flow IDs, simulator commands, n8n registry
-failures_md   = fetch("docs/FAILURES.md")     # what broke before — scan before touching anything
-decisions_md  = fetch("docs/DECISIONS.md")    # why things are built the way they are
-standards_md  = fetch("docs/STANDARDS.md")    # labelling rules + Claude Code routing
-arch_md       = fetch("docs/ARCHITECTURE.md") # non-obvious decisions — MANDATORY, read before acting
-# If working on marketing: fetch("docs/MARKETING.md")
+## Communication Style
+
+- No recaps, summaries, or filler at the end of responses. Dan reads the output directly.
+- No "Great question!" or "Certainly!" openers.
+- Technical output (JSON, SQL, API responses, configs) — raw and unfiltered.
+- Be direct. Call out problems and better approaches without being asked.
+- Short responses for simple tasks. Detailed only when complexity warrants it.
+
+---
+
+## Skills — Auto-Trigger, Always
+
+Full skill library is loaded. Check available skills before starting any task. Trigger automatically — never make Dan ask.
+
+| Category | Key Skills |
+|---|---|
+| Documents | `docx`, `pdf`, `xlsx`, `pptx` |
+| Marketing | `copywriting`, `cold-email`, `seo-audit`, `content-strategy`, `social-content`, `linkedin-content`, `email-sequence`, `paid-ads`, `ad-creative`, `launch-strategy`, `competitor-alternatives` |
+| CRO | `page-cro`, `signup-flow-cro`, `onboarding-cro`, `popup-cro`, `paywall-upgrade-cro`, `form-cro`, `churn-prevention` |
+| AI Media | `ai-image-generation`, `ai-video-generation`, `elevenlabs-tts`, `elevenlabs-dialogue`, `ai-avatar-video`, `flux-image`, `google-veo`, `ai-music-generation` |
+| Dev / Data | `supabase-postgres-best-practices`, `vercel-react-best-practices`, `python-sdk`, `javascript-sdk`, `python-executor` |
+| Design | `excalidraw-diagram`, `frontend-design`, `data-visualization`, `pitch-deck-visuals`, `adapt`, `animate`, `audit`, `bolder`, `clarify`, `colorize`, `critique`, `delight`, `distill`, `harden`, `normalize`, `optimize`, `overdrive`, `polish`, `quieter`, `typeset` |
+| Research | `firecrawl`, `web-search`, `customer-research`, `competitor-teardown`, `notebooklm` |
+| Sales | `sales:account-research`, `sales:call-prep`, `sales:draft-outreach`, `sales:competitive-intelligence`, `sales:pipeline-review`, `apollo:prospect`, `apollo:enrich-lead`, `apollo:sequence-load` |
+| Syntharra | `syntharra-marketing:content-engine`, `syntharra-marketing:prospector`, `syntharra-marketing:outreach`, `syntharra-marketing:intelligence`, `syntharra-marketing:competitor-watch`, `syntharra-marketing:conversion-optimizer`, `syntharra-marketing:video-content`, `syntharra-marketing:weekly-plan`, `syntharra-marketing:batch-content` |
+| Data | `data:analyze`, `data:sql-queries`, `data:build-dashboard`, `data:statistical-analysis`, `data:create-viz` |
+| Operations | `operations:process-doc`, `operations:runbook`, `operations:risk-assessment`, `operations:status-report` |
+
+---
+
+## Connected MCP Tools — Use Proactively
+
+These are live and authenticated. Use without asking:
+
+| MCP | Tools Available | Use For |
+|---|---|---|
+| **Gmail** | search, read, draft | Emails, threads, inbox triage |
+| **Google Calendar** | list, create, update, find free time | Scheduling, meetings, availability |
+| **Google Drive** | search, fetch | Find/read documents and files |
+| **Slack** | send, search, read channel/thread, schedule | Team comms, announcements, DMs |
+| **HubSpot CRM** | get/search contacts, deals, pipeline | Lead status, CRM lookups |
+| **Stripe** | list/create customers, invoices, subscriptions, refunds, payments | Billing, revenue, payment ops |
+| **Supabase** | execute SQL, migrations, edge functions, logs, branches | All database operations |
+| **n8n** | create/update/execute/publish workflows, get node types | Automation building and management |
+| **JotForm** | fetch, search, create/edit forms, create submissions | Form data, onboarding submissions |
+| **Apollo** | prospect leads, enrich contacts, load sequences | Outbound prospecting, lead research |
+| **Scheduled Tasks** | create, list, update | Recurring automations and reminders |
+| **Claude in Chrome** | navigate, click, fill forms, scrape, screenshot | Browser automation, web research |
+| **PDF Viewer** | read, display, save PDFs | Document processing |
+
+---
+
+## The Product
+
+**Syntharra AI Receptionist** — fully automated phone receptionist for trade businesses.
+- Answers every call 24/7. Books jobs. Qualifies leads. Sends confirmations.
+- Built on Retell AI. No human involvement after setup.
+- Standard: $497/mo | Premium: $997/mo
+- Target: HVAC contractors running 3–20 trucks in the USA
+- Core value prop: Trade owners miss 30–40% of calls. Each missed call = $300–$2,000 lost. Syntharra captures every call.
+- Website: syntharra.com | Demo: Cal.com on /demo.html | CRM: HubSpot
+
+---
+
+## Syntharra Brand
+
+All branded output must follow the Syntharra brand standard.
+
+- **Primary colour**: `#6C63FF` (violet) | **Font**: Inter
+- Full brand spec: `C:\Users\danie\.claude\skills\theme-factory\themes\syntharra.md`
+- Logo files: `C:\Users\danie\OneDrive\Desktop\Syntharra\syntharra_logo\`
+- Emails: light theme only (`#F7F7FB` bg, `#FFFFFF` card), system fonts (Georgia/Arial), hosted PNG logo — never base64 SVG
+- Documents: full logo top-left, Inter headings, `#6C63FF` H2, `#4A4A6A` body
+- Hosted email-safe icon: `https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/brand-assets/email-signature/syntharra-icon.png`
+
+---
+
+## Infrastructure (Use It — Don't Rebuild)
+
+| Asset | Status | Location |
+|---|---|---|
+| syntharra.com | Live | GitHub Pages |
+| 21 blog articles | Live | syntharra.com/blog |
+| AI Readiness Quiz | Live | /ai-readiness.html |
+| Revenue Calculator | Live | /calculator.html |
+| Plan Quiz | Live | /plan-quiz.html |
+| Google Ads landing pages | Live | /lp/hvac-*, /lp/plumbing-*, /lp/electrical-* |
+| Demo landing page | Live | /demo.html |
+| Cold email system | Built, not activated | n8n + SMTP2GO |
+| HubSpot CRM | Live | Full pipeline configured |
+| Supabase lead DB | Live | website_leads table |
+| Cal.com booking | Live | On demo page |
+| Admin dashboard | Live | Railway, auto-deploys from `main` |
+
+---
+
+## n8n Workflow Rules
+
+1. **No `fetch()` in Code nodes** — use HTTP Request nodes, or `this.helpers.httpRequest({...})` inside Code nodes.
+2. **`responseMode: responseNode`** requires a linear chain — respond node must be on a single path, no splits.
+3. **Split In Batches v3**: `output[1]` = loop items (has more), `output[0]` = done.
+4. **HTTP Request v4.2** wraps array responses as `{ data: [...] }` — always access via `.data`.
+5. **`runOnceForEachItem` returns** `{ json: {...} }` not `[{ json: {...} }]` — don't double-wrap.
+6. **Groq free tier**: 30 RPM / 6000 TPM — add 10s Wait node inside every batch loop.
+7. **Cross-node refs**: safe in HTTP Request expressions; unreliable in Code nodes — use `$input.all()` in Code nodes.
+8. **SMTP2GO auth**: `api_key` in JSON body (not header). Format: `{ api_key, sender, to, subject, html_body }`.
+
+### Workflow IDs
+- `SYNTHARRA_AGENT_TEST_RUNNER` = `3MMp9J8QN0YKgA6Q`
+- `SYNTHARRA_FIX_APPROVER` = `ZAAtRETIIVZSMMDk`
+- Standard Onboarding = `4Hx7aRdzMl5N0uJP` (webhook: `jotform-hvac-onboarding`)
+- Premium Onboarding = `kz1VmwNccunRMEaF` (webhook: `jotform-hvac-premium-onboarding`)
+
+---
+
+## Retell AI Rules
+
+- **Always fetch before updating**: `GET /get-conversation-flow/{flow_id}` first, merge changes, then `PATCH`. Never push a stripped/reconstructed node.
+- **Groq 403 = firewall block** (not rate limit). Switch to OpenAI GPT-4.1-mini as fallback.
+- **Prompt optimizer patch cap**: Max 3–4 patches per round. More causes prompt bloat and regression.
+
+---
+
+## Agent Testing System
+
+### Supabase Tables (project: `hgheyqwnrcvwtgngqdnq`)
+- `agent_test_scenarios` — 115 scenarios (100 standard, 15 premium)
+- `agent_test_results` — test run results
+- `agent_pending_fixes` — diagnosis only
+- `infra_health_checks` — health check results
+- `e2e_test_results` — E2E results
+
+### Baselines
+- Best result: **90/95 pass (94.7%)** — Round 5, `best_prompt_r5_95%.json` in `claude_code/`
+- Always start optimizer from `best_prompt_r5_95%.json`, not from live flow
+- Test webhook: `POST /webhook/agent-test-runner`
+
+---
+
+## Admin Dashboard (`syntharra-admin` repo)
+- Single-file SPA: `public/index.html` — auto-deploys to Railway from `main`
+- Nav: `nav(id, el)` toggles `class="section"` divs by `id="sec-{id}"`
+- **JS rule**: `var` not `const`/`let` inside render functions; one `<style>` block; `overflow-x:clip` on body
+- A single JS SyntaxError crashes ALL navigation — run `node --check` on extracted script before pushing
+- Extract: `python3 -c "open('test_script.js','w').write(open('index.html').read().split('<script>')[-1].split('</script>')[0])"`
+
+---
+
+## Build Scripts (`claude_code/` directory)
+- `build_wf1.py` / `build_wf2.py` — main workflow builders
+- `build_wf*_clean.py` — working/current versions
+- Run from `claude_code/`: `python build_wf1_clean.py`
+
+---
+
+## Vendor Rules
+
+- **Never use Twilio.** Email: SMTP2GO. SMS: Telnyx (not live yet).
+
+---
+
+## Get Shit Done (GSD) — Meta-Prompting System
+
+GSD commands and agents are installed in `get-shit-done/` within this workspace.
+
+- **Commands**: `get-shit-done/commands/` — slash-style workflows (do, debug, autonomous, execute-phase, new-project, health, forensics, etc.)
+- **Agents**: `get-shit-done/agents/` — specialist subagent roles (planner, executor, debugger, researcher, UI auditor, doc writer, security auditor, etc.)
+- **References**: `get-shit-done/references/` — best practices and patterns
+- **Workflows**: `get-shit-done/workflows/` — structured multi-step workflows
+
+Use GSD agent roles when spawning subagents for complex tasks. Reference `gsd-planner.md` for planning phases, `gsd-executor.md` for execution, `gsd-debugger.md` for debugging.
+
+---
+
+## End-of-Session Task Logging
+
+Insert any tasks discussed but **not completed** into `admin_tasks` Supabase table (project `hgheyqwnrcvwtgngqdnq`):
+
+```sql
+INSERT INTO public.admin_tasks (title, category, priority) VALUES ('...', '...', '...');
 ```
 
-> ARCHITECTURE.md is mandatory every session — not optional, not "when relevant".
-> It contains reasoning behind decisions that aren't obvious from the code.
-> Reading it prevents re-litigating settled choices and repeating past mistakes.
-
-## Context files — load what you need
-| What you're working on | File to fetch |
-|---|---|
-| Any session (always) | `docs/TASKS.md`, `docs/REFERENCE.md`, `docs/FAILURES.md`, `docs/DECISIONS.md`, `docs/STANDARDS.md` |
-| Marketing system | `docs/MARKETING.md` |
-| Full reasoning behind decisions | `docs/ARCHITECTURE.md` |
-| Agents, calls, Retell | `docs/context/AGENTS.md` |
-| n8n workflows | `docs/context/WORKFLOWS.md` |
-| Stripe billing | `docs/context/STRIPE.md` |
-| Supabase tables | `docs/context/SUPABASE.md` |
-| Infrastructure / Railway | `docs/context/INFRA.md` |
-| Artifacts / UI previews | `docs/context/ARTIFACTS.md` |
-| Pre-launch status | `docs/context/LAUNCH.md` |
-| HubSpot CRM | `docs/context/HUBSPOT.md` |
-
-## Skill files — fetch from GitHub, never from /mnt
-> Skills live in `skills/{name}-SKILL.md` in this repo.
-> Fetch them directly — they are always current, no upload step needed.
-> Load only the skills relevant to the task. Never load all 16 at once.
-
-```python
-def load_skill(name):
-    return fetch(f"skills/{name}-SKILL.md")
-```
-
-| Area | Skill name |
-|---|---|
-| ~~Admin dashboard~~ | DEPRECATED — replaced by HubSpot |
-| HubSpot CRM | `syntharra-hubspot` |
-| Client dashboard | `syntharra-client-dashboard` |
-| Website | `syntharra-website` |
-| Retell / agents | `syntharra-retell` |
-| n8n / infrastructure | `syntharra-infrastructure` |
-| Emails | `syntharra-email` |
-| Stripe / billing | `syntharra-stripe` |
-| HVAC Standard pipeline | `hvac-standard` |
-| HVAC Premium pipeline | `hvac-premium` |
-| E2E test — Standard | `e2e-hvac-standard` |
-| E2E test — Premium | `e2e-hvac-premium` |
-| Ops / session rules | `syntharra-ops` |
-| Marketing / lead gen | `syntharra-marketing` |
-| Slack notifications | `syntharra-slack` |
-| Social leads system | `syntharra-social-leads` |
-| Brand / visual identity | `syntharra-brand` |
-| AI receptionist (new verticals) | `ai-receptionist` |
-| Artifacts (React previews) | fetch `syntharra-artifacts/SKILL.md` directly |
-
-## Tools — use these, don't build from scratch
-| Script | Location | When to use |
-|---|---|---|
-| Agent simulator | `tools/openai-agent-simulator.py` | Test agent behaviour across scenario groups |
-| Auto-fix loop | `tools/auto-fix-loop.py` | Targeted fix validation after prompt changes (~$0.15/test) |
-| Retell call analyser | `tools/retell-call-analyser.py` | Analyse real call transcripts for issues |
-| E2E test — Standard | `shared/e2e-test.py` | Full pipeline test before any deploy |
-| E2E test — Premium | `shared/e2e-test-premium.py` | Full Premium pipeline test |
-| Self-healing loop | `tools/self-healing-loop.py` | Automated fix → test → fix cycle |
-| Safety checks | `tools/safety-checks.py` | Pre-deploy safety validation |
-
-## GitHub repos
-| Repo | Purpose |
-|---|---|
-| `syntharra-automations` | All ops code, skills, docs, n8n backups |
-| `syntharra-website` | syntharra.com (GitHub Pages) |
-| ~~`syntharra-admin`~~ | DEPRECATED — admin dashboard replaced by HubSpot |
-| `syntharra-checkout` | Stripe checkout server — `checkout.syntharra.com` |
-| `syntharra-oauth-server` | Premium OAuth — `auth.syntharra.com` |
-| `syntharra-ops-monitor` | 24/7 monitor (Railway, ACTIVE) |
-| `syntharra-artifacts` | Claude chat artifact files |
-
-## CRM — HubSpot (replaced admin dashboard 2026-04-03)
-- URL: `https://app.hubspot.com`
-- API key: in `syntharra_vault` (service_name='HubSpot', key_type='api_key')
-- Base URL: `https://api.hubapi.com`
-- Pipeline stages: Lead → Demo Booked → Paid Client → Active
-- All n8n workflows push contact + deal data to HubSpot automatically
-- See `docs/context/HUBSPOT.md` for full integration reference
-
-## Scaling Architecture
-- Each client gets their own Retell agent cloned via Retell API
-- Triggered by Jotform submission → n8n onboarding workflow
-- Client config stored in `hvac_standard_agent` Supabase table (single table for Standard + Premium)
-- Current focus: HVAC contractors USA. Expansion: plumbing, electrical, cleaning — same system, one parameter change
-- SMS via Telnyx (pending approval). NOT Twilio.
-
-
-## Claude Code — Safe Operating Rules
-> Claude Code is the execution layer for session-based tasks. It complements this chat — never replaces or overwrites it.
-> These rules are as non-negotiable as the Retell agent rules above.
-
-### Hard limits (never violate)
-1. **TESTING agents only** — self-healing loop and E2E runs operate on TESTING agents exclusively. MASTER agents are never touched by Claude Code.
-2. **E2E must pass before any production push** — no exceptions. Green tests = safe to push. Anything else = stop and report.
-3. **No destructive operations** — no deleting files, agents, workflows, Supabase rows, or GitHub history. Ever.
-4. **3-strike stop rule** — if any automated step fails 3 consecutive times, stop completely and report to Dan. Do not loop indefinitely.
-5. **Max 10 iterations** on any self-healing loop before stopping and reporting.
-6. **Session log mandatory** — Claude Code session cannot close without pushing a session log to `docs/session-logs/YYYY-MM-DD-topic.md`.
-
-### What Claude Code does in a session
-| Task | Script | Operates on |
-|---|---|---|
-| Run E2E after agent change | `python3 shared/e2e-test.py` | TESTING agent only |
-| Run E2E after workflow change | `python3 shared/e2e-test-premium.py` | TESTING agent only |
-| Self-healing loop | `python3 tools/self-healing-loop.py` | TESTING agent only |
-| Push session log | `tools/claude-code/push-session-log.sh` | `docs/session-logs/` only |
-| Verify GitHub push | `tools/claude-code/verify-push.sh` | Read-only check |
-
-### What Claude Code never does
-- Never runs against MASTER agents (`agent_4afbfdb3fcb1ba9569353af28d`, `agent_9822f440f5c3a13bc4d283ea90`)
-- Never modifies n8n production workflows without E2E pass
-- Never changes Railway env vars without explicit Dan instruction in chat
-- Never touches Stripe in live mode
-- Never sends real emails to real clients during testing
-
-### CLAUDE.md for Claude Code
-> When Claude Code starts, it must fetch and follow this CLAUDE.md exactly.
-> The operating rules, skill files, and session protocols are identical whether running in chat or Claude Code.
-> Claude Code is not a separate context — it is the same engineer, same rules, same memory.
-
-## Brand tokens (quick reference)
-- Violet: `#6C63FF` | Cyan: `#00D4FF` | Dark: `#1A1A2E`
-- Font: DM Sans (UI) | Email font: Inter
-- Logo: 4 ascending bars, flat `#6C63FF` — NEVER emoji substitute
-- Icon URL: `https://raw.githubusercontent.com/Syntharra/syntharra-website/main/logo-icon-2x.png`
+Categories: `Pre-Launch`, `Agent Testing`, `Infrastructure`, `Marketing`, `Operations`
+Priorities: `critical`, `high`, `medium`, `low`
