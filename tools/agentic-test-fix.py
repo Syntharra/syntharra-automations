@@ -104,7 +104,7 @@ MAX_OUTER_ITERATIONS    = 3     # full suite re-runs if new failures found
 
 _call_window = deque()
 _RATE_MAX    = 1       # 1 call per window — 2 calls/min max, ~3000 tokens/min (under 6000 TPM cap)
-_RATE_WINDOW = 30.0    # 30s window — aligns with Groq's 60s TPM window cleanly
+_RATE_WINDOW = 62.0    # 30s window — aligns with Groq's 60s TPM window cleanly
 
 def rate_gate(label=""):
     """Block until we're under the rate limit. Called before every Groq API call."""
@@ -211,12 +211,13 @@ def fetch_agent_prompt(agent_type):
 # GROQ API  (rate-gated, exponential backoff on 429)
 # =============================================================================
 
-def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=4, max_tokens=None):
-    """Rate-gated Groq chat completion."""
+def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=4, max_tokens=None, skip_gate=False):
+    """Rate-gated Groq chat completion. skip_gate=True for small eval calls (<600 tokens)."""
     if model is None:
         model = "llama-3.1-8b-instant"
 
-    rate_gate(model[:8])   # enforce 25 RPM before every call
+    if not skip_gate:
+        rate_gate(model[:8])   # enforce TPM gate — only for large simulate calls
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
@@ -231,7 +232,7 @@ def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=
         try:
             r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=45)
             if r.status_code == 429:
-                wait = 30 * (attempt + 1)
+                wait = 63 + 30 * attempt
                 print(f" [429 — wait {wait}s] ", end="", flush=True)
                 time.sleep(wait)
                 rate_gate("retry")
@@ -380,7 +381,7 @@ Respond ONLY with valid JSON (no markdown fences, no extra text):
     response, usage = chat(
         api_key, eval_system,
         [{"role": "user", "content": f"TRANSCRIPT:\n{transcript_text}"}],
-        temperature=0.1, model=model, max_tokens=200,
+        temperature=0.1, model=model, max_tokens=200, skip_gate=True,
     )
 
     clean = response.replace("```json", "").replace("```", "").strip()
