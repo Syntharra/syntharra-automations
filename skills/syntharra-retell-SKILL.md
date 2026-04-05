@@ -721,3 +721,18 @@ This is different from Conversation nodes which use `transitions` (array).
 If identify_call → call_style_detector → leadcapture, both edges must exist.
 
 ---
+
+
+## Library Component Node Type Constraints (verified 2026-04-05)
+
+**ALLOWED inside Library Components:** conversation, subagent (nested refs), extract_dynamic_variables, end
+**NOT ALLOWED:** code, tool_call, transfer_call
+
+Code nodes (call_style_detector, validate_phone) MUST stay as single-node Library Components.
+They CAN be referenced as nested subagent nodes inside multi-node components.
+
+**Subagent node does NOT support start_node_id.** You cannot route to a specific internal node of a multi-node component. Entry point is always node at index 0.
+
+**Code components as subagent:** When referencing a code-type Library Component, the subagent node carries: code, else_edge, speak_during_execution, wait_for_result fields.
+
+**else_edge prompt MUST be exactly "Else"** — any other value causes Retell API 400.
