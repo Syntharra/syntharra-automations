@@ -675,3 +675,49 @@ When making significant changes to Premium, don't modify Premium TESTING directl
 - Finetune examples — per-node transcript examples for response + transition
 - Flex Mode — compiles flow into single prompt (higher cost, more natural)
 - Version comparison — diff between agent versions
+
+---
+
+## Code Node Configuration — CRITICAL PATTERNS
+
+**Code nodes (type: "code") in Retell need else_edge configured even if they have no explicit incoming edges.**
+
+Without else_edge, a code node becomes a dead end — execution reaches the node but has nowhere to go afterward.
+
+Example: `validate_phone` code node validates caller input and has no incoming edges (it's triggered automatically by transcript observation), but MUST have:
+```json
+{
+  "type": "code",
+  "else_edge": {
+    "destination_node_id": "ending_node_id",
+    "transition_condition": {
+      "prompt": "Else"
+    }
+  }
+}
+```
+
+Without this, the code node runs but call disconnects because there's no exit path.
+
+**Transfer nodes (type: "transfer_call") use singular `edge` property (not `edges` array).**
+
+This is different from Conversation nodes which use `transitions` (array).
+
+```json
+{
+  "type": "transfer_call",
+  "edge": {
+    "destination_node_id": "transfer_failed_node_id",
+    "transition_condition": {
+      "prompt": "transfer_failed"
+    }
+  }
+}
+```
+
+**validate_phone code node:** Runs automatically via transcript observation. Doesn't need incoming edges but MUST have else_edge pointing to Ending node.
+
+**call_style_detector code node:** Should have incoming edge from identify_call node + else_edge to primary capture node.
+If identify_call → call_style_detector → leadcapture, both edges must exist.
+
+---
