@@ -103,8 +103,8 @@ MAX_OUTER_ITERATIONS    = 3     # full suite re-runs if new failures found
 # =============================================================================
 
 _call_window = deque()
-_RATE_MAX    = 2       # max calls per window (TPM-safe for 8b-instant 6000 TPM)
-_RATE_WINDOW = 40.0    # seconds — keeps token/min well under 6000 TPM
+_RATE_MAX    = 1       # 1 call per window — 2 calls/min max, ~3000 tokens/min (under 6000 TPM cap)
+_RATE_WINDOW = 30.0    # 30s window — aligns with Groq's 60s TPM window cleanly
 
 def rate_gate(label=""):
     """Block until we're under the rate limit. Called before every Groq API call."""
