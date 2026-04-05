@@ -1,6 +1,6 @@
 # HVAC Standard Agent Testing — Skill
 > Load when: running agent simulator, diagnosing test failures, fixing prompt issues, promoting TESTING → MASTER
-> Last verified: 2026-04-03 — 80/80 (100%) all groups
+> Last verified: 2026-04-05 — Subagent component architecture. Simulator updated to fetch component instructions.
 
 ---
 
@@ -15,7 +15,7 @@
 | Simulator script | `tools/openai-agent-simulator.py` |
 | Scenarios file | `tests/agent-test-scenarios.json` |
 | Results dir | `tests/results/` |
-| Simulator cost | ~$0.002/scenario (gpt-4o-mini) |
+| Simulator cost | ~$0.002/scenario (Groq llama-3.3-70b) |
 | Phone number | `+18129944371` → MASTER agent |
 
 ---
@@ -63,7 +63,7 @@ pip install openai --break-system-packages
 ### Run a group
 ```bash
 GITHUB_TOKEN=ghp_... RETELL_KEY=key_... python3 tools/openai-agent-simulator.py \
-  --key sk-... --group info_collection
+  --key gsk_... --group info_collection
 ```
 
 ### Run all groups
@@ -71,7 +71,7 @@ GITHUB_TOKEN=ghp_... RETELL_KEY=key_... python3 tools/openai-agent-simulator.py 
 # Groups: core_flow | personalities | info_collection | pricing_traps | edge_cases | boundary_safety
 for GROUP in core_flow personalities info_collection pricing_traps edge_cases boundary_safety; do
   GITHUB_TOKEN=ghp_... RETELL_KEY=key_... python3 tools/openai-agent-simulator.py \
-    --key sk-... --group $GROUP
+    --key gsk_... --group $GROUP
 done
 ```
 
