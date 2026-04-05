@@ -648,3 +648,34 @@ If activation fails with "conflict with one of the webhooks":
 **What was rejected:** Original plan to create a 5-node Booking Component. Also rejected: Support Component bundling callback + existing_customer + general_questions (no start_node_id support means you can't route to a specific internal node).
 
 **Unverified:** Whether nested subagent referencing a code-type Library Component works correctly 2 levels deep inside a multi-node component. Must test before implementing.
+
+---
+
+## 2026-04-05 — Agent Architecture: Subagent Component Library
+
+**Problem:** Both HVAC Standard and Premium agents share ~60% of their conversation logic (call routing, emergency handling, lead capture, spam detection, etc.) but maintained separate copies. Changes to shared logic required manual patching across both agents — error-prone and doesn't scale.
+
+**Options considered:**
+1. Keep separate prompts, synchronize manually after each change
+2. Extract shared logic into Retell Conversation Flow Components (subagent library)
+3. Template-based generation (build flows from templates at deploy time)
+
+**Chose:** Option 2 — Retell Conversation Flow Components
+
+**Because:** Retell's native component system allows reusable node groups that can be embedded into any flow. A component update propagates to all flows using it — single source of truth. This maps perfectly to our scaling model (one agent per client, all composed from the same library). Template generation (option 3) would only help at creation time, not for ongoing updates.
+
+**What was built:**
+- 19 components in the library (12 shared Tier 1 + 7 Premium-specific Tier 2)
+- Standard flow: 14/20 nodes are now subagents (70%)
+- Premium flow: 19/26 nodes are now subagents (73%)
+- 7 duplicate components cleaned up
+- Premium global prompt reduced 28% (12,250 → 9,190 chars)
+- Standard global prompt enhanced with missing sections (+1,033 chars)
+- 4 tool calls improved with error handling and corrected required params
+
+**Trade-offs accepted:**
+- Components must be generic enough to work across all agent tiers — per-client customization happens in greeting node and global prompt only
+- Subagent node instructions in the flow are just short descriptions — the real logic lives in the component. This means debugging requires checking the component, not the flow node.
+- Cannot have different component versions for different agents — all share the same version
+
+**Revisit if:** Retell adds component versioning (allowing A/B testing of component variants) or if different HVAC verticals need fundamentally different call handling logic that can't be parameterized.
