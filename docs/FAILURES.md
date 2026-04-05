@@ -174,3 +174,9 @@
 | 2026-04-05 | n8n Onboarding | Agent corrupted Standard workflow — replaced webhook path and name with Premium data | Sub-agent used GET workflow nodes instead of execution nodes, losing credential bindings and webhook config | Restored from execution 1323 nodes with correct webhook path and name | Yes (syntharra-infrastructure, syntharra-retell) |
 | 2026-04-05 | n8n Onboarding | Premium workflow deactivated by sub-agent fixing Standard | Agent deactivated Premium to resolve webhook conflict it caused | Reactivated after restoring Standard to correct webhook path | Yes (syntharra-infrastructure) |
 | 2026-04-05 | Retell Flow | Code nodes (call_style_detector, validate_phone) disconnected in live flows | Build code created nodes but some missing else_edge or no incoming routes | Added proper else_edges and verified connectivity in both TESTING agents | Yes (syntharra-retell) |
+
+| 2026-04-05 | Build Code | COMPONENTS object undefined in v3 build codes | Removed during v3-fixed refactor | Restored full COMPONENTS from v2 source | Yes (syntharra-retell) |
+| 2026-04-05 | Retell API | Code node else_edge prompt caused 400 | Must be exactly "Else", not descriptive text | Changed both else_edge prompts to "Else" | Yes (syntharra-retell) |
+| 2026-04-05 | n8n | Premium HTTP body double-stringified | Used JSON.stringify() wrapper on expression | Removed wrapper, use raw expression | Yes (syntharra-infrastructure) |
+| 2026-04-05 | Retell API | Premium TESTING missing global nodes | Only applied globals to Standard in prior session | Added 3 global + 1 extract to Premium TESTING | No |
+| 2026-04-05 | E2E Test | Premium E2E RETELL_KEY empty | No embedded fallback key in test | Added fallback key | No |
