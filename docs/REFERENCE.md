@@ -57,13 +57,13 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 | call_style_detector | `conversation_flow_component_ff58734c21bb` |
 | verify_emergency | `conversation_flow_component_174275fc7751` |
 | booking_capture | `conversation_flow_component_ca04bba21560` |
-| transfer_failed | `conversation_flow_component_183320e7b210` |
-| ending | `conversation_flow_component_801ba4098915` |
+| transfer_failed | `conversation_flow_component_335da5e7364e` |
+| ending | `conversation_flow_component_827d612a2cb9` |
 | existing_customer | `conversation_flow_component_d8eff9881e16` |
-| spam_robocall | `conversation_flow_component_d23e204deb4f` |
+| spam_robocall | `conversation_flow_component_2cc95ba461b7` |
 | identify_call | `conversation_flow_component_ebac0db129f3` |
 | general_questions | `conversation_flow_component_d46848148d1d` |
-| fallback_leadcapture | `conversation_flow_component_e6879f7849ab` |
+| fallback_leadcapture | `conversation_flow_component_33ab8b82f1fc` |
 | callback | `conversation_flow_component_ab7909b654e2` |
 | validate_phone | `conversation_flow_component_3b788e86e755` |
 | emergency_fallback | `conversation_flow_component_9d3c5c904347` |
