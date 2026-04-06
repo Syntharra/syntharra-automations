@@ -10,6 +10,70 @@ description: >
 ---
 
 # Syntharra Marketing & Lead Gen — Full Reference
+---
+
+## ⚡ AGENTIC LEARNING PROTOCOL — MANDATORY FOR ALL MARKETING AGENTS
+
+**Every marketing agent MUST run this check before executing any task. No exceptions.**
+
+### Step 1 — Check the Learnings Index
+Fetch this file from GitHub before starting work:
+```
+GET https://api.github.com/repos/Syntharra/syntharra-automations/contents/docs/marketing-learnings/INDEX.md
+Authorization: token {GITHUB_TOKEN from vault}
+```
+
+Scan the `Learnings Log` table for entries relevant to your task category:
+
+| Your task type | Relevant categories to check |
+|---|---|
+| Writing blog / content | Content Marketing, SEO, Brand, General Business |
+| Writing cold emails | Cold Outreach, Sales, General Business |
+| Writing social posts / video scripts | Social Media, Video Marketing, Content Marketing |
+| Conversion / landing pages | Sales, Content Marketing, Brand |
+| Competitor research | Any / All |
+| Weekly intelligence brief | All categories — every entry |
+
+### Step 2 — Read Relevant Reports
+For each relevant INDEX entry, fetch the linked report file:
+```
+GET https://api.github.com/repos/Syntharra/syntharra-automations/contents/docs/marketing-learnings/{filename}.md
+```
+Read the **Key Learnings** and **Syntharra Applications** sections. These are the most important parts.
+
+### Step 3 — Apply Before You Produce
+Incorporate what you've learned BEFORE generating your output, not after.
+
+Examples of what this looks like in practice:
+- Content Engine writing a blog post → checks if any video covered relevant topic angles, hooks, or SEO patterns. Uses them.
+- Outreach writing cold email → checks if any video covered subject line psychology, opening lines, or B2B email tactics. Uses them.
+- Video Content writing scripts → checks if any video covered hooks, formats, or short-form patterns that worked. Uses them.
+- Intelligence writing weekly brief → reads ALL entries, identifies patterns across videos, incorporates into agent directives.
+
+### Step 4 — Log What You Applied
+At the bottom of your output file, add a one-line note:
+```
+_Learnings applied: [brief description, or "none relevant this task"]_
+```
+
+### What This Is NOT
+- Not a blocker. If GitHub fetch fails, proceed without learnings and note it.
+- Not a bottleneck. The index scan takes seconds. Do it in parallel with other setup.
+- Not optional. Learnings that don't get used are wasted intelligence.
+
+### The Intelligence Agent's Special Role
+The **Intelligence agent** (weekly brief) has an extra responsibility:
+
+In addition to the above, Intelligence must:
+1. Read the **full text** of every learning report added in the past 14 days
+2. Identify **patterns across multiple videos** — recurring themes = strong signal
+3. Add a `## Learnings Digest` section to the weekly brief summarising:
+   - What patterns are emerging across all processed videos
+   - Which agents should prioritise which learnings this week
+   - Any new Quick Wins from recent videos not yet implemented
+4. If 3+ videos point to the same tactic → elevate to Dan as a strategy recommendation
+
+---
 
 ---
 
