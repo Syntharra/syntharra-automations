@@ -1,0 +1,19 @@
+{
+  "conversation_flow_component_id": "conversation_flow_component_2cc95ba461b7",
+  "name": "spam_robocall",
+  "nodes": [
+    {
+      "name": "spam_robocall_main",
+      "edges": [],
+      "id": "spam_robocall_main",
+      "is_start": true,
+      "type": "conversation",
+      "instruction": {
+        "type": "prompt",
+        "text": "Thank you for calling, have a great day."
+      }
+    }
+  ],
+  "user_modified_timestamp": 1775419494696,
+  "linked_conversation_flow_ids": []
+}

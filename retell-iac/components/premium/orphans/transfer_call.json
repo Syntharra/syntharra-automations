@@ -1,0 +1,31 @@
+{
+  "body": {
+    "edge": {
+      "destination_node_id": "node-transfer-failed",
+      "id": "edge-transfer-failed",
+      "transition_condition": {
+        "prompt": "Transfer failed",
+        "type": "prompt"
+      }
+    },
+    "instruction": {
+      "text": "Say: \"Let me get someone on the line for you right now, just one moment.\" Then transfer.",
+      "type": "prompt"
+    },
+    "transfer_destination": {
+      "number": "+18563630633",
+      "type": "predefined"
+    },
+    "transfer_option": {
+      "enable_bridge_audio_cue": true,
+      "type": "warm_transfer",
+      "warm_transfer_option": {
+        "prompt": "You are now speaking to the business owner or team member, NOT the caller. Give a brief 1-2 sentence summary of the call. Include: the caller's name (if collected), what they are calling about, and whether they had a booking or just had a question. Keep it concise and professional.",
+        "type": "prompt"
+      }
+    }
+  },
+  "name": "transfer_call",
+  "node_type": "transfer_call",
+  "source_component_id": null
+}

@@ -1,0 +1,21 @@
+{
+  "conversation_flow_component_id": "conversation_flow_component_174275fc7751",
+  "name": "Syntharra - verify_emergency",
+  "nodes": [
+    {
+      "name": "verify_emergency_node",
+      "id": "node-verify-emergency",
+      "type": "conversation",
+      "display_position": {
+        "x": 4398,
+        "y": 2430
+      },
+      "instruction": {
+        "type": "prompt",
+        "text": "## TWO-STEP URGENCY SEQUENCE (ALWAYS in this order)\nStep 1: \"Is the system completely not working?\" (urgency assessment)\nStep 2: \"Is there any burning smell, gas smell, smoke, or water leak?\" (safety check)\n\n## ROUTING DECISION\n- EXTREME URGENCY (freezing occupants, elderly alone, dangerous conditions): offer live transfer \u2014 \"Would you like me to connect you to our emergency line right now?\"\n- MATTER-OF-FACT OUTAGE (system down, no immediate danger, calm caller): HIGH PRIORITY lead \u2014 book or capture details, flag as urgent.\n- Any gas/burning/smoke/water: ALWAYS offer transfer immediately.\n\nStay calm and reassuring. This caller has an urgent situation.\n\n1. Acknowledge immediately: \"I completely understand, let me get you sorted right away.\"\n2. Is this a true emergency right now? No cooling in extreme heat, no heat in freezing temps, water leak, burning smell, gas smell?\n3. If YES:\n   - Quickly get name and callback number if not already collected\n   - Say: \"I am going to transfer you to our emergency line now. The number is 555-700-9911 in case we get disconnected.\"\n   - Transfer immediately\n4. If NOT a true emergency (urgent but can wait):\n   - Say: \"I understand this feels urgent. Let me get you booked in as the next available slot so the team can get to you as quickly as possible.\"\n   - Route to booking_capture_node as priority"
+      }
+    }
+  ],
+  "user_modified_timestamp": 1775366267561,
+  "linked_conversation_flow_ids": []
+}

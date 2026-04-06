@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_731ee109f18a",
+    "instruction": {
+      "text": "The caller appears to be speaking Spanish.\n\nRespon",
+      "type": "prompt"
+    }
+  },
+  "name": "spanish_routing_node",
+  "node_type": "subagent",
+  "source_component_id": null
+}

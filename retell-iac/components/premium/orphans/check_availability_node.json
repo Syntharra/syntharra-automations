@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_dfe7bd5017e5",
+    "instruction": {
+      "text": "Check calendar availability for the requested date",
+      "type": "prompt"
+    }
+  },
+  "name": "check_availability_node",
+  "node_type": "subagent",
+  "source_component_id": null
+}

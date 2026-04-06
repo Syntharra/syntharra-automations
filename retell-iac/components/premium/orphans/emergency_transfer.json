@@ -1,0 +1,31 @@
+{
+  "body": {
+    "edge": {
+      "destination_node_id": "node-transfer-failed",
+      "id": "edge-emergency-failed",
+      "transition_condition": {
+        "prompt": "Transfer failed",
+        "type": "prompt"
+      }
+    },
+    "instruction": {
+      "text": "Say: \"I am transferring you to our emergency line right now. The number is 555-700-9911 in case we get disconnected. Stay on the line.\" Then transfer immediately.",
+      "type": "prompt"
+    },
+    "transfer_destination": {
+      "number": "+18563630633",
+      "type": "predefined"
+    },
+    "transfer_option": {
+      "enable_bridge_audio_cue": true,
+      "type": "warm_transfer",
+      "warm_transfer_option": {
+        "prompt": "You are now speaking to the emergency team, NOT the caller. This is an EMERGENCY call. Give a brief summary: the caller's name, what the emergency is, and their address if collected. Be urgent and concise.",
+        "type": "prompt"
+      }
+    }
+  },
+  "name": "emergency_transfer",
+  "node_type": "transfer_call",
+  "source_component_id": null
+}

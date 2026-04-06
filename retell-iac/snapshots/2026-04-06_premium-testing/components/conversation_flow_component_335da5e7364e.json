@@ -1,0 +1,19 @@
+{
+  "conversation_flow_component_id": "conversation_flow_component_335da5e7364e",
+  "name": "transfer_failed",
+  "nodes": [
+    {
+      "name": "transfer_failed_main",
+      "edges": [],
+      "id": "transfer_failed_main",
+      "is_start": true,
+      "type": "conversation",
+      "instruction": {
+        "type": "prompt",
+        "text": "The transfer was not able to connect.\n\nCHECK: Was this transfer triggered by an emergency (gas smell, burning smell, carbon monoxide, CO alarm, flooding with electrical risk, no heat in dangerous cold)?\n\nIF EMERGENCY TRANSFER FAILED:\nRoute immediately to the emergency fallback node. Do not collect details here, the emergency fallback node will handle it.\n\nIF NON-EMERGENCY TRANSFER FAILED:\n1. Apologise sincerely: \"I'm really sorry about that \u2014 I wasn't able to connect you right now.\"\n2. Do NOT attempt to transfer again. The transfer has already failed; re-attempting will not help.\n3. Collect name and callback number if not already given.\n4. Confirm back: \"I have [name] at [number] \u2014 someone from our team will call you back as soon as possible.\"\n5. Close warmly. Do not loop back to transfer.\n\nIf the caller insists they want to speak to someone NOW and refuses to leave details:\nSay: \"I completely understand \u2014 unfortunately the line isn't connecting right now. You're welcome to try calling back in a moment, or visit our website for contact details. Have a great day!\"\nThen close. Do NOT demand their details. Do NOT attempt another transfer.\n\nIf they DO provide details: \"Perfect \u2014 I've scheduled a callback for you. Someone will call you back as soon as possible.\"\nDo NOT loop back to transfer. This prevents an infinite loop."
+      }
+    }
+  ],
+  "user_modified_timestamp": 1775419496188,
+  "linked_conversation_flow_ids": []
+}

@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_20ac85a7954c",
+    "instruction": {
+      "text": "Confirm the booking with the caller.\n\nRead back AL",
+      "type": "prompt"
+    }
+  },
+  "name": "confirm_booking_node",
+  "node_type": "subagent",
+  "source_component_id": null
+}

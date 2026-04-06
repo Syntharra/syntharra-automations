@@ -1,0 +1,15 @@
+{
+  "body": {
+    "global_node_setting": {
+      "condition": "The caller explicitly asks to speak to a real person, manager, owner, supervisor, or human. They are insistent on speaking to someone and not to the AI.",
+      "cool_down": 2
+    },
+    "instruction": {
+      "text": "Say: 'Of course, let me get someone on the line for you right now, just one moment.' Then transfer.",
+      "type": "prompt"
+    }
+  },
+  "name": "transfer_request",
+  "node_type": "conversation",
+  "source_component_id": null
+}

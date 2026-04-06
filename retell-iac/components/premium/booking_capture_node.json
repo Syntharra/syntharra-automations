@@ -1,0 +1,33 @@
+{
+  "body": {
+    "finetune_transition_examples": [
+      {
+        "destination_node_id": "node-verify-emergency",
+        "id": "fe-booking-emergency",
+        "transcript": [
+          {
+            "content": "Actually it completely stopped\nI smell gas\nWater is flooding\nThere is smoke from the unit",
+            "role": "user"
+          }
+        ]
+      },
+      {
+        "destination_node_id": "node-fallback-leadcapture",
+        "id": "fe-booking-fallback",
+        "transcript": [
+          {
+            "content": "I don't want to book right now\nJust have someone call me\nI'll sort out the time later\nJust take my details",
+            "role": "user"
+          }
+        ]
+      }
+    ],
+    "instruction": {
+      "text": "Capture booking details for new service requests",
+      "type": "prompt"
+    }
+  },
+  "name": "booking_capture_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_ca04bba21560"
+}

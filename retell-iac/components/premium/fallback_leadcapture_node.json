@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Capture lead details when booking is not available",
+      "type": "prompt"
+    }
+  },
+  "name": "fallback_leadcapture_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_33ab8b82f1fc"
+}

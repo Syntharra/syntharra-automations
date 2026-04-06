@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_9d3c5c904347",
+    "instruction": {
+      "text": "CRITICAL SAFETY NODE \u2014 A live transfer has FAILED ",
+      "type": "prompt"
+    }
+  },
+  "name": "emergency_fallback_node",
+  "node_type": "subagent",
+  "source_component_id": null
+}

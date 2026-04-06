@@ -1,0 +1,51 @@
+{
+  "body": {
+    "variables": [
+      {
+        "description": "Full name of the caller",
+        "name": "caller_name",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "description": "Phone number the caller provides",
+        "name": "caller_phone",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "description": "Service address or location",
+        "name": "caller_address",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "description": "What service or repair the caller needs",
+        "name": "service_needed",
+        "required": false,
+        "type": "string"
+      },
+      {
+        "description": "Whether this is an emergency situation",
+        "name": "is_emergency",
+        "required": false,
+        "type": "boolean"
+      },
+      {
+        "choices": [
+          "low",
+          "medium",
+          "high",
+          "emergency"
+        ],
+        "description": "How urgent the request is",
+        "name": "urgency_level",
+        "required": false,
+        "type": "enum"
+      }
+    ]
+  },
+  "name": "extract_caller_data",
+  "node_type": "extract_dynamic_variables",
+  "source_component_id": null
+}

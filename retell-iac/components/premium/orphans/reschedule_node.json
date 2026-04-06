@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_4b3d107fd73a",
+    "instruction": {
+      "text": "The caller wants to reschedule an existing appoint",
+      "type": "prompt"
+    }
+  },
+  "name": "reschedule_node",
+  "node_type": "subagent",
+  "source_component_id": null
+}

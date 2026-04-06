@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Thank you for calling V7 Premium FrostKing HVAC, this is Jack, how can I help you today?",
+      "type": "static_text"
+    }
+  },
+  "name": "greeting_node",
+  "node_type": "conversation",
+  "source_component_id": null
+}

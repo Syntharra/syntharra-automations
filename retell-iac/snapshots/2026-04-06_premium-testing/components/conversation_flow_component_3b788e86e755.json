@@ -1,0 +1,20 @@
+{
+  "conversation_flow_component_id": "conversation_flow_component_3b788e86e755",
+  "name": "Syntharra - validate_phone",
+  "nodes": [
+    {
+      "code": "async function main(args) {\n  const phone = (args.transcript || \"\").match(/\\b\\d{3}[\\s.-]?\\d{3}[\\s.-]?\\d{4}\\b/g);\n  if (phone && phone.length > 0) {\n    const cleaned = phone[phone.length - 1].replace(/[\\s.-]/g, \"\");\n    const formatted = `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6)}`;\n    return { phone_captured: formatted, phone_raw: cleaned };\n  }\n  return { phone_captured: \"none\", phone_raw: \"\" };\n}",
+      "name": "validate_phone",
+      "id": "node-validate-phone",
+      "type": "code",
+      "speak_during_execution": false,
+      "display_position": {
+        "x": 900,
+        "y": 1400
+      },
+      "wait_for_result": true
+    }
+  ],
+  "user_modified_timestamp": 1775366284142,
+  "linked_conversation_flow_ids": []
+}

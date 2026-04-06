@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_eb20b4cd1d8d",
+    "instruction": {
+      "text": "The caller wants to cancel an appointment.\n\n1. Get",
+      "type": "prompt"
+    }
+  },
+  "name": "cancel_appointment_node",
+  "node_type": "subagent",
+  "source_component_id": null
+}
