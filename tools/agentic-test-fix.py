@@ -463,11 +463,11 @@ def phase_diagnose(api_key, scenarios, agent_type):
             total   = evaluation.get("criteria_total", "?")
 
             if outcome == "PASS":
-                n_pass += 1; icon = "✅"
+                n_pass += 1; icon = "[PASS]"
             elif outcome == "FAIL":
-                n_fail += 1; icon = "❌"
+                n_fail += 1; icon = "[FAIL]"
             else:
-                n_err  += 1; icon = "⚠️"
+                n_err  += 1; icon = "[ERR ]"
 
             print(f"{icon} {outcome} ({met}/{total})")
 
@@ -485,7 +485,7 @@ def phase_diagnose(api_key, scenarios, agent_type):
             })
         except Exception as e:
             n_err += 1
-            print(f"⚠️  ERROR: {str(e)[:80]}")
+            print(f"[ERR ] ERROR: {str(e)[:80]}")
             results.append({
                 "id": scenario["id"], "name": scenario["name"],
                 "group": scenario.get("group", ""), "outcome": "ERROR",
@@ -647,7 +647,7 @@ def apply_component_fix(target_name, change_text, agent_type):
 
     try:
         patch_component(comp_id, component)
-        print(f"    ✔ Patched '{comp_name}' ({len(current_text)} → {len(new_text)} chars)")
+        print(f"    [OK] Patched '{comp_name}' ({len(current_text)} → {len(new_text)} chars)")
         return True
     except requests.exceptions.HTTPError as e:
         # Retell 400: "remove finetune examples before deleting edge" — component has
@@ -687,7 +687,7 @@ def publish_agent(agent_type):
             headers=retell_headers(), json={}, timeout=30
         )
         if r.status_code == 200:
-            print(f"  ✅ Agent published: {agent_id}")
+            print(f"  [OK] Agent published: {agent_id}")
             return True
         else:
             # Non-fatal — agent still testable via simulation
@@ -729,7 +729,7 @@ def push_results_to_github(results_path, content_str):
     try:
         r = requests.put(url, headers=headers, json=payload, timeout=30)
         if r.status_code in (200, 201):
-            print(f"  ✅ Results pushed to GitHub: {gh_path}")
+            print(f"  [OK] Results pushed to GitHub: {gh_path}")
             return True
         else:
             print(f"  [warn] GitHub push returned {r.status_code}: {r.text[:120]}")
@@ -843,18 +843,18 @@ CHANGE: <exact instruction line to append>"""
                 continue
 
             if eval_result.get("overall") == "PASS":
-                print(f"✅ PASS")
+                print(f"[PASS]")
                 fixed_ids.append(scenario["id"])
                 scenario_fixed = True
                 break
             else:
                 new_cause = eval_result.get("root_cause", "")
-                print(f"❌ Still FAIL: {new_cause[:80]}")
+                print(f"[FAIL] Still FAIL: {new_cause[:80]}")
                 root_cause = new_cause  # use updated root cause for next attempt
 
         if not scenario_fixed and not dry_run:
             still_failing_ids.append(scenario["id"])
-            print(f"  ✗ Gave up on #{scenario['id']} after {MAX_FIX_ATTEMPTS} attempts")
+            print(f"  [STOP] Gave up on #{scenario['id']} after {MAX_FIX_ATTEMPTS} attempts")
 
     print(f"\n  → Fixed: {len(fixed_ids)} | Still failing: {len(still_failing_ids)}")
     return {"fixed": fixed_ids, "still_failing": still_failing_ids}
@@ -928,7 +928,7 @@ def main():
             best_diagnose_results = diagnose_results
 
         if n_pass == n_total:
-            print(f"\n  🎉 ALL {n_total} SCENARIOS PASS! Done.")
+            print(f"\n  [DONE] ALL {n_total} SCENARIOS PASS! Done.")
             break
 
         # PHASE 2: TRIAGE
@@ -986,11 +986,11 @@ def main():
 
     # Promotion gate
     if args.agent == "standard" and best_pass >= 85:
-        print(f"\n  ✅ PROMOTION GATE PASSED ({best_pass}/91 ≥ 85) — safe to promote to MASTER")
+        print(f"\n  [GATE-PASS] PROMOTION GATE PASSED ({best_pass}/91 ≥ 85) — safe to promote to MASTER")
     elif args.agent == "premium" and best_pass >= 95:
-        print(f"\n  ✅ PROMOTION GATE PASSED ({best_pass}/108 ≥ 95) — safe to promote to MASTER")
+        print(f"\n  [GATE-PASS] PROMOTION GATE PASSED ({best_pass}/108 ≥ 95) — safe to promote to MASTER")
     else:
-        print(f"\n  ⚠️  NOT ready for promotion yet ({best_pass}/{n_total})")
+        print(f"\n  [GATE-FAIL] NOT ready for promotion yet ({best_pass}/{n_total})")
 
     print(f"{'='*62}\n")
 
