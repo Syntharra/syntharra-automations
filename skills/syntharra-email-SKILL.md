@@ -1,7 +1,7 @@
 ---
 name: syntharra-email
 description: >
-  Complete reference for all Syntharra email work — templates, SMTP2GO, address routing,
+  Complete reference for all Syntharra email work — templates, Brevo API, address routing,
   email signatures, and the approved logo block.
   ALWAYS load this skill when: building or editing any n8n email node, creating an email template,
   designing a welcome email, weekly report, onboarding email, or any automated email; checking
@@ -289,3 +289,53 @@ Only update this skill when something **fundamental** changes — not during rou
 | Light theme only | White cards, #F7F7FB bg | Brand standard — dark email themes have inconsistent rendering across clients | Brand refresh |
 | Email fonts | System fonts (Arial/Georgia) in email | Google Fonts don't load in email clients — system font stack is the only reliable option | — |
 | Sender address | noreply@syntharra.com for all automated | Single sender simplifies DKIM/SPF management; reply-to routes to appropriate functional address | — |
+
+---
+
+## ⚡ EMAIL PROVIDER: BREVO (migrated 2026-04-06)
+
+**Replaced SMTP2GO on 2026-04-06. All 24 n8n email nodes now use Brevo.**
+**API key in Supabase vault: service_name='Brevo', key_type='api_key'**
+
+### Brevo API Pattern (use this in all n8n code nodes)
+
+```javascript
+// Get key from vault or use inline (key stored in Supabase vault)
+const BREVO_KEY = '<fetch from syntharra_vault: service_name=Brevo, key_type=api_key>';
+
+await this.helpers.httpRequest({
+  method: 'POST',
+  url: 'https://api.brevo.com/v3/smtp/email',
+  headers: { 'api-key': BREVO_KEY, 'Content-Type': 'application/json' },
+  body: {
+    sender: { name: 'Syntharra AI', email: 'noreply@syntharra.com' },
+    to: [{ email: recipientEmail }],
+    subject: subjectLine,
+    htmlContent: html
+  },
+  json: true
+});
+```
+
+### Key Differences from SMTP2GO
+
+| Property | SMTP2GO (old — deprecated) | Brevo (current) |
+|---|---|---|
+| Auth | `api_key` in JSON body | `api-key` in HTTP header |
+| URL | `api.smtp2go.com/v3/email/send` | `api.brevo.com/v3/smtp/email` |
+| sender | `'noreply@syntharra.com'` (string) | `{ name: '...', email: '...' }` (object) |
+| to | `['email@domain.com']` (strings) | `[{ email: 'email@domain.com' }]` (objects) |
+| HTML body key | `html_body` | `htmlContent` |
+
+### DO NOT use SMTP2GO
+- SMTP2GO key `api-0BE30DA64A074BC79F28BE6AEDC9DB9E` is deprecated
+- All 24 email nodes updated. Never write SMTP2GO patterns in new code.
+- `fetch()` for Brevo — always use `this.helpers.httpRequest()`
+
+### Common recipient patterns
+```javascript
+to: [{ email: d.client_email }]                    // client
+to: [{ email: 'onboarding@syntharra.com' }]        // internal
+to: [{ email: 'admin@syntharra.com' }]             // admin
+```
+
