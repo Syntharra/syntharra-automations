@@ -286,3 +286,7 @@ Write to `/sessions/happy-intelligent-goodall/mnt/.auto-memory/` if anything mat
 ---
 
 **FAILURE TO PUSH = SESSION NOT CLOSED.** If GitHub writes are blocked (403), note it explicitly and give Dan the exact files + content to push manually. Do not silently skip.
+
+
+## Git-IaC Lock-In (2026-04-06)
+Retell agent management is canonically handled via `/retell-iac/`. See `docs/ARCHITECTURE.md#git-iac-canonical-retell-agent-management-locked-2026-04-06` and `retell-iac/README.md`. Direct PATCH to MASTER agents is prohibited. Use `retell-iac/scripts/promote.py` only.
