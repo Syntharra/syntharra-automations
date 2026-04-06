@@ -1,0 +1,42 @@
+# Retell Agent Infrastructure as Code (Git-IaC)
+
+**Canonical source of truth for all Retell agent configuration at Syntharra. Locked in 2026-04-06.**
+
+## Core Principle
+**The Retell dashboard is NOT the source of truth. This directory is.**
+
+All changes to HVAC Standard or Premium MASTER agents flow through this directory exclusively.
+
+## Canonical Workflow
+1. Edit manifest or components in `manifests/` or `components/`
+2. Build: `python scripts/build_agent.py --manifest manifests/hvac-standard.yaml --out build/hvac-standard.built.json`
+3. Round-trip verify: `python scripts/diff.py`
+4. Patch clone, publish for test
+5. Run scenario tests: `python scripts/run_clone_tests.py --agent standard`
+6. On green, promote: `python scripts/promote.py --agent standard_master --built build/hvac-standard.built.json`
+7. Tag release: `git tag release-hvac-standard-vN-<change>`
+
+## MASTER Agents (Read-Only outside promote.py)
+
+| Agent | ID | Flow |
+|---|---|---|
+| HVAC Standard MASTER | `agent_4afbfdb3fcb1ba9569353af28d` | `conversation_flow_34d169608460` |
+| HVAC Premium MASTER (interim) | `agent_2cffe3d86d7e1990d08bea068f` | `conversation_flow_2ded0ed4f808` |
+
+## Prohibited
+- Direct Retell dashboard edits to MASTER agents
+- Direct Retell API PATCH calls to MASTER outside `promote.py`
+- Hand-editing flow JSON in `/retell-agents/` (reference archive only)
+- Using `claude_code/build_wf*.py` for Retell work (DEPRECATED 2026-04-06)
+
+## Rollback
+```
+python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_master
+```
+
+## See Also
+- `CLAUDE.md` — binding rules
+- `EXECUTION_PLAYBOOK.md` — full playbook
+- `SCALING_ADDENDUM.md` — fleet rollout (Phases 6-8 pending)
+- `../docs/ARCHITECTURE.md` — canonical architecture
+- `../docs/SCALE-REVIEW-1000-CLIENTS.md` — scale review
