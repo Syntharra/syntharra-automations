@@ -93,7 +93,7 @@ COMPONENT_ALIASES = {
 }
 
 MAX_TURNS               = 10
-COMPONENT_MAX_CHARS     = 1200  # max component instruction length (raised from 800 — some nodes are 700+ chars)
+COMPONENT_MAX_CHARS     = 2500  # max component instruction length (raised from 1200 — identify_call node is ~2200 chars)
 FINETUNE_EXAMPLES_MAX   = 3
 MAX_FIX_ATTEMPTS        = 3     # per failing scenario
 MAX_OUTER_ITERATIONS    = 3     # full suite re-runs if new failures found
