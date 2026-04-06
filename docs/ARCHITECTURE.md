@@ -730,3 +730,35 @@ If activation fails with "conflict with one of the webhooks":
 ### Architecture health
 
 Solid. All major platform choices (Retell, Railway, Supabase, SMTP2GO, HubSpot) remain well-reasoned and no "Revisit if" conditions are fully triggered. The system has matured significantly this week — COMPONENTS architecture, unified call logging, and full E2E test coverage are the most material improvements. One open question (evaluator false-fail rate) should be resolved and closed in the next test cycle.
+
+## 2026-04-06 — Email logo rendering strategy
+
+Decision: use inline HTML bars (nested table with 4 div cells), NOT hosted PNG or SVG, for the Syntharra 4-bar mark in every external email header.
+
+Why:
+- Outlook desktop strips/mangles SVG
+- Hosted PNG creates a deploy dependency (must re-upload when logo changes) and breaks silently if the URL 404s or the old PNG is cached downstream
+- Inline HTML bars render identically across Gmail, Outlook 2016+, Apple Mail, iOS Mail, Android Gmail, without image loading
+
+Spec (canonical):
+- 4 bars, 7px wide each, 4px gap (padding-right:4px on first 3 cells)
+- Heights 18, 26, 34, 42 px ascending
+- background-color:#6C63FF, font-size:1px line-height:1px on the div with &nbsp; as content to force rendering
+- Wordmark: Arial 22px 800 color:#1A1A2E letter-spacing:-0.5
+- Tagline: Arial 9px 700 color:#6C63FF letter-spacing:2px text-transform:uppercase, margin-top:7px
+- Vertical-align:bottom on bar td, vertical-align:middle on text td
+
+Rejected: base64 SVG (Outlook ignores), hosted PNG (deploy drift), web font (Outlook falls back to Times)
+
+## 2026-04-06 — Website hamburger breakpoint
+
+Decision: .hamburger is mobile-only (max-width:900px). Desktop shows full nav-menu.
+
+Why:
+- Standard responsive pattern — Google/Apple/Stripe all do this
+- At desktop widths the full horizontal nav is more usable and scannable than a collapsed menu
+- A hamburger on desktop next to a full nav is visual redundancy
+
+Verified 2026-04-06 via playwright on 19 public nav pages at 375px (hamburger visible, nav-menu hidden) and 1440px (hamburger hidden, nav-menu visible). 0 broken.
+
+If we later want to force hamburger always visible, change the base rule to `display:flex` and the media query can stay as-is, but we'll also need to hide `.nav-menu` at desktop or both will show.
