@@ -1,0 +1,19 @@
+{
+  "conversation_flow_component_id": "conversation_flow_component_827d612a2cb9",
+  "name": "ending",
+  "nodes": [
+    {
+      "name": "ending_main",
+      "edges": [],
+      "id": "ending_main",
+      "is_start": true,
+      "type": "conversation",
+      "instruction": {
+        "type": "prompt",
+        "text": "Ask once: \"Is there anything else I can help you with today?\"\n\nIf the caller says NO, or has no further questions: say goodbye warmly and end the call immediately. Do not continue the conversation.\n\nIf the caller has ONE follow-up question: answer it briefly using only information from the global prompt, then close immediately \u2014 \"Have a great day, take care!\" Do not ask another question after this.\n\nIf the caller pushes for pricing: \"Our team will give you the most accurate quote \u2014 your details are with them now. Have a great day!\"\n\nIf the caller asks something you cannot answer: \"I'll make sure that gets passed along to the team. Have a great day!\"\n\nCRITICAL: This is the final node. Do not ask follow-up questions. Do not re-collect information. One response maximum, then end the call."
+      }
+    }
+  ],
+  "user_modified_timestamp": 1775419497675,
+  "linked_conversation_flow_ids": []
+}

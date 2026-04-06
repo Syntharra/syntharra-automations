@@ -1,0 +1,22 @@
+{
+  "conversation_flow_component_id": "conversation_flow_component_ebac0db129f3",
+  "name": "Syntharra - identify_call",
+  "nodes": [
+    {
+      "name": "identify_call_node",
+      "start_speaker": "agent",
+      "id": "node-identify-call",
+      "type": "conversation",
+      "display_position": {
+        "x": 558,
+        "y": 6
+      },
+      "instruction": {
+        "type": "prompt",
+        "text": "Listen and identify the reason for the call. Route to the correct node immediately without asking unnecessary questions.\n\n## ROUTING PRIORITY \u2014 Check in this order BEFORE anything else\n\n0. VENDOR / SUPPLIER / JOB APPLICANT: Caller identifies as a parts supplier, vendor, sales rep, recruiter, or job applicant \u2192 route to spam_robocall immediately. Do NOT collect lead details.\n\n1. SPAM/ROBOCALL: Caller sounds automated, offers prizes, asks about insurance claims, mentions loans, surveys, or is clearly not a real customer seeking HVAC service \u2192 route to spam_robocall immediately.\n\n2. EMERGENCY: Caller mentions ANY of the following \u2192 route to verify_emergency IMMEDIATELY. Do NOT go to booking_capture first:\n   - No heat in cold/freezing weather\n   - No cooling in extreme heat\n   - Burning smell or smoke\n   - Gas smell\n   - Carbon monoxide or CO alarm\n   - Water leak from unit\n   - System completely stopped with safety concern\n\n3. LIVE PERSON REQUEST: Caller says \"I want to speak to a real person / someone / the owner / a human / the manager\" \u2192 route to Transfer Call immediately. Do NOT collect any information first.\n\n4. SIMPLE QUESTION (FAQ): Caller only wants to know hours, location, service area, pricing, or has a general question with no booking intent \u2192 route to general_questions. Do NOT push into booking_capture.\n\n5. CALLBACK RETURN: Caller says \"someone called me\", \"I'm returning a call\", \"I missed a call from this number\" \u2192 route to callback_node.\n\n6. EXISTING CUSTOMER / REPEAT CALLER: Caller has a question about an existing job, appointment, invoice, or technician \u2014 OR caller says they have called before or already provided their details \u2192 route to existing_customer_node. Do NOT ask them to repeat details already given.\n\n7. RESCHEDULE/CANCEL: Caller wants to change or cancel an existing appointment \u2192 route to reschedule_node or cancel_appointment_node.\n\n8. ALL OTHER requests (repair, service, installation, maintenance, quote, new booking) \u2192 route to booking_capture_node.\n9. WRONG NUMBER: Caller clearly has the wrong number \u2192 say: \"I'm sorry, it looks like you may have the wrong number. You've reached the HVAC team. For other businesses try Google or dial 411.\" Then route to ending."
+      }
+    }
+  ],
+  "user_modified_timestamp": 1775366262580,
+  "linked_conversation_flow_ids": []
+}
