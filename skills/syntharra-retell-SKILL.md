@@ -764,3 +764,22 @@ They CAN be referenced as nested subagent nodes inside multi-node components.
 - All Premium booking tools POST to: https://n8n.syntharra.com/webhook/retell-integration-dispatch
 - Action routing via "action" const field in params
 - Always include error handling guidance in the component that uses the tool
+
+## Standard MASTER Architecture (2026-04-06)
+- MASTER and TESTING are now **identical architecture** — both modular subagent/component
+- 20 nodes, 5086-char global_prompt
+- MASTER was promoted from TESTING on 2026-04-06 (flow version 22)
+- MASTER previously had monolithic inline `conversation` nodes — that architecture is retired
+
+## Promotion Script
+- Path: `tools/promote-agent.py`
+- Copies TESTING flow (nodes + edges + global_prompt) to MASTER flow via PATCH
+- `STUB_THRESHOLD = 200`: any subagent node with empty component_id and instruction < 200 chars gets restored from MASTER's original content
+- Dry-run: `python promote.py --agent standard --dry-run`
+- Live: `python promote.py --agent standard`
+- Safety nodes restored in last promotion: emergency_fallback_node (50→897ch), spanish_routing_node (50→592ch)
+
+## Spanish Routing Node
+- `spanish_routing_node` is scheduled for removal from the flow
+- Do NOT treat as safety-critical — failures on Spanish routing scenarios are not blocking
+- promote.py handles removal automatically: if node absent from TESTING, it won't be promoted to MASTER
