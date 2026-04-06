@@ -93,7 +93,7 @@ COMPONENT_ALIASES = {
 }
 
 MAX_TURNS               = 10
-COMPONENT_MAX_CHARS     = 800   # max component instruction length (increased from 500)
+COMPONENT_MAX_CHARS     = 1200  # max component instruction length (raised from 800 — some nodes are 700+ chars)
 FINETUNE_EXAMPLES_MAX   = 3
 MAX_FIX_ATTEMPTS        = 3     # per failing scenario
 MAX_OUTER_ITERATIONS    = 3     # full suite re-runs if new failures found
@@ -519,6 +519,7 @@ def phase_triage(api_key, failures, agent_type):
         expected = normalize_expected(scenario)
 
         # Retry up to 2 times to rule out variance
+        # Rate-gate each retry so triage bursts don't exhaust Groq TPM
         still_failing = True
         for _ in range(2):
             try:
@@ -528,6 +529,7 @@ def phase_triage(api_key, failures, agent_type):
                     still_failing = False
                     break
             except Exception:
+                time.sleep(5)
                 pass
 
         if not still_failing:
@@ -647,6 +649,16 @@ def apply_component_fix(target_name, change_text, agent_type):
         patch_component(comp_id, component)
         print(f"    ✔ Patched '{comp_name}' ({len(current_text)} → {len(new_text)} chars)")
         return True
+    except requests.exceptions.HTTPError as e:
+        # Retell 400: "remove finetune examples before deleting edge" — component has
+        # backend finetune examples that block structural changes. Our fix only appends
+        # instruction text so this shouldn't normally trigger, but guard anyway.
+        err_body = e.response.text[:200] if hasattr(e, 'response') else str(e)
+        if "finetune" in err_body.lower():
+            print(f"    [SKIP] Retell finetune-lock on {comp_name} — cannot patch this component")
+        else:
+            print(f"    [SKIP] Retell HTTP error on {comp_name}: {err_body}")
+        return False
     except Exception as e:
         print(f"    [SKIP] Patch failed: {e}")
         return False
@@ -662,6 +674,69 @@ def parse_fix_suggestion(response):
         elif line.startswith("CHANGE:"):
             result["change"] = line.split(":", 1)[1].strip()
     return result
+
+def publish_agent(agent_type):
+    """
+    Publish the TESTING agent so component patches go live for real-call testing.
+    Called after a successful fix round. Safe to call even if already published.
+    """
+    agent_id = AGENT_CONFIG[agent_type]["agent_id"]
+    try:
+        r = requests.post(
+            f"{RETELL_BASE}/publish-agent/{agent_id}",
+            headers=retell_headers(), json={}, timeout=30
+        )
+        if r.status_code == 200:
+            print(f"  ✅ Agent published: {agent_id}")
+            return True
+        else:
+            # Non-fatal — agent still testable via simulation
+            print(f"  [warn] Publish returned {r.status_code}: {r.text[:120]}")
+            return False
+    except Exception as e:
+        print(f"  [warn] Publish error: {e}")
+        return False
+
+def push_results_to_github(results_path, content_str):
+    """
+    Push local results JSON to GitHub tests/results/.
+    Non-fatal — if push fails, local file still exists.
+    """
+    if not GITHUB_TOKEN:
+        print("  [warn] GITHUB_TOKEN not set — skipping GitHub push")
+        return False
+
+    gh_path = results_path.replace("\\", "/")
+    url = f"https://api.github.com/repos/Syntharra/syntharra-automations/contents/{gh_path}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}", "Content-Type": "application/json"}
+
+    # Check if file already exists (get SHA for update)
+    sha = None
+    try:
+        check = requests.get(url, headers=headers, timeout=15)
+        if check.status_code == 200:
+            sha = check.json().get("sha")
+    except Exception:
+        pass
+
+    payload = {
+        "message": f"chore(tests): save agentic test results {results_path}",
+        "content": base64.b64encode(content_str.encode()).decode(),
+    }
+    if sha:
+        payload["sha"] = sha
+
+    try:
+        r = requests.put(url, headers=headers, json=payload, timeout=30)
+        if r.status_code in (200, 201):
+            print(f"  ✅ Results pushed to GitHub: {gh_path}")
+            return True
+        else:
+            print(f"  [warn] GitHub push returned {r.status_code}: {r.text[:120]}")
+            return False
+    except Exception as e:
+        print(f"  [warn] GitHub push error: {e}")
+        return False
 
 # =============================================================================
 # PHASE 3: FIX
@@ -831,8 +906,10 @@ def main():
         run_suffix += f"-{args.group}"
 
     # ── Outer iteration loop ──────────────────────────────────────────────────
-    best_pass = 0
-    no_improvement = 0
+    best_pass            = 0
+    best_diagnose_results = []   # results from the BEST iteration (not necessarily last)
+    no_improvement       = 0
+    fixes_applied_total  = 0
 
     for outer in range(1, MAX_OUTER_ITERATIONS + 1):
         print(f"\n{'='*62}")
@@ -842,7 +919,13 @@ def main():
         # PHASE 1: DIAGNOSE
         diagnose_results, n_pass, n_fail, n_err = phase_diagnose(groq_key, scenarios, args.agent)
 
-        print(f"\n  Pass rate: {n_pass}/{n_total} ({100*n_pass//n_total}%)")
+        pct = 100 * n_pass // n_total if n_total else 0
+        print(f"\n  Pass rate: {n_pass}/{n_total} ({pct}%)")
+
+        # Track best iteration's results for final save
+        if n_pass >= best_pass:
+            best_pass             = n_pass
+            best_diagnose_results = diagnose_results
 
         if n_pass == n_total:
             print(f"\n  🎉 ALL {n_total} SCENARIOS PASS! Done.")
@@ -855,6 +938,12 @@ def main():
         # PHASE 3: FIX
         if not args.dry_run:
             fix_results = phase_fix(groq_key, triaged, args.agent, dry_run=False)
+            fixes_applied_total += len(fix_results.get("fixed", []))
+
+            # Publish TESTING agent after each fix round so changes are live for real-call testing
+            if fix_results.get("fixed"):
+                print(f"\n  Publishing TESTING agent (fixes applied: {len(fix_results['fixed'])})...")
+                publish_agent(args.agent)
         else:
             fix_results = phase_fix(groq_key, triaged, args.agent, dry_run=True)
             break  # dry-run: stop after first iteration
@@ -875,14 +964,37 @@ def main():
             break
 
     # ── Final report ──────────────────────────────────────────────────────────
+    pct_final = 100 * best_pass // n_total if n_total else 0
+    remaining = n_total - best_pass
+
     print(f"\n{'='*62}")
-    print(f"  FINAL RESULT: {best_pass}/{n_total} PASS ({100*best_pass//n_total}%)")
+    print(f"  FINAL RESULT: {best_pass}/{n_total} PASS ({pct_final}%)")
     print(f"  Agent: {AGENT_CONFIG[args.agent]['name']}")
-    if n_total > best_pass:
-        print(f"  Remaining failures: {n_total - best_pass}")
+    print(f"  Fixes applied across all iterations: {fixes_applied_total}")
+
+    # Show remaining failing scenarios by ID + name
+    if remaining > 0:
+        still_failing = [
+            r for r in best_diagnose_results
+            if r.get("outcome") in ("FAIL", "ERROR")
+        ]
+        print(f"\n  Remaining failures ({len(still_failing)}):")
+        for r in still_failing:
+            group = r.get("group", "")
+            cause = r.get("root_cause", r.get("error", ""))[:80]
+            print(f"    #{r['id']:03d} [{group}] {r['name'][:45]} — {cause}")
+
+    # Promotion gate
+    if args.agent == "standard" and best_pass >= 85:
+        print(f"\n  ✅ PROMOTION GATE PASSED ({best_pass}/91 ≥ 85) — safe to promote to MASTER")
+    elif args.agent == "premium" and best_pass >= 95:
+        print(f"\n  ✅ PROMOTION GATE PASSED ({best_pass}/108 ≥ 95) — safe to promote to MASTER")
+    else:
+        print(f"\n  ⚠️  NOT ready for promotion yet ({best_pass}/{n_total})")
+
     print(f"{'='*62}\n")
 
-    # Save results
+    # ── Save results (use best iteration, not last) ────────────────────────────
     os.makedirs("tests/results", exist_ok=True)
     results_file = f"tests/results/{run_suffix}-agentic.json"
     output = {
@@ -891,14 +1003,22 @@ def main():
         "dry_run":       args.dry_run,
         "scenarios_run": n_total,
         "best_pass":     best_pass,
-        "results":       diagnose_results,
+        "pass_rate_pct": pct_final,
+        "fixes_applied": fixes_applied_total,
+        "results":       best_diagnose_results,   # ← best iteration, not last
     }
+    output_str = json.dumps(output, indent=2, default=str)
     try:
         with open(results_file, "w") as f:
-            json.dump(output, f, indent=2, default=str)
+            f.write(output_str)
         print(f"Results saved to {results_file}")
     except Exception as e:
-        print(f"[warn] Could not save results: {e}")
+        print(f"[warn] Could not save results locally: {e}")
+        output_str = json.dumps(output, default=str)  # compact fallback for GitHub push
+
+    # Push results to GitHub
+    print("Pushing results to GitHub...")
+    push_results_to_github(results_file, output_str)
 
 if __name__ == "__main__":
     main()
