@@ -1,5 +1,5 @@
 # Syntharra Open Tasks
-_Last updated: 2026-04-06 — Agent testing session_
+_Last updated: 2026-04-06 — Brevo migration complete_
 
 ## CRITICAL
 - [ ] Check Standard TESTING result (log: /tmp/standard_scout_gptoss.log, PID 67652)
@@ -13,6 +13,7 @@ _Last updated: 2026-04-06 — Agent testing session_
 - [ ] HubSpot pipeline — verify lead→demo→paid stages firing correctly
 
 ## MEDIUM
-- [ ] Cold email system activation (built, not live — n8n + SMTP2GO)
+- [ ] Cold email system activation (built, not live — n8n + Brevo)
+- [ ] Update syntharra-email skill with Brevo API patterns
 - [ ] Google Ads landing page A/B test setup
 - [ ] Telnyx SMS approval follow-up
