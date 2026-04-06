@@ -180,3 +180,4 @@
 | 2026-04-05 | n8n | Premium HTTP body double-stringified | Used JSON.stringify() wrapper on expression | Removed wrapper, use raw expression | Yes (syntharra-infrastructure) |
 | 2026-04-05 | Retell API | Premium TESTING missing global nodes | Only applied globals to Standard in prior session | Added 3 global + 1 extract to Premium TESTING | No |
 | 2026-04-05 | E2E Test | Premium E2E RETELL_KEY empty | No embedded fallback key in test | Added fallback key | No |
+2026-04-06 | seo | GitHub MCP create_or_update_file 403 intermittent | GitHub App token flakiness | reverted to PAT+Python requests.put() route | no
