@@ -1,0 +1,15 @@
+-- 2026-04-07 — Track C2 — partition hvac_call_log monthly on created_at
+-- Applied via Supabase MCP (apply_migration name=partition_hvac_call_log_monthly)
+-- Old table preserved as hvac_call_log_pre_partition (9 rows backup)
+-- Helper: SELECT public.ensure_call_log_partition('2027-02-01'::date);
+-- Schedule that helper from n8n monthly (pg_cron not installed on this Supabase project).
+--
+-- Why partitioned:
+--   * Query planner will partition-prune by created_at range (most queries are recent-window)
+--   * Old months can be detached and archived to cold storage without VACUUM pain
+--   * Index sizes stay small per partition — sub-millisecond inserts at 1M+ row scale
+--
+-- Partition naming: hvac_call_log_p_YYYY_MM (initial set), hvac_call_log_YYYY_MM (new via helper)
+-- Default partition: hvac_call_log_p_default — catches anything outside known ranges
+-- Primary key: (id, created_at) — partition key MUST be in PK
+-- See migration body in supabase apply_migration history.
