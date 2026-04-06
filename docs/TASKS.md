@@ -1,19 +1,22 @@
-# Syntharra Open Tasks
-_Last updated: 2026-04-06 — Brevo migration complete_
+# Open Tasks
 
-## CRITICAL
-- [ ] Check Standard TESTING result (log: /tmp/standard_scout_gptoss.log, PID 67652)
-- [ ] Promote Standard TESTING agent to MASTER if ≥85/91 pass (agent_4afbfdb3fcb1ba9569353af28d)
-- [ ] Run Premium TESTING suite — 108 scenarios with agentic-test-fix.py --agent premium
-- [ ] Promote Premium TESTING agent to MASTER (agent_9822f440f5c3a13bc4d283ea90)
+## P0 (this week)
+- [ ] Re-extract and rewrite 4 remaining FAQs (cancel, security, transfer, fallback)
+- [ ] Regenerate + push 3 marketing HTML emails (ai-readiness-score, free-report-missed-calls, lead-nurture)
+- [ ] Verify syntharra-admin/checkout/oauth-server via PAT; finish logo rollout
 
-## HIGH
-- [ ] Pre-launch checklist — Stripe live mode activation
-- [ ] Website final review — pricing page, demo booking flow
-- [ ] HubSpot pipeline — verify lead→demo→paid stages firing correctly
+## P1 (next)
+- [ ] Internal linking: blog ↔ pricing ↔ demo
+- [ ] Pricing comparison table + schema (Standard vs Premium vs doing nothing)
+- [ ] Social proof above fold on index.html
+- [ ] Urgency signal + risk reversal on demo.html
+- [ ] CTA color consistency audit across site
 
-## MEDIUM
-- [ ] Cold email system activation (built, not live — n8n + Brevo)
-- [ ] Update syntharra-email skill with Brevo API patterns
-- [ ] Google Ads landing page A/B test setup
-- [ ] Telnyx SMS approval follow-up
+## P2 (backlog)
+- People Also Ask blocks
+- Alt text audit
+- Blog headline CTR rewrites
+- Retell partnership disclosure
+- Mobile sticky CTA bar
+- Syntharra vs competitor Q&As
+- AggregateRating schema
