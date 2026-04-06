@@ -8,7 +8,25 @@
 
 ---
 
-## 1. Executive Summary
+## 0. CANONICAL POLICY (read first, applies to all future sessions)
+
+**As of 2026-04-06, Syntharra's Retell agents are built and maintained via the Git-IaC pipeline described in this document. This is the ONLY approved method for creating, editing, or promoting Retell agents going forward.**
+
+Binding rules for every future Claude session:
+
+1. **Do not edit Retell agents in the Retell dashboard.** All edits go through `retell-iac/` in `syntharra-automations`, built via `build_agent.py`, promoted via `promote.py`.
+2. **Do not create new shared Retell sub-agent components.** The old "in-Retell shared sub-agent library" model is deprecated. Reusability now lives in Git component files + manifest overrides. The build script inlines components into each flow at build time. No runtime sub-agent handoffs.
+3. **Spanish routing is removed.** Both HVAC Standard and HVAC Premium will no longer support Spanish routing. Do not recreate `spanish_routing_node` in any form. If a caller needs Spanish, they are outside the current product scope.
+4. **MASTER agents are read-only outside of `promote.py`.** Standard MASTER and Premium MASTER can only be updated by a successful `promote.py` run after TESTING has passed.
+5. **Every agent change produces a Git commit.** No commit = no change. No exceptions.
+6. **New verticals (plumbing, electrical, cleaning) get a new manifest, not new agents in the dashboard.** Copy `hvac-standard.yaml`, rename, override vertical-specific components, build, deploy.
+7. **The prompt optimizer / self-healing loop writes to component files in Git, not to live flows.** (Phase 7.)
+
+If a future session finds itself tempted to "just quickly edit the Retell flow" or "add a shared sub-agent component in Retell," stop. That's the old model. Use the pipeline.
+
+---
+
+
 
 ### 1.1 What we're doing
 Migrating Syntharra's Retell HVAC Standard and Premium agents from an in-Retell shared sub-agent component library to a **GitHub-native Infrastructure-as-Code (IaC) pipeline**. Flow definitions and reusable components will live as versioned JSON/YAML files in the `syntharra-automations` repo. A Python build script will compile them into full Retell conversation flows with **inline conversation nodes** instead of runtime sub-agents.
@@ -84,7 +102,7 @@ These are the highest-priority migration targets — they are drift-in-waiting.
 - reschedule_node
 - cancel_appointment_node
 - emergency_fallback_node
-- spanish_routing_node
+- ~~spanish_routing_node~~ **REMOVED — do not migrate. Delete from both Standard and Premium flows during Phase 1.**
 
 ### 2.5 Flow-level config
 - **Model:** `cascading gpt-4.1` (NOT Groq — good)
@@ -124,8 +142,8 @@ syntharra-automations/
     │   │   ├── check_availability.json
     │   │   ├── confirm_booking.json
     │   │   ├── reschedule.json
-    │   │   ├── cancel_appointment.json
-    │   │   └── spanish_routing.json
+    │   │   └── cancel_appointment.json
+    │   │   # spanish_routing REMOVED — not migrated
     │   └── README.md
     ├── manifests/
     │   ├── hvac-standard.yaml
