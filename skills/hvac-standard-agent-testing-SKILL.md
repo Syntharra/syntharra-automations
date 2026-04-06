@@ -166,3 +166,37 @@ requests.post(f"https://api.retellai.com/publish-agent/{MASTER_AGENT}", headers=
 4. Optional: `premiumOnly: true` (excluded from Standard runs)
 5. Run agentic engine on the new scenario's group to verify
 6. Push to GitHub
+
+## Gotchas & Verified Patterns
+
+### COMPONENT_MAX_CHARS must be ≥ component size + buffer
+- `COMPONENT_MAX_CHARS = 2500` in `tools/agentic-test-fix.py`
+- Was 1200 — silently skipped all patches for #043 (identify_call node ~2200 chars)
+- Root cause: patch generator produces correct fix but constant blocks it silently
+- Fix confirmed on GitHub SHA e123a51f, 2026-04-06
+
+### Groq qwen/qwen3-32b TPD limit (500k tokens/day)
+- Standard full 3-iteration run consumes ~499k tokens
+- **Do NOT run Standard + Premium on the same calendar day** — Premium will be rate-limited from the start
+- Retry waits follow sliding 24h window: 116s → 352s → 451s+ as budget exhausts
+- Plan: run Standard one day, Premium the next
+
+### Desktop Commander Python output capture
+- `start_process` does NOT capture Python stdout inline
+- Must use: `Start-Process -FilePath python.exe -ArgumentList ... -RedirectStandardOutput out.txt -Wait -NoNewWindow`
+- Then read the output file with `Get-Content`
+
+### Scenario #043 persistent failure
+- "Commercial property facilities manager" — fails due to COMPONENT_MAX_CHARS cap blocking the fix
+- With COMPONENT_MAX_CHARS=2500 the fix will apply on next run
+- Score without #043 fix: 90/91 (98%) — still well above gate
+
+### Spanish routing node removal
+- `spanish_routing_node` scheduled for removal from the flow
+- Don't flag failures on Spanish routing scenarios as blocking
+- promote.py STUB_THRESHOLD logic handles removal automatically (won't try to restore a missing node)
+
+## Promotion History
+| Date | Score | Gate | Result |
+|---|---|---|---|
+| 2026-04-06 | 90/91 (98%) | ≥85/91 | ✅ PROMOTED — flow v22 |
