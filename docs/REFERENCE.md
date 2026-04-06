@@ -5,52 +5,75 @@
 
 ---
 
+## 🏛️ Standard Onboarding & Agent Creation (CANONICAL as of 2026-04-06)
+
+This is the ONLY supported path for creating a new client agent. Any deviation must be documented and approved.
+
+1. **Source of truth** = `retell-iac/` on `main`. Agent flows are built from YAML manifests + JSON templates, never hand-edited in the Retell UI.
+2. **Standard client** → cloned from `agent_4afbfdb3fcb1ba9569353af28d` (Standard MASTER, flow `conversation_flow_34d169608460`).
+3. **Premium client** → cloned from `agent_2cffe3d86d7e1990d08bea068f` (Premium MASTER = Premium TESTING, interim. Flow `conversation_flow_2ded0ed4f808`).
+4. **Clone trigger** = Jotform submission → n8n onboarding workflow:
+   - Standard: `HVAC AI Receptionist - JotForm Onboarding (Supabase)` (`4Hx7aRdzMl5N0uJP`)
+   - Premium: `HVAC Prem Onboarding` (`kz1VmwNccunRMEaF`)
+5. **Onboarding pipeline steps** (both tiers):
+   Jotform webhook → Parse fields → Build Retell prompt → Create Retell LLM → Clone Retell agent (from master above) → Merge LLM + agent data → Write to `hvac_standard_agent` Supabase → Stripe payment reconcile → Purchase phone number (see §Phone Purchase) → Publish Retell agent → HubSpot deal update → Slack notify → `You're Live` email.
+6. **Phone Purchase**: Twilio-only right now. Swap to Telnyx when credential is vaulted (see §Telnyx Migration). No other provider.
+7. **Spanish handling**: excluded from flows — Retell native multilingual handles Spanish callers inline. `spanish_routing_node` intentionally stripped at build time via `retell-iac/manifests/*.yaml` `excluded` list.
+8. **MASTER safety**: never patch MASTER agents directly in Retell. Always (a) edit the manifest/template in `retell-iac/`, (b) run `scripts/build_agent.py` + `scripts/diff.py` round-trip, (c) `scripts/promote.py` gated on round-trip clean.
+9. **Backups**: every MASTER change must tag a baseline in `retell-iac/snapshots/YYYY-MM-DD_<label>/` before promotion.
+10. **No bypasses**: direct Retell API PATCHes to MASTER agents, direct n8n node edits that skip git, or manual Supabase writes to `hvac_standard_agent` are all prohibited outside of emergency rollback.
+
+See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
+
+---
+
 ## ⚠️ Known Script Gotchas
 
 | Script | Gotcha | Safe Alternative |
 |---|---|---|
-| `run_tests.py --agent premium` | **BROKEN** — silently ignores `--agent` flag. Always runs STANDARD TESTING SUITE first regardless. Wastes ~200K TPD tokens before Premium starts. Discovered 2026-04-06 after losing full day's budget. | Use `run_premium_only.py` instead |
-| `promote.py --agent premium` | **BROKEN** — tries to fetch Premium MASTER flow which doesn't exist yet (agent not created). Returns 404. | Use `promote_premium.py` instead |
+| `run_tests.py --agent premium` | **BROKEN** — silently ignores `--agent` flag. Always runs STANDARD TESTING SUITE first regardless. Wastes ~200K TPD tokens before Premium starts. Discovered 2026-04-06. | Use `run_premium_only.py` instead |
+| `promote.py --agent premium` | Not needed yet — Premium TESTING is acting as interim Premium MASTER (2026-04-06). Promotion to a distinct MASTER deferred until post-launch. | Point clones at `agent_2cffe3d86d7e1990d08bea068f` |
 
 ---
 
 ## Agent Registry
 | Agent | ID | Status |
 |---|---|---|
-| HVAC Standard | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE (promoted 2026-04-06, flow v22, 90/91 98%) |
-| HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🧪 Awaiting full 108-scenario run (run after midnight UTC with run_premium_only.py) |
+| HVAC Standard (MASTER) | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE (promoted 2026-04-06, flow v22, 90/91 98%). Clone source for Standard clients. |
+| HVAC Premium (MASTER = TESTING, interim) | `agent_2cffe3d86d7e1990d08bea068f` | ✅ Acting as Premium MASTER until post-launch split. Clone source for Premium clients. |
 | Demo Female / Sophie | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male / Jake | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
 
-> Note: All other agents deleted 2026-04-06 cleanup (156 → 4). Standard TESTING agent deleted after successful promotion to MASTER.
-> Note: Premium MASTER agent does NOT exist yet — promote_premium.py --live will create it on first promotion.
+> Note: Premium MASTER and TESTING are the same agent (`agent_2cffe3d86d7e1990d08bea068f`) until Dan greenlights a split post-launch.
 
 ## Conversation Flow Registry
 | Flow | ID | Bound to |
 |---|---|---|
 | HVAC Standard (MASTER) | `conversation_flow_34d169608460` | Standard MASTER agent |
 | HVAC Standard (TESTING) | `conversation_flow_5b98b76c8ff4` | Unbound — Standard TESTING agent deleted post-promotion |
-| HVAC Premium (MASTER) | `conversation_flow_1dd3458b13a7` | ⚠️ NOT YET CREATED — Premium MASTER agent does not exist |
-| HVAC Premium (TESTING) | `conversation_flow_2ded0ed4f808` | Premium TESTING agent |
+| HVAC Premium (MASTER/TESTING) | `conversation_flow_2ded0ed4f808` | Premium MASTER (interim — same agent as TESTING) |
+
+## Phone Numbers
+- **+18129944371** — only active line. Used for live sales calls + demos while burning down ~$20 Twilio credit. Will be replaced by Telnyx numbers once Telnyx is live.
+- (Old demo line `+12292672271` deleted in Twilio 2026-04-06 — do not reference.)
+
+## Telnyx Migration (post-Twilio)
+- Telnyx becomes the **permanent** phone provider the moment a Telnyx API key is added to Supabase vault (`service_name='Telnyx', key_type='api_key'`). Twilio usage stops at that point.
+- Onboarding "Purchase Number" HTTP node swap:
+  - Search: `GET https://api.telnyx.com/v2/available_phone_numbers?filter[country_code]=US&filter[locality]={client_city}&filter[features][]=voice&filter[features][]=sms`
+  - Order: `POST https://api.telnyx.com/v2/number_orders` with `phone_numbers: [{phone_number: <selected>}]`
+  - Bind to Retell SIP: `PATCH /v2/phone_numbers/{id}` setting `voice.connection_id` to the Retell SIP connection id.
+  - Auth header: `Authorization: Bearer <vault key>` on all three calls.
+- Once this swap is live, agent creation is fully automatic end-to-end — Jotform in, live phone number out, zero manual steps.
+- Tracked in TASKS.md until built.
 
 ## Simulator — Premium
 ```
-# Run core_flow group
 git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group core_flow
-
-# Group order: core_flow → personalities → info_collection → pricing_traps → edge_cases → boundary_safety → premium_specific
-# Model: llama-3.3-70b-versatile
-# Groq key: Supabase vault — service_name='Groq', key_type='api_key'
-# Prompt: global prompt only (~10k chars) — node instructions must be INCLUDED (do not strip)
 ```
 
 ## n8n Workflows
 - Total: 47 | Active: 32 | Labelled: 37/47
-- Unlabelled active: `Google Keep → Groq → Slack To-Do List` (`5wxgBfJL7QeNP2ab`)
-- 9 inactive duplicates: left intentionally per Dan 2026-04-04
-
-## Phone Numbers
-- Standard smoke test line: +18129944371
 
 ## core_flow — Fix Status (Premium TESTING)
 | # | Scenario | Status |
@@ -61,7 +84,6 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 | #13 | Callback repetition | Fix applied, retest pending |
 | #14 | Pricing redirect | Fix applied, retest pending |
 | #15 | Over-eager close | Fix applied, retest pending |
-
 
 ## Component Library (Subagent)
 | Component | ID |
@@ -86,34 +108,18 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 | reschedule | `conversation_flow_component_4b3d107fd73a` |
 | cancel_appointment | `conversation_flow_component_eb20b4cd1d8d` |
 
-
 ## Testing Tools
 
 | Tool | Path | Purpose |
 |---|---|---|
 | Agentic Test Engine | `tools/agentic-test-fix.py` | Full scenario suite + triage + self-fix. Respects --agent flag correctly. |
-| **Premium-Only Runner** | `C:\Users\danie\syntharra-tests\run_premium_only.py` | **USE THIS for Premium runs.** Bypasses run_tests.py wrapper — downloads agentic-test-fix.py from GitHub, calls it directly with --agent premium. |
-| **Premium Promoter** | `C:\Users\danie\syntharra-tests\promote_premium.py` | Promotes Premium TESTING → MASTER. Creates MASTER agent if doesn't exist. Dry run default, --live to execute, --force to skip gate. |
-| Standard Simulator | `tools/openai-agent-simulator.py` | Legacy per-scenario pass/fail |
-| Premium Simulator | `tools/openai-agent-simulator-premium.py` | Legacy per-scenario pass/fail (Premium) |
+| **Premium-Only Runner** | `C:\Users\danie\syntharra-tests\run_premium_only.py` | **USE THIS for Premium runs.** |
 | Standard E2E | `shared/e2e-test.py` | Full pipeline E2E (93 assertions) |
 | Premium E2E | `shared/e2e-test-premium.py` | Full pipeline E2E (106 assertions) |
 | Scenarios | `tests/agent-test-scenarios.json` | 108 scenarios, 7 groups |
-| Results | `tests/results/` | Timestamped JSON results |
 
 ### Groq Budget — Agentic Test Engine (qwen/qwen3-32b)
-- **Model**: `qwen/qwen3-32b` via `https://api.groq.com/openai/v1/chat/completions`
-- **Daily limit**: 500,000 TPD (tokens per calendar day — resets midnight UTC)
-- **Per eval call**: ~2,000–3,200 tokens
-- **Standard full run**: ~200K tokens (~40% of daily budget)
-- **Premium full run**: ~270K tokens (~54% of daily budget)
-- **Combined**: ~470K tokens — only fits if run back-to-back with no reruns
-- **⚠️ NEVER run Standard before Premium if you need Premium to complete** — Standard uses 40% of budget first
-- **429 symptoms**: wait times 400–550s per retry, 8 retries, then "ERR: Max retries exceeded" = TPD exhausted → wait until midnight UTC
-
-### Groq Budget — Legacy Simulators (llama-4-scout)
-- Model: `meta-llama/llama-4-scout-17b-16e-instruct`
-- Rate: 30 req/min, 14,400 req/day, 30,000 TPM
-- Standard full run: ~1,547 calls (10.7% daily)
-- Premium full run: ~1,836 calls (12.8% daily)
-- Combined: ~3,383 calls (23.5% daily) — fits comfortably in one day
+- **Daily limit**: 500,000 TPD (resets midnight UTC)
+- **Standard full run**: ~200K tokens
+- **Premium full run**: ~270K tokens
+- **⚠️ NEVER run Standard before Premium if you need Premium to complete**
