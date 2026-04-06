@@ -1,63 +1,17 @@
 agent: premium
 flow_template: flows/hvac-premium.template.json
-components:
-  - name: greeting_node
-    source: components/premium/orphans/greeting_node.json
-  - name: identify_call_node
-    source: components/identify_call_node.json
-  - name: booking_capture_node
-    source: components/premium/booking_capture_node.json
-  - name: check_availability_node
-    source: components/premium/orphans/check_availability_node.json
-  - name: confirm_booking_node
-    source: components/premium/orphans/confirm_booking_node.json
-  - name: reschedule_node
-    source: components/premium/orphans/reschedule_node.json
-  - name: cancel_appointment_node
-    source: components/premium/orphans/cancel_appointment_node.json
-  - name: fallback_leadcapture_node
-    source: components/premium/fallback_leadcapture_node.json
-  - name: verify_emergency_node
-    source: components/verify_emergency_node.json
-  - name: callback_node
-    source: components/callback_node.json
-  - name: existing_customer_node
-    source: components/existing_customer_node.json
-  - name: general_questions_node
-    source: components/general_questions_node.json
-  - name: spam_robocall_node
-    source: components/spam_robocall_node.json
-  - name: transfer_call
-    source: components/premium/orphans/transfer_call.json
-  - name: emergency_transfer
-    source: components/premium/orphans/emergency_transfer.json
-  - name: transfer_failed_node
-    source: components/transfer_failed_node.json
-  - name: ending
-    source: components/ending.json
-  - name: end_call
-    source: components/premium/orphans/end_call.json
-  - name: call_style_detector
-    source: components/call_style_detector.json
-  - name: validate_phone
-    source: components/validate_phone.json
-  - name: emergency_detection
-    source: components/premium/orphans/emergency_detection.json
-  - name: spam_detection
-    source: components/premium/orphans/spam_detection.json
-  - name: transfer_request
-    source: components/premium/orphans/transfer_request.json
-  - name: extract_caller_data
-    source: components/premium/orphans/extract_caller_data.json
-  - name: emergency_fallback_node
-    source: components/premium/orphans/emergency_fallback_node.json
-  - name: spanish_routing_node
-    source: components/premium/orphans/spanish_routing_node.json
+# Lossless template: hvac-premium.template.json is a byte copy of the Premium TESTING
+# snapshot (26 nodes). No component indirection — the full node bodies live in the template.
+# Build = template with `excluded` nodes stripped + inbound edges cleaned.
+components: []
 overrides: {}
 excluded:
   - spanish_routing_node
 status: active_premium_testing_source
+source_snapshot: snapshots/2026-04-06_premium-testing/flow.json
 notes: |
-  Premium MASTER does not yet exist. This manifest is built from Premium TESTING
-  (agent_2cffe3d86d7e1990d08bea068f, flow conversation_flow_2ded0ed4f808) with Spanish
-  routing excluded — Retell native multilingual handles Spanish callers inline.
+  Premium MASTER does not yet exist in Retell. Current truth is Premium TESTING
+  (agent_2cffe3d86d7e1990d08bea068f, flow conversation_flow_2ded0ed4f808).
+  Spanish routing is excluded — Retell native multilingual handles Spanish callers inline.
+  When Premium MASTER is created, register its agent_id in retell-iac/CLAUDE.md
+  MASTERS table and in scripts/promote.py.
