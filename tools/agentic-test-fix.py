@@ -43,13 +43,13 @@ AGENT_CONFIG = {
     "standard": {
         "agent_id": "agent_731f6f4d59b749a0aa11c26929",
         "flow_id":  "conversation_flow_5b98b76c8ff4",
-        "model":    "meta-llama/llama-4-scout-17b-16e-instruct",
+        "model":    "qwen/qwen3-32b",
         "name":     "HVAC Standard (TESTING)",
     },
     "premium": {
         "agent_id": "agent_2cffe3d86d7e1990d08bea068f",
         "flow_id":  "conversation_flow_2ded0ed4f808",
-        "model":    "meta-llama/llama-4-scout-17b-16e-instruct",
+        "model":    "qwen/qwen3-32b",
         "name":     "HVAC Premium (TESTING)",
     },
 }
@@ -103,8 +103,8 @@ MAX_OUTER_ITERATIONS    = 3     # full suite re-runs if new failures found
 # =============================================================================
 
 _call_window = deque()
-_RATE_MAX    = 1       # 1 simulate call per 5.5s = ~10.9/min × 2480 tokens = 27K TPM — safe under 30K TPM
-_RATE_WINDOW = 5.5     # 5.5s window; llama-4-scout: 1000 RPM / 30000 TPM
+_RATE_MAX    = 1       # 1 simulate call per 24s = ~2.5/min × 2300 tokens = 5.75K TPM — safe under 6K TPM
+_RATE_WINDOW = 24.0    # 24s window; qwen3-32b: 1000 RPM / 6000 TPM; /no_think disables reasoning overhead
 
 def rate_gate(label=""):
     """Block until we're under the rate limit. Called before every Groq API call."""
@@ -233,10 +233,14 @@ def fetch_agent_prompt_compressed(agent_type):
 # GROQ API  (rate-gated, exponential backoff on 429)
 # =============================================================================
 
-def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=4, max_tokens=None, skip_gate=False):
+def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=8, max_tokens=None, skip_gate=False):
     """Rate-gated Groq chat completion. skip_gate=True for small eval calls (<600 tokens)."""
     if model is None:
-        model = "meta-llama/llama-4-scout-17b-16e-instruct"
+        model = "qwen/qwen3-32b"
+
+    # qwen3 reasoning suppression: append /no_think so it skips the <think> chain
+    if "qwen" in model.lower() and "/no_think" not in system_prompt:
+        system_prompt = system_prompt + " /no_think"
 
     if not skip_gate:
         rate_gate(model[:8])   # enforce TPM gate — only for large simulate calls
@@ -254,15 +258,28 @@ def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=
         try:
             r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=45)
             if r.status_code == 429:
-                wait = 10 + 10 * attempt  # 10, 20, 30, 40s — rare on llama-4-scout (1000 RPM / 30K TPM)
-                err_msg = r.json().get('error', {}).get('message', r.text[:200]) if r.headers.get('content-type','').startswith('application/json') else r.text[:200]
-                print(f" [429 — wait {wait}s | {err_msg[:300]}] ", end="", flush=True)
+                err_msg = r.json().get('error', {}).get('message', r.text[:400]) if r.headers.get('content-type','').startswith('application/json') else r.text[:400]
+                # Parse "Please try again in Xs" from Groq error — honor exact TPD window
+                import re as _re
+                m = _re.search(r'try again in (\d+)m(\d+(?:\.\d+)?)s', err_msg)
+                m2 = _re.search(r'try again in (\d+(?:\.\d+)?)s', err_msg)
+                if m:
+                    wait = int(m.group(1)) * 60 + float(m.group(2)) + 5
+                elif m2:
+                    wait = float(m2.group(1)) + 5
+                else:
+                    wait = 30 + 30 * attempt  # fallback: 30, 60, 90, 120s
+                print(f"\n [429 — wait {wait:.0f}s | {err_msg[:200]}] ", end="", flush=True)
                 time.sleep(wait)
                 rate_gate("retry")
                 continue
             r.raise_for_status()
             data = r.json()
-            return data["choices"][0]["message"]["content"].strip(), data.get("usage", {})
+            raw_content = data["choices"][0]["message"]["content"].strip()
+            # Strip qwen3 <think>...</think> blocks (present even with /no_think as empty tags)
+            import re as _re2
+            clean_content = _re2.sub(r'<think>.*?</think>', '', raw_content, flags=_re2.DOTALL).strip()
+            return clean_content, data.get("usage", {})
         except Exception as e:
             if attempt == retries - 1:
                 raise
