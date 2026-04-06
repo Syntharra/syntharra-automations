@@ -1,3 +1,11 @@
+# Retell Agents — Reference Archive (Pre-Git-IaC)
+
+> ⚠️ **NOT the source of truth.** As of 2026-04-06, Retell agent management is canonically handled in `/retell-iac/`.
+> This directory holds legacy reference templates and dated backups only. Do not modify production agents from here.
+> Source-of-truth: `/retell-iac/manifests/*.yaml` → `scripts/build_agent.py` → `scripts/promote.py`
+
+---
+
 # retell-agents/
 
 This folder is the source of truth for all Syntharra Retell agents and conversation flows.
