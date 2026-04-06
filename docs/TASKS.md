@@ -1,6 +1,7 @@
 # Open Tasks
 
 ## P0 (this week)
+- [ ] Promote Premium TESTING → MASTER once 2026-04-06 test run completes (gate: ≥95/108)
 - [ ] Re-extract and rewrite 4 remaining FAQs (cancel, security, transfer, fallback)
 - [ ] Regenerate + push 3 marketing HTML emails (ai-readiness-score, free-report-missed-calls, lead-nurture)
 - [ ] Verify syntharra-admin/checkout/oauth-server via PAT; finish logo rollout
