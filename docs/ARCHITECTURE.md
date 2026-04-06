@@ -762,3 +762,114 @@ Why:
 Verified 2026-04-06 via playwright on 19 public nav pages at 375px (hamburger visible, nav-menu hidden) and 1440px (hamburger hidden, nav-menu visible). 0 broken.
 
 If we later want to force hamburger always visible, change the base rule to `display:flex` and the media query can stay as-is, but we'll also need to hide `.nav-menu` at desktop or both will show.
+
+---
+
+## [2026-04-06] — Agentic Test Engine: COMPONENT_MAX_CHARS Must Exceed Largest Node
+
+**Problem:** `tools/agentic-test-fix.py` had `COMPONENT_MAX_CHARS = 1200`. The `identify_call` node instruction is ~2,200 chars. The fix engine silently skipped ALL patch attempts for scenario #043 across every round without logging a warning — just `[SKIP] component too large`. The scenario kept failing because the fix was never applied.
+
+**Options considered:**
+1. Keep 1200 and add a diagnostic warning when skipping
+2. Raise the limit to 2500 to cover all current nodes
+3. Make it dynamic (read node size, set limit accordingly)
+
+**Chose:** Option 2 — raise to 2500. Option 3 is premature optimisation.
+
+**Because:** The limit exists to prevent the LLM from rewriting enormous nodes (which produces prompt bloat and regression). 2500 covers all current components with headroom. The real lesson is that a silent skip is a silent failure — the fix engine should log `[WARN] SKIP node too large (Xch > 1200ch) — no patch possible` so the operator can see it.
+
+**Rule going forward:** After any agentic test round, scan the run log for `[SKIP]` lines. A `[SKIP]` on a FAIL scenario means the scenario will never be fixed by the engine — it requires a manual prompt intervention.
+
+**Revisit if:** Any node exceeds 2500 chars (add another 500 and document why).
+
+---
+
+## [2026-04-06] — Retell API: DELETE Returns 204, Not 200
+
+**Problem:** `retell_cleanup.py` checked `r.status_code in (200, 201)` for success. Retell DELETE endpoint returns `204 No Content`. Every delete was logged as "FAILED" — creating false alarm output and nearly causing the operator to rerun the delete script.
+
+**Chose:** For all Retell delete operations, success = `r.status_code in (200, 201, 204)`.
+
+**Because:** REST convention: 204 means "success, no body". Retell follows this convention for DELETE. Any subsequent DELETE attempt on the same agent returns 404 (already deleted) — this is normal and should be logged as "already deleted" not "failed".
+
+**Rule:** Always include 204 in success codes for DELETE calls to any REST API. A 404 on a DELETE is not an error — it means the resource is already gone.
+
+---
+
+## [2026-04-06] — Retell: Agent Proliferation Requires Periodic Audit
+
+**Problem:** REFERENCE.md listed 6 Retell agents. Actual count: 156. The gap was 150 stale agents — FrostKing HVAC Premium timestamp-clones (~50+), Max/Nova test agents, demo clones — all created during onboarding workflow testing. No audit protocol existed.
+
+**Why it happened:** Each test run of the Standard/Premium onboarding workflows clones a new Retell agent from the MASTER template. With no cleanup step, agents accumulate at ~1 per test run. Over months of testing: 150+ orphaned agents.
+
+**Chose:** Periodic cleanup protocol (now implemented via `retell_cleanup.py`).
+- KEEP list is hardcoded (4 agents: Standard MASTER, Premium TESTING, Demo Female, Demo Male)
+- All others: delete
+- Run before any major test/promotion session
+
+**Rule:** After any E2E test session that involves onboarding workflow runs, delete test-created agents within the same session. The REFERENCE.md agent count should always equal the KEEP list count (currently 4).
+
+**Revisit if:** Client agents are provisioned in the same Retell account (at that point, the KEEP list must include all live client agents — the cleanup script must query Supabase for live agent_ids before running).
+
+---
+
+## [2026-04-06] — Groq Free Tier: TPD = 500k tokens/24h Sliding Window
+
+**Problem:** The Standard full agentic test run (91 scenarios) consumed ~499,974 / 500,000 Groq tokens per day (TPD). Premium test started immediately after and was rate-limited within 2 scenarios.
+
+**Why this matters:** The ARCHITECTURE entry from 2026-04-04 noted Groq has "no daily RPD cap" — that was about request count, not token volume. The free tier DOES have a 500k TPD limit. With the agentic test engine using ~5,500 tokens per scenario (3 phases × ~1,800 tokens), a full 91-scenario Standard run hits the limit.
+
+**Chose:** Run Standard and Premium on separate days. The 24h sliding window means if Standard runs at 10:00, Premium can start safely at ~10:30 the next day.
+
+**Corrected budget (agentic test engine, free tier):**
+- Standard full run: ~499k tokens (~100% of daily TPD budget — full day)
+- Premium full run: ~600k tokens (exceeds daily budget — requires multi-hour rate-limit waits)
+- Cannot run both in same session without significant TPD wait
+
+**Rule:** Schedule Standard and Premium agentic test runs on separate days. Do not start Premium within 24h of completing Standard unless you're willing to wait through multiple 352s rate-limit holds.
+
+**Revisit if:** Groq raises free tier TPD, or we upgrade to a paid Groq plan (removes TPD cap entirely).
+
+---
+
+## [2026-04-06] — Desktop Commander: Python stdout requires file redirect
+
+**Problem:** When running Python scripts via Desktop Commander `start_process`, the tool always returned exit 0 with empty output. The script was running correctly — Desktop Commander just doesn't capture Python stdout inline.
+
+**Pattern (correct):**
+```powershell
+Start-Process -FilePath python.exe -ArgumentList "C:\path\to\script.py" -RedirectStandardOutput "C:\path\to\out.txt" -RedirectStandardError "C:\path\to\err.txt" -Wait -NoNewWindow
+Get-Content "C:\path\to\out.txt"
+```
+
+**Why:** Desktop Commander's `start_process` captures output for shell built-ins and simple CLI tools but not Python's stdout (separate process stdio). The `-RedirectStandardOutput` flag routes Python stdout to a file; `-Wait` ensures the process completes before reading the file.
+
+**Trade-offs accepted:** Two-step pattern (run then read). For scripts longer than ~60s, Desktop Commander's 60s tool timeout fires — the process continues in background and the output file must be read in a separate call after the timeout.
+
+---
+
+## [2026-04-06] — Agent Promotion: TESTING → MASTER via promote-agent.py
+
+**Decision:** Standard promotion flow established. `tools/promote-agent.py` is the canonical promotion tool.
+
+**How it works:**
+1. Fetches TESTING agent's current conversation flow
+2. Fetches MASTER agent's original flow (for stub restoration)
+3. For each node in TESTING flow: if node content is a stub (< `STUB_THRESHOLD=200` chars), restore the MASTER's version of that node instead
+4. PATCHes the MASTER agent's flow with the merged result
+5. Publishes the MASTER agent
+
+**Why STUB_THRESHOLD matters:** When MASTER was cloned to create TESTING, some safety-critical nodes (emergency_fallback, spanish_routing) were left as short stubs in the TESTING flow. The threshold restores these from MASTER rather than promoting the stub, preserving live safety logic.
+
+**Gate:** Standard gate = 85/91 pass (93.4%). Result 2026-04-06: 90/91 (98.9%). Premium gate = 95/108 (88%).
+
+**Post-promotion checklist:**
+1. Verify `is_published: true` on MASTER
+2. Check Retell dashboard — new version number visible
+3. Update REFERENCE.md with new flow version
+4. Update skill files (hvac-standard-SKILL.md or hvac-premium-SKILL.md)
+5. Back up MASTER JSON to `retell-agents/`
+6. Run a smoke test call on the MASTER line (+18129944371 for Standard)
+
+**Spanish routing note:** Dan confirmed 2026-04-06 that `spanish_routing_node` will be removed. Failures on this node are not blocking for promotion decisions.
+
