@@ -123,3 +123,17 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 - **Standard full run**: ~200K tokens
 - **Premium full run**: ~270K tokens
 - **⚠️ NEVER run Standard before Premium if you need Premium to complete**
+
+
+## Retell Agents — AUTHORITATIVE (verified 2026-04-07 via list-agents)
+
+| client_id | agent_id | flow_id | tier | status | notes |
+|---|---|---|---|---|---|
+| SYNTHARRA_MASTER_STD  | agent_4afbfdb3fcb1ba9569353af28d | conversation_flow_34d169608460 | std  | active | HVAC Standard MASTER |
+| SYNTHARRA_MASTER_PREM | agent_2cffe3d86d7e1990d08bea068f | conversation_flow_2ded0ed4f808 | prem | active | HVAC Premium MASTER (provisional — confirm after scenario testing) |
+
+**Removed (do NOT use — these IDs no longer exist on Retell):**
+- agent_9822f440f5c3a13bc4d283ea90 (was claimed Premium MASTER)
+- agent_731f6f4d59b749a0aa11c26929 (was claimed Standard TESTING)
+
+Source of truth: Supabase `public.client_agents` table.
