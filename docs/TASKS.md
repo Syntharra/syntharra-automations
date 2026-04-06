@@ -8,7 +8,6 @@ _Updated: 2026-04-06 | Under 40 lines | Open work only_
 
 ## Agent / Testing
 - [ ] E2E test suite run before launch — both Standard and Premium pipelines
-- [ ] Premium MASTER agent (agent_9822f440) — verify it matches tested TESTING agent config
 
 ## Infrastructure
 - [ ] n8n workflow labelling audit — ensure all workflows labelled before launch
