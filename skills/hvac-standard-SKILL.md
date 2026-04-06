@@ -675,3 +675,11 @@ All E2E test data must use generic values:
 - Company name: `TestClient HVAC {timestamp}`
 
 Never use real company names, real domains, or branded plan names in test payloads.
+
+## Session Update — 2026-04-06
+- Full agentic test run (3 iterations × 91 scenarios) completed
+- Final score: **90/91 (98%)** — best ever
+- Only failure: #043 commercial property facilities manager (fix blocked by COMPONENT_MAX_CHARS=1200, now raised to 2500)
+- Standard MASTER promoted from TESTING — flow version 22
+- MASTER architecture now matches TESTING: 20 nodes, modular subagent/component
+- Spanish routing node (`spanish_routing_node`) pending removal — not safety-critical
