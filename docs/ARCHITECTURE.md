@@ -873,3 +873,35 @@ Get-Content "C:\path\to\out.txt"
 
 **Spanish routing note:** Dan confirmed 2026-04-06 that `spanish_routing_node` will be removed. Failures on this node are not blocking for promotion decisions.
 
+---
+
+## [2026-04-06] — Website: Site-wide visual changes require single-page preview gate before rollout
+
+**Problem:** How to safely apply CSS changes that affect every page on syntharra.com without breaking the live site or wasting time on reversions.
+
+**Context:** On 2026-04-06, a dark footer theme (`background:#0F0E1A`) was applied across all 27 pages of syntharra-website without showing Dan a preview first. Dan rejected the result immediately ("destroyed the entire website"). Required 27 sequential HTTP PUT reverts to restore the site — approximately 2 hours of wasted work.
+
+**Options considered:**
+1. Apply to all pages at once (fast but zero safety margin)
+2. Apply to one page, show preview, get approval, then rollout (preview gate pattern)
+3. Use a CSS variable on a shared stylesheet (not viable — all pages are standalone HTML files with inline styles)
+
+**Chose:** Preview gate (option 2) — mandatory for all future site-wide visual changes.
+
+**The rule:**
+1. Apply to ONE representative page (index.html or the most visible page relevant to the change)
+2. Wait 60–90s for GitHub Pages CDN to deploy
+3. Share live URL with Dan, confirm it looks correct
+4. Only then batch-apply to all remaining pages
+
+**Because:** Visual decisions (especially affecting brand/aesthetic) require human sign-off. Dan can't approve something he hasn't seen. The cost of a single-page rollback is trivial; 27-page rollback is not.
+
+**Trade-offs accepted:** Slightly slower rollout (one extra approval step). Worth it unconditionally for any visual change.
+
+**Revisit if:** Syntharra adopts a shared CSS file / build system — at that point a single change + preview is structurally enforced.
+
+**Additional failures discovered in this incident:**
+- Chrome MCP screenshot tool fires at ~2.5x DPR → CSS viewport ~620px → triggers mobile breakpoint → background-color changes on desktop containers may not be visible in screenshots. Never rely on Chrome screenshots for background-color verification — use Python HTTP GET to check the raw CSS string in the live HTML.
+- GitHub API parallel writes cause HTTP 409 (stale SHA) — writes must always be sequential, with SHA fetched immediately before each PUT.
+- `str.replace()` silently does nothing if the pattern doesn't match (e.g. `1.4fr` vs `1.5fr` in `.footer-top grid-template-columns`). Always assert that the replacement changed the content.
+
