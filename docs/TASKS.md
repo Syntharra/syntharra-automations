@@ -1,28 +1,18 @@
-# Open Tasks
+# Syntharra Open Tasks
+_Last updated: 2026-04-06 — Agent testing session_
 
-> Under 40 lines. Reference data → REFERENCE.md. Marketing → MARKETING.md.
+## CRITICAL
+- [ ] Check Standard TESTING result (log: /tmp/standard_scout_gptoss.log, PID 67652)
+- [ ] Promote Standard TESTING agent to MASTER if ≥85/91 pass (agent_4afbfdb3fcb1ba9569353af28d)
+- [ ] Run Premium TESTING suite — 108 scenarios with agentic-test-fix.py --agent premium
+- [ ] Promote Premium TESTING agent to MASTER (agent_9822f440f5c3a13bc4d283ea90)
 
-## Priority 1 — Pre-Launch Blockers
-- [ ] Build `tools/agentic-test-fix.py` — core agentic test + self-fix engine (plan: docs/AGENTIC-TESTING-PLAN.md)
-- [ ] Run agentic test suite on Standard TESTING (target: 85/91+)
-- [ ] Run agentic test suite on Premium TESTING (target: 95/108+)
-- [ ] Promote TESTING → MASTER agents after both suites green
-- [ ] Build retell-integration-dispatch n8n workflow for Premium booking tool calls
-- [ ] Publish both TESTING agents (is_published still false — needs Dan confirmation)
-- [ ] Activate Stripe LIVE mode — recreate products/prices/coupons/webhook
+## HIGH
+- [ ] Pre-launch checklist — Stripe live mode activation
+- [ ] Website final review — pricing page, demo booking flow
+- [ ] HubSpot pipeline — verify lead→demo→paid stages firing correctly
 
-## Priority 2 — Post-Launch
-- [ ] Set up nightly regression test (n8n scheduled or cron)
-- [ ] Telnyx SMS approval (pending)
-- [ ] Unpause syntharra-ops-monitor on Railway
-- [ ] Fix HubSpot Code node in call processors ($env access denied) — rewrite to HTTP Request
-
-## Recently Completed (2026-04-05)
-- [x] Subagent component library — 19 components created and deployed
-- [x] Standard flow: 15→20 nodes, all subagent components wired
-- [x] Premium flow: 20→26 nodes, all subagent components wired
-- [x] Both E2E pipeline tests passing (Standard 93/93, Premium 106/106)
-- [x] Simulator scripts updated — fetch component instructions + edge routing
-- [x] 13 new test scenarios added (95→108 total)
-- [x] All 3 E2E skill files updated for subagent architecture
-- [x] AGENTIC-TESTING-PLAN.md designed and published
+## MEDIUM
+- [ ] Cold email system activation (built, not live — n8n + SMTP2GO)
+- [ ] Google Ads landing page A/B test setup
+- [ ] Telnyx SMS approval follow-up
