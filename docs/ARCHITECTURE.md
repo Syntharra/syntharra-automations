@@ -905,3 +905,35 @@ Get-Content "C:\path\to\out.txt"
 - GitHub API parallel writes cause HTTP 409 (stale SHA) — writes must always be sequential, with SHA fetched immediately before each PUT.
 - `str.replace()` silently does nothing if the pattern doesn't match (e.g. `1.4fr` vs `1.5fr` in `.footer-top grid-template-columns`). Always assert that the replacement changed the content.
 
+
+
+---
+
+## Git-IaC: Canonical Retell Agent Management (Locked 2026-04-06)
+
+As of 2026-04-06, all Retell agent management is canonically handled via Git-IaC stored in `/retell-iac/`.
+
+**Core Principle:** The Retell dashboard is NOT the source of truth. Git is.
+
+### MASTER Agents Are Read-Only
+- Standard MASTER: `agent_4afbfdb3fcb1ba9569353af28d` — modified only by `retell-iac/scripts/promote.py`
+- Premium MASTER (interim): `agent_2cffe3d86d7e1990d08bea068f` — same rule
+- Direct Retell API PATCH operations to MASTER are prohibited
+- Hand-editing flow JSON in the Retell dashboard is prohibited
+
+### Workflow
+Manifest → build_agent.py → diff.py (round-trip clean) → patch clone → run_clone_tests.py → promote.py → git tag.
+
+### Deprecated as of 2026-04-06
+- `claude_code/build_wf*.py` standalone scripts
+- Direct Retell PATCH outside promote.py
+- Hand-edited flow JSON in `/retell-agents/` (reference-only archive)
+
+### Why This Matters for Scale
+At 1000+ clients you cannot push a prompt fix to every cloned agent manually. Git-IaC + fleet rollout (SCALING_ADDENDUM Phases 6-8) is the only path to single-tenant isolation with global update capability.
+
+### See
+- `/retell-iac/README.md`
+- `/retell-iac/CLAUDE.md`
+- `/retell-iac/SCALING_ADDENDUM.md`
+- `/docs/SCALE-REVIEW-1000-CLIENTS.md`
