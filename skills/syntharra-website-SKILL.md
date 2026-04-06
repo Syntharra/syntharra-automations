@@ -349,6 +349,75 @@ This includes:
 **How:** At end of chat, fetch this file from GitHub, apply changes with `str.replace()`, push back.
 **GitHub push function:** See `syntharra-ops` skill for the standard push pattern.
 
+
+---
+
+## ⚠️ Hard-Won Lessons (Do Not Skip)
+
+### 1. Preview Gate — MANDATORY before any site-wide CSS change
+Before applying any visual/style change to more than ONE page:
+1. Apply to **one representative page only** (e.g. `index.html`)
+2. **Get Dan's explicit visual approval** — share the live URL, give it 60–90s to deploy, ask "does this look right?"
+3. Only after approval: batch-apply to all other pages
+
+**Why this exists:** 2026-04-06 — Dark footer CSS was applied to all 27 pages without preview. Dan rejected it. 27 sequential reverts required. 2h wasted.
+
+### 2. Chrome Extension Screenshot — Cannot Verify Background Colours
+The Claude-in-Chrome MCP renders screenshots at ~2.5x device pixel ratio, making the effective CSS viewport ~620px wide — below the 768px mobile breakpoint. This means:
+- Mobile layout triggers (hamburger nav visible, single column)
+- `background-color` changes on desktop layout containers may not be visible
+- **Do NOT use Chrome screenshots to confirm background-colour changes** — use Python HTTP GET + `content.find()` to verify the CSS string is present in the live HTML instead
+
+```python
+import requests
+r = requests.get("https://syntharra.com/index.html")
+assert "background:#0F0E1A" in r.text, "CSS not found in live HTML"
+```
+
+### 3. GitHub API Writes — Sequential Only, Never Parallel
+When pushing multiple files to the same repo:
+- **Always write sequentially** — fetch SHA immediately before each PUT
+- **Never batch-fetch SHAs then write in parallel** — the second write will 409 (stale SHA) if the first hasn't committed yet
+- Add `time.sleep(1)` between writes if in doubt
+
+```python
+# CORRECT pattern
+for filename in files:
+    r = requests.get(f"{API}/{filename}", headers=headers)
+    sha = r.json()["sha"]
+    content = base64.b64decode(r.json()["content"]).decode()
+    # ... edit content ...
+    requests.put(f"{API}/{filename}", headers=headers, json={"message": "...", "content": b64, "sha": sha})
+    time.sleep(1)  # let GitHub commit settle
+
+# WRONG — do not do this:
+# shas = {f: fetch_sha(f) for f in files}  # batch fetch
+# pool.map(push, files)                      # parallel push → 409s
+```
+
+### 4. str.replace() — Always Verify the Replacement Happened
+`str.replace()` silently does nothing if the pattern doesn't match. After every replace call, verify:
+
+```python
+old = content
+content = content.replace("OLD_CSS", "NEW_CSS")
+assert content != old, "str.replace() found no match — pattern mismatch. Check exact whitespace and values."
+```
+
+Common silent failures:
+- `grid-template-columns: 1.5fr` in pattern but file has `1.4fr` → no match, no error
+- Trailing whitespace differences
+- `
+` vs `
+` line endings on files edited on Windows
+
+### 5. Deploy Lag — Always Wait Before Verifying
+GitHub Pages has a 60–90s CDN deploy lag. After pushing:
+- Wait ≥90s before checking the live site
+- On first check, do a **hard refresh** (Ctrl+Shift+R) to bypass browser cache
+- `Cache-Control: max-age=600` headers mean stale content can persist for 10min in some caches
+- Use Python HTTP GET with `cache-busting` or check the raw GitHub API content to confirm the push landed
+
 ## CRM — HubSpot (active since 2026-04-03)
 > HubSpot replaced the admin dashboard as Syntharra's CRM layer.
 > Load `skills/syntharra-hubspot-SKILL.md` for full API reference.
