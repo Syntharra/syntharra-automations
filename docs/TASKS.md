@@ -1,20 +1,39 @@
-# TASKS
+# Syntharra Open Tasks
 
-## Track A — gated on Dan
-- [ ] A1 Stripe live migration (run tools/stripe_live_migration.py once sk_live_ available)
-- [ ] A2 Ops monitor unpause (Railway service 7ce0f943) — runbook ready
-- [ ] A3 Telnyx 10DLC chase email — draft ready
+_Last updated 2026-04-07. Open work only. Reference data lives in REFERENCE.md._
 
-## Track C — hardening
-- [ ] C1 n8n queue mode + 2 workers (Railway env change)
-- [ ] C3 Enable Supabase PITR
-- [ ] C4 Ops dashboard scaffold
-- [ ] Schedule tools/partition_janitor.py monthly from n8n
-- [ ] Drop hvac_call_log_pre_partition after 7-day soak (target 2026-04-14)
+## Track A — Gated on Dan
+- [ ] Activate Stripe live mode (recreate products, prices, coupons, webhook + signing secret)
+- [ ] Telnyx SMS approval
+- [ ] Unpause `syntharra-ops-monitor` Railway service
+- [ ] Attach Supabase service-role credential to Premium Integration Dispatcher (post SRK removal)
+- [ ] Approve RLS enablement on `hvac_call_log`, `stripe_payment_data`, `agent_prompts`
+- [ ] Approve replacing `USING (true)` RLS policies (9 tables)
 
-## Track D
-- [ ] D3 Apply n8n label scheme to 37 workflows
-- [ ] D5 Build proper Premium MASTER agent via retell-iac manifest (after scenario testing confirms current)
+## Track B — Done ✓
+- B1 `client_agents` registry, B2 rollout.py, B3 canary.py, C2 monthly partitioning, D4 Premium rename
 
-## Security debt
-- [ ] Move hardcoded Supabase service role key out of n8n workflow 73Y0MHVBu05bIm5p (Premium Integration Dispatcher) into n8n credentials
+## Pre-scenario-testing (P0/P1 from 2026-04-07 audit)
+- [ ] Onboarding: add idempotency lookup before Retell clone (Std + Prem)
+- [ ] Onboarding: insert into `client_agents` after agent creation (Std + Prem)
+- [ ] Onboarding: real error branches on Retell clone, route fails to DLQ
+- [ ] Premium Dispatcher: Jobber GraphQL exponential backoff on 429/5xx
+- [ ] Premium Dispatcher: Google Calendar 401 retry loop
+- [ ] Call ingestion: require `call.start_timestamp`, drop `new Date()` fallback
+- [ ] Stripe: webhook signature verification (HMAC against `Stripe-Signature`)
+- [ ] Stripe: idempotency guard using `stripe_processed_events`
+- [ ] Stripe: handle subscription.* + invoice.payment_failed (dunning)
+- [ ] Stripe: locate or build monthly overage aggregator
+- [ ] n8n: migrate 18+ hardcoded secrets to credentials/env (P0 batch)
+- [ ] n8n: replace 5 raw `fetch()` calls with `this.helpers.httpRequest`
+- [ ] Alerting: per-client success-rate < 90 % (P0)
+- [ ] Alerting: Retell error-rate spike > 2 % (P0)
+- [ ] Alerting: n8n critical workflow failure rate
+- [ ] Alerting: Supabase pool saturation
+- [ ] Verify Brevo on every email-sending node (zero SMTP2GO references confirmed)
+
+## Hardening (P2)
+- [ ] Pin `search_path` on 4 trigger functions
+- [ ] Refactor 5 long-running n8n workflows for queue-mode (no static data)
+- [ ] Pre-partition automation as a scheduled n8n workflow (currently manual)
+- [ ] DLQ writes from call processors and Premium dispatcher
