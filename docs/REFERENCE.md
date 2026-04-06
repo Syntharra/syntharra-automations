@@ -9,17 +9,17 @@
 | Agent | ID | Status |
 |---|---|---|
 | HVAC Standard | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE (promoted 2026-04-06, flow v22, 90/91 98%) |
-| HVAC Standard (TESTING) | `agent_731f6f4d59b749a0aa11c26929` | ✅ Promoted to MASTER 2026-04-06 — 90/91 (98%) |
 | HVAC Premium (TESTING) | `agent_2cffe3d86d7e1990d08bea068f` | 🧪 Full 108-scenario run in progress 2026-04-06 |
-| HVAC Premium (DEMO) | `agent_80d6270ab39ed3169f997cb035` | 🧪 Enhancement testing |
-| Demo Female | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
-| Demo Male | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
+| Demo Female / Sophie | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
+| Demo Male / Jake | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
+
+> Note: All other agents deleted 2026-04-06 cleanup (156 → 4). Standard TESTING agent deleted after successful promotion to MASTER.
 
 ## Conversation Flow Registry
 | Flow | ID | Bound to |
 |---|---|---|
 | HVAC Standard (MASTER) | `conversation_flow_34d169608460` | Standard MASTER agent |
-| HVAC Standard (TESTING) | `conversation_flow_5b98b76c8ff4` | Standard TESTING agent |
+| HVAC Standard (TESTING) | `conversation_flow_5b98b76c8ff4` | Unbound — Standard TESTING agent deleted post-promotion |
 | HVAC Premium (MASTER) | `conversation_flow_1dd3458b13a7` | Premium MASTER agent |
 | HVAC Premium (TESTING) | `conversation_flow_2ded0ed4f808` | Premium TESTING agent |
 
