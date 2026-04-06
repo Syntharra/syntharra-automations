@@ -1,0 +1,16 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_24d9b49e1a30",
+    "global_node_setting": {
+      "condition": "The caller describes a dangerous, life-threatening, or urgent safety situation such as a gas leak, flooding, fire, no heat in freezing conditions, electrical sparks, or carbon monoxide. Only trigger for genuine safety emergencies, not for routine urgent repairs.",
+      "cool_down": 3
+    },
+    "instruction": {
+      "text": "The caller has described what sounds like an emerg",
+      "type": "prompt"
+    }
+  },
+  "name": "emergency_detection",
+  "node_type": "subagent",
+  "source_component_id": null
+}

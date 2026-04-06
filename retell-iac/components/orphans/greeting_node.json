@@ -1,0 +1,12 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Thank you for calling Arctic Breeze HVAC, this is Sophie. Just so you know, this call may be recorded for quality purposes. How can I help you today?",
+      "type": "static_text"
+    },
+    "start": true
+  },
+  "name": "greeting_node",
+  "node_type": "conversation",
+  "source_component_id": null
+}

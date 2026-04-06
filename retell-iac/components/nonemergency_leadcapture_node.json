@@ -1,0 +1,23 @@
+{
+  "body": {
+    "finetune_transition_examples": [
+      {
+        "destination_node_id": "node-verify-emergency",
+        "id": "ft-lead-emerg",
+        "transcript": [
+          {
+            "content": "Actually it completely stopped working\nThere is no air at all\nI smell something burning",
+            "role": "user"
+          }
+        ]
+      }
+    ],
+    "instruction": {
+      "text": "Fallback lead capture handler",
+      "type": "prompt"
+    }
+  },
+  "name": "nonemergency_leadcapture_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_33ab8b82f1fc"
+}

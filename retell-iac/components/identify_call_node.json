@@ -1,0 +1,43 @@
+{
+  "body": {
+    "finetune_transition_examples": [
+      {
+        "destination_node_id": "node-callback",
+        "id": "ft-callback",
+        "transcript": [
+          {
+            "content": "Yeah I just missed a call from this number\nSomeone called me from here\nI am calling back",
+            "role": "user"
+          }
+        ]
+      },
+      {
+        "destination_node_id": "node-verify-emergency",
+        "id": "ft-emergency",
+        "transcript": [
+          {
+            "content": "My AC stopped working completely\nNo air coming out at all\nI smell something burning\nThere is water leaking everywhere",
+            "role": "user"
+          }
+        ]
+      },
+      {
+        "destination_node_id": "node-transfer-call",
+        "id": "ft-transfer",
+        "transcript": [
+          {
+            "content": "Can I speak to someone\nI want a real person\nLet me talk to the manager",
+            "role": "user"
+          }
+        ]
+      }
+    ],
+    "instruction": {
+      "text": "Route to appropriate handler based on call reason",
+      "type": "prompt"
+    }
+  },
+  "name": "identify_call_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_ebac0db129f3"
+}

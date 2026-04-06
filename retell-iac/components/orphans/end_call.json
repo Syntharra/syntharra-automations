@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "End the call warmly.",
+      "type": "static_text"
+    }
+  },
+  "name": "end_call",
+  "node_type": "end",
+  "source_component_id": null
+}

@@ -1,0 +1,30 @@
+{
+  "body": {
+    "edge": {
+      "destination_node_id": "node-transfer-failed",
+      "id": "e-transfer-fail",
+      "transition_condition": {
+        "prompt": "Transfer failed",
+        "type": "prompt"
+      }
+    },
+    "instruction": {
+      "text": "I'm just going to transfer you now, one moment please.",
+      "type": "static_text"
+    },
+    "transfer_destination": {
+      "number": "+15125550192",
+      "type": "predefined"
+    },
+    "transfer_option": {
+      "agent_detection_timeout_ms": 30000,
+      "cold_transfer_mode": "sip_invite",
+      "enable_bridge_audio_cue": true,
+      "show_transferee_as_caller": false,
+      "type": "cold_transfer"
+    }
+  },
+  "name": "transfer_call",
+  "node_type": "transfer_call",
+  "source_component_id": null
+}

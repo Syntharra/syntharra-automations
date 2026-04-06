@@ -1,0 +1,22 @@
+{
+  "body": {
+    "code": "const raw = (typeof dv !== 'undefined' && dv && dv.caller_phone) ? dv.caller_phone : '';\nconst digits = raw.replace(/\\D/g, '');\nlet phone_normalized = raw, phone_valid = false, phone_flag = '';\nif (digits.length === 10) { phone_normalized = '+1' + digits; phone_valid = true; }\nelse if (digits.length === 11 && digits.startsWith('1')) { phone_normalized = '+' + digits; phone_valid = true; }\nelse if (digits.length < 7) { phone_flag = 'incomplete_number'; }\nelse { phone_flag = 'unusual_format'; phone_valid = true; }\nreturn { phone_normalized, phone_valid, phone_flag };",
+    "else_edge": {
+      "destination_node_id": "node-ending",
+      "id": "edge-validate-phone-else",
+      "transition_condition": {
+        "prompt": "Else",
+        "type": "prompt"
+      }
+    },
+    "instruction": {
+      "text": "Phone number extraction and validation",
+      "type": "prompt"
+    },
+    "speak_during_execution": false,
+    "wait_for_result": true
+  },
+  "name": "validate_phone",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_3b788e86e755"
+}

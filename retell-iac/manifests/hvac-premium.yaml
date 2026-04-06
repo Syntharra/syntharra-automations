@@ -1,0 +1,15 @@
+agent: premium
+# Premium MASTER does not yet exist; this manifest will be populated from Premium MASTER
+# snapshot once Standard is promoted and Premium MASTER is created via IaC.
+flow_template: flows/hvac-premium.template.json
+components: []
+overrides: {}
+premium_orphans_expected:
+  - check_availability
+  - confirm_booking
+  - reschedule
+  - cancel_appointment
+  - emergency_fallback
+excluded:
+  - spanish_routing_node
+status: pending_premium_master_creation

@@ -1,0 +1,12 @@
+{
+  "body": {
+    "conversation_flow_component_id": "conversation_flow_component_9d3c5c904347",
+    "instruction": {
+      "text": "CRITICAL SAFETY NODE \u2014 A live transfer has FAILED during an emergency situation.\n\nStay calm and reassuring. Follow these steps exactly:\n\n1. Say: \"I was not able to connect you to our emergency line. If you are in immediate danger from a gas leak, carbon monoxide, or any safety threat, please hang up and dial 911 right now.\"\n\n2. If the caller has NOT already provided their details, collect:\n   - Full name\n   - Callback phone number (read back to confirm)\n   - Service address (exact street address for dispatch)\n\n3. Say: \"I am flagging this as an urgent emergency. Our team will contact you as soon as possible. If your situation becomes unsafe at any point, please call 911 immediately.\"\n\n4. Close: \"Please stay safe. We will be in touch very shortly.\"\n\nIMPORTANT: Do NOT minimize the situation. Do NOT suggest the caller try troubleshooting. Direct them to 911 if there is any safety concern.",
+      "type": "prompt"
+    }
+  },
+  "name": "emergency_fallback_node",
+  "node_type": "conversation",
+  "source_component_id": null
+}

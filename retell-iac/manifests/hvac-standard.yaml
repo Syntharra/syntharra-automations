@@ -1,0 +1,44 @@
+agent: standard
+flow_template: flows/hvac-standard.template.json
+components:
+  - name: greeting_node
+    source: components/orphans/greeting_node.json
+  - name: identify_call_node
+    source: components/identify_call_node.json
+  - name: nonemergency_leadcapture_node
+    source: components/nonemergency_leadcapture_node.json
+  - name: verify_emergency_node
+    source: components/verify_emergency_node.json
+  - name: callback_node
+    source: components/callback_node.json
+  - name: existing_customer_node
+    source: components/existing_customer_node.json
+  - name: general_questions_node
+    source: components/general_questions_node.json
+  - name: spam_robocall_node
+    source: components/spam_robocall_node.json
+  - name: transfer_call
+    source: components/orphans/transfer_call.json
+  - name: transfer_failed_node
+    source: components/transfer_failed_node.json
+  - name: ending
+    source: components/ending.json
+  - name: end_call
+    source: components/orphans/end_call.json
+  - name: emergency_fallback_node
+    source: components/orphans/emergency_fallback_node.json
+  - name: call_style_detector
+    source: components/call_style_detector.json
+  - name: validate_phone
+    source: components/validate_phone.json
+  - name: emergency_detection
+    source: components/orphans/emergency_detection.json
+  - name: spam_detection
+    source: components/orphans/spam_detection.json
+  - name: transfer_request
+    source: components/orphans/transfer_request.json
+  - name: extract_caller_data
+    source: components/orphans/extract_caller_data.json
+overrides: {}
+excluded:
+  - spanish_routing_node

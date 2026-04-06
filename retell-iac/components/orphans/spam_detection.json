@@ -1,0 +1,15 @@
+{
+  "body": {
+    "global_node_setting": {
+      "condition": "The conversation appears to be a robocall, automated message, extended silence after greeting, or sales/marketing call not related to HVAC services.",
+      "cool_down": 1
+    },
+    "instruction": {
+      "text": "Say: 'Thank you for calling, have a great day.' Then end the call.",
+      "type": "static_text"
+    }
+  },
+  "name": "spam_detection",
+  "node_type": "conversation",
+  "source_component_id": null
+}
