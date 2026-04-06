@@ -181,3 +181,4 @@
 | 2026-04-05 | Retell API | Premium TESTING missing global nodes | Only applied globals to Standard in prior session | Added 3 global + 1 extract to Premium TESTING | No |
 | 2026-04-05 | E2E Test | Premium E2E RETELL_KEY empty | No embedded fallback key in test | Added fallback key | No |
 2026-04-06 | seo | GitHub MCP create_or_update_file 403 intermittent | GitHub App token flakiness | reverted to PAT+Python requests.put() route | no
+| 2026-04-06 | agentic-test-fix | COMPONENT_MAX_CHARS=1200 silently skipped all #043 fix patches | identify_call component is ~2200 chars; patch generator produced 2303–2323 char fixes exceeding the cap | Raised COMPONENT_MAX_CHARS to 2500 in tools/agentic-test-fix.py (SHA e123a51f) | no |
