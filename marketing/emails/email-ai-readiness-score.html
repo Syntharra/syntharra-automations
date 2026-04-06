@@ -1,121 +1,36 @@
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F7F7FB;padding:40px 16px"><tr><td align="center">
-<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%">
-
-<!-- Logo -->
-<tr><td style="padding:0 0 24px;text-align:center">
-  <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="36" height="36"><rect x="4" y="56" width="12" height="20" rx="4" fill="#6C63FF"/><rect x="22" y="40" width="12" height="36" rx="4" fill="#6C63FF"/><rect x="40" y="24" width="12" height="52" rx="4" fill="#6C63FF"/><rect x="58" y="4" width="12" height="72" rx="4" fill="#6C63FF"/></svg>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Your AI Readiness Score</title></head>
+<body style="margin:0;padding:0;background:#F7F7FB;font-family:Georgia,'Times New Roman',serif;color:#1A1A2E;-webkit-font-smoothing:antialiased">
+<div style="display:none;max-height:0;overflow:hidden">Here's what your score means and your next step.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F7FB"><tr><td align="center" style="padding:32px 16px">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border-radius:12px;overflow:hidden;border:1px solid #E4E4EF">
+    <tr><td style="padding:28px 36px 22px;border-bottom:1px solid #F0F0F8;background:#FFFFFF">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="left"><tr>
+<td style="vertical-align:middle;padding-right:12px">
+<img src="https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/brand-assets/email-signature/syntharra-icon.png" width="36" height="36" alt="Syntharra" style="display:block;border:0;outline:none;text-decoration:none">
+</td>
+<td style="vertical-align:middle;text-align:left;line-height:1">
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:800;color:#1A1A2E;letter-spacing:-0.5px;line-height:1">Syntharra</div>
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:9px;font-weight:600;color:#6C63FF;letter-spacing:2px;text-transform:uppercase;margin-top:6px;line-height:1">Global AI Solutions</div>
+</td>
+</tr></table>
 </td></tr>
-
-<!-- Main Card -->
-<tr><td style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
-<div style="height:3px;background:linear-gradient(90deg,#6C63FF,#8B7FFF)"></div>
-<div style="padding:32px 36px">
-
-<!-- Header -->
-<p style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6C63FF;margin:0 0 8px">Your AI Readiness Results</p>
-<h1 style="color:#1A1A2E;font-size:24px;font-weight:700;margin:0 0 6px;line-height:1.2">Here's What We Found, {{first_name}}</h1>
-<p style="color:#6B7280;font-size:15px;line-height:1.6;margin:0 0 28px">Based on your answers, here's how your business stacks up — and what it's costing you.</p>
-
-<!-- Score Box -->
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px">
-<tr>
-  <td style="background:linear-gradient(135deg,#6C63FF,#8B7FFF);border-radius:12px;padding:28px;text-align:center">
-    <div style="font-size:56px;font-weight:700;color:#fff;line-height:1">{{score}}</div>
-    <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:4px">out of 100</div>
-    <div style="margin:16px auto 0;background:rgba(255,255,255,0.2);border-radius:20px;padding:6px 20px;display:inline-block">
-      <span style="font-size:13px;font-weight:600;color:#fff">{{score_label}}</span>
-    </div>
-  </td>
-</tr>
-</table>
-
-<!-- What This Means -->
-<h2 style="font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 12px">What this means for your business</h2>
-<p style="font-size:14px;color:#6B7280;line-height:1.7;margin:0 0 24px">{{score_explanation}}</p>
-
-<!-- Stats Section -->
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden">
-<tr>
-  <td style="padding:16px 20px;border-bottom:1px solid #E5E7EB;background:#FAFAFA" colspan="2">
-    <span style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280">The Cost of Missed Calls</span>
-  </td>
-</tr>
-<tr>
-  <td style="padding:14px 20px;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px">Average missed calls per week</td>
-  <td style="padding:14px 20px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:700;color:#EF4444;font-size:14px">12 calls</td>
-</tr>
-<tr>
-  <td style="padding:14px 20px;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px">Average job value in your industry</td>
-  <td style="padding:14px 20px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:700;color:#1A1A2E;font-size:14px">$350</td>
-</tr>
-<tr>
-  <td style="padding:14px 20px;border-bottom:1px solid #E5E7EB;color:#1A1A2E;font-size:14px">Estimated revenue lost per month</td>
-  <td style="padding:14px 20px;border-bottom:1px solid #E5E7EB;text-align:right;font-weight:700;color:#EF4444;font-size:18px">$16,800</td>
-</tr>
-<tr>
-  <td style="padding:14px 20px;color:#1A1A2E;font-size:14px">Revenue recovered with AI Receptionist</td>
-  <td style="padding:14px 20px;text-align:right;font-weight:700;color:#10B981;font-size:18px">$14,280+</td>
-</tr>
-</table>
-
-<!-- 3 Key Points -->
-<h2 style="font-size:17px;font-weight:700;color:#1A1A2E;margin:0 0 16px">3 things you can do right now</h2>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
-<tr>
-  <td style="width:32px;vertical-align:top;padding-top:2px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#F0EEFF;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#6C63FF">1</div>
-  </td>
-  <td style="padding:0 0 16px 12px">
-    <p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px">Stop losing after-hours calls</p>
-    <p style="font-size:13px;color:#6B7280;line-height:1.5;margin:0">62% of customers won't leave a voicemail. An AI receptionist answers 24/7 and captures every lead.</p>
-  </td>
-</tr>
-</table>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
-<tr>
-  <td style="width:32px;vertical-align:top;padding-top:2px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#ECFDF5;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#10B981">2</div>
-  </td>
-  <td style="padding:0 0 16px 12px">
-    <p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px">Filter spam before it wastes your time</p>
-    <p style="font-size:13px;color:#6B7280;line-height:1.5;margin:0">AI filters out robocalls and telemarketers so you only get notified about real customers.</p>
-  </td>
-</tr>
-</table>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px">
-<tr>
-  <td style="width:32px;vertical-align:top;padding-top:2px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#FEF3C7;text-align:center;line-height:28px;font-size:13px;font-weight:700;color:#F59E0B">3</div>
-  </td>
-  <td style="padding:0 0 16px 12px">
-    <p style="font-size:14px;font-weight:600;color:#1A1A2E;margin:0 0 4px">Get instant lead alerts on every call</p>
-    <p style="font-size:13px;color:#6B7280;line-height:1.5;margin:0">Every qualified lead gets scored and sent to you via SMS and email within seconds of hanging up.</p>
-  </td>
-</tr>
-</table>
-
-<!-- CTA -->
-<div style="text-align:center;margin:0 0 8px">
-  <a href="https://calendar.app.google/jxUu7XfiMXMqvdiw6" style="display:inline-block;background:#6C63FF;color:#fff;padding:16px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;box-shadow:0 4px 14px rgba(108,99,255,0.35)">Book a Free Demo Call</a>
-</div>
-<p style="text-align:center;font-size:12px;color:#9CA3AF;margin:12px 0 0">No commitment. See it working live in 15 minutes.</p>
-
-</div>
-</td></tr>
-
-<!-- Secondary CTA -->
-<tr><td style="padding:24px;text-align:center">
-  <p style="color:#6B7280;font-size:14px;margin:0 0 12px">Not ready for a call? See our packages →</p>
-  <a href="https://checkout.syntharra.com/" style="color:#6C63FF;font-size:14px;font-weight:600;text-decoration:none">View Pricing</a>
-</td></tr>
-
-<!-- Footer -->
-<tr><td style="padding:0 0 0;text-align:center">
-  <p style="color:#9CA3AF;font-size:11px;margin:0;line-height:1.6">
-    Syntharra AI Solutions · AI Receptionist for the Trade Industry<br>
-    <a href="https://www.syntharra.com" style="color:#6C63FF;text-decoration:none">syntharra.com</a> · <a href="/cdn-cgi/l/email-protection#6f1c1a1f1f001d1b2f1c16011b070e1d1d0e410c0002" style="color:#6C63FF;text-decoration:none"><span class="__cf_email__" data-cfemail="5c2f
+    <tr><td style="padding:36px 40px 8px"><h1 style="margin:0 0 16px;font:800 26px/1.25 Georgia,serif;color:#1A1A2E;letter-spacing:-0.01em">Your AI Readiness Score is in.</h1>
+<p style="margin:0 0 16px;font:17px/1.65 Georgia,serif;color:#4A4A6A">Thanks for taking the quiz. Your score tells us two things: how many calls you're likely losing every week, and how fast you'd see revenue if you flipped an AI receptionist on tomorrow.</p>
+<p style="margin:0 0 16px;font:17px/1.65 Georgia,serif;color:#4A4A6A">Most HVAC, plumbing, and electrical contractors we score land between <b>62 and 78</b>. That range means the business is healthy enough to grow, but the phone is a bottleneck — usually 30 to 40 percent of after-hours and overflow calls never convert.</p>
+<p style="margin:0 0 16px;font:17px/1.65 Georgia,serif;color:#4A4A6A">Here's what we'd suggest doing next:</p>
+<ol style="margin:0 0 20px 18px;padding:0;font:17px/1.7 Georgia,serif;color:#4A4A6A">
+  <li>Pull your call log from the last 30 days and count the voicemails.</li>
+  <li>Multiply that by your average job value — that's monthly leakage.</li>
+  <li>Book a 15-minute demo so we can show you exactly how the AI would have handled those specific calls.</li>
+</ol>
+<p style="margin:0;font:17px/1.65 Georgia,serif;color:#4A4A6A">No pitch, no pressure — just the numbers for your business.</p></td></tr>
+    <tr><td style="padding:32px 40px 36px">
+      <a href="https://syntharra.com/demo.html" style="display:inline-block;background:#6C63FF;color:#FFFFFF;text-decoration:none;padding:14px 26px;border-radius:8px;font:600 15px Arial,sans-serif">See a 3-minute demo →</a>
+    </td></tr>
+    <tr><td style="background:#F7F7FB;padding:22px 40px;border-top:1px solid #F0F0F8;font:13px Georgia,serif;color:#6B6B82;line-height:1.55">
+      Syntharra Global AI Solutions · <a href="https://syntharra.com" style="color:#6C63FF;text-decoration:none">syntharra.com</a><br>
+      <a href="{{unsubscribe_url}}" style="color:#9A9AAB;text-decoration:underline">Unsubscribe</a>
+    </td></tr>
+  </table>
+</td></tr></table></body></html>
