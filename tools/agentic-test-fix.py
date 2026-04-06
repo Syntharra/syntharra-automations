@@ -43,13 +43,13 @@ AGENT_CONFIG = {
     "standard": {
         "agent_id": "agent_731f6f4d59b749a0aa11c26929",
         "flow_id":  "conversation_flow_5b98b76c8ff4",
-        "model":    "llama-3.1-8b-instant",
+        "model":    "llama-3.3-70b-versatile",
         "name":     "HVAC Standard (TESTING)",
     },
     "premium": {
         "agent_id": "agent_2cffe3d86d7e1990d08bea068f",
         "flow_id":  "conversation_flow_2ded0ed4f808",
-        "model":    "llama-3.1-8b-instant",
+        "model":    "llama-3.3-70b-versatile",
         "name":     "HVAC Premium (TESTING)",
     },
 }
@@ -103,8 +103,8 @@ MAX_OUTER_ITERATIONS    = 3     # full suite re-runs if new failures found
 # =============================================================================
 
 _call_window = deque()
-_RATE_MAX    = 1       # 1 call per window — 2 calls/min max, ~3000 tokens/min (under 6000 TPM cap)
-_RATE_WINDOW = 62.0    # 30s window — aligns with Groq's 60s TPM window cleanly
+_RATE_MAX    = 5       # 5 calls per window — llama-3.3-70b-versatile: 100 RPM, 131072 TPM
+_RATE_WINDOW = 5.0     # 5s window = 60 calls/min max, well under 100 RPM; ~1780 tokens/call << 131072 TPM
 
 def rate_gate(label=""):
     """Block until we're under the rate limit. Called before every Groq API call."""
@@ -236,7 +236,7 @@ def fetch_agent_prompt_compressed(agent_type):
 def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=4, max_tokens=None, skip_gate=False):
     """Rate-gated Groq chat completion. skip_gate=True for small eval calls (<600 tokens)."""
     if model is None:
-        model = "llama-3.1-8b-instant"
+        model = "llama-3.3-70b-versatile"
 
     if not skip_gate:
         rate_gate(model[:8])   # enforce TPM gate — only for large simulate calls
@@ -254,7 +254,7 @@ def chat(api_key, system_prompt, messages, temperature=0.7, model=None, retries=
         try:
             r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=45)
             if r.status_code == 429:
-                wait = 63 + 30 * attempt
+                wait = 15 + 15 * attempt  # 15, 30, 45, 60s — rare on 70b versatile (100 RPM / 131K TPM)
                 err_msg = r.json().get('error', {}).get('message', r.text[:200]) if r.headers.get('content-type','').startswith('application/json') else r.text[:200]
                 print(f" [429 — wait {wait}s | {err_msg[:100]}] ", end="", flush=True)
                 time.sleep(wait)
