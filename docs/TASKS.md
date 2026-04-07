@@ -1,3 +1,8 @@
+## ✅ 2026-04-07 — Scenario tester v3 shipped
+- tools/agentic-test-fix-v3.py — OpenAI gpt-4o-mini async, hard $5 cap, ~3min/agent
+- tools/run-scenario-tests.py — wrapper updated
+- docs/HARD_RULES.md — Retell batch sim ban + $5 cap
+
 # Syntharra Open Tasks
 _Last updated 2026-04-07 (batch 4). Open work only._
 
