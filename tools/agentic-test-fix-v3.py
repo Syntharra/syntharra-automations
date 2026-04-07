@@ -39,7 +39,7 @@ PRICE_OUT   = 0.60 / 1_000_000
 PRICE_CACHED_IN = 0.075 / 1_000_000  # 50% off cached prompt tokens
 
 AGENT_CONFIG = {
-    "standard": {"agent_id": "agent_731f6f4d59b749a0aa11c26929", "flow_id": "conversation_flow_5b98b76c8ff4", "name": "HVAC Standard (TESTING)"},
+    "standard": {"agent_id": "agent_9d6e1db069d7900a61b78c5ca6", "flow_id": "conversation_flow_a54448105a43", "name": "HVAC Standard (TESTING)"},
     "premium":  {"agent_id": "agent_2cffe3d86d7e1990d08bea068f", "flow_id": "conversation_flow_2ded0ed4f808", "name": "HVAC Premium (TESTING)"},
 }
 
