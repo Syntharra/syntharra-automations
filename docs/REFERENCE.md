@@ -50,7 +50,7 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 | Flow | ID | Bound to |
 |---|---|---|
 | HVAC Standard (MASTER) | `conversation_flow_34d169608460` | Standard MASTER agent |
-| HVAC Standard (TESTING) | `conversation_flow_5b98b76c8ff4` | Unbound — Standard TESTING agent deleted post-promotion |
+| HVAC Standard (TESTING) | `conversation_flow_a54448105a43` | Unbound — Standard TESTING agent deleted post-promotion |
 | HVAC Premium (MASTER/TESTING) | `conversation_flow_2ded0ed4f808` | Premium MASTER (interim — same agent as TESTING) |
 
 ## Phone Numbers
@@ -134,6 +134,6 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 
 **Removed (do NOT use — these IDs no longer exist on Retell):**
 - agent_9822f440f5c3a13bc4d283ea90 (was claimed Premium MASTER)
-- agent_731f6f4d59b749a0aa11c26929 (was claimed Standard TESTING)
+- agent_9d6e1db069d7900a61b78c5ca6 (was claimed Standard TESTING)
 
 Source of truth: Supabase `public.client_agents` table.
