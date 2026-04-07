@@ -1,17 +1,17 @@
-# Open Tasks
+# TASKS
 
-## P0 — Critical
-- **Fix n8n onboarding workflows**: `Check Idempotency & Insert` node throws `Cannot read properties of undefined (reading 'submission_id')` on both Standard (`4Hx7aRdzMl5N0uJP`) and Premium (`kz1VmwNccunRMEaF`). Blocks ALL new client onboarding. Likely JotForm payload schema drift — fix Code node line 2 to read submission_id from correct path.
+## P0 — Resume v4r1 Standard measurement
+- Write async eval harness using fetch_agent_prompt_full (tools/agentic-test-fix-v3.py has the helper)
+- Run 12 failing scenarios first (10,16,19,22,23,28,41,60,63,66,73,75)
+- Run full 91 regression
+- Target ≥95%, no prompt bloat
+- Agent: agent_9d6e1db069d7900a61b78c5ca6 / flow conversation_flow_a54448105a43
 
-## P1 — High
-- Build `agentic-test-fix-v4.py` with **rewrite-based** fixes (not append-only). v3 hits 86% ceiling because COMPONENT_MAX_CHARS cap blocks further appends after ~3200 chars.
-- Make `call_style_detector` patchable — currently "no instruction node", blocks abuse/profanity scenario fixes.
-- Re-run E2E (`shared/e2e-test.py`, `shared/e2e-test-premium.py`) once n8n is fixed, to verify today's component patches did not regress live agents.
+## P0 — n8n onboarding broken at submission_id (pre-existing)
 
-## P2 — Medium
-- Test ceiling: Premium 90/108 (83%), Standard 79/91 (86%) — gap to 95% requires v4 architecture.
+## P1 — After Standard green, repeat for Premium
+- agent_2cffe3d86d7e1990d08bea068f (interim) vs agent_af3ac35808a5b5ae1492090155 (new) — determine canonical first
 
-## Reference (current)
-- Standard TESTING: `agent_9d6e1db069d7900a61b78c5ca6` / `conversation_flow_a54448105a43` (cloned 2026-04-07)
-- Premium TESTING == Premium MASTER: `agent_2cffe3d86d7e1990d08bea068f` / `conversation_flow_2ded0ed4f808`
-- v3 script: COMPONENT_MAX_CHARS=3200, $5 cap per agent, ~$0.15/run typical
+## Notes
+- n8n webhook /webhook/agent-test-runner is INACTIVE (404). Do not retry — use direct harness.
+- v3 simulator default uses compressed prompt (blind to components). Always use _full for v4+.
