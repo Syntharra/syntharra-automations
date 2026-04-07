@@ -2,7 +2,7 @@
 run-scenario-tests.py
 =====================
 Loads credentials from Supabase vault at runtime (no keys in repo).
-Runs agentic-test-fix.py for Standard then Premium, full suite.
+Runs agentic-test-fix-v3.py for Standard then Premium, full suite.
 
 Usage:
     python3 run-scenario-tests.py [--dry-run] [--agent standard|premium] [--group <group>]
@@ -34,7 +34,7 @@ def load_credentials():
     creds = {}
 
     # Prefer env vars (fast path)
-    creds["GROQ_KEY"]     = os.environ.get("GROQ_KEY")     or get_key("Groq", "api_key")
+    creds["GROQ_KEY"]     = os.environ.get("GROQ_KEY")     or get_key("OpenAI", "api_key")
     creds["RETELL_KEY"]   = os.environ.get("RETELL_KEY")   or get_key("Retell AI", "api_key")
     creds["GITHUB_TOKEN"] = os.environ.get("GITHUB_TOKEN") or get_key("GitHub", "personal_access_token")
 
@@ -48,10 +48,10 @@ def load_credentials():
 
 # ── Run a single agent ──────────────────────────────────────────────────────
 def run_agent(agent_type, creds, dry_run=False, group=None, scenarios=None):
-    script = os.path.join(os.path.dirname(__file__), "tools", "agentic-test-fix.py")
+    script = os.path.join(os.path.dirname(__file__), "tools", "agentic-test-fix-v3.py")
     if not os.path.exists(script):
         # Fall back to same directory
-        script = os.path.join(os.path.dirname(__file__), "agentic-test-fix.py")
+        script = os.path.join(os.path.dirname(__file__), "agentic-test-fix-v3.py")
 
     cmd = [sys.executable, script, "--agent", agent_type]
     if dry_run:
