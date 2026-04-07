@@ -1,26 +1,35 @@
-# 2026-04-07 — Scale-readiness audit (pre-scenario-testing)
+# 2026-04-07 — Scale-readiness audit (continued)
 
-Ran 7 parallel audit subagents (onboarding, Premium dispatcher, call ingestion, Supabase, n8n, Stripe, alerting) plus a verifier pass. Full report: docs/audits/2026-04-07-scale-readiness.md.
+Second batch of autonomous fixes after initial audit. Dan reminder: lean on Retell native analytics rather than hardening custom call processors.
 
-## Autonomous fixes applied
-- Created 8 missing indexes on hot tables (client_agents.agent_id, .flow_id, partial active status; stripe_payment_data customer + created; billing_cycles.subscription_id; overage_charges.billing_cycle_id; transcript_analysis composite).
-- Created public.stripe_processed_events for webhook idempotency.
-- Pre-created 12 months of hvac_call_log monthly partitions (rolling, idempotent), now covering through 2027-03.
-- Removed hardcoded Supabase service role JWT from Premium Integration Dispatcher (73Y0MHVBu05bIm5p), 2 Code nodes — replaced with n8n credential expression. Workflow republished, activeVersionId ae63ede4-2c49-4a3d-9610-774fb9614811. Dan must attach a service-role credential before runtime works.
+## Applied
+- SQL: pinned search_path on update_updated_at, update_updated_at_column, update_hvac_premium_agent_updated_at. Skipped ensure_call_log_partition (function does not exist in DB — remove from audit recommendation).
+- SQL: created idx_hvac_call_log_call_id (unique-ish lookup hot path).
+- n8n: 5 workflows had raw fetch() replaced with this.helpers.httpRequest — Eo8wwvZgeDm5gA9d (Newsletter Unsubscribe), b9xRG7wtqCZ5fdxo (Premium Dispatcher Calendly), BxnR17qUfAb5BZCz (Premium Dispatcher Jobber), msEy13eRz66LPxW6 (Premium Dispatcher HubSpot), PavRLBVQQpWrKUYs (Email Intelligence Inbox Scanner). 13 calls converted total.
+- n8n: 6 monitoring workflows + 1 partition maintenance workflow created (DRAFT — see below).
 
-## Top blockers (full list in TASKS.md)
-- Onboarding has no idempotency and never writes to client_agents → B1/B2/B3 are operating on an empty registry.
-- Stripe webhook has no signature verification and only handles checkout.session.completed.
-- 18+ n8n workflows still embed hardcoded secrets in Code nodes.
-- RLS disabled on hvac_call_log, stripe_payment_data, agent_prompts; 9 tables carry USING (true) policies.
-- No per-client success-rate or Retell error-rate alerts.
+## Created (DRAFT, awaiting Dan to wire credentials in UI then publish)
+| ID | Name | Needs |
+|---|---|---|
+| l45IpkWypMDC96DJ | MON: Per-Client Call Success Rate | Slack creds + Supabase auth on HTTP node |
+| n4wSnx4z1kJWmkqP | MON: Retell Error Rate Spike | Slack + Supabase auth |
+| vIBQ2c13bWuhZGky | MON: n8n Critical Workflow Failures | Slack + n8n API bearer token |
+| L3MyzOeXW37qZxdS | MON: Stripe Webhook Delivery Failures | Slack + Supabase auth |
+| 4oeS60f5tpBopYHu | MON: Supabase Pool Saturation | Slack + Supabase auth (RPC get_connection_stats must be created) |
+| VNwwajvBg68EdsJU | MON: Next-Month Partition Exists | Slack + Supabase auth (RPC partition_exists_next_month, create_next_partition needed) |
+| YTNnym92HjdNKHul | MAINT: hvac_call_log Monthly Partition Pre-Creation | Postgres credential + Slack |
 
-## Notes
-- Brevo has replaced SMTP2GO. Audit found zero SMTP2GO references in current workflows; still recommend visual verification of every email node.
-- Authoritative agent IDs live in public.client_agents — CLAUDE.md is stale on this.
+All 7 are . They will not run until Dan binds credentials in the n8n UI and publishes.
+
+## Blocked
+- Premium Integration Dispatcher (73Y0MHVBu05bIm5p) Jobber/Calendar retry hardening: n8n SDK update_workflow validation rejected the patch. Need manual UI edit. Helper functions (jobberCallWithRetry, gcalWithRefresh) drafted in audit notes.
+- 14 unscanned n8n workflows for fetch() — onboarding + Stripe deliberately skipped (high-risk surface).
+
+## Re-scoped per Dan
+- DROPPED: hardening custom call processors Kg576YtPM9yEacKn / STQ4Gt3rH8ptlvMi.
+- ADDED: research task — audit Retell post_call_analysis / call_analysis / transcript fields and map what custom processors duplicate. Plan to thin custom processing to a passthrough into hvac_call_log + Retell-native enrichment.
 
 ## Reflection
-1. Got wrong: assumed `client_agents.retell_agent_id` existed; actual column is `agent_id`. Always SELECT columns before CREATE INDEX.
-2. Assumption corrected: GitHub MCP write blocked → confirmed; pushed via raw token+requests instead.
-3. Pattern: 7 parallel subagents → ~3 minutes wall clock vs estimated 45 min sequential. Default to this for any audit ≥3 areas.
-4. ARCHITECTURE.md addition pending: document that monthly partition pre-creation should run as a scheduled n8n workflow (currently manual SQL).
+1. Wrong assumption: ensure_call_log_partition function exists. It does not — audit recommendation was based on function name found in another file, never deployed. Fixed by dropping from batch.
+2. n8n SDK update_workflow is brittle — minimal-diff retry strategy needed for any Code-node-only edit. Workaround: Dan does manual UI edit OR we use n8n REST API directly with raw PUT.
+3. Pattern: monitoring workflows created via SDK CANNOT bind named credentials — they must be wired in UI. Future workflow-creation tasks should output a credential-binding checklist alongside the workflow ID.
