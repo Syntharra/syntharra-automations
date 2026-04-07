@@ -1,19 +1,35 @@
----
-name: syntharra-brand
-description: >
-  Complete Syntharra brand standard — colors, typography, logo, email, documents, and decks.
-  ALWAYS load this skill when: creating any branded output (presentations, documents, emails,
-  artifacts, landing pages, reports, blog posts, social content); applying Syntharra colors or
-  fonts; using the logo; building or editing any email template; creating slide decks or PDFs;
-  designing any UI that carries the Syntharra brand; checking which logo variant to use;
-  ensuring color or typography consistency across any deliverable. This skill is the single
-  source of truth for ALL Syntharra visual identity. Apply silently — never narrate it.
+# Syntharra
+
+Official Syntharra brand theme — clean AI-tech identity. This is the standard for ALL Syntharra work: presentations, documents, emails, and any branded output.
+
 ---
 
-# Syntharra — Brand Standard
+## Logo Assets
 
-> Single source of truth for all Syntharra visual identity.
-> Apply to every branded output: decks, docs, emails, artifacts, UI, social.
+### Variants
+
+| Variant | File | Use When |
+|---|---|---|
+| Icon — transparent bg | `syntharra-icon (Transparent).png` | Light backgrounds, documents, decks |
+| Icon — dark bg | `syntharra-icon (Dark Background).png` | Dark sections, dark slide backgrounds |
+| Full logo (serif wordmark) | `syntharra-logo-swapped-v2.png` | Cover slides, document headers, formal docs |
+| Full logo (violet wordmark) | `syntharra-workspace-logo.png` | Brand-forward contexts, workspace, internal |
+| Hosted icon (email-safe PNG) | `https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/brand-assets/email-signature/syntharra-icon.png` | All emails — use this URL, never base64 |
+
+### Local Path
+`C:\Users\danie\OneDrive\Desktop\Syntharra\syntharra_logo\`
+
+### Logo Construction
+- 4 ascending vertical bars, rounded corners, flat `#6C63FF`
+- Wordmark: Georgia / Times New Roman serif, 22px, normal weight, `#6C63FF`, letter-spacing 0.5px
+- Tagline: Arial / Helvetica, 8px, bold, uppercase, letter-spacing 3.5px, `#111111`
+- Tagline text: **Global AI Solutions**
+
+### Logo Usage Rules
+- **Never** stretch, recolor, or add effects to the logo
+- **Never** place the transparent icon on a busy background — use the dark-bg variant on dark sections
+- **Never** use base64-encoded SVGs in emails — Gmail mobile breaks them; always use the hosted PNG URL
+- Minimum clear space: equal to the height of one bar on all sides
 
 ---
 
@@ -32,58 +48,35 @@ description: >
 --dark-section:   linear-gradient(135deg, #0d0d1a, #1a1a3e);
 ```
 
-**Email outer background:** `#F7F7FB` (slightly different from page bg — email-specific)
-
 ---
 
 ## Typography
 
-### Documents, Decks, Artifacts, Web
-| Role | Font | Weight | Notes |
-|---|---|---|---|
-| Headings | Inter | Bold (700) | Google Fonts |
-| Body | Inter | Regular (400) | Google Fonts |
-| Import | `https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap` | | |
+### Documents & Presentations
+- **Headers**: Inter Bold
+- **Body**: Inter Regular
+- **Source**: Google Fonts — `https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap`
 
-### Emails only (system fonts — Google Fonts don't load in email clients)
-| Role | Font stack |
-|---|---|
-| Wordmark / name | Georgia, 'Times New Roman', serif |
-| Body / labels / UI | Arial, Helvetica, sans-serif |
+### Emails
+- **Wordmark / Name**: Georgia, 'Times New Roman', serif
+- **Body / Labels**: Arial, Helvetica, sans-serif
+- **Reason**: Email clients don't load Google Fonts reliably — always use system fonts in emails
 
 ---
 
-## Logo
+## Email Standard
 
-### Variants — which to use when
-| Variant | Filename | Use when |
-|---|---|---|
-| Icon — transparent bg | `syntharra-icon (Transparent).png` | Light backgrounds, docs, decks |
-| Icon — dark bg | `syntharra-icon (Dark Background).png` | Dark slides, dark sections |
-| Full logo — serif wordmark | `syntharra-logo-swapped-v2.png` | Cover slides, doc headers, formal |
-| Full logo — violet wordmark | `syntharra-workspace-logo.png` | Brand-forward, workspace, internal |
-| **Email-safe hosted PNG** | URL below | **All emails — always use this** |
+### Template Rules
+- Outer background: `#F7F7FB`
+- Card/body background: `#FFFFFF`
+- Text: `#1A1A2E`
+- Accent: `#6C63FF`
+- **Never dark-theme emails** — always light; let email clients handle dark mode
+- Max width: 600px, centered
 
-**Hosted icon URL (email-safe, never base64 in n8n/website):**
-`https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/brand-assets/email-signature/syntharra-icon.png`
+### Logo Block (copy into every email template)
 
-**Local path:** `C:\Users\danie\OneDrive\Desktop\Syntharra\syntharra_logo\`
-
-### Logo Construction
-- 4 ascending vertical bars, rounded corners, flat `#6C63FF`
-- Wordmark: Georgia / Times New Roman serif, 22px, normal weight, `#6C63FF`, letter-spacing 0.5px
-- Tagline: Arial / Helvetica, 8px, bold, uppercase, letter-spacing 3.5px, `#111111`
-- Tagline text: **"Global AI Solutions"** — always this exact phrase, always uppercase
-
-### Logo Rules
-- **Never** stretch, recolor, or add effects
-- **Never** place transparent icon on busy background — use dark-bg variant on dark sections
-- **Never** base64 SVG in emails — Gmail mobile breaks them; always use hosted PNG URL
-- Minimum clear space: height of one bar on all sides
-
----
-
-## Logo HTML Block (canonical — copy into every email / doc)
+Extracted from `syntharra_signatures/` — this is the canonical logo HTML for all emails and documents:
 
 ```html
 <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
@@ -102,100 +95,44 @@ description: >
 ```
 
 **Rules:**
-- Use this exact block in all emails and documents that need a logo
-- For hosted contexts (website, n8n) swap base64 src for: `https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/brand-assets/email-signature/syntharra-icon.png`
-- Tagline is always **"Global AI Solutions"** — uppercase, letter-spaced, never abbreviated
+- Use this exact block in all emails, documents, and decks that need a logo
+- Tagline is always **"Global AI Solutions"** — uppercase, letter-spaced
+- The base64 icon is self-contained — no external URL dependency for emails
+- For hosted contexts (website, n8n, etc.) you can swap the base64 `src` for the hosted URL: `https://raw.githubusercontent.com/Syntharra/syntharra-automations/main/brand-assets/email-signature/syntharra-icon.png`
+
+### Email Signature
+- Name font: Georgia serif, 17px bold, `#111111`
+- Title font: Arial, 10px bold uppercase, letter-spacing 2.5px, `#6C63FF`
+- Contact links: Arial 13px, `#6C63FF`
+- Divider: 2px solid `#6C63FF`
+- Footer tagline: "AI Receptionists · Built for the Trades · Available 24/7"
+- Signature source: `C:\Users\danie\OneDrive\Desktop\Syntharra\syntharra_signatures\` (10 role-specific signatures)
+- Tagline under wordmark: **"Global AI Solutions"** (always this — not "AI Solutions" or "AI SOLUTIONS")
 
 ---
 
-## Email Standard
+## Document & Deck Standard
 
-| Property | Value |
-|---|---|
-| Outer background | `#F7F7FB` |
-| Card / body background | `#FFFFFF` |
-| Text | `#1A1A2E` |
-| Accent | `#6C63FF` |
-| Max width | 600px, centered |
-| Theme | **Always light** — never dark email |
+### Slides / Presentations
+- Background: `#FAFAFA`
+- Slide header: Inter Bold, `#1A1A2E` or `#6C63FF` for emphasis
+- Body: Inter Regular, `#4A4A6A`
+- Accent bar / gradient: `linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)`
+- Cover slide: full logo (`syntharra-logo-swapped-v2.png`), centered or top-left
+- Dark slides: use dark-section gradient, white text, cyan `#00D4FF` for highlights
+- Cards: white surface, 20px border-radius, 1px `#E5E7EB` border, violet top strip on featured cards
+- Buttons: gradient primary or `#6C63FF` outline
 
-### Email Signature Spec
-| Element | Style |
-|---|---|
-| Name | Georgia serif, 17px, bold, `#111111` |
-| Title | Arial, 10px, bold uppercase, letter-spacing 2.5px, `#6C63FF` |
-| Contact links | Arial, 13px, `#6C63FF` |
-| Divider | 2px solid `#6C63FF` |
-| Footer tagline | "AI Receptionists · Built for the Trades · Available 24/7" |
-
-Signature files: `C:\Users\danie\OneDrive\Desktop\Syntharra\syntharra_signatures\` (10 role-specific)
+### Documents (Word / PDF)
+- Header: full logo top-left, 40px tall
+- Heading 1: Inter Bold 24px, `#1A1A2E`
+- Heading 2: Inter Bold 18px, `#6C63FF`
+- Body: Inter 14px, `#4A4A6A`, line-height 1.7
+- Dividers: 1px `#E5E7EB`
+- Footer: Syntharra icon + "syntharra.com" + page number, `#8A8AA0`
 
 ---
 
-## Slide / Presentation Standard
+## Best Used For
 
-| Element | Spec |
-|---|---|
-| Background | `#FAFAFA` |
-| Slide header | Inter Bold, `#1A1A2E` or `#6C63FF` for emphasis |
-| Body | Inter Regular, `#4A4A6A` |
-| Accent bar | `linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%)` |
-| Cover slide | Full logo (`syntharra-logo-swapped-v2.png`), centered or top-left |
-| Dark slides | Dark-section gradient, white text, `#00D4FF` highlights |
-| Cards | White surface, 20px border-radius, 1px `#E5E7EB` border, violet top strip on featured |
-| Buttons | Gradient primary or `#6C63FF` outline |
-
----
-
-## Document Standard (Word / PDF)
-
-| Element | Spec |
-|---|---|
-| Header | Full logo top-left, 40px tall |
-| Heading 1 | Inter Bold 24px, `#1A1A2E` |
-| Heading 2 | Inter Bold 18px, `#6C63FF` |
-| Body | Inter 14px, `#4A4A6A`, line-height 1.7 |
-| Dividers | 1px `#E5E7EB` |
-| Footer | Syntharra icon + "syntharra.com" + page number, `#8A8AA0` |
-
----
-
-## HTML / Artifact / Web UI Standard
-
-```css
-/* Always import Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-/* Root tokens */
-:root {
-  --primary:        #6C63FF;
-  --secondary:      #00D4FF;
-  --gradient:       linear-gradient(135deg, #6C63FF 0%, #8B85FF 100%);
-  --bg:             #FAFAFA;
-  --surface:        #FFFFFF;
-  --text:           #1A1A2E;
-  --text-secondary: #4A4A6A;
-  --text-muted:     #8A8AA0;
-  --border:         #E5E7EB;
-}
-
-body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
-h1, h2, h3 { font-weight: 700; color: var(--text); }
-.accent { color: var(--primary); }
-.card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); }
-.btn-primary { background: var(--gradient); color: #fff; border-radius: 8px; }
-```
-
----
-
-## Brand Rules (never break these)
-
-1. **Never** dark-theme emails — always light with `#F7F7FB` outer bg
-2. **Never** base64 SVG in emails — use hosted PNG URL
-3. **Never** stretch, recolor, or add effects to the logo
-4. **Never** abbreviate the tagline — always "Global AI Solutions"
-5. **Always** Inter for web/docs/decks, system fonts (Georgia/Arial) for emails
-6. **Always** `overflow-x: clip` on body in HTML artifacts
-7. **Always** one `<style>` block per HTML page — no inline style sprawl
-8. **Always** use `#6C63FF` for accent, never approximate purples
-9. **Always** confirm information back — Syntharra voice is warm, professional, concise
+All Syntharra materials — sales decks, investor pitches, client onboarding, case studies, email templates, email signatures, internal documents, blog headers, and any other branded output.
