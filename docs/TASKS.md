@@ -1,40 +1,31 @@
 # Syntharra Open Tasks
-_Last updated 2026-04-07 (batch 3). Open work only._
+_Last updated 2026-04-07 (batch 4). Open work only._
 
-## Track A -- Gated on Dan
-- [ ] Activate Stripe live mode (recreate products, prices, coupons, webhook + signing secret)
-- [ ] Add Stripe webhook_signing_secret to syntharra_vault
+## Track A — Final pre-launch testing (where we are now)
+- [ ] Full scenario test sweep — Standard 100 + Premium 15 (e2e against MASTER agents)
+- [ ] CRM end-to-end test — JotForm → n8n onboarding → HubSpot deal + contact + pipeline move
+- [ ] Calendar end-to-end test — Premium dispatcher books real GCal slot, confirmation back, 401 retry path
+- [ ] Stripe test-mode webhook live-fire — checkout → invoice.payment_succeeded → failed → dunning advance
+- [ ] Slack alert smoke test — one message per channel from each of the 7 MON workflows
+
+## Track B — Gated on Dan
+- [ ] Activate Stripe LIVE mode (recreate products/prices/coupons/webhook + swap whsec_)
 - [ ] Telnyx SMS approval
-- [ ] Unpause syntharra-ops-monitor Railway service
-- [ ] Attach Supabase service-role credential to Premium Integration Dispatcher
-- [ ] Wire Slack + Supabase/Postgres credentials on 7 MON/MAINT workflows + publish
-- [ ] Manual UI: Premium Dispatcher Jobber/GCal retry patch (file: /Cowork/premium_dispatcher_patched.js)
-- [ ] Manual UI import: Std + Prem onboarding idempotency JSONs (/Cowork/workflows/)
-- [ ] Manual UI import: Stripe hardened webhook (xKD3ny6kfHL0HHXq)
-- [ ] Approve RLS enablement on hvac_call_log, stripe_payment_data, agent_prompts
-- [ ] Approve replacing USING(true) RLS policies (9 tables)
-- [ ] Get n8n API key into Claude env so future patches auto-deploy
+- [ ] Unpause syntharra-ops-monitor Railway service post-launch
 
-## Pre-scenario-testing
-- [ ] Re-run n8n fetch() audit on remaining ~14 workflows (excl onboarding/Stripe)
-- [ ] Build v2 Retell-native call processors (refactor plan: docs/audits/2026-04-07-retell-native-refactor.md)
-- [ ] Migrate 18+ hardcoded secrets to credentials (P0 batch)
+## Done in batch 4
+- n8n raw REST API deploy path unlocked (X-N8N-API-KEY)
+- Std onboarding idempotency (4Hx7aRdzMl5N0uJP) — DEPLOYED + ACTIVE
+- Prem onboarding idempotency (kz1VmwNccunRMEaF) — DEPLOYED + ACTIVE
+- Stripe hardened webhook (xKD3ny6kfHL0HHXq) — DEPLOYED + ACTIVE; whsec_ in vault
+- Premium Dispatcher Jobber/GCal retry patch — DEPLOYED + ACTIVE
+- RLS enabled on agent_prompts, dunning_state, stripe_payment_data, stripe_processed_events
+- 17 anon USING(true) policies dropped → service-role-only
+- website_leads anon INSERT preserved
+- Slack bot_token confirmed in vault — 7 MON workflows being patched to chat.postMessage with channel routing
 
-## Hardening (P2)
-- [ ] Refactor 5 long-running n8n workflows for queue-mode
-- [ ] DLQ writes from Premium dispatcher
-
-## Done in this session (batches 1-3)
-- 8 hot-table indexes + idx_hvac_call_log_call_id
-- stripe_processed_events table
-- dunning_state table + retry index
-- client_agents.submission_id UNIQUE column
-- 12mo partition pre-creation through 2027_03
-- search_path pinned on 3 trigger functions
-- Premium Dispatcher hardcoded SRK removed
-- 5 fetch() violations fixed
-- 7 monitoring/maintenance workflows created (draft)
-- Std + Prem onboarding idempotency JSONs built + validated
-- Stripe hardened webhook JSON built (sig verify + idempotency + dunning routing)
-- Premium Dispatcher retry patch prepared
-- Retell-native refactor plan published
+## Done batches 1–3
+- 8 hot-table indexes; stripe_processed_events; dunning_state; client_agents.submission_id UNIQUE
+- 12mo partitions through 2027_03; search_path pinned on 3 trigger fns
+- Premium Dispatcher SRK removed; 5 fetch() violations fixed
+- 7 MON/MAINT workflow drafts; Retell-native refactor plan published
