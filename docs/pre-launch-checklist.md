@@ -1,3 +1,5 @@
+> **Canonical pre-launch checklist.** Checkbox status is tracked in `docs/STATE.md` via `tools/session_end.py`. Do not edit checkboxes here directly — update STATE.md and let the tool sync.
+
 # Syntharra Pre-Launch Checklist & Next Steps
 **Updated: 2026-03-28**
 

@@ -16,3 +16,5 @@ date | area | what failed | root cause | fix applied | skill updated
 | 2026-04-07 | email | welcome email logo rendered as broken-image placeholder in client | hosted PNG (email-logo.png) didn't resolve cleanly; trusted repo file without browser-verifying render | replaced `<img>` with inline white `<p>SYNTHARRA</p>` wordmark (28px/900/ls6px); redeployed both onboarding workflows | yes (HANDOFF-2026-04-07) |
 
 2026-04-07 | agent-testing | v3 optimizer ceiling 83-86% | append-only component patcher + signal dilution (CO rule 6x) AND simulator using fetch_agent_prompt_compressed blind to component text | surgical rewrites of 5 components, net -3968 chars, use fetch_agent_prompt_full for v4+ | yes
+
+| 2026-04-07 | github-mcp | Cowork GitHub MCP returned 403 "Resource not accessible by integration" on every write attempt across multiple subagent contexts | Token permission injection inconsistent across Cowork execution contexts | Codified mirror-and-instruct fallback in CLAUDE_INSTRUCTIONS.md sec.8 and auto-memory; installed Desktop Commander MCP for direct local git access as permanent workaround | yes |
