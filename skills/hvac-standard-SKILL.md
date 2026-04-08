@@ -11,8 +11,19 @@ description: >
   Sub-skills: e2e-hvac-standard | standard-call-processor-testing | hvac-standard-agent-testing
 ---
 
+> **This is now the single Syntharra product — $697/mo. Premium tier retired 2026-04-08.**
 > **Last verified: 2026-04-05** — COMPONENTS architecture deployed, Standard E2E 93/93 passing, warm_transfer enabled.
 > **System status: PRE-LAUNCH — ready for live calls. SMS pending Telnyx approval.**
+
+## retell-iac change workflow (canonical — do not bypass)
+
+All agent changes go through `retell-iac/` on `main`. Never edit the Retell dashboard directly.
+
+1. Edit `retell-iac/components/<name>.json` or `retell-iac/manifests/hvac-standard.yaml`
+2. Build: `python retell-iac/scripts/build_agent.py --manifest retell-iac/manifests/hvac-standard.yaml --out retell-iac/build/hvac-standard.built.json`
+3. Diff verify: `python retell-iac/scripts/diff.py`
+4. Patch Standard CLONE agent, publish, test
+5. On green: `python retell-iac/scripts/promote.py --agent standard_master --built retell-iac/build/hvac-standard.built.json`
 
 # HVAC Standard — Master Pipeline Reference
 

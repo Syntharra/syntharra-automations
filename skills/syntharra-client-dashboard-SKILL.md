@@ -1,14 +1,31 @@
 ---
 name: syntharra-client-dashboard
 description: >
-  Complete reference for all work on the Syntharra client-facing Client Dashboard (dashboard.html).
-  ALWAYS load this skill when: editing dashboard.html, adding new KPI cards or stats, changing the
-  call table layout, updating badge types or score logic, modifying the period selector or filters,
-  fixing Supabase data loading, changing the password gate, adding new columns or UI sections,
-  debugging dashboard data issues, changing plan logic (Standard vs Premium), or deploying any
-  dashboard update to production. This skill contains the full file structure, all HTML element IDs,
-  the Supabase data model, JavaScript patterns, and the exact push workflow for shipping changes.
+  Complete reference for the Syntharra client dashboard. Load when: editing dashboard.html,
+  changing call card layout, updating badges/filters, fixing data loading, or deploying changes.
+  Architecture: Retell API via n8n proxy. Supabase for company info only. Single product (Standard).
 ---
+
+> **Rebuilt 2026-04-09 — Retell-native architecture. Premium tier retired.**
+
+## Architecture
+
+| Layer | Detail |
+|---|---|
+| Call data | `POST https://n8n.syntharra.com/webhook/retell-calls` `{ "agent_id": "..." }` |
+| Company info | Supabase `hvac_standard_agent` — anon key safe client-side |
+| URL param | `?a=AGENT_ID` (also accepts `?agent_id=`) |
+| Retell fields | `call_id`, `start_timestamp`, `end_timestamp`, `duration_ms`, `call_status`, `transcript`, `recording_url`, `call_analysis.call_summary`, `call_analysis.user_sentiment` |
+| Mock fallback | 6 sample calls shown + yellow banner if proxy fetch fails |
+
+## Mock data fallback pattern
+
+```javascript
+fetch(N8N_URL, { method:'POST', body: JSON.stringify({ agent_id: agentId }) })
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(data => { allCalls = Array.isArray(data) ? data : data.calls || []; render(); })
+  .catch(() => { allCalls = MOCK; showBanner(); render(); });
+```
 
 ---
 
@@ -31,9 +48,9 @@ At the **END** of every chat that changes the dashboard:
 |---|---|
 | Repo | `Syntharra/syntharra-website` |
 | File path | `dashboard.html` |
-| Live URL | `https://syntharra.com/dashboard.html?agent_id=<AGENT_ID>` |
-| Password gate code | `syntharra2024` |
-| Current SHA | `b16bda030a25aa6a9dd011da0ef8c479bb2f2150` |
+| Live URL | `https://syntharra.com/dashboard.html?a=<AGENT_ID>` |
+| JSX component | `shared/client-dashboard.jsx` in `syntharra-automations` |
+| Current SHA | `b0603b6e7fe6b92318d012e99edf362f11b04360` |
 
 ---
 

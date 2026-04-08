@@ -1,50 +1,47 @@
 # State — Syntharra Automations
 
-_Last updated: 2026-04-08_
+_Last updated: 2026-04-09_
 
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-35a20ff docs: wrap-up consolidation (retire 4 superseded docs, mark checklist canonical, log 403 incident)
+9d9e5cc feat(dashboard): rebuild as lean Retell-native lead capture view
 
 ## Go-live checklist
-see docs/pre-launch-checklist.md
+see docs/TASKS.md
+
+---
+
+## Product decision (2026-04-09)
+
+Single product: **HVAC Standard at $697/mo**. Premium tier retired. One agent, one onboarding flow, one price.
+Repo stripped to lean core. retell-iac is Standard-only.
 
 ---
 
 ## What's live in production
 
-- **HVAC Standard agent** — MASTER template at `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`. Currently at v4r1 quality ceiling ~85% on eval harness. 12 scenarios still failing.
-- **HVAC Premium agent** — MASTER at `retell-agents/HVAC-PREMIUM-AGENT-TEMPLATE.md`. Running same agent as TESTING (split deferred to P1).
-- **n8n onboarding workflows** — Standard `4Hx7aRdzMl5N0uJP`, Premium `kz1VmwNccunRMEaF`. Both received `submission_id` fix on 2026-04-07. Needs smoke-test verification at next session.
-- **n8n call processors** — Standard + Premium variants, active.
-- **Supabase schema** — RLS hardened 2026-04-07 (see FAILURES.md). `client_agents` table is the per-client source of truth.
-- **OAuth server** — Railway-deployed. Google Calendar credentials still TODO before first paying client (see pre-launch-checklist §1).
-- **Stripe** — still in test mode. Live-mode migration is a pre-launch blocker (see pre-launch-checklist §2).
+- **HVAC Standard agent** — MASTER at `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`. Agent ID `agent_4afbfdb3fcb1ba9569353af28d`, flow `conversation_flow_34d169608460`. retell-iac is the canonical source of truth for all changes.
+- **n8n onboarding workflow** — Standard `4Hx7aRdzMl5N0uJP`. Received `submission_id` fix 2026-04-07.
+- **n8n call processor** — Standard variant, active.
+- **Supabase schema** — RLS hardened 2026-04-07. `hvac_standard_agent` and `hvac_call_log` are the live tables.
+- **Client dashboard** — `dashboard.html` in syntharra-website (SHA: b0603b6e). Retell-native: fetches calls via POST `n8n.syntharra.com/webhook/retell-calls`. Company info from Supabase. URL param `?a=AGENT_ID`. Mock fallback if webhook not yet live.
+- **OAuth server** — Railway-deployed.
+- **Stripe** — still in test mode. Live-mode migration is a P0 blocker (see TASKS.md).
 
 ## What's in flight
 
-- **v4r1 Standard eval harness** — 12 failing scenarios (10, 16, 19, 22, 23, 28, 41, 60, 63, 66, 73, 75). Harness runs async on OpenAI gpt-4o-mini, concurrency 20, $5 cap. Resume next session.
-- **n8n onboarding smoke test** — verify both workflows execute end-to-end with the `submission_id` fix live.
-- **Arch consolidation** — canonical docs (this file, SESSION_START.md, RULES.md) landing tonight.
+- **Retell proxy webhook** — n8n `POST /webhook/retell-calls` not yet built. Dashboard shows mock data until live.
+- **Stripe single-product migration** — retire old price IDs, create one $697/mo price.
+- **Jotform onboarding form update** — remove tier selection.
 
 ## What's blocked
 
-- **Telnyx SMS activation** — waiting on Telnyx AI evaluation approval. Once received: buy toll-free, add to Supabase vault, flip `SMS_ENABLED=true` in call processors.
-- **Premium MASTER/TESTING split** — deferred until Standard is green.
-- **`run_tests.py --agent premium` flag** — broken, workaround is `run_premium_only.py`. See REFERENCE.md gotchas.
-
-## Next session — pick up here
-
-1. Run `python tools/session_start.py` to see the last session row and any new failures.
-2. Verify n8n onboarding `submission_id` fix is live in both Standard `4Hx7aRdzMl5N0uJP` and Premium `kz1VmwNccunRMEaF`.
-3. Resume v4r1 async eval harness on the 12 failing Standard scenarios.
-4. If any scenario produces a new failure mode, log it in FAILURES.md and update RULES.md if it implies a standing rule.
+- **Telnyx SMS** — waiting on Telnyx AI evaluation approval.
 
 ## Architecture invariants (do not violate)
 
-- **MASTER templates are the only thing in the repo.** Every per-client clone lives in Supabase `client_agents`.
+- **retell-iac is the source of truth for the agent.** No manual Retell dashboard edits to MASTER.
+- **MASTER templates are the only thing in the repo.** Per-client clones live in Supabase `client_agents`.
 - **IDs come from `docs/REFERENCE.md` only.** Never inline.
 - **Never test on a live Retell agent.** Clone → TESTING → `retell-iac/scripts/promote.py` → live.
-- **Every session ends with `tools/session_end.py`.** No exceptions.
-- **Every new failure gets a FAILURES.md row.** Every row that implies a standing rule gets a RULES.md update in the same commit.
