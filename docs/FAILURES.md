@@ -18,3 +18,45 @@ date | area | what failed | root cause | fix applied | skill updated
 2026-04-07 | agent-testing | v3 optimizer ceiling 83-86% | append-only component patcher + signal dilution (CO rule 6x) AND simulator using fetch_agent_prompt_compressed blind to component text | surgical rewrites of 5 components, net -3968 chars, use fetch_agent_prompt_full for v4+ | yes
 
 | 2026-04-07 | github-mcp | Cowork GitHub MCP returned 403 "Resource not accessible by integration" on every write attempt across multiple subagent contexts | Token permission injection inconsistent across Cowork execution contexts | Codified mirror-and-instruct fallback in CLAUDE_INSTRUCTIONS.md sec.8 and auto-memory; installed Desktop Commander MCP for direct local git access as permanent workaround | yes |
+
+## 2026-04-08 — ai_phone_number blank in "you're live" email
+**What failed:** AI Phone Number field was blank in the "Your AI Receptionist is Live" email and in the Quick Start Checklist "Set up call forwarding to [blank]"
+**Root cause:** Variable extraction split rule in call processor was incorrectly keyed — ai_phone_number was not passed through to the email node
+**Fix:** Corrected variable mapping in both Standard and Premium n8n call processor workflows
+**Rule:** When adding new email template variables, always trace the full path from webhook payload → Set node → email HTML template and verify the key name matches at every step
+
+## 2026-04-08 — transfer_phone_number blank in "you're live" email
+**What failed:** Live Transfer Number field was blank in the "Your AI Receptionist is Live" email
+**Root cause:** Wrong key name used for transfer_phone when building the email payload
+**Fix:** Corrected key name in both Standard and Premium workflows
+**Rule:** Use a single canonical field name mapping doc — do not infer key names from memory
+
+## 2026-04-08 — Premium "you're live" email never fired
+**What failed:** Premium clients received Google OAuth and HubSpot OAuth emails but never received the "Your AI Receptionist is Live" activation email
+**Root cause:** Premium call processor had a guard condition that was blocking the Send Welcome Email node from executing
+**Fix:** Removed the incorrect guard condition
+**Rule:** After any call processor change, verify all email send nodes fire in sequence on a test run — do not assume email nodes are wired correctly just because other nodes work
+
+## 2026-04-08 — n8n MCP unusable for targeted workflow patches
+**What failed:** Attempts to patch n8n workflows via the n8n MCP resulted in full workflow rewrites that broke other nodes
+**Root cause:** n8n MCP operates on full workflow JSON only — there is no "patch a single node" operation
+**Fix:** Switched to direct n8n REST API (PUT /api/v1/workflows/{id}) — read full workflow, modify target nodes in Python, PUT the entire workflow back
+**Rule:** Never use n8n MCP to modify existing workflows. Always use REST API with a full read-modify-write cycle. Credentials are in syntharra_vault table in Supabase.
+
+## 2026-04-08 — Supabase vault wrong table/column name
+**What failed:** Queries to `public.vault` and filtering on `active` column both returned errors
+**Root cause:** The vault table is `public.syntharra_vault` (not `public.vault`), and there is no `active` column
+**Fix:** Use `SELECT * FROM public.syntharra_vault WHERE service_name = 'X'` — no active filter needed
+**Rule:** Always query syntharra_vault, never vault. No active column exists. Service names are exact strings (e.g. 'Retell AI', 'n8n Railway').
+
+## 2026-04-08 — Brevo API key hardcoded in n8n workflow (security finding)
+**What failed:** Brevo (email sender) API key found hardcoded directly in n8n workflow node rather than stored in vault
+**Root cause:** Workflow was built before vault pattern was established, key was never migrated
+**Fix:** NOT YET FIXED — P0 task logged to migrate key to syntharra_vault
+**Rule:** All API keys, tokens, and credentials must live in syntharra_vault. Zero hardcoded secrets in any workflow or script.
+
+## 2026-04-08 — Standard MASTER auto-layout blocked by phantom component
+**What failed:** Retell canvas "Auto Layout" button threw an error on the Standard MASTER flow, blocking canvas operations
+**Root cause:** The flow's components[] array contained a blank inline component (cf-component-1774923921746, name "Component L1") with literal Retell placeholder text "Describe what the AI should say or do" — never filled in, never referenced by any node. Retell requires all components to be in a complete state before Auto Layout can run.
+**Fix:** PATCH components: [] on the flow. Auto Layout unblocked.
+**Rule:** After any flow edit session, check components[] array for any entries with placeholder text or zero node references. Delete them before leaving the flow.
