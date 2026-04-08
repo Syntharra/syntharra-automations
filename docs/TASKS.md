@@ -4,15 +4,7 @@
 
 ## P0
 
-- **Wire Retell proxy webhook in n8n** (`POST /webhook/retell-calls`)
-  Fetch call list from Retell API using vault key (`service_name='Retell'`), return array to dashboard.
-  Response should match `/v2/list-calls` shape: `call_id`, `start_timestamp`, `end_timestamp`, `duration_ms`, `call_status`, `transcript`, `recording_url`, `call_analysis.call_summary`, `call_analysis.user_sentiment`.
-
-- **Update Stripe to single product at $697/mo**
-  Retire old Standard and Premium price IDs. Create one product, one price. Update n8n webhook to use new price ID. Verify in Stripe dashboard (currently test mode).
-
-- **Update Jotform onboarding form**
-  Remove tier selection field. Single product flow only. Confirm all required fields still present.
+_(none — all P0 items shipped 2026-04-08)_
 
 ## P1
 
@@ -20,9 +12,12 @@
 - **Update n8n onboarding workflow** — remove Premium branch, single flow only
 - **Update welcome email template** — remove tier-specific language, single product messaging
 - **Move Brevo API key to Supabase vault** — currently hardcoded in n8n workflow node
+- **Stripe live mode** — add live secret key to vault, create $697/mo live price (test price created: `price_1TK5b1ECS71NQsk8Ru3Gyybl`)
 
 ## Notes
 
 - n8n webhook `/webhook/agent-test-runner` is INACTIVE (404). Do not retry.
 - Dashboard URL: `https://syntharra.com/dashboard.html?a=<agent_id>`
-- Retell proxy: `POST https://n8n.syntharra.com/webhook/retell-calls` `{ "agent_id": "..." }`
+- Retell proxy: `POST https://n8n.syntharra.com/webhook/retell-calls` `{ "agent_id": "..." }` — LIVE (n8n workflow `Y1EptXhOPAmosMbs`)
+- Jotform Standard form `260795139953066` — already Standard-only, no tier field exists
+- Stripe test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` = $697/mo on `prod_UC0hZtntx3VEg2`. Old prices archived.

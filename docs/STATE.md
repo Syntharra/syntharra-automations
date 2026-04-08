@@ -25,15 +25,15 @@ Repo stripped to lean core. retell-iac is Standard-only.
 - **n8n onboarding workflow** — Standard `4Hx7aRdzMl5N0uJP`. Received `submission_id` fix 2026-04-07.
 - **n8n call processor** — Standard variant, active.
 - **Supabase schema** — RLS hardened 2026-04-07. `hvac_standard_agent` and `hvac_call_log` are the live tables.
-- **Client dashboard** — `dashboard.html` in syntharra-website (SHA: b0603b6e). Retell-native: fetches calls via POST `n8n.syntharra.com/webhook/retell-calls`. Company info from Supabase. URL param `?a=AGENT_ID`. Mock fallback if webhook not yet live.
+- **Client dashboard** — `dashboard.html` in syntharra-website (SHA: b0603b6e). Retell-native: fetches calls via POST `n8n.syntharra.com/webhook/retell-calls`. Company info from Supabase. URL param `?a=AGENT_ID`.
+- **Retell proxy webhook** — n8n `POST /webhook/retell-calls` LIVE (workflow `Y1EptXhOPAmosMbs`). Returns `{ calls: [...] }` with all required Retell fields. E2E tested 2026-04-08.
 - **OAuth server** — Railway-deployed.
 - **Stripe** — still in test mode. Live-mode migration is a P0 blocker (see TASKS.md).
 
 ## What's in flight
 
-- **Retell proxy webhook** — n8n `POST /webhook/retell-calls` not yet built. Dashboard shows mock data until live.
-- **Stripe single-product migration** — retire old price IDs, create one $697/mo price.
-- **Jotform onboarding form update** — remove tier selection.
+- **Stripe live mode** — test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` ($697/mo) created and old prices archived. Live key not yet in vault.
+- **P1 cleanup** — website pricing page, n8n onboarding Premium branch removal, welcome email.
 
 ## What's blocked
 
