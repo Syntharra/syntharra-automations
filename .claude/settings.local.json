@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python tools/session_start.py)",
+      "mcp__claude_ai_Github_MCP__get_file_contents"
+    ]
+  }
+}
