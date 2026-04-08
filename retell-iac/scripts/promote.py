@@ -10,10 +10,6 @@ MASTERS = {
         "agent_id": "agent_4afbfdb3fcb1ba9569353af28d",
         "flow_id":  "conversation_flow_34d169608460",
     },
-    "premium_master": {
-        "agent_id": None,  # does not exist yet
-        "flow_id":  None,
-    },
 }
 
 def get_key():

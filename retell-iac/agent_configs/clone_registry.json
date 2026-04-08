@@ -8,17 +8,5 @@
     "baseline_tag": "baseline-100-percent-20260406",
     "source_master_agent_id": "agent_4afbfdb3fcb1ba9569353af28d",
     "source_master_flow_id": "conversation_flow_34d169608460"
-  },
-  "premium_clone": {
-    "agent_id": "agent_eb8195c21ba2ef79e2c6d8d3c5",
-    "flow_id": "conversation_flow_746a02ffa4ac",
-    "phone_number": null,
-    "created": "2026-04-06",
-    "purpose": "Git-IaC candidate \u2014 Premium staging (Premium MASTER does not yet exist)",
-    "source_testing_agent_id": "agent_2cffe3d86d7e1990d08bea068f",
-    "source_testing_flow_id": "conversation_flow_2ded0ed4f808",
-    "excluded_nodes": [
-      "spanish_routing_node"
-    ]
   }
 }

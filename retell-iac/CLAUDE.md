@@ -1,3 +1,5 @@
+> Premium tier retired 2026-04-08. Single product — $697/mo. Standard only.
+
 # retell-iac — Canonical Policy
 
 **Source of truth for all Retell agent configuration at Syntharra.**
@@ -19,20 +21,16 @@ The Retell dashboard is NOT the source of truth. This directory is.
 retell-iac/
 ├── CLAUDE.md                 # this file
 ├── agent_configs/
-│   └── clone_registry.json   # live clone agent IDs + phones
+│   └── clone_registry.json   # live clone agent IDs + phones (Standard only)
 ├── snapshots/
-│   ├── 2026-04-06_baseline-100/       # Standard MASTER 100% (tagged)
-│   └── 2026-04-06_premium-testing/    # Premium TESTING source
+│   └── 2026-04-06_baseline-100/       # Standard MASTER 100% (tagged)
 ├── components/               # inlined-at-build component bodies
 │   ├── *.json                # Standard shared (11)
-│   ├── orphans/              # Standard non-subagent inline nodes
-│   └── premium/              # Premium-only shared + orphans
+│   └── orphans/              # Standard non-subagent inline nodes
 ├── flows/
-│   ├── hvac-standard.template.json
-│   └── hvac-premium.template.json
+│   └── hvac-standard.template.json
 ├── manifests/
-│   ├── hvac-standard.yaml
-│   └── hvac-premium.yaml
+│   └── hvac-standard.yaml
 ├── scripts/
 │   ├── build_agent.py        # manifest → built flow JSON
 │   ├── diff.py               # normalized flow diff
@@ -53,8 +51,6 @@ retell-iac/
 7. Git tag `release-hvac-standard-vN-<change>`.
 8. On any smoke failure: `python scripts/rollback.py --tag <previous-release-tag> --agent standard_master`.
 
-Premium follows the identical loop against `hvac-premium.yaml` and the Premium clone.
-
 ## Rollback
 
 ```
@@ -69,6 +65,4 @@ python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_
 | Agent | agent_id | flow_id | Phone |
 |---|---|---|---|
 | Standard MASTER | `agent_4afbfdb3fcb1ba9569353af28d` | `conversation_flow_34d169608460` | `+18129944371` |
-| Premium MASTER | (not yet created) | — | — |
 | Standard CLONE | `agent_201b8d1e9eee10303e79710bc9` | `conversation_flow_b0f2cf9a0e58` | `+12292672271` |
-| Premium CLONE  | `agent_eb8195c21ba2ef79e2c6d8d3c5`  | `conversation_flow_746a02ffa4ac`  | (web test only) |
