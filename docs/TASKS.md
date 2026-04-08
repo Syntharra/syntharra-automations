@@ -8,11 +8,14 @@ _(none — all P0 items shipped 2026-04-08)_
 
 ## P1
 
-- **Update website pricing page** — single product $697/mo, remove tier comparison table
-- **Update n8n onboarding workflow** — remove Premium branch, single flow only
-- **Update welcome email template** — remove tier-specific language, single product messaging
-- **Move Brevo API key to Supabase vault** — currently hardcoded in n8n workflow node
 - **Stripe live mode** — add live secret key to vault, create $697/mo live price (test price created: `price_1TK5b1ECS71NQsk8Ru3Gyybl`)
+
+## Completed (2026-04-09)
+
+- ~~Update website pricing page~~ — `plan-quiz.html` updated: single product $697/mo, Premium tier removed, quiz always returns Standard, JSON-LD updated
+- ~~Update n8n onboarding workflow~~ — Premium onboarding (`kz1VmwNccunRMEaF`) deactivated; Standard workflow has no Premium branch
+- ~~Update welcome email template~~ — `Send Welcome Email` node: removed "Standard Tier" comment, removed unused `PLAN_NAME` + dead `hasCRM`/`hasCal` vars
+- ~~Move Brevo API key to Supabase vault~~ — `Send Setup Instructions Email` + `Send Welcome Email` nodes now fetch from `syntharra_vault` (Brevo/api_key)
 
 ## Notes
 

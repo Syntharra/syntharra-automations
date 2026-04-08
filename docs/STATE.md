@@ -32,8 +32,7 @@ Repo stripped to lean core. retell-iac is Standard-only.
 
 ## What's in flight
 
-- **Stripe live mode** — test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` ($697/mo) created and old prices archived. Live key not yet in vault.
-- **P1 cleanup** — website pricing page, n8n onboarding Premium branch removal, welcome email.
+- **Stripe live mode** — test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` ($697/mo) created and old prices archived. Live key not yet in vault. P0 blocker pending Dan's timeline.
 
 ## What's blocked
 
