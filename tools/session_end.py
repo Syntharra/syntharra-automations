@@ -12,8 +12,10 @@ Usage:
 """
 import argparse
 import datetime as dt
+import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 
@@ -25,13 +27,40 @@ RULES = ROOT / "docs" / "RULES.md"
 CHECKLIST = ROOT / "docs" / "pre-launch-checklist.md"
 
 
+def find_git():
+    """Find git executable. PATH first, then common Windows GitHub Desktop locations."""
+    git = shutil.which("git")
+    if git:
+        return git
+    candidates = []
+    local = os.environ.get("LOCALAPPDATA", "")
+    if local:
+        gh_desktop = pathlib.Path(local) / "GitHubDesktop"
+        if gh_desktop.exists():
+            for app_dir in sorted(gh_desktop.glob("app-*"), reverse=True):
+                candidates.append(app_dir / "resources" / "app" / "git" / "cmd" / "git.exe")
+    candidates.extend([
+        pathlib.Path(r"C:\Program Files\Git\cmd\git.exe"),
+        pathlib.Path(r"C:\Program Files (x86)\Git\cmd\git.exe"),
+    ])
+    for c in candidates:
+        if c.exists():
+            return str(c)
+    return None
+
+
+GIT = find_git()
+
+
 def sh(*args):
-    return subprocess.check_output(args, cwd=ROOT, text=True).strip()
+    if not GIT:
+        raise RuntimeError("git not found on PATH or in GitHub Desktop")
+    return subprocess.check_output([GIT, *args], cwd=ROOT, text=True).strip()
 
 
 def get_last_commit():
     try:
-        return sh("git", "log", "-1", "--pretty=format:%h %s")
+        return sh("log", "-1", "--pretty=format:%h %s")
     except Exception as exc:
         return f"unknown ({exc})"
 
@@ -90,7 +119,7 @@ def append_session_log_index(topic, summary):
 
 def check_new_failures():
     try:
-        diff = sh("git", "diff", "--name-only", "HEAD~1", "HEAD")
+        diff = sh("diff", "--name-only", "HEAD~1", "HEAD")
     except Exception:
         return
     changed = set(diff.splitlines())

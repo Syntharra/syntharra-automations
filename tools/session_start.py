@@ -15,8 +15,10 @@ Output:
 Usage:
   python tools/session_start.py
 """
+import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 
@@ -28,16 +30,43 @@ STATE = ROOT / "docs" / "STATE.md"
 BAR = "=" * 72
 
 
+def find_git():
+    """Find git executable. PATH first, then common Windows GitHub Desktop locations."""
+    git = shutil.which("git")
+    if git:
+        return git
+    candidates = []
+    local = os.environ.get("LOCALAPPDATA", "")
+    if local:
+        gh_desktop = pathlib.Path(local) / "GitHubDesktop"
+        if gh_desktop.exists():
+            for app_dir in sorted(gh_desktop.glob("app-*"), reverse=True):
+                candidates.append(app_dir / "resources" / "app" / "git" / "cmd" / "git.exe")
+    candidates.extend([
+        pathlib.Path(r"C:\Program Files\Git\cmd\git.exe"),
+        pathlib.Path(r"C:\Program Files (x86)\Git\cmd\git.exe"),
+    ])
+    for c in candidates:
+        if c.exists():
+            return str(c)
+    return None
+
+
+GIT = find_git()
+
+
 def sh(*args):
+    if not GIT:
+        return ""
     try:
-        return subprocess.check_output(args, cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+        return subprocess.check_output([GIT, *args], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
     except Exception:
         return ""
 
 
 def print_header():
-    branch = sh("git", "rev-parse", "--abbrev-ref", "HEAD") or "?"
-    commit = sh("git", "log", "-1", "--pretty=format:%h %s") or "?"
+    branch = sh("rev-parse", "--abbrev-ref", "HEAD") or "?"
+    commit = sh("log", "-1", "--pretty=format:%h %s") or "?"
     print(BAR)
     print(f"BRANCH: {branch}")
     print(f"HEAD:   {commit}")
@@ -102,7 +131,7 @@ def print_state_sections():
 
 
 def print_dirty_state():
-    status = sh("git", "status", "--short")
+    status = sh("status", "--short")
     if status:
         print("UNCOMMITTED:")
         for line in status.splitlines()[:10]:
