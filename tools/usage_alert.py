@@ -66,7 +66,7 @@ def fetch_active_subscriptions() -> list[dict]:
     url = (env("SUPABASE_URL").rstrip("/") +
            "/rest/v1/client_subscriptions"
            "?status=eq.active"
-           "&select=agent_id,company_name,client_email,included_minutes")
+           "&select=agent_id,company_name,client_email,included_minutes,tier,overage_rate")
     status, data = http_json("GET", url, sb_headers())
     if status != 200:
         sys.exit(f"Supabase fetch subscriptions failed: {status} {data}")
@@ -179,23 +179,26 @@ ALERT_TEMPLATES = {
     100: {
         "subject": "📢 You've used 100% of your included minutes — overage now applying",
         "heading": "You've reached your included minutes limit",
-        "body_extra": (
-            "<p>Overage charges are now applying for any additional minutes used this month. "
-            "Your AI receptionist continues to work normally — calls won't be blocked.</p>"
-            "<p>You'll see the overage on your next invoice. "
-            "If you have questions, reply to this email and we'll sort it out.</p>"
-        ),
+        "body_extra": None,  # generated dynamically with actual overage_rate
     },
 }
 
 
 def send_alert_email(sub: dict, threshold_pct: int, total_minutes: int,
-                     included_minutes: int, dry_run: bool) -> None:
+                     included_minutes: int, dry_run: bool, overage_rate: float = 0.18) -> None:
     if dry_run:
         print(f"  [DRY-RUN] would send {threshold_pct}% alert to {sub['client_email']}")
         return
     tmpl = ALERT_TEMPLATES[threshold_pct]
     company = sub.get("company_name", "there")
+    # Build dynamic body_extra for 100% alert using actual overage_rate
+    body_extra = tmpl.get("body_extra") or (
+        f"<p>Overage charges are now applying at <strong>${overage_rate:.2f}/min</strong> "
+        "for any additional minutes used this month. "
+        "Your AI receptionist continues to work normally — calls won't be blocked.</p>"
+        "<p>You'll see the overage on your next invoice. "
+        "If you have questions, reply to this email and we'll sort it out.</p>"
+    )
     usage_pct = round(total_minutes / included_minutes * 100) if included_minutes else 0
     bar_width = min(usage_pct, 100)
     bar_color = "#DC2626" if threshold_pct >= 100 else "#D97706"
@@ -233,7 +236,7 @@ def send_alert_email(sub: dict, threshold_pct: int, total_minutes: int,
         '</table>'
         '</div>'
 
-        f'<div style="font-size:14px;color:#1A1A2E;line-height:1.7">{tmpl["body_extra"]}</div>'
+        f'<div style="font-size:14px;color:#1A1A2E;line-height:1.7">{body_extra}</div>'
         f'<div style="margin-top:20px;font-size:13px;color:#6B7280">Questions? Email us at '
         f'<a href="mailto:support@syntharra.com" style="color:#6C63FF;text-decoration:none;font-weight:500">support@syntharra.com</a></div>'
     )
@@ -265,9 +268,11 @@ def process_subscription(sub: dict, year: int, month: int, dry_run: bool) -> Non
     agent_id       = sub["agent_id"]
     company        = sub.get("company_name", agent_id)
     billing_month  = f"{year}-{month:02d}"
-    included       = sub.get("included_minutes") or 500
+    included       = sub.get("included_minutes") or 700
+    overage_rate   = float(sub.get("overage_rate") or 0.18)
+    tier           = sub.get("tier") or "professional"
 
-    print(f"\n--- {company} ({agent_id}) [{billing_month}] ---")
+    print(f"\n--- {company} ({agent_id}) [{billing_month}] tier={tier} overage=${overage_rate}/min ---")
 
     cycle = ensure_billing_cycle(agent_id, billing_month, included)
     already_80  = cycle.get("alert_80_sent", False)
@@ -287,14 +292,14 @@ def process_subscription(sub: dict, year: int, month: int, dry_run: bool) -> Non
 
     # 100% alert (check first so we don't double-send 80 when already at 100+)
     if usage_pct >= 100 and not already_100:
-        send_alert_email(sub, 100, total_minutes, included, dry_run)
+        send_alert_email(sub, 100, total_minutes, included, dry_run, overage_rate)
         if not dry_run:
             set_alert_flag(agent_id, billing_month, "alert_100_sent")
             print("  billing_cycles.alert_100_sent = true")
 
     # 80% alert (only if not already at 100%; if at 100% they get one email, not two)
     if usage_pct >= 80 and not already_80 and usage_pct < 100:
-        send_alert_email(sub, 80, total_minutes, included, dry_run)
+        send_alert_email(sub, 80, total_minutes, included, dry_run, overage_rate)
         if not dry_run:
             set_alert_flag(agent_id, billing_month, "alert_80_sent")
             print("  billing_cycles.alert_80_sent = true")

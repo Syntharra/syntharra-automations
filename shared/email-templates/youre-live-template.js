@@ -16,6 +16,21 @@ const agentName      = input.agent_name          || 'your AI Receptionist';
 const phone          = input.agent_phone_number  || '';
 const leadEmail      = input.lead_email          || '';
 
+// Tier data — passed from onboarding workflow via Stripe session lookup
+const tier          = (input.tier || 'professional').toLowerCase();
+const minutesLimit  = input.minutes_limit  || (tier === 'starter' ? 350 : tier === 'business' ? 1400 : 700);
+const overageRate   = input.overage_rate   || (tier === 'starter' ? 0.25 : tier === 'business' ? 0.12 : 0.18);
+const whatsappNum   = input.whatsapp_number || '';  // set when Telnyx WhatsApp number is confirmed
+
+const TIER_LABELS = { starter: 'Starter', professional: 'Professional', business: 'Business' };
+const TIER_SUPPORT = {
+  starter:      null,
+  professional: { label: 'Priority WhatsApp Support', desc: 'Reach us via WhatsApp for priority assistance.' },
+  business:     { label: 'Dedicated WhatsApp Line',   desc: 'Your dedicated Syntharra contact via WhatsApp.' },
+};
+const tierLabel   = TIER_LABELS[tier] || 'Professional';
+const tierSupport = TIER_SUPPORT[tier];
+
 if (!leadEmail || !phone) {
   return [{ json: { ...input, _skip: true, _reason: 'missing email or phone' } }];
 }
@@ -113,6 +128,32 @@ const emailHtml = `<!DOCTYPE html>
 </tr>
 </table>
 
+<!-- Plan details card -->
+<div style="padding:18px 20px;background:#F8F7FF;border-radius:10px;border:1px solid #E8E6FF;margin-bottom:20px">
+  <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6C63FF;margin-bottom:10px">Your Plan — ${tierLabel}</div>
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="font-size:13px;color:#6B7280;padding:5px 0;border-bottom:1px solid #E8E6FF">Included minutes / month</td>
+      <td style="font-size:13px;font-weight:700;color:#0D0D1A;text-align:right;padding:5px 0;border-bottom:1px solid #E8E6FF">${minutesLimit} min</td>
+    </tr>
+    <tr>
+      <td style="font-size:13px;color:#6B7280;padding:5px 0;border-bottom:1px solid #E8E6FF">Overage rate</td>
+      <td style="font-size:13px;color:#0D0D1A;text-align:right;padding:5px 0;border-bottom:1px solid #E8E6FF">$${overageRate.toFixed(2)}/min</td>
+    </tr>
+    <tr>
+      <td style="font-size:13px;color:#6B7280;padding:5px 0">Dashboard access</td>
+      <td style="font-size:13px;color:#047857;text-align:right;padding:5px 0">&#x2705; Included</td>
+    </tr>
+  </table>
+</div>
+
+${tierSupport ? `
+<!-- WhatsApp support card (Professional / Business) -->
+<div style="padding:16px 20px;background:#E8F5E9;border-radius:10px;border:1px solid #A5D6A7;margin-bottom:20px">
+  <div style="font-size:13px;font-weight:700;color:#1B5E20;margin-bottom:4px">&#x1F4AC; ${tierSupport.label}</div>
+  <div style="font-size:12px;color:#2E7D32;line-height:1.5">${tierSupport.desc}${whatsappNum ? ` WhatsApp: <strong>${whatsappNum}</strong>` : ' Our team will reach out via WhatsApp shortly.'}</div>
+</div>` : ''}
+
 <!-- What happens next -->
 <div style="padding:18px 20px;background:#F0EEFF;border-radius:10px;border:1px solid #D0CAFF;margin-bottom:20px">
   <div style="font-size:14px;font-weight:700;color:#0D0D1A;margin-bottom:10px">Once forwarding is active</div>
@@ -153,5 +194,8 @@ return [{
     emailHtml,
     emailSubject: `Your AI Receptionist is Live \u2014 ${companyName}`,
     lead_email: leadEmail,
+    tier,
+    minutes_limit: minutesLimit,
+    overage_rate: overageRate,
   },
 }];
