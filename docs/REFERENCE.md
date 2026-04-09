@@ -10,7 +10,7 @@
 This is the ONLY supported path for creating a new client agent. Any deviation must be documented and approved.
 
 1. **Source of truth** = `retell-iac/` on `main`. Agent flows are built from YAML manifests + JSON templates, never hand-edited in the Retell UI.
-2. **Standard client** → cloned from `agent_6e7a2ae03c2fbd7a251fafcd00` (Standard TESTING, flow `conversation_flow_90da7ca2b270`) — authoritative as of 2026-04-09. Legacy MASTER `agent_4afbfdb3fcb1ba9569353af28d` is stale and will be replaced on next promotion.
+2. **Standard client** → cloned from `agent_4afbfdb3fcb1ba9569353af28d` (Standard MASTER, flow `conversation_flow_34d169608460`, phone `+18129944371`). Promoted 2026-04-09 to the modern code-node architecture — byte-identical to the TESTING snapshot at the time of promotion. TESTING `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270` remains as the authoring surface; clones use MASTER.
 3. **Premium client** → cloned from `agent_2cffe3d86d7e1990d08bea068f` (Premium MASTER = Premium TESTING, interim. Flow `conversation_flow_2ded0ed4f808`).
 4. **Clone trigger** = Jotform submission → n8n onboarding workflow:
    - Standard: `HVAC AI Receptionist - JotForm Onboarding (Supabase)` (`4Hx7aRdzMl5N0uJP`)

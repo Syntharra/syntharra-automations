@@ -4,16 +4,20 @@
 
 ## P0
 
-- **Promote Standard TESTING → MASTER** — `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270` has been autolayout-fixed (2026-04-09) and is the canonical current agent. Verify it works end-to-end in Retell UI (click Auto Layout, run a test call), then promote to MASTER (`agent_4afbfdb3fcb1ba9569353af28d` / `conversation_flow_34d169608460`). **The current MASTER uses the legacy `subagent` node type** — promotion will be a full architecture swap to `code` nodes, not a delta merge. Snapshot of the fixed testing flow: `retell-iac/snapshots/2026-04-09_testing-autolayout-fixed/`.
-- **Rewrite `retell-iac/components/` for the new architecture** — all 19 component JSON files in `retell-iac/components/` describe the legacy `subagent` shape. They do NOT match the current Standard TESTING flow. `build_agent.py` would produce invalid output until the components are rewritten as `code`/`conversation` node bodies. Do not run any IaC rebuild on Standard until this is done.
 - **n8n onboarding naming patch** — Dan to paste 3-line diff into `Build Retell Prompt` code node of workflow `4Hx7aRdzMl5N0uJP`:
   - L25: add `const isDemo = !!data.is_demo;` and `const agentDisplayName = \`${isDemo ? 'Demo' : 'Live'} — ${companyName}\`;`
   - L683: change `agent_name: \`${agentName}\`,` → `agent_name: agentDisplayName,`
+- **Test call on MASTER `+18129944371`** — confirm code-node architecture swap works live. MASTER was rebuilt from byte-identical IaC output on 2026-04-09; testing agent already verified, but the swap is significant enough to warrant one live-call smoke before declaring done.
 
 ## P1
 
 - **Stripe live mode** — add live secret key to vault, create $697/mo live price (test price created: `price_1TK5b1ECS71NQsk8Ru3Gyybl`)
 - **Who's hand-editing MASTER?** — 5 unpublished Retell revisions (v22→v27) accumulated on MASTER despite `retell-iac/CLAUDE.md` Rule 1. Find and close the loophole.
+
+## Completed (2026-04-09 — late session)
+
+- ~~Promote Standard TESTING → MASTER~~ — full architecture swap complete. MASTER flow v28, 19 code/conversation nodes, no `subagent`. Pre-promotion snapshot at `retell-iac/snapshots/2026-04-09_master-pre-promote/` (legacy v27) for rollback. Promote script output and verification in session log.
+- ~~Rewrite `retell-iac/components/` for code-node architecture~~ — `scripts/split_snapshot.py` regenerates template + components + manifest from any live snapshot. Ran against 2026-04-09 testing snapshot; `build_agent.py` output is byte-identical to live. Legacy subagent files archived with `.legacy-subagent-20260409` suffix. `retell-iac/CLAUDE.md` updated.
 
 ## Completed (2026-04-09)
 
