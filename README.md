@@ -22,3 +22,16 @@ syntharra-automations/
 - `syntharra-checkout` — Pricing page + Stripe checkout only (Railway)
 - `syntharra-automations` — All operational automation code (this repo)
 - `syntharra-website` — Public website
+
+## Local Claude plugin launcher
+Use the workspace launcher to start Claude with all local plugins found in `plugins/`.
+
+- `start-claude-with-plugins.ps1` — PowerShell launcher that discovers `.claude-plugin` folders and passes `--plugin-dir` for each one.
+- `start-claude-with-plugins.cmd` — Windows wrapper for double-click or shortcut launch.
+- `.vscode/tasks.json` includes `Start Claude with local plugins` so you can run it from VS Code.
+
+To launch:
+1. Run `start-claude-with-plugins.cmd` from the repo root.
+2. Or use the VS Code task named `Start Claude with local plugins`.
+
+If you start Claude some other way, those local repo plugins will not be loaded automatically unless that process uses this launcher.
