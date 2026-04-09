@@ -10,7 +10,7 @@
 This is the ONLY supported path for creating a new client agent. Any deviation must be documented and approved.
 
 1. **Source of truth** = `retell-iac/` on `main`. Agent flows are built from YAML manifests + JSON templates, never hand-edited in the Retell UI.
-2. **Standard client** → cloned from `agent_4afbfdb3fcb1ba9569353af28d` (Standard MASTER, flow `conversation_flow_34d169608460`, phone `+18129944371`). Promoted 2026-04-09 to the modern code-node architecture — byte-identical to the TESTING snapshot at the time of promotion. TESTING `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270` remains as the authoring surface; clones use MASTER.
+2. **Standard client** → cloned from `agent_4afbfdb3fcb1ba9569353af28d` (Standard MASTER, flow `conversation_flow_34d169608460`, phone `+18129944371`). Promoted 2026-04-09 to modern code-node architecture (19 nodes, byte-identical to TESTING at promotion time). TESTING `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270` is the authoring surface — edit there, then promote to MASTER.
 3. **Premium client** → cloned from `agent_2cffe3d86d7e1990d08bea068f` (Premium MASTER = Premium TESTING, interim. Flow `conversation_flow_2ded0ed4f808`).
 4. **Clone trigger** = Jotform submission → n8n onboarding workflow:
    - Standard: `HVAC AI Receptionist - JotForm Onboarding (Supabase)` (`4Hx7aRdzMl5N0uJP`)
@@ -39,8 +39,8 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 ## Agent Registry
 | Agent | ID | Status |
 |---|---|---|
-| **HVAC Standard TESTING (authoritative — most up-to-date)** | `agent_6e7a2ae03c2fbd7a251fafcd00` | ✅ Current source of truth for Standard. Modern `code`-node architecture. Autolayout + finetune orphan fixed 2026-04-09. Pending promotion to MASTER. |
-| HVAC Standard MASTER (legacy — stale) | `agent_4afbfdb3fcb1ba9569353af28d` | ⚠️ Legacy `subagent` architecture. Last promoted 2026-04-06 (v22). Will be replaced wholesale by TESTING on next promotion. Do not use as clone source. |
+| HVAC Standard TESTING | `agent_6e7a2ae03c2fbd7a251fafcd00` | ✅ Modern `code`-node architecture. Autolayout + finetune orphan fixed 2026-04-09. Promoted to MASTER 2026-04-09 — use as authoring surface for future changes. |
+| **HVAC Standard MASTER (current, code-node arch)** | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ Promoted 2026-04-09 from TESTING. Modern code-node architecture, 19 nodes. Flow `conversation_flow_34d169608460`. Use as clone source for Standard clients. |
 | HVAC Premium (MASTER = TESTING, interim) | `agent_2cffe3d86d7e1990d08bea068f` | ✅ Acting as Premium MASTER until post-launch split. Clone source for Premium clients. |
 | Demo Female / Sophie | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male / Jake | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
@@ -51,7 +51,7 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 | Flow | ID | Bound to |
 |---|---|---|
 | **HVAC Standard TESTING (authoritative)** | `conversation_flow_90da7ca2b270` | Standard TESTING agent `agent_6e7a2ae03c2fbd7a251fafcd00` — the canonical current Standard flow |
-| HVAC Standard MASTER (legacy) | `conversation_flow_34d169608460` | Legacy Standard MASTER — subagent architecture, to be replaced |
+| **HVAC Standard MASTER (current)** | `conversation_flow_34d169608460` | Promoted 2026-04-09. Code-node architecture, byte-identical to TESTING snapshot. |
 | HVAC Standard (OLD TESTING) | `conversation_flow_a54448105a43` | Unbound — old testing agent deleted post-2026-04-06 promotion, do not use |
 | HVAC Premium (MASTER/TESTING) | `conversation_flow_2ded0ed4f808` | Premium MASTER (interim — same agent as TESTING) |
 
