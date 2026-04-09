@@ -93,3 +93,51 @@
   - Extract what you actually need (e.g. a single code-node `jsCode` field) into a focused fixture, then delete the raw dump.
 - `.gitignore` blocks `*_raw.json` and `*.secrets.json` globally. If you name a dump anything else, you are on the hook for it.
 - **Why:** See FAILURES.md 2026-04-09 "stop hook / secrets" — an n8n workflow dump with 32 live credentials nearly hit GitHub via a broken auto-backup hook. The hook has been hardened (branch-gate + `git add -u` + pre-commit secret scan) but the discipline is still yours — belt AND braces.
+
+## 15. HTTP node credential stripping after raw REST PUT
+
+- When a raw `PUT /api/v1/workflows/{id}` patches an n8n workflow, any `credentials` objects on HTTP Request nodes are silently stripped from the returned payload.
+- After any raw PUT, HTTP nodes that need auth must use `authentication: "none"` with hardcoded `headerParameters` (e.g. `Authorization: Bearer <token>` or `apikey: <key>`).
+- Never assume credentials survive a PUT round-trip. Verify by re-fetching and checking `headerParameters` on auth-dependent nodes.
+
+## 16. n8n Supabase GET: always set fullResponse
+
+- When a Supabase REST `GET` returns an empty array (row not found), the HTTP Request node emits **0 items** by default — downstream nodes never execute.
+- Fix: set `options.response.response.fullResponse: true` on every Supabase query node that checks for existence. A 200 + empty body still emits one item with `body: []`, and downstream IF nodes can test `body.length`.
+- After any Supabase query node change, verify the downstream IF/Switch condition handles both the found and not-found paths.
+
+## 17. Never INSERT to client_agents before the Retell agent exists
+
+- `client_agents.agent_id` is NOT NULL. Inserting before `POST /create-agent` returns `agent_id` fails with 400.
+- Pattern: query `hvac_standard_agent` (canonical config row) for the template flow ID → proceed through Retell agent creation → INSERT/UPDATE after Retell returns the new `agent_id`.
+- No optimistic early INSERT — there is no `agent_id` to put there.
+
+## 18. n8n HTTP node: sendHeaders must be explicitly true
+
+- Adding `headerParameters` does **not** send those headers unless `sendHeaders: true` is also set. Default is `false`.
+- After any HTTP Request node add or update involving custom headers (Authorization, apikey, Content-Type), verify `sendHeaders: true` is present.
+- This causes silent 401 / 4xx failures on Retell, Supabase, and Brevo nodes with no UI warning.
+
+## 19. Retell conversation flow field is start_node_id, not starting_node_id
+
+- `POST /create-conversation-flow` and `PATCH /update-conversation-flow/{id}` expect `start_node_id`.
+- `starting_node_id` is silently ignored, resulting in a flow with no entry point that fails at publish.
+- Any build script, Code node, or JSON template assembling a Retell flow must use `start_node_id`.
+
+## 20. Google OAuth email node must guard on integration_type
+
+- The Send Google OAuth Email node must check `integration_type === 'google'` before sending.
+- Without this guard, it fires for every client. Non-Google clients have blank `client_email` → Brevo 400.
+- After any onboarding workflow branch change, verify this guard is present and short-circuits cleanly.
+
+## 21. Email templates must use inline wordmark, not a hosted image
+
+- Never use `<img src="...">` for the Syntharra logo. Hosted images render as broken placeholders in many email clients.
+- Use the inline wordmark: `<p style="font-size:28px;font-weight:900;letter-spacing:6px;color:#ffffff;">SYNTHARRA</p>`.
+- Applies to all onboarding, welcome, and notification emails. Never reference a hosted asset for the logo.
+
+## 22. GitHub MCP 403: mirror-and-instruct is the documented fallback
+
+- When `mcp__*__create_or_update_file` returns `403 Resource not accessible by integration`: (a) retry once from a fresh subagent, (b) use Desktop Commander MCP to push from the local clone, (c) if neither works, mirror changed files + leave a `PUSH_ME.md` one-shot script for the user.
+- Documented in both Rule 4 above and `CLAUDE.md §GitHub MCP 403 fallback`. Keep both in sync.
+- Every 403 incident is logged in FAILURES.md with the exact call and context.

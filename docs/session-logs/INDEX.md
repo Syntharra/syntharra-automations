@@ -15,3 +15,4 @@
 | 2026-04-09 | prompt-compiler-merge | 723b243 | Merged prompt compiler + client-update CLI to main; n8n client-update form queued for next session |
 | 2026-04-09 | client-update-pass2-plan | 493d69b | Oriented session, identified go-live blockers (null webhook + broken billing), wrote 6-task plan for next session |
 | 2026-04-09 | re-register-agents-usage-alert-client-update-smoke | 47c9ecd | Re-registered MASTER+TESTING in Retell, built usage_alert.py, ran client-update workflow builder, smoke-tested update_client_agent.py (fixed 3 prompt_compiler bugs in the process) |
+| 2026-04-09 | agent-prompt-audit | f6b017c | Deep prompt audit: fixed 7 component issues, added vendor/wrong-number edges, hardcoded emergency number bug, all deployed to TESTING+MASTER; n8n workflow updated with same changes + timezone automation for new clients |
