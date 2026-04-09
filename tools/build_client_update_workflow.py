@@ -94,12 +94,10 @@ def build_workflow(build_retell_js: str) -> dict:
     ID_FETCH    = "sb-fetch-row-v1"
     ID_APPLY    = "apply-field-update-v1"
     ID_COMPILE  = "build-retell-prompt-v1"
-    ID_BRANCH   = "preview-branch-v1"
     ID_PATCH    = "retell-patch-flow-v1"
     ID_PUBLISH  = "retell-publish-v1"
     ID_UPDATE   = "sb-update-row-v1"
     ID_RESPOND  = "form-respond-v1"
-    ID_RESPOND_PREVIEW = "form-respond-preview-v1"
 
     field_options = [{"option": f} for f in EDITABLE_FIELDS]
 
@@ -113,9 +111,9 @@ def build_workflow(build_retell_js: str) -> dict:
             "position": [240, 400],
             "parameters": {
                 "formTitle": "Update Client Agent",
-                "formDescription": "Update HVAC Standard agent settings. Changes are applied live immediately (unless Preview mode selected).",
+                "formDescription": "Update HVAC Standard agent settings. Changes are applied to Retell and Supabase immediately.",
                 "path": "client-update",
-                "responseMode": "lastNode",
+                "responseMode": "responseNode",
                 "formFields": {
                     "values": [
                         {
@@ -134,15 +132,6 @@ def build_workflow(build_retell_js: str) -> dict:
                             "fieldLabel": "New Value",
                             "fieldType": "textarea",
                             "placeholder": "Enter the new value",
-                            "requiredField": True,
-                        },
-                        {
-                            "fieldLabel": "Mode",
-                            "fieldType": "dropdown",
-                            "fieldOptions": {"values": [
-                                {"option": "Apply — write changes live"},
-                                {"option": "Preview — show diff only, no writes"},
-                            ]},
                             "requiredField": True,
                         },
                     ]
@@ -190,11 +179,9 @@ if (!rowArray.length) throw new Error('No hvac_standard_agent row found for agen
 const row = rowArray[0];
 const field = formData['Field to Update'];
 const newValue = formData['New Value'];
-const mode = formData['Mode'] || '';
-const isDryRun = mode.startsWith('Preview');
 const oldValue = row[field];
 const updatedRow = { ...row, [field]: newValue };
-return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent_id, flowId: row.conversation_flow_id, isDryRun } }];
+return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent_id, flowId: row.conversation_flow_id } }];
 """.strip(),
             },
         },
@@ -211,51 +198,13 @@ return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent
             },
         },
 
-        # 5 — IF: branch on isDryRun (Preview vs Apply)
-        # true output (index 0) → Preview respond (no writes)
-        # false output (index 1) → PATCH flow
-        {
-            "id": ID_BRANCH,
-            "name": "Preview or Apply?",
-            "type": "n8n-nodes-base.if",
-            "typeVersion": 2,
-            "position": [1120, 400],
-            "parameters": {
-                "conditions": {
-                    "options": {"caseSensitive": True, "leftValue": "", "typeValidation": "strict"},
-                    "conditions": [
-                        {
-                            "id": "preview-check",
-                            "leftValue": "={{ $('Apply Field Update').first().json.isDryRun }}",
-                            "rightValue": True,
-                            "operator": {"type": "boolean", "operation": "true"},
-                        }
-                    ],
-                    "combinator": "and",
-                },
-            },
-        },
-
-        # 6a — Respond: Preview (no writes, shows old/new diff)
-        {
-            "id": ID_RESPOND_PREVIEW,
-            "name": "Respond: Preview",
-            "type": "n8n-nodes-base.respondToWebhook",
-            "typeVersion": 1,
-            "position": [1340, 240],
-            "parameters": {
-                "respondWith": "text",
-                "responseBody": "={{ 'PREVIEW ONLY — No changes made.\\nField: ' + $(\\'Apply Field Update\\').first().json.field + '\\nOld: ' + $(\\'Apply Field Update\\').first().json.oldValue + '\\nNew: ' + $(\\'Apply Field Update\\').first().json.newValue }}",
-            },
-        },
-
-        # 6b — HTTP: PATCH Retell conversation flow (Apply path only)
+        # 5 — HTTP: PATCH Retell conversation flow
         {
             "id": ID_PATCH,
             "name": "Retell: PATCH Flow",
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4,
-            "position": [1340, 560],
+            "position": [1120, 400],
             "parameters": {
                 "method": "PATCH",
                 "url": "={{ 'https://api.retellai.com/update-conversation-flow/' + $('Apply Field Update').first().json.flowId }}",
@@ -277,7 +226,7 @@ return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent
             "name": "Retell: Publish Agent",
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4,
-            "position": [1560, 560],
+            "position": [1340, 400],
             "parameters": {
                 "method": "POST",
                 "url": "={{ 'https://api.retellai.com/publish-agent/' + $('Apply Field Update').first().json.agentId }}",
@@ -295,7 +244,7 @@ return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent
             "name": "Supabase: Update Row",
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4,
-            "position": [1780, 560],
+            "position": [1560, 400],
             "parameters": {
                 "method": "PATCH",
                 "url": f"={SUPABASE_URL}/rest/v1/hvac_standard_agent",
@@ -317,13 +266,13 @@ return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent
             },
         },
 
-        # 9 — Form response (Apply path)
+        # 8 — Form response
         {
             "id": ID_RESPOND,
             "name": "Respond to Form",
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1,
-            "position": [2000, 560],
+            "position": [1780, 400],
             "parameters": {
                 "respondWith": "text",
                 "responseBody": "={{ 'Done. Updated ' + $(\\'Apply Field Update\\').first().json.field + ' on ' + $(\\'Apply Field Update\\').first().json.agentId }}",
@@ -331,21 +280,13 @@ return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent
         },
     ]
 
-    # Connections:
-    # Form → Fetch → Apply → Compile → Branch
-    #   Branch true (index 0) → Respond: Preview
-    #   Branch false (index 1) → PATCH → Publish → Update → Respond to Form
+    # Connections: linear
+    # Form → Fetch → Apply → Compile → PATCH → Publish → Update → Respond
     connections = {
         "Client Update Form":        {"main": [[{"node": "Supabase: Fetch Agent Row",  "type": "main", "index": 0}]]},
         "Supabase: Fetch Agent Row":  {"main": [[{"node": "Apply Field Update",         "type": "main", "index": 0}]]},
         "Apply Field Update":         {"main": [[{"node": "Build Retell Prompt",        "type": "main", "index": 0}]]},
-        "Build Retell Prompt":        {"main": [[{"node": "Preview or Apply?",          "type": "main", "index": 0}]]},
-        "Preview or Apply?": {
-            "main": [
-                [{"node": "Respond: Preview",        "type": "main", "index": 0}],  # true → preview
-                [{"node": "Retell: PATCH Flow",      "type": "main", "index": 0}],  # false → apply
-            ]
-        },
+        "Build Retell Prompt":        {"main": [[{"node": "Retell: PATCH Flow",         "type": "main", "index": 0}]]},
         "Retell: PATCH Flow":         {"main": [[{"node": "Retell: Publish Agent",     "type": "main", "index": 0}]]},
         "Retell: Publish Agent":      {"main": [[{"node": "Supabase: Update Row",      "type": "main", "index": 0}]]},
         "Supabase: Update Row":       {"main": [[{"node": "Respond to Form",           "type": "main", "index": 0}]]},
