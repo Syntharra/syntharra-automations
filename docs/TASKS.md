@@ -15,9 +15,57 @@
 - **Test call on MASTER `+18129944371`** — confirm code-node architecture swap + Call Processor fan-out work live. Validates (a) code-node flow end-to-end, (b) `is_lead`/`urgency`/`is_spam` custom analysis fields populate, (c) Brevo email lands in lead inbox, (d) Slack fan-out skipped cleanly when no webhook present.
 - **Telnyx SMS swap** — once Telnyx AI approval lands, replace the `SMS Stub (Telnyx TODO)` node in HVAC Call Processor with a real HTTP node calling Telnyx messaging API. Stub payload is already built in `Build Payload`.
 
-## P1
+## P1 — 3-tier pricing end-to-end test (next session)
 
-- **Stripe live mode** — add live secret key to vault, create $697/mo live price (test price created: `price_1TK5b1ECS71NQsk8Ru3Gyybl`)
+Run in order. All test-mode. Grab a Stripe test card (4242 4242 4242 4242).
+
+### 1. Checkout page
+- [ ] Visit `syntharra.com/checkout` (or staging URL) — 3 cards render, "Most Popular" on Professional
+- [ ] Monthly/Annual toggle — all 3 cards update prices + annual year totals
+- [ ] Annual prices: Starter $330/mo ($3,967/yr), Pro $581/mo ($6,970/yr), Biz $914/mo ($10,970/yr)
+- [ ] Overage lines: $0.25/min, $0.18/min, $0.12/min
+- [ ] $997 Activation Fee shown on all cards (no crossed-out price)
+- [ ] Enterprise section shows, CTA → `sales@syntharra.com`
+- [ ] CTA on each card fires Stripe checkout (test mode, correct price_id hits `/create-checkout-session`)
+- [ ] Mobile: no horizontal scroll, cards stack cleanly
+
+### 2. Stripe checkout → welcome email
+- [ ] Complete a test checkout for each tier (Starter monthly is fine as a smoke test)
+- [ ] `stripe_payment_data` row appears in Supabase with correct `tier`, `overage_rate`, `minutes`
+- [ ] Welcome email arrives (Brevo) — plan name, minutes, overage rate correct, Jotform link appended `?tier=starter` / `?tier=professional` / `?tier=business`
+
+### 3. Jotform → onboarding workflow
+- [ ] Open Jotform link from welcome email (tier pre-fills if hidden field configured)
+- [ ] Submit form → n8n `4Hx7aRdzMl5N0uJP` fires
+- [ ] `reconcile_jotform_stripe` node finds Stripe record by email, PATCHes `client_subscriptions` with correct tier/overage_rate/billing_cycle
+- [ ] `client_subscriptions` row in Supabase shows correct values
+
+### 4. "You're Live" email
+- [ ] Email sends after onboarding completes
+- [ ] "Your Plan" card shows correct tier name, minutes, overage rate
+- [ ] Starter: no WhatsApp section
+- [ ] Professional/Business: WhatsApp section present (pending WhatsApp number being set)
+
+### 5. Dashboard
+- [ ] `dashboard.html?a=<agent_id>` loads, company info correct
+- [ ] Minutes used / included minutes shown (if populated)
+- [ ] Overage rate visible (if dashboard surfaces it)
+
+### 6. Usage alert
+- [ ] Run `python tools/usage_alert.py` manually against a test subscription
+- [ ] Alert email shows correct `$X.XX/min` overage rate for that tier (not hardcoded 0.18)
+
+### 7. Overage charges
+- [ ] `python tools/monthly_minutes.py` — verify overage calculation uses `client_subscriptions.overage_rate`
+- [ ] Confirm Stripe charge amount matches minutes × rate for the correct tier
+
+### Blockers before test session
+- [ ] **Backend `/create-checkout-session`** — check if it handles `starter_monthly`, `professional_monthly`, `business_monthly`, `starter_annual`, `professional_annual`, `business_annual` plan strings and maps them to the correct Stripe test price IDs. Update if not.
+- [ ] **Jotform hidden `tier` field** — configure in Jotform 260795139953066 so `?tier=X` in the URL pre-fills the submission. Otherwise the onboarding reconcile step can't know the tier from Jotform alone.
+
+## P1 — Stripe live mode
+
+- **Stripe live mode** — provide live secret key, replicate all 7 prices (3 monthly + 3 annual + activation fee) in live mode, update `syntharra_vault` entries and the PLANS map in n8n `xKD3ny6kfHL0HHXq`. Old single-price test ID `price_1TK5b1ECS71NQsk8Ru3Gyybl` is now superseded by the 6 tier-specific test prices in vault.
 - **Who's hand-editing MASTER?** — 5 unpublished Retell revisions (v22→v27) accumulated on MASTER despite `retell-iac/CLAUDE.md` Rule 1. Find and close the loophole.
 
 ## Completed (2026-04-09 — late session, notification + infra pass)

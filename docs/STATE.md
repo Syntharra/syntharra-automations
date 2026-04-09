@@ -98,9 +98,27 @@ Removed the speculative "store everything in Supabase" layer. Retell is the sour
 - Rewrite `retell-iac/components/` for flat `code`-node architecture before any IaC rebuild is possible.
 - Paste Task 4 naming diff into the onboarding workflow.
 
+## 2026-04-09 session — 3-tier pricing system
+
+Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), Professional ($697/mo, 700 min, $0.18/min — hero), Business ($1,097/mo, 1,400 min, $0.12/min). Annual = 2 months free. Flat $997 Activation Fee all tiers.
+
+**What shipped:**
+- **`Syntharra/syntharra-checkout` `public/index.html`** — full 3-tier checkout page (3 cards + Enterprise dark section, monthly/annual toggle, activation fee on all cards, overage rates per card). GitHub SHA `4249ba66`.
+- **Stripe test-mode products/prices** — 3 products (Starter/Professional/Business) + Activation Fee product, 6 subscription prices + 1 one-time price. All IDs stored in `syntharra_vault` (`service_name='Stripe'`, key_type prefixed `prod_` / `price_`).
+- **`client_subscriptions` schema** — added `tier` (text, default 'professional'), `overage_rate` (numeric, default 0.18), `billing_cycle` (text, default 'monthly'), `stripe_price_id` (text).
+- **n8n Stripe webhook `xKD3ny6kfHL0HHXq`** — `handle-checkout-completed` node now maps all 6 price IDs → tier config, saves to `stripe_payment_data`, sends tier-aware welcome email (Brevo), Jotform URL: `form.jotform.com/260795139953066?tier={tier}`.
+- **n8n Onboarding workflow `4Hx7aRdzMl5N0uJP`** — `reconcile_jotform_stripe` node fetches tier/overage_rate/minutes from `stripe_payment_data` by email, then PATCHes `client_subscriptions` with tier data. Defaults to Professional if no Stripe record found.
+- **`tools/usage_alert.py`** — overage rate now dynamic per subscription (was hardcoded 0.18). Reads `tier,overage_rate` from `client_subscriptions`.
+- **`shared/email-templates/youre-live-template.js`** — tier-aware "Your Plan" card showing minutes + overage rate. Conditional WhatsApp support section for Professional/Business (gated on `whatsapp_number` input being set).
+
+**⚠️ All Stripe price IDs are TEST MODE.** Needs live IDs before go-live. See TASKS.md.
+
+**WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
+
 ## What's in flight
 
-- **Stripe live mode** — test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` ($697/mo) created and old prices archived. Live key not yet in vault. P0 blocker pending Dan's timeline.
+- **3-tier pricing — testing** — all backend wired and checkout page live, but untested end-to-end. Full test plan in TASKS.md.
+- **Stripe live mode** — test-mode only. Dan to provide live secret key. All 7 test prices documented in vault. P0 blocker.
 
 ## What's blocked
 
