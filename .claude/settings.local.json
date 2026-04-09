@@ -13,7 +13,24 @@
       "Bash(curl -s -X DELETE https://api.retellai.com/v2/agent/agent_8d49d333da8772174e4eba5d6c -H 'Authorization: Bearer key_0157d9401f66cfa1b51fadc66445' -H 'Content-Type: application/json')",
       "Bash(echo \"exit: $?\")",
       "Bash(curl -s -X POST https://api.retellai.com/publish-agent/agent_b585bac6ef2e169639f552d5d0 -H 'Authorization: Bearer key_0157d9401f66cfa1b51fadc66445' -H 'Content-Type: application/json' -d '{}' -w '\\\\nHTTP_STATUS:%{http_code}')",
-      "Bash(python3 \"C:/Users/danie/AppData/Local/Temp/patch_three_nodes.py\")"
+      "Bash(python3 \"C:/Users/danie/AppData/Local/Temp/patch_three_nodes.py\")",
+      "Bash(python3 \"C:/Users/danie/AppData/Local/Temp/patch_merge_and_publish.py\")",
+      "Bash(python3 -c \"import json,sys; [print\\(e['id'],e['status'],e['startedAt']\\) for e in json.load\\(sys.stdin\\)['data']]\")",
+      "Bash(python3 \"C:/Users/danie/AppData/Local/Temp/patch_final.py\")",
+      "Bash(curl -s \"https://n8n.syntharra.com/healthz\")",
+      "Bash(curl -s 'https://n8n.syntharra.com/api/v1/workflows?limit=1' -H 'X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiODQxMGUzOGEtZmQxOC00YWMxLWJkZDctYWFkYmEwOGI3ZjFhIiwiaWF0IjoxNzc1NTIwOTAxfQ.GRY5cmlsDMiWDVDtxWvbBducCrEk7Vb1Ysbubr0DMuA')",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('n8n version in meta?' , str\\(d\\)[:300]\\)\")",
+      "Bash(python patch_publish_node.py)",
+      "Bash(python verify_publish.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/get_webhook_url.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/test_e2e.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/check_result.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/get_supabase_key.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/patch_status_update.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/test_e2e_2.py)",
+      "Bash(python /c/Users/danie/AppData/Local/Temp/cleanup_test_agents.py)",
+      "Bash(python tools/session_end.py)",
+      "Bash(python tools/session_end.py --topic \"E2E pipeline fix — publish, status update, field mapping\" --summary \"Fixed all onboarding pipeline bugs found during E2E test. Publish Retell Agent converted from Code to HTTP Request node. Pass Through + Update Agent Status nodes added. submission_id reach-back fixed. Jotform rawRequest parsing corrected. 27-node workflow fully passing end-to-end.\")"
     ]
   }
 }

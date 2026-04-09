@@ -5,7 +5,7 @@ _Last updated: 2026-04-09_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-aba04a3 chore(session): auto-backup local changes 2026-04-09
+adfff73 fix(onboarding): E2E pipeline fully working â€” publish, status update, field mapping
 
 ## Go-live checklist
 see docs/TASKS.md

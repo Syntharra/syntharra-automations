@@ -35,7 +35,11 @@
       "Bash(python3 -m pip install requests -q)",
       "Bash(python3 -c \"import requests; print\\('ok'\\)\")",
       "Bash(python tools/analyze_failures.py)",
-      "Bash(python tools/analyze_failures.py --area n8n)"
+      "Bash(python tools/analyze_failures.py --area n8n)",
+      "Bash(npx @claude-flow*)",
+      "Bash(npx claude-flow*)",
+      "Bash(node .claude/*)",
+      "mcp__claude-flow__:*"
     ],
     "additionalDirectories": [
       "C:\\Users\\danie\\AppData\\Local\\Temp"
@@ -100,5 +104,10 @@
         ]
       }
     ]
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_FLOW_V3_ENABLED": "true",
+    "CLAUDE_FLOW_HOOKS_ENABLED": "true"
   }
 }
