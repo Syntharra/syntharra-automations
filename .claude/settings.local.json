@@ -40,7 +40,9 @@
       "mcp__claude_ai_n8n__archive_workflow",
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ls -lt \"C:/Users/danie/.claude/projects/c--Users-danie-Desktop-Syntharra-Cowork-Syntharra-Project-syntharra-automations/\"*.jsonl)",
+      "mcp__claude_ai_Github_MCP__search_repositories"
     ]
   }
 }
