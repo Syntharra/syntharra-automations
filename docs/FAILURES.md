@@ -55,6 +55,42 @@ date | area | what failed | root cause | fix applied | skill updated
 **Fix:** NOT YET FIXED — P0 task logged to migrate key to syntharra_vault
 **Rule:** All API keys, tokens, and credentials must live in syntharra_vault. Zero hardcoded secrets in any workflow or script.
 
+## 2026-04-09 — Parse JotForm Data: all fields empty (rawRequest not parsed)
+**What failed:** All extracted fields (company_name, phones, services, etc.) came through blank despite Jotform sending full form data.
+**Root cause:** `formData = _raw.body || _raw` gives the top-level body where q* fields don't exist. JotForm packs all q* field answers inside `body.rawRequest` as a JSON string. The parse node was never reading it.
+**Fix:** Parse `rawRequest` and merge: `formData = { ...bodyRaw, ...JSON.parse(bodyRaw.rawRequest) }` (Parse JotForm Data v6)
+**Rule:** JotForm webhook data: always parse `body.rawRequest` (JSON string) and spread it on top of `body`. Direct `body.q*` keys are absent or stale fallbacks.
+
+## 2026-04-09 — Phone fields arrive as objects, not strings
+**What failed:** `transfer_phone`, `emergency_phone`, `lead_phone`, `main_phone` all returned as `[object Object]` or empty string.
+**Root cause:** JotForm phone widgets send `{full: '(555) 234-5678'}` objects, not plain strings.
+**Fix:** Added `cleanPhone()` helper: `if (typeof val === 'object' && val.full) return String(val.full).replace(/[^+\d]/g, '')`.
+**Rule:** Any JotForm phone field must be unwrapped via `cleanPhone()`. Never assume a phone value is a string.
+
+## 2026-04-09 — Checkbox fields use wrong key in rawRequest
+**What failed:** `services_offered`, `brands_serviced`, `certifications` all empty despite client filling them in.
+**Root cause:** Multi-select checkbox fields in rawRequest use key `q13_option_` (not `q13_servicesOffered`), `q14_option_` (not `q14_brandsequipmentServiced`), `q29_option_` (not `q29_certifications`). Named keys don't exist in rawRequest.
+**Fix:** Parse using the `q*_option_` key with named-key fallback: `formData['q13_option_'] || formData.q13_servicesOffered`
+**Rule:** JotForm checkbox fields always use the `q{N}_option_` key pattern inside rawRequest. Never rely on the named key.
+
+## 2026-04-09 — submission_id lost at IF branch
+**What failed:** Supabase record written with `submission_id: null` despite successful idempotency insert.
+**Root cause:** The IF node (IF Already Processed) passes through the Query Client Agents HTTP response, which has no `submission_id`. The idempotency node's `submission_id` was not available downstream.
+**Fix:** Merge LLM & Agent Data node reaches back directly via `$('Check Idempotency & Insert (STANDARD)').first().json.submission_id`.
+**Rule:** IF branches drop upstream context — always reach back to the specific node holding the data you need rather than assuming it flows through.
+
+## 2026-04-09 — Query Client Agents URL: literal template expression not evaluated
+**What failed:** Query returned all rows (no filter) or an HTTP error — `submission_id` filter not applied.
+**Root cause:** URL contained `{{ $input.first().json.submission_id }}` as literal text (missing `=` prefix). n8n only evaluates expressions when the field starts with `=`.
+**Fix:** Changed to `={{ 'https://...?submission_id=eq.' + $input.first().json.submission_id + '&select=submission_id' }}`
+**Rule:** n8n expression fields must start with `=`. Without it the curly braces are literal text.
+
+## 2026-04-09 — Publish Retell Agent Code node cannot make HTTP calls
+**What failed:** `_published: false` on every run — Retell agent created but never published.
+**Root cause:** n8n Code nodes cannot make outbound HTTP calls. `$helpers.httpRequest` fails on the empty 200 response body (JSON parse error). `fetch()` is unavailable in the Code node sandbox.
+**Fix:** Converted "Publish Retell Agent" from Code node to HTTP Request node (same type as Create Retell Agent) with `responseFormat: text` to handle empty 200 body. Added "Pass Through Agent Data" Code node after it to forward agent data to downstream nodes (HubSpot, email). Added "Update Agent Status: Active" PATCH node to set Supabase `agent_status = 'active'` after publish.
+**Rule:** Never use a Code node for outbound HTTP. Always use an HTTP Request node. When the response is empty (like Retell publish), set `options.response.response.responseFormat: 'text'` to avoid JSON parse failures.
+
 ## 2026-04-08 — Standard MASTER auto-layout blocked by phantom component
 **What failed:** Retell canvas "Auto Layout" button threw an error on the Standard MASTER flow, blocking canvas operations
 **Root cause:** The flow's components[] array contained a blank inline component (cf-component-1774923921746, name "Component L1") with literal Retell placeholder text "Describe what the AI should say or do" — never filled in, never referenced by any node. Retell requires all components to be in a complete state before Auto Layout can run.

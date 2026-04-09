@@ -156,7 +156,8 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 - **Always publish after any workflow edit**
 - **n8n PUT payload fields:** only `name`, `nodes`, `connections`, `settings` (only `executionOrder` inside settings) — extra fields cause 400 errors
 - All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
-- **n8n Code nodes do NOT support `fetch()` or `$http`** — use Code node (build body) + HTTP Request node (fire call)
+- **n8n Code nodes cannot make outbound HTTP calls** — `fetch()`, `$helpers.httpRequest`, and `this.helpers.httpRequest` all fail. Always use an HTTP Request node for any outbound call.
+- When an HTTP Request node returns an empty body (e.g. Retell publish returns 200 with no body), set `options.response.response.responseFormat: 'text'` to prevent JSON parse errors.
 
 ### Email Routing
 | Type | To |
@@ -177,51 +178,81 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 
 **Use REST API directly — do NOT use MCP OAuth connector (broken).**
 
-### Jotform → Supabase Column Mapping (all 40+ fields)
+### Jotform Webhook — How Data Arrives (CRITICAL — read before touching Parse node)
 
-| Supabase Column | Jotform Key |
-|---|---|
-| `company_name` | `q4_hvacCompany` |
-| `owner_name` | `q54_ownerName` |
-| `client_email` | `q5_emailAddress` |
-| `company_phone` | `q6_mainCompany` |
-| `website` | `q7_companyWebsite` |
-| `years_in_business` | `q8_yearsIn` |
-| `timezone` | `q34_timezone` |
-| `agent_name` | `q10_aiAgent10` |
-| `custom_greeting` | `q38_customGreeting` |
-| `services_offered` | `q13_servicesOffered` |
-| `brands_serviced` | `q14_brandsequipmentServiced` |
-| `service_area` | `q16_primaryService` |
-| `service_area_radius` | `q40_serviceAreaRadius` |
-| `certifications` | `q29_certifications` |
-| `emergency_service` | `q20_247Emergency` |
-| `emergency_phone` | `q21_emergencyAfterhours` |
-| `business_hours` | `q17_businessHours` |
-| `pricing_policy` | `q42_pricingPolicy` |
-| `diagnostic_fee` | `q41_diagnosticFee` |
-| `financing_available` | `q25_financingAvailable` |
-| `warranty` | `q26_serviceWarranties` |
-| `payment_methods` | `q45_paymentMethods` |
-| `maintenance_plans` | `q46_maintenancePlans` |
-| `membership_program` | `q58_membershipProgramName` |
-| `lead_contact_method` | `q31_leadContact` |
-| `lead_phone` | `q32_leadNotification` |
-| `lead_email` | `q33_leadNotification33` |
-| `notification_email_2` | `q66_notifEmail2` |
-| `notification_email_3` | `q67_notifEmail3` |
-| `notification_sms_2` | `q64_notifSms2` |
-| `notification_sms_3` | `q65_notifSms3` |
-| `transfer_phone` | `q48_transferPhone` |
-| `transfer_triggers` | `q49_transferTriggers` |
-| `google_review_rating` | `q55_googleReviewRating` |
-| `google_review_count` | `q56_googleReviewCount` |
-| `unique_selling_points` | `q51_uniqueSellingPoints` |
-| `current_promotion` | `q52_currentPromotion` |
-| `do_not_service` | `q57_doNotServiceList` |
-| `additional_info` | `q37_additionalInfo` |
-| `agent_id` | Retell API response |
-| `conversation_flow_id` | Retell API response |
+JotForm sends a POST with all q* field answers packed inside `body.rawRequest` as a **JSON string**.
+Direct `body.q*` keys are absent or stale. The Parse node must:
+1. Read `body.rawRequest`
+2. `JSON.parse()` it
+3. Spread the result on top of body: `formData = { ...body, ...JSON.parse(body.rawRequest) }`
+
+**Phone fields** arrive as objects: `{ full: '(555) 234-5678' }` — NOT strings.
+Use `cleanPhone()`: `if (typeof val === 'object' && val.full) return val.full.replace(/[^+\d]/g, '')`.
+
+**Checkbox fields** use the `q{N}_option_` key pattern inside rawRequest (NOT the named key).
+- `services_offered` → key is `q13_option_` (NOT `q13_servicesOffered`)
+- `brands_serviced`  → key is `q14_option_` (NOT `q14_brandsequipmentServiced`)
+- `certifications`   → key is `q29_option_` (NOT `q29_certifications`)
+Code: `formData['q13_option_'] || formData.q13_servicesOffered` (fallback for safety)
+
+### Jotform → Supabase Column Mapping
+
+| Supabase Column | rawRequest Key | Notes |
+|---|---|---|
+| `company_name` | `q4_hvacCompany` | |
+| `owner_name` | `q54_ownerName` | |
+| `client_email` | `q5_emailAddress` | |
+| `main_phone` | `q6_mainCompany` | phone object → `cleanPhone()` |
+| `website` | `q7_companyWebsite` | |
+| `years_in_business` | `q8_yearsIn` | |
+| `timezone` | `q34_timezone` | default `America/Chicago` |
+| `agent_name` | `q10_aiAgent10` | |
+| `voice_gender` | `q11_aiVoice` | default `Female` |
+| `custom_greeting` | `q73_customGreetingText` OR `q38_customGreeting` | try q73 first |
+| `services_offered` | **`q13_option_`** (checkbox) | NOT `q13_servicesOffered` |
+| `brands_serviced` | **`q14_option_`** (checkbox) | NOT `q14_brandsequipmentServiced` |
+| `certifications` | **`q29_option_`** (checkbox) | NOT `q29_certifications` |
+| `service_area` | `q16_primaryService` | |
+| `service_area_radius` | `q40_serviceAreaRadius` | |
+| `licensed_insured` | `q28_licensedAnd` | default `Yes` |
+| `emergency_service` | `q20_247Emergency` | default `No` |
+| `emergency_phone` | `q21_emergencyAfterhours` | phone object → `cleanPhone()` |
+| `after_hours_behavior` | `q22_afterhoursBehavior` | |
+| `after_hours_transfer` | `q68_afterHoursTransfer` | |
+| `business_hours` | `q17_businessHours` | |
+| `response_time` | `q18_typicalResponse` | |
+| `pricing_policy` | `q42_pricingPolicy` | |
+| `diagnostic_fee` | `q41_diagnosticFee` | |
+| `standard_fees` | `q43_standardFees` | |
+| `free_estimates` | `q24_freeEstimates` | default `Yes - always free` |
+| `do_not_service` | `q57_doNotServiceList` | |
+| `transfer_phone` | `q48_transferPhone` | phone object → `cleanPhone()` |
+| `transfer_triggers` | `q49_transferTriggers` | |
+| `transfer_behavior` | `q50_transferBehavior` | |
+| `financing_available` | `q25_financingAvailable` | default `No` |
+| `financing_details` | `q44_financingDetails` | |
+| `warranty` | `q26_serviceWarranties` | default `Yes` |
+| `warranty_details` | `q27_warrantyDetails` | |
+| `payment_methods` | `q45_paymentMethods` | |
+| `maintenance_plans` | `q46_maintenancePlans` | default `No` |
+| `membership_program` | `q58_membershipProgramName` | |
+| `lead_contact_method` | `q31_leadContact` | default `Both` |
+| `lead_phone` | `q32_leadNotification` | phone object → `cleanPhone()` |
+| `lead_email` | `q33_leadNotification33` | |
+| `notification_email_2` | `q66_notifEmail2` | |
+| `notification_email_3` | `q67_notifEmail3` | |
+| `notification_sms_2` | `q64_notifSms2` | phone object → `cleanPhone()` |
+| `notification_sms_3` | `q65_notifSms3` | phone object → `cleanPhone()` |
+| `google_review_rating` | `q55_googleReviewRating` | |
+| `google_review_count` | `q56_googleReviewCount` | |
+| `unique_selling_points` | `q51_uniqueSellingPoints` | |
+| `current_promotion` | `q52_currentPromotion` | |
+| `seasonal_services` | `q53_seasonalServices` | |
+| `additional_info` | `q37_additionalInfo` | |
+| `stripe_customer_id` | `stripe_customer_id` | top-level body field |
+| `submission_id` | `submissionID` / `submission_id` / `submission` | top-level body; also in rawRequest |
+| `agent_id` | Retell API response | |
+| `conversation_flow_id` | Retell API response | |
 
 ---
 
