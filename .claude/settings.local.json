@@ -49,7 +49,8 @@
       "Bash(git -C \"C:/Users/danie/AppData/Local/Temp/website-redesign\" -c user.email=\"noreply@syntharra.com\" -c user.name=\"Syntharra\" commit -m \"redesign\\(dashboard\\): full v2 — a11y, dark mode, sentiment, CSV export, virtualisation, URL sanitization\")",
       "Bash(git -C \"C:/Users/danie/AppData/Local/Temp/website-redesign\" push -u origin dashboard-redesign)",
       "mcp__claude_ai_Github_MCP__create_pull_request",
-      "Bash(gh pr create -R Syntharra/syntharra-website -H dashboard-redesign -B main --title 'redesign\\(dashboard\\): full v2 — a11y, dark mode, sentiment, CSV, virtualisation' --body ':*)"
+      "Bash(gh pr create -R Syntharra/syntharra-website -H dashboard-redesign -B main --title 'redesign\\(dashboard\\): full v2 — a11y, dark mode, sentiment, CSV, virtualisation' --body ':*)",
+      "mcp__claude_ai_Supabase_2__list_tables"
     ]
   }
 }
