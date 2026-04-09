@@ -2,7 +2,43 @@
   "permissions": {
     "allow": [
       "Bash(python3 -)",
-      "Bash(python3 _archive_move.py)"
+      "Bash(python3 _archive_move.py)",
+      "Bash(python3 -c ':*)",
+      "Bash(python tools/session_start.py --topic lean-strip-single-product --summary \"Lean strip: 391 files archived, retell-iac Standard-only, dashboard rebuilt Retell-native, CLAUDE.md+docs updated for single product at 697/mo\")",
+      "mcp__claude_ai_Jotform__search",
+      "mcp__claude_ai_Stripe__list_products",
+      "mcp__claude_ai_n8n__search_workflows",
+      "mcp__claude_ai_Stripe__list_prices",
+      "mcp__claude_ai_n8n__get_workflow_details",
+      "mcp__claude_ai_Stripe__stripe_api_execute",
+      "mcp__claude_ai_Stripe__stripe_api_search",
+      "mcp__claude_ai_Stripe__retrieve_balance",
+      "mcp__claude_ai_Stripe__stripe_api_details",
+      "mcp__claude_ai_Jotform__fetch",
+      "mcp__claude_ai_n8n__get_sdk_reference",
+      "mcp__claude_ai_n8n__get_node_types",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_n8n__validate_workflow",
+      "mcp__claude_ai_n8n__create_workflow_from_code",
+      "mcp__claude_ai_n8n__publish_workflow",
+      "Bash(curl -s -X POST https://n8n.syntharra.com/webhook/retell-calls -H 'Content-Type: application/json' -d '{\"agent_id\":\"agent_4afbfdb3fcb1ba9569353af28d\"}')",
+      "Bash(curl -s -X POST https://n8n.syntharra.com/webhook/retell-calls -H \"Content-Type: application/json\" -d \"{\\\\\"agent_id\\\\\":\\\\\"agent_4afbfdb3fcb1ba9569353af28d\\\\\"}\")",
+      "mcp__claude_ai_n8n__update_workflow",
+      "mcp__claude_ai_Supabase__get_publishable_keys",
+      "mcp__claude_ai_Supabase_2__execute_sql",
+      "Bash(python3 -c \"import json,sys; files=[f['name'] for f in json.load\\(sys.stdin\\) if isinstance\\(f,dict\\)]; print\\('\\\\n'.join\\(sorted\\(files\\)\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; wf=json.load\\(sys.stdin\\); print\\(wf.get\\('name','?'\\)\\); nodes=wf.get\\('nodes',[]\\); print\\(f'Nodes: {len\\(nodes\\)}'\\); [print\\(f\\\\\"  {n['id'][:8]} | {n['type'].split\\('.'\\)[-1][:30]} | {n.get\\('name',''\\)[:50]}\\\\\"\\) for n in nodes]\")",
+      "Bash(curl -s https://n8n.syntharra.com/api/v1/workflows/4Hx7aRdzMl5N0uJP -H 'X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiODQxMGUzOGEtZmQxOC00YWMxLWJkZDctYWFkYmEwOGI3ZjFhIiwiaWF0IjoxNzc1NTIwOTAxfQ.GRY5cmlsDMiWDVDtxWvbBducCrEk7Vb1Ysbubr0DMuA')",
+      "Read(//c/Users/danie/**)",
+      "Bash(python3 -c \"import json,sys,base64; d=json.load\\(sys.stdin\\); c=base64.b64decode\\(d['content']\\).decode\\(\\); print\\('SHA:',d['sha']\\); print\\(c[:6000]\\)\")",
+      "Bash(python3 -c \"import json,sys,base64; d=json.load\\(sys.stdin\\); c=base64.b64decode\\(d['content']\\).decode\\(\\); open\\('C:/Users/danie/AppData/Local/Temp/plan-quiz.html','w',encoding='utf-8'\\).write\\(c\\); print\\('SHA:',d['sha']\\); print\\('Len:',len\\(c\\)\\)\")",
+      "Bash(python3 -m pip install requests -q)",
+      "Bash(python3 -c \"import requests; print\\('ok'\\)\")",
+      "Bash(python tools/analyze_failures.py)",
+      "Bash(python tools/analyze_failures.py --area n8n)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\danie\\AppData\\Local\\Temp"
     ]
   },
   "hooks": {
@@ -23,11 +59,33 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "bash",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "python3 .claude/hooks/post_n8n_webhook.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_bash_failure.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_edit_failures.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_edit_failures.py"
           }
         ]
       }
