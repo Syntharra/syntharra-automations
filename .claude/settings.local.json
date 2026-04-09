@@ -30,7 +30,8 @@
       "Bash(python /c/Users/danie/AppData/Local/Temp/test_e2e_2.py)",
       "Bash(python /c/Users/danie/AppData/Local/Temp/cleanup_test_agents.py)",
       "Bash(python tools/session_end.py)",
-      "Bash(python tools/session_end.py --topic \"E2E pipeline fix — publish, status update, field mapping\" --summary \"Fixed all onboarding pipeline bugs found during E2E test. Publish Retell Agent converted from Code to HTTP Request node. Pass Through + Update Agent Status nodes added. submission_id reach-back fixed. Jotform rawRequest parsing corrected. 27-node workflow fully passing end-to-end.\")"
+      "Bash(python tools/session_end.py --topic \"E2E pipeline fix — publish, status update, field mapping\" --summary \"Fixed all onboarding pipeline bugs found during E2E test. Publish Retell Agent converted from Code to HTTP Request node. Pass Through + Update Agent Status nodes added. submission_id reach-back fixed. Jotform rawRequest parsing corrected. 27-node workflow fully passing end-to-end.\")",
+      "Bash(python tools/session_end.py --topic \"plugin-inquiry\" --summary \"User asked about Claude Code plugins. Explained MCP servers, skills, and hooks as the extension mechanisms. No code changes.\")"
     ]
   }
 }
