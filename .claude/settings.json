@@ -100,5 +100,20 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_FLOW_V3_ENABLED": "true",
     "CLAUDE_FLOW_HOOKS_ENABLED": "true"
+  },
+  "extraKnownMarketplaces": {
+    "local-plugins": {
+      "source": "directory",
+      "path": "plugins"
+    }
+  },
+  "enabledPlugins": {
+    "banana-claude-main@local-plugins": true,
+    "chrome-devtools-mcp-main@local-plugins": true,
+    "deep-implement-main@local-plugins": true,
+    "excalidraw-diagram-skill-main@local-plugins": true,
+    "get-shit-done-main@local-plugins": true,
+    "humanizer-main@local-plugins": true,
+    "notebooklm-skill-master@local-plugins": true
   }
 }
