@@ -2,42 +2,74 @@
   "body": {
     "finetune_transition_examples": [
       {
-        "destination_node_id": "node-callback",
-        "id": "ft-callback",
+        "destination_node_id": "node-call-style-detector",
+        "id": "fe-service",
         "transcript": [
           {
-            "content": "Yeah I just missed a call from this number\nSomeone called me from here\nI am calling back",
+            "content": "My AC isn't working\nI need a repair\nI need a tune-up\nI need maintenance\nI need an installation quote\nI want my system checked",
             "role": "user"
+          },
+          {
+            "content": "I can help with that",
+            "role": "agent"
           }
         ]
       },
       {
         "destination_node_id": "node-verify-emergency",
-        "id": "ft-emergency",
+        "id": "fe-emergency",
         "transcript": [
           {
-            "content": "My AC stopped working completely\nNo air coming out at all\nI smell something burning\nThere is water leaking everywhere",
+            "content": "no cooling\nno heating\nsystem not working\nwater leaking\nburning smell\nI smell gas\nurgent repair",
+            "role": "user"
+          }
+        ]
+      },
+      {
+        "destination_node_id": "node-callback",
+        "id": "fe-callback",
+        "transcript": [
+          {
+            "content": "I missed a call from this number\nSomeone called me from here\nI am calling back",
+            "role": "user"
+          }
+        ]
+      },
+      {
+        "destination_node_id": "node-existing-customer",
+        "id": "fe-existing",
+        "transcript": [
+          {
+            "content": "calling about my appointment\nwhere is the technician\nquestion about my invoice\ncalling about my quote",
             "role": "user"
           }
         ]
       },
       {
         "destination_node_id": "node-transfer-call",
-        "id": "ft-transfer",
+        "id": "fe-transfer-live",
         "transcript": [
           {
-            "content": "Can I speak to someone\nI want a real person\nLet me talk to the manager",
+            "content": "Let me speak to someone\nI want to talk to a real person\nCan I speak to a human\nI want to talk to the manager",
+            "role": "user"
+          }
+        ]
+      },
+      {
+        "destination_node_id": "node-spam-robocall",
+        "id": "fe-spam",
+        "transcript": [
+          {
+            "content": "Hello\nHello\nHello",
             "role": "user"
           }
         ]
       }
     ],
     "instruction": {
-      "text": "Route to appropriate handler based on call reason",
+      "text": "Listen and identify the reason for the call. Route to the correct node immediately without asking unnecessary questions.\n\n## ROUTING PRIORITY \u2014 Check in this order BEFORE anything else\n\n0. VENDOR / SUPPLIER / JOB APPLICANT: Caller identifies as a parts supplier, vendor, sales rep, recruiter, or job applicant \u2192 route to spam_robocall immediately. Do NOT collect lead details.\n\n1. SPAM/ROBOCALL: Caller sounds automated, offers prizes, asks about insurance claims, mentions loans, surveys, or is clearly not a real customer seeking HVAC service \u2192 route to spam_robocall immediately.\n\n2. EMERGENCY: Caller mentions ANY of the following \u2192 route to verify_emergency IMMEDIATELY. Do NOT go to node-fallback-leadcapture first:\n   - No heat in cold/freezing weather\n   - No cooling in extreme heat\n   - Burning smell or smoke\n   - Gas smell\n   - Carbon monoxide or CO alarm\n   - Water leak from unit\n   - System completely stopped with safety concern\n\n3. LIVE PERSON REQUEST: Caller says \"I want to speak to a real person / someone / the owner / a human / the manager\" \u2192 route to Transfer Call immediately. Do NOT collect any information first.\n\n4. SIMPLE QUESTION (FAQ): Caller only wants to know hours, location, service area, pricing, or has a general question with no booking intent \u2192 route to general_questions. Do NOT push into node-fallback-leadcapture.\n\n5. CALLBACK RETURN: Caller says \"someone called me\", \"I'm returning a call\", \"I missed a call from this number\" \u2192 route to callback_node.\n\n6. EXISTING CUSTOMER / REPEAT CALLER: Caller has a question about an existing job, appointment, invoice, or technician \u2014 OR caller says they have called before or already provided their details \u2192 route to existing_customer_node. Do NOT ask them to repeat details already given.\n\n7. ALL OTHER requests (repair, service, installation, maintenance, quote, new booking) \u2192 route to node-fallback-leadcapture.\n\n8. WRONG NUMBER: Caller clearly has the wrong number \u2192 say: \"I'm sorry, it looks like you may have the wrong number. You've reached the HVAC team. For other businesses try Google or dial 411.\" Then route to ending.",
       "type": "prompt"
-    }
-  },
-  "name": "identify_call_node",
-  "node_type": "subagent",
-  "source_component_id": "conversation_flow_component_ebac0db129f3"
+    },
+    "start_speaker": "agent"
+  }
 }

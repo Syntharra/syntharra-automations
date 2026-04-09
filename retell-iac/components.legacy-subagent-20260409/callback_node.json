@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Callback handler for return calls from leads",
+      "type": "prompt"
+    }
+  },
+  "name": "callback_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_ab7909b654e2"
+}

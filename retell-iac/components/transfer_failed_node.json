@@ -1,11 +1,8 @@
 {
   "body": {
     "instruction": {
-      "text": "Transfer failure fallback handler",
+      "text": "Say: \"I'm sorry, I wasn't able to connect you right now. Let me take your details and have someone call you back as soon as possible.\"\n\nCollect name and callback number only (do NOT re-ask if already provided).\n\u26a0\ufe0f SCRIPTED CLOSE \u2014 USE EXACT WORDS: \"Perfect, I've got your details noted. Someone from our team will call you back shortly.\"\nThen route to ending. Do NOT restart the flow.",
       "type": "prompt"
     }
-  },
-  "name": "transfer_failed_node",
-  "node_type": "subagent",
-  "source_component_id": "conversation_flow_component_335da5e7364e"
+  }
 }

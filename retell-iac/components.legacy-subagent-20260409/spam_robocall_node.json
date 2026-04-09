@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Spam and robocall detection",
+      "type": "prompt"
+    }
+  },
+  "name": "spam_robocall_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_2cc95ba461b7"
+}

@@ -1,0 +1,12 @@
+{
+  "body": {
+    "global_node_setting": {
+      "condition": "The caller describes a dangerous, life-threatening, or urgent safety situation such as a gas leak, flooding, fire, no heat in freezing conditions, electrical sparks, or carbon monoxide. Only trigger for genuine safety emergencies, not for routine urgent repairs.",
+      "cool_down": 3
+    },
+    "instruction": {
+      "text": "The caller has described what sounds like an emergency. Follow the two-step urgency sequence: Step 1: Ask 'Is the system completely down or is there any immediate danger like a gas smell, water flooding, or smoke?' Step 2: Based on their response, either transfer to emergency line or route to priority lead capture.",
+      "type": "prompt"
+    }
+  }
+}

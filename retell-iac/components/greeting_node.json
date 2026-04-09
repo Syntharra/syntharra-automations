@@ -1,0 +1,8 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Thank you for calling Apex Comfort HVAC, this is Sophie, how can I help you today?",
+      "type": "static_text"
+    }
+  }
+}

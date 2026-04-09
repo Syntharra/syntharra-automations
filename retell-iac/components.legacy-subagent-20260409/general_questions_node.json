@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "FAQ handler for general questions",
+      "type": "prompt"
+    }
+  },
+  "name": "general_questions_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_d46848148d1d"
+}

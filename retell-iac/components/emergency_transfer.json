@@ -1,0 +1,20 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Say: \"I am transferring you to our emergency line now. The number is 8129944371 in case we get disconnected. Stay on the line.\" Then transfer immediately.",
+      "type": "prompt"
+    },
+    "transfer_destination": {
+      "number": "+18129944371",
+      "type": "predefined"
+    },
+    "transfer_option": {
+      "enable_bridge_audio_cue": true,
+      "type": "warm_transfer",
+      "warm_transfer_option": {
+        "prompt": "You are now speaking to the emergency team, NOT the caller. This is an EMERGENCY call. Briefly state: the caller's name, the emergency type (gas leak, flooding, no heat/cooling, etc), and their phone number if collected. Be direct and urgent.",
+        "type": "prompt"
+      }
+    }
+  }
+}

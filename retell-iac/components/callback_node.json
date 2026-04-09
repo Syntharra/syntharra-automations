@@ -1,11 +1,8 @@
 {
   "body": {
     "instruction": {
-      "text": "Callback handler for return calls from leads",
+      "text": "The caller is returning a missed call.\n\nSay: \"Thanks for calling back! We may have been trying to reach you about a service enquiry.\"\n\nAsk: \"Do you know what it was regarding?\" \u2014 if they volunteer a service need, great. Do NOT probe with follow-up service questions if they say they don't know or give a vague answer. Simply confirm their details and close.\n\nThen collect:\n1. Full name (first and last)\n2. Confirm their number: \"Is the best number to reach you still the one you're calling from?\"\n\nIf they describe a new service need: route to node-fallback-leadcapture to attempt capture.\n\nClose: \"Perfect, I have let the team know you called and someone will be in touch shortly.\"",
       "type": "prompt"
     }
-  },
-  "name": "callback_node",
-  "node_type": "subagent",
-  "source_component_id": "conversation_flow_component_ab7909b654e2"
+  }
 }

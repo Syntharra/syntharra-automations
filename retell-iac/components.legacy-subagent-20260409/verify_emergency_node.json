@@ -1,0 +1,11 @@
+{
+  "body": {
+    "instruction": {
+      "text": "Emergency verification node for urgent HVAC issues",
+      "type": "prompt"
+    }
+  },
+  "name": "verify_emergency_node",
+  "node_type": "subagent",
+  "source_component_id": "conversation_flow_component_174275fc7751"
+}

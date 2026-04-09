@@ -1,0 +1,8 @@
+{
+  "body": {
+    "instruction": {
+      "text": "End the call warmly.",
+      "type": "prompt"
+    }
+  }
+}
