@@ -5,7 +5,7 @@ _Last updated: 2026-04-09_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-9d9e5cc feat(dashboard): rebuild as lean Retell-native lead capture view
+aba04a3 chore(session): auto-backup local changes 2026-04-09
 
 ## Go-live checklist
 see docs/TASKS.md

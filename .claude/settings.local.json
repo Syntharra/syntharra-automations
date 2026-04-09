@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(python tools/session_start.py)",
-      "mcp__claude_ai_Github_MCP__get_file_contents"
+      "mcp__claude_ai_Github_MCP__get_file_contents",
+      "Bash(python tools/session_end.py --topic agentic-self-improvement --summary \"Built fully agentic loop: memory system, self-improvement skill, failure analyzer, hooks \\(bash-failure, edit-failures auto-memory, stop auto-push fix\\), weekly remote agent, session_end.py\")"
     ]
   }
 }

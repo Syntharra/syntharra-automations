@@ -9,3 +9,4 @@
 | email-fixes-2026-04-08 | 2026-04-08 | Email variable fixes, template cleanup, agent renaming, flow fixes, E2E 73/73 both |
 | 2026-04-09 | lean-strip-single-product | 51d7338 | Lean strip: 391 files archived, retell-iac Standard-only, dashboard rebuilt Retell-native, CLAUDE.md+docs updated for single product at $697/mo |
 | 2026-04-09 | p1-cleanup-single-product | pending | P1 cleanup: plan-quiz.html → single product $697/mo; Premium onboarding deactivated; Brevo key vaulted in both email nodes; welcome email tier language removed |
+| 2026-04-09 | agentic-self-improvement | aba04a3 | Built fully agentic loop: memory system, self-improvement skill, failure analyzer, hooks (bash-failure, edit-failures auto-memory, stop auto-push fix), weekly remote agent, session_end.py |
