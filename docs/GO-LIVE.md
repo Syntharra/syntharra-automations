@@ -10,6 +10,7 @@
 - [ ] **Stripe live mode** — add live secret key to vault, swap test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` for live equivalent. See TASKS.md P1.
 - [ ] **MASTER phone number bound** — `+18129944371` must be bound to MASTER agent in Retell dashboard (Manage > Phone Numbers). ⚠️ Dan action required.
 - [ ] **Test call on MASTER** — dial `+18129944371`, confirm: code-node flow end-to-end, `is_lead`/`urgency`/`is_spam` custom analysis fields populate, Brevo email lands in lead inbox, Slack fan-out skipped cleanly when no webhook present.
+- [ ] **Stripe webhook signature verification** — `Verify Stripe Signature` node is bypassed (test-only). Before go-live: set `NODE_FUNCTION_ALLOW_BUILTIN=crypto` in Railway n8n env vars, then restore full HMAC verification in workflow `xKD3ny6kfHL0HHXq`. Secret already in vault (`Stripe / webhook_signing_secret`).
 
 ---
 

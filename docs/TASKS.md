@@ -60,8 +60,8 @@ Run in order. All test-mode. Grab a Stripe test card (4242 4242 4242 4242).
 - [ ] Confirm Stripe charge amount matches minutes × rate for the correct tier
 
 ### Blockers before test session
-- [ ] **Backend `/create-checkout-session`** — check if it handles `starter_monthly`, `professional_monthly`, `business_monthly`, `starter_annual`, `professional_annual`, `business_annual` plan strings and maps them to the correct Stripe test price IDs. Update if not.
-- [ ] **Jotform hidden `tier` field** — configure in Jotform 260795139953066 so `?tier=X` in the URL pre-fills the submission. Otherwise the onboarding reconcile step can't know the tier from Jotform alone.
+- [x] **Backend `/create-checkout-session`** — ✅ verified 2026-04-09: handles all 6 plan strings, price IDs match n8n PLANS map exactly.
+- [x] **Jotform hidden `tier` field** — ✅ done 2026-04-09: field `tier` (qid 77) set to hidden, pre-fills from `?tier=X` URL param.
 
 ## P1 — Stripe live mode
 
