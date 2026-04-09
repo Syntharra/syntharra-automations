@@ -57,7 +57,9 @@
       "Bash(curl -s -H \"Authorization: Bearer key_0157d9401f66cfa1b51fadc66445\" \"https://api.retellai.com/get-agent/agent_4afbfdb3fcb1ba9569353af28d\" -o \"C:/Users/danie/AppData/Local/Temp/master_agent.json\")",
       "Bash(curl -s -H \"Authorization: Bearer key_0157d9401f66cfa1b51fadc66445\" \"https://api.retellai.com/get-conversation-flow/conversation_flow_b0f2cf9a0e58\" -o \"C:/Users/danie/AppData/Local/Temp/clone_flow.json\")",
       "Bash(curl -s -H \"Authorization: Bearer key_0157d9401f66cfa1b51fadc66445\" \"https://api.retellai.com/get-agent/agent_201b8d1e9eee10303e79710bc9\" -o \"C:/Users/danie/AppData/Local/Temp/clone_agent.json\")",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('agent_id:',d.get\\('agent_id'\\)\\); print\\('agent_name:',d.get\\('agent_name'\\)\\); print\\('version:',d.get\\('version'\\)\\); print\\('is_published:',d.get\\('is_published'\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('agent_id:',d.get\\('agent_id'\\)\\); print\\('agent_name:',d.get\\('agent_name'\\)\\); print\\('version:',d.get\\('version'\\)\\); print\\('is_published:',d.get\\('is_published'\\)\\)\")",
+      "Bash(curl -s -X POST -H \"Authorization: Bearer key_0157d9401f66cfa1b51fadc66445\" -H \"Content-Type: application/json\" --data @\"C:/Users/danie/AppData/Local/Temp/clone_flow_payload.json\" \"https://api.retellai.com/create-conversation-flow\" -o \"C:/Users/danie/AppData/Local/Temp/new_clone_flow.json\")",
+      "Bash(curl -s -H \"Authorization: Bearer key_0157d9401f66cfa1b51fadc66445\" \"https://api.retellai.com/get-agent/agent_1d8d85fd2c1c21ede61c68b88c\")"
     ]
   }
 }
