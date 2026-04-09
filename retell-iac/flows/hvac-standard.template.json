@@ -92,10 +92,26 @@
           }
         },
         {
+          "destination_node_id": "node-ending",
+          "id": "edge-to-vendor-deflect",
+          "transition_condition": {
+            "prompt": "Vendor, supplier, recruiter, job applicant, or sales rep calling about business or employment",
+            "type": "prompt"
+          }
+        },
+        {
+          "destination_node_id": "node-ending",
+          "id": "edge-to-wrong-number",
+          "transition_condition": {
+            "prompt": "Caller has the wrong number or wrong business",
+            "type": "prompt"
+          }
+        },
+        {
           "destination_node_id": "node-spam-robocall",
           "id": "edge-to-spam",
           "transition_condition": {
-            "prompt": "Robocall, spam, automated message, silence after greeting",
+            "prompt": "Robocall, automated message, recorded message, prize or survey call, silence after greeting",
             "type": "prompt"
           }
         }

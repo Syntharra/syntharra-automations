@@ -1,7 +1,7 @@
 {
   "body": {
     "instruction": {
-      "text": "The caller is returning a missed call.\n\nSay: \"Thanks for calling back! We may have been trying to reach you about a service enquiry.\"\n\nAsk: \"Do you know what it was regarding?\" \u2014 if they volunteer a service need, great. Do NOT probe with follow-up service questions if they say they don't know or give a vague answer. Simply confirm their details and close.\n\nThen collect:\n1. Full name (first and last)\n2. Confirm their number: \"Is the best number to reach you still the one you're calling from?\"\n\nIf they describe a new service need: route to node-fallback-leadcapture to attempt capture.\n\nClose: \"Perfect, I have let the team know you called and someone will be in touch shortly.\"",
+      "text": "The caller is returning a missed call.\n\nSay: \"Thanks for calling back! We may have been trying to reach you about a service enquiry.\"\n\nAsk: \"Do you know what it was regarding?\" \u2014 if they volunteer a service need, great. Do NOT probe with follow-up service questions if they say they don't know or give a vague answer. Simply confirm their details and close.\n\nThen collect:\n1. Full name (first and last)\n2. Confirm their number: \"Is the best number to reach you still the one you're calling from?\"\n\nIf they describe a new service need (a specific HVAC problem such as: not working, broken, needs repair, strange noise, no cooling, no heating): route to node-fallback-leadcapture to attempt full lead capture. If they are simply asking what the original call was about or giving a vague answer, keep them in callback and close normally.\n\nClose: \"Perfect, I have let the team know you called and someone will be in touch shortly.\"",
       "type": "prompt"
     }
   }
