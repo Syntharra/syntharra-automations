@@ -37,6 +37,10 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timedelta, timezone
 
+# Shared email shell — mirrors client-update form design system
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from shared.email_template import syntharra_email_shell  # noqa: E402
+
 # --------------- config ---------------
 BRAND_FROM_NAME = "Syntharra"
 BRAND_FROM_EMAIL = "reports@syntharra.com"
@@ -165,71 +169,72 @@ def render_email_html(client: dict, stats: dict, since: datetime, until: datetim
 
     subject = f"Your Syntharra weekly report — {stats['leads']} lead{'s' if stats['leads'] != 1 else ''} this week"
 
-    # Lead row HTML
+    # Lead rows
     lead_rows = ""
     for l in stats["top_leads"]:
         urg = l["urgency"]
-        badge_color = "#dc2626" if urg == "emergency" else "#ea580c" if urg == "high" else "#2563eb"
+        badge_color = "#DC2626" if urg == "emergency" else "#EA580C" if urg == "high" else "#6C63FF"
         badge_label = "EMERGENCY" if urg == "emergency" else urg.upper()
         lead_rows += (
-            f'<tr><td style="padding:14px 0;border-bottom:1px solid #e2e8f0">'
-            f'<div style="display:inline-block;background:{badge_color};color:#fff;font-size:10px;font-weight:600;letter-spacing:0.04em;padding:3px 8px;border-radius:4px;margin-bottom:4px">{badge_label}</div>'
-            f'<div style="font-size:15px;font-weight:600;color:#0f172a">{l["caller"]}</div>'
-            f'<div style="font-size:13px;color:#64748b;margin:2px 0 6px">{l["phone"]}</div>'
-            f'<div style="font-size:13px;color:#334155;line-height:1.5">{l["summary"]}</div>'
-            f"</td></tr>"
+            f'<div style="padding:14px 0;border-bottom:1px solid #E8E6FF">'
+            f'<span style="display:inline-block;background:{badge_color};color:#fff;font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:6px">{badge_label}</span>'
+            f'<div style="font-size:15px;font-weight:600;color:#0D0D1A;margin-top:2px">{l["caller"]}</div>'
+            f'<div style="font-size:13px;color:#6B7280;margin:2px 0 6px">{l["phone"]}</div>'
+            f'<div style="font-size:13px;color:#1A1A2E;line-height:1.55">{l["summary"]}</div>'
+            f"</div>"
         )
     if not lead_rows:
         lead_rows = (
-            '<tr><td style="padding:24px 0;text-align:center;color:#94a3b8;font-size:14px">'
-            "No leads this week. Check the dashboard for all activity."
-            "</td></tr>"
+            '<div style="padding:24px 0;text-align:center;color:#6B7280;font-size:14px">'
+            "No leads this week. Check your dashboard for all activity."
+            "</div>"
         )
 
-    html = f"""<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a">
-<div style="max-width:600px;margin:0 auto;background:#ffffff">
-  <div style="background:#0f172a;padding:28px 32px">
-    <div style="color:#ffffff;font-size:20px;font-weight:600;letter-spacing:-0.01em">Syntharra</div>
-    <div style="color:#94a3b8;font-size:13px;margin-top:4px">Weekly report · {week_label}</div>
-  </div>
-  <div style="padding:32px">
-    <div style="font-size:15px;color:#475569;margin-bottom:4px">Hi {owner_hi},</div>
-    <h1 style="font-size:24px;margin:6px 0 24px;font-weight:600;letter-spacing:-0.02em">Your week at {company}</h1>
+    # Stats grid — 4 cells with individual divs for email-safe rendering
+    stats_grid = (
+        '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px"><tr>'
+        f'<td width="25%" style="padding:3px 3px 3px 0">'
+        f'<div style="background:#F8F7FF;border:1px solid #E8E6FF;border-radius:10px;padding:18px 8px;text-align:center">'
+        f'<div style="font-size:28px;font-weight:700;color:#0D0D1A">{stats["total"]}</div>'
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;font-weight:600;margin-top:5px">Calls</div>'
+        "</div></td>"
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:32px">
-      <tr>
-        <td width="25%" style="text-align:center;padding:20px 10px;background:#f1f5f9;border-radius:8px 0 0 8px">
-          <div style="font-size:28px;font-weight:700;color:#0f172a">{stats['total']}</div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-top:4px">Calls</div>
-        </td>
-        <td width="25%" style="text-align:center;padding:20px 10px;background:#dbeafe">
-          <div style="font-size:28px;font-weight:700;color:#1e40af">{stats['leads']}</div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#1e40af;margin-top:4px">Leads</div>
-        </td>
-        <td width="25%" style="text-align:center;padding:20px 10px;background:#fee2e2">
-          <div style="font-size:28px;font-weight:700;color:#991b1b">{stats['emergencies']}</div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#991b1b;margin-top:4px">Emergency</div>
-        </td>
-        <td width="25%" style="text-align:center;padding:20px 10px;background:#f1f5f9;border-radius:0 8px 8px 0">
-          <div style="font-size:28px;font-weight:700;color:#0f172a">{stats['total_minutes']}</div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-top:4px">Minutes</div>
-        </td>
-      </tr>
-    </table>
+        f'<td width="25%" style="padding:3px">'
+        f'<div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:18px 8px;text-align:center">'
+        f'<div style="font-size:28px;font-weight:700;color:#4338CA">{stats["leads"]}</div>'
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#4338CA;font-weight:600;margin-top:5px">Leads</div>'
+        "</div></td>"
 
-    <h2 style="font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;font-weight:600;margin:0 0 8px">Top leads this week</h2>
-    <table width="100%" cellpadding="0" cellspacing="0">{lead_rows}</table>
+        f'<td width="25%" style="padding:3px">'
+        f'<div style="background:#FFF1F2;border:1px solid #FECDD3;border-radius:10px;padding:18px 8px;text-align:center">'
+        f'<div style="font-size:28px;font-weight:700;color:#BE123C">{stats["emergencies"]}</div>'
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#BE123C;font-weight:600;margin-top:5px">Emergency</div>'
+        "</div></td>"
 
-    <div style="margin-top:32px;padding:20px 0;border-top:1px solid #e2e8f0">
-      <a href="{dash_url}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px">Open your dashboard</a>
-    </div>
-  </div>
-  <div style="padding:20px 32px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:12px;text-align:center">
-    Syntharra AI Receptionist · <a href="{BRAND_LINK}" style="color:#94a3b8;text-decoration:underline">syntharra.com</a><br>
-    This report was generated automatically every Sunday at 6pm local time.
-  </div>
-</div></body></html>"""
+        f'<td width="25%" style="padding:3px 0 3px 3px">'
+        f'<div style="background:#F8F7FF;border:1px solid #E8E6FF;border-radius:10px;padding:18px 8px;text-align:center">'
+        f'<div style="font-size:28px;font-weight:700;color:#0D0D1A">{stats["total_minutes"]}</div>'
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;font-weight:600;margin-top:5px">Minutes</div>'
+        "</div></td>"
+        "</tr></table>"
+    )
+
+    body = (
+        f'<div style="font-size:14px;color:#6B7280;margin-bottom:4px">Hi {owner_hi},</div>'
+        f'<h1 style="font-size:22px;font-weight:700;color:#0D0D1A;margin:6px 0 24px;letter-spacing:-0.02em">Your week at {company}</h1>'
+        + stats_grid
+        + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;font-weight:600;margin-bottom:14px">Top leads this week</div>'
+        + lead_rows
+        + f'<div style="margin-top:28px;padding-top:24px;border-top:1px solid #E8E6FF">'
+        f'<a href="{dash_url}" style="display:inline-block;background:#6C63FF;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:10px;font-weight:600;font-size:15px">Open your dashboard</a>'
+        "</div>"
+    )
+
+    html = syntharra_email_shell(
+        header_context=f"Weekly report &nbsp;&middot;&nbsp; {week_label}",
+        body_html=body,
+        footer_note="Generated every Sunday at 6 pm local time.",
+    )
     return subject, html
 
 

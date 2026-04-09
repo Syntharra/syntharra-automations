@@ -26,6 +26,10 @@ import argparse, json, math, os, sys, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from calendar import monthrange
 
+# Shared email shell — mirrors client-update form design system
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from shared.email_template import syntharra_email_shell  # noqa: E402
+
 
 # --------------- env / http ---------------
 
@@ -158,30 +162,59 @@ def send_usage_email(sub: dict, result: dict, billing_month: str, dry_run: bool)
     if dry_run:
         print(f"  [DRY-RUN] would send usage email to {sub['client_email']}")
         return
-    overage_line = (
-        f"<p><strong>Overage charge: ${result['overage_amount_dollars']}</strong> "
-        f"({result['overage_minutes']} min × $0.{result['overage_rate_cents']:02d}/min)</p>"
-        if result["has_overage"] else
-        "<p>No overage this month.</p>"
+
+    company = sub.get("company_name", "")
+    usage_pct = result["usage_percent"]
+    bar_width = min(usage_pct, 100)
+    bar_color = "#DC2626" if bar_width >= 100 else "#D97706" if bar_width >= 80 else "#6C63FF"
+
+    if result["has_overage"]:
+        overage_block = (
+            f'<div style="padding:16px 20px;background:#FEF2F2;border-radius:10px;border:1px solid #FECACA;margin-bottom:0">'
+            f'<div style="font-size:14px;font-weight:600;color:#991B1B;margin-bottom:4px">Overage charge: ${result["overage_amount_dollars"]}</div>'
+            f'<div style="font-size:13px;color:#DC2626;line-height:1.5">'
+            f'{result["overage_minutes"]} min × ${result["overage_rate_cents"] / 100:.2f}/min — charged to your account'
+            f'</div></div>'
+        )
+    else:
+        overage_block = (
+            '<div style="padding:16px 20px;background:#ECFDF5;border-radius:10px;border:1px solid #A7F3D0;margin-bottom:0">'
+            '<div style="font-size:14px;font-weight:600;color:#065F46;margin-bottom:4px">No overage this month</div>'
+            '<div style="font-size:13px;color:#047857">You stayed within your included minutes.</div>'
+            '</div>'
+        )
+
+    body = (
+        f'<div style="font-size:14px;color:#6B7280;margin-bottom:4px">Hi {company},</div>'
+        f'<h1 style="font-size:22px;font-weight:700;color:#0D0D1A;margin:6px 0 6px;letter-spacing:-0.02em">Monthly Usage Report</h1>'
+        f'<div style="font-size:14px;color:#6B7280;margin-bottom:24px">{billing_month}</div>'
+
+        # Usage stats card
+        '<div style="padding:20px 24px;background:#F8F7FF;border-radius:12px;border:1px solid #E8E6FF;margin-bottom:20px">'
+        '<table width="100%" cellpadding="0" cellspacing="0">'
+        f'<tr><td style="padding:10px 0;border-bottom:1px solid #E8E6FF;font-size:14px;color:#6B7280">Total calls</td>'
+        f'<td style="padding:10px 0;border-bottom:1px solid #E8E6FF;text-align:right;font-size:14px;font-weight:600;color:#0D0D1A">{result["call_count"]}</td></tr>'
+        f'<tr><td style="padding:10px 0;border-bottom:1px solid #E8E6FF;font-size:14px;color:#6B7280">Total minutes</td>'
+        f'<td style="padding:10px 0;border-bottom:1px solid #E8E6FF;text-align:right;font-size:14px;font-weight:600;color:#0D0D1A">{result["total_minutes"]}</td></tr>'
+        f'<tr><td style="padding:10px 0;border-bottom:1px solid #E8E6FF;font-size:14px;color:#6B7280">Included minutes</td>'
+        f'<td style="padding:10px 0;border-bottom:1px solid #E8E6FF;text-align:right;font-size:14px;color:#0D0D1A">{result["included_minutes"]}</td></tr>'
+        f'<tr><td style="padding:12px 0 0;font-size:14px;color:#6B7280">Usage</td>'
+        f'<td style="padding:12px 0 0;text-align:right;font-size:20px;font-weight:700;color:#6C63FF">{usage_pct}%</td></tr>'
+        '</table>'
+        # Progress bar
+        f'<div style="margin-top:16px;height:8px;background:#E8E6FF;border-radius:4px;overflow:hidden">'
+        f'<div style="height:8px;width:{bar_width}%;background:{bar_color};border-radius:4px"></div>'
+        '</div>'
+        f'<div style="font-size:11px;color:#6B7280;margin-top:6px;text-align:right">{result["total_minutes"]} / {result["included_minutes"]} min</div>'
+        '</div>'
+
+        + overage_block
     )
-    html = f"""
-<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-  <h2 style="color:#1a1a2e">Monthly Usage Report — {billing_month}</h2>
-  <p>Hi {sub.get('company_name','')},</p>
-  <p>Here's your Syntharra AI Receptionist usage summary for <strong>{billing_month}</strong>:</p>
-  <table style="width:100%;border-collapse:collapse">
-    <tr><td style="padding:8px;border-bottom:1px solid #eee">Total calls</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right"><strong>{result['call_count']}</strong></td></tr>
-    <tr><td style="padding:8px;border-bottom:1px solid #eee">Total minutes</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right"><strong>{result['total_minutes']}</strong></td></tr>
-    <tr><td style="padding:8px;border-bottom:1px solid #eee">Included minutes</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">{result['included_minutes']}</td></tr>
-    <tr><td style="padding:8px">Usage</td>
-        <td style="padding:8px;text-align:right">{result['usage_percent']}%</td></tr>
-  </table>
-  {overage_line}
-  <p style="color:#888;font-size:12px;margin-top:32px">Syntharra · support@syntharra.com</p>
-</div>"""
+
+    html = syntharra_email_shell(
+        header_context=f"Monthly usage report &nbsp;&middot;&nbsp; {billing_month}",
+        body_html=body,
+    )
     payload = {
         "sender": {"name": "Syntharra", "email": "support@syntharra.com"},
         "to": [{"email": sub["client_email"]}],

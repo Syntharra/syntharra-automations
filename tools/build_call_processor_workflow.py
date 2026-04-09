@@ -139,38 +139,48 @@ const emails = [client.lead_email, client.notification_email_2, client.notificat
 const urgencyBadge = isEmergency ? '🔥 EMERGENCY' : urgency === 'high' ? '⚡ HIGH' : '📞 LEAD';
 const urgencyColor = isEmergency ? '#dc2626' : urgency === 'high' ? '#ea580c' : '#2563eb';
 
-// --- Email HTML (Syntharra-branded) ---
+// --- Email HTML (Syntharra-branded — matches client-update form design system) ---
 const emailSubject = isEmergency
   ? `🔥 EMERGENCY — ${callerName} (${callerPhone})`
   : `New Lead — ${callerName} (${callerPhone})`;
 
+const _logoBars = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr><td style="vertical-align:bottom;padding-right:3px"><div style="width:5px;height:13px;background:#6C63FF;font-size:1px;line-height:1px">&nbsp;</div></td><td style="vertical-align:bottom;padding-right:3px"><div style="width:5px;height:19px;background:#6C63FF;font-size:1px;line-height:1px">&nbsp;</div></td><td style="vertical-align:bottom;padding-right:3px"><div style="width:5px;height:26px;background:#6C63FF;font-size:1px;line-height:1px">&nbsp;</div></td><td style="vertical-align:bottom"><div style="width:5px;height:33px;background:#6C63FF;font-size:1px;line-height:1px">&nbsp;</div></td></tr></table>`;
+
 const emailHtml = `<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a">
-<div style="max-width:560px;margin:0 auto;background:#ffffff">
-  <div style="background:#0f172a;padding:24px 28px">
-    <div style="color:#ffffff;font-size:18px;font-weight:600;letter-spacing:-0.01em">Syntharra</div>
-    <div style="color:#94a3b8;font-size:13px;margin-top:2px">Lead notification for ${client.company_name}</div>
-  </div>
-  <div style="padding:28px">
-    <div style="display:inline-block;background:${urgencyColor};color:#ffffff;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:0.02em">${urgencyBadge}</div>
-    <h1 style="font-size:22px;margin:16px 0 8px;font-weight:600;letter-spacing:-0.02em">${callerName}</h1>
-    <div style="color:#64748b;font-size:15px;margin-bottom:24px">${callerPhone} &middot; ${callDuration}s call</div>
-
-    <a href="${callbackHref}" style="display:inline-block;background:${urgencyColor};color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px">Call back now</a>
-
-    <div style="margin-top:28px;padding:16px 18px;background:#f1f5f9;border-radius:8px;border-left:3px solid ${urgencyColor}">
-      <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;font-weight:600;margin-bottom:6px">Summary</div>
-      <div style="font-size:14px;line-height:1.55">${summary}</div>
-    </div>
-
-    <div style="margin-top:28px">
-      <a href="${dashboardUrl}" style="color:#2563eb;text-decoration:none;font-size:14px">View full transcript in your dashboard →</a>
-    </div>
-  </div>
-  <div style="padding:20px 28px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:12px;text-align:center">
-    Syntharra AI Receptionist · <a href="https://syntharra.com" style="color:#94a3b8;text-decoration:underline">syntharra.com</a>
-  </div>
-</div></body></html>`;
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F2F1FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#0D0D1A">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F2F1FF;padding:40px 20px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #E8E6FF;box-shadow:0 8px 40px rgba(108,99,255,.10),0 1px 3px rgba(0,0,0,.04)">
+<tr><td style="height:4px;background:linear-gradient(90deg,#6C63FF,#8B7FFF,#A78BFA);font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td style="padding:24px 40px;border-bottom:1px solid #E8E6FF;background:#ffffff">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td style="padding-right:11px;vertical-align:middle">${_logoBars}</td>
+<td style="vertical-align:middle">
+<div style="font-size:16px;font-weight:700;color:#0D0D1A;letter-spacing:-0.02em;line-height:1">Syntharra</div>
+<div style="font-size:12px;color:#6B7280;margin-top:5px;line-height:1">Lead notification for ${client.company_name}</div>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:32px 40px;background:#ffffff">
+<div style="margin-bottom:20px"><span style="display:inline-block;background:${urgencyColor};color:#ffffff;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">${urgencyBadge}</span></div>
+<h1 style="font-size:22px;font-weight:700;color:#0D0D1A;margin:0 0 6px;letter-spacing:-0.02em">${callerName}</h1>
+<div style="font-size:14px;color:#6B7280;margin-bottom:24px">${callerPhone} &middot; ${callDuration}s call</div>
+<a href="${callbackHref}" style="display:inline-block;background:${urgencyColor};color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:10px;font-weight:600;font-size:15px">Call back now</a>
+<div style="margin-top:24px;padding:16px 18px;background:#F0EEFF;border-radius:10px;border-left:3px solid #6C63FF">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;font-weight:600;margin-bottom:8px">Summary</div>
+<div style="font-size:14px;line-height:1.6;color:#1A1A2E">${summary}</div>
+</div>
+<div style="margin-top:20px"><a href="${dashboardUrl}" style="color:#6C63FF;text-decoration:none;font-size:14px;font-weight:500">View transcript in your dashboard &rarr;</a></div>
+</td></tr>
+<tr><td style="padding:18px 40px;border-top:1px solid #E8E6FF;background:#ffffff">
+<div style="font-size:12px;color:#6B7280;text-align:center;line-height:1.7">Syntharra AI Receptionist &nbsp;&middot;&nbsp; <a href="https://syntharra.com" style="color:#6C63FF;text-decoration:none">syntharra.com</a></div>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
 
 // --- Slack blocks (Syntharra-branded) ---
 const slackBlocks = {

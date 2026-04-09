@@ -30,6 +30,10 @@ import argparse, json, math, os, sys, urllib.error, urllib.parse, urllib.request
 from calendar import monthrange
 from datetime import datetime, timezone
 
+# Shared email shell — mirrors client-update form design system
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from shared.email_template import syntharra_email_shell  # noqa: E402
+
 
 # ---------- helpers ----------
 
@@ -191,30 +195,53 @@ def send_alert_email(sub: dict, threshold_pct: int, total_minutes: int,
         print(f"  [DRY-RUN] would send {threshold_pct}% alert to {sub['client_email']}")
         return
     tmpl = ALERT_TEMPLATES[threshold_pct]
+    company = sub.get("company_name", "there")
     usage_pct = round(total_minutes / included_minutes * 100) if included_minutes else 0
-    html = f"""
-<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-  <h2 style="color:#1a1a2e">{tmpl['heading']}</h2>
-  <p>Hi {sub.get('company_name', 'there')},</p>
-  <table style="width:100%;border-collapse:collapse;margin:16px 0">
-    <tr>
-      <td style="padding:8px;border-bottom:1px solid #eee">Minutes used so far</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right"><strong>{total_minutes}</strong></td>
-    </tr>
-    <tr>
-      <td style="padding:8px;border-bottom:1px solid #eee">Included minutes</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">{included_minutes}</td>
-    </tr>
-    <tr>
-      <td style="padding:8px">Usage</td>
-      <td style="padding:8px;text-align:right"><strong>{usage_pct}%</strong></td>
-    </tr>
-  </table>
-  {tmpl['body_extra']}
-  <p style="color:#888;font-size:12px;margin-top:32px">
-    Syntharra · <a href="mailto:support@syntharra.com">support@syntharra.com</a>
-  </p>
-</div>"""
+    bar_width = min(usage_pct, 100)
+    bar_color = "#DC2626" if threshold_pct >= 100 else "#D97706"
+    badge_style = (
+        "display:inline-block;background:#DC2626;color:#fff;padding:5px 12px;border-radius:999px;"
+        "font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:20px"
+        if threshold_pct >= 100 else
+        "display:inline-block;background:#D97706;color:#fff;padding:5px 12px;border-radius:999px;"
+        "font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:20px"
+    )
+    badge_label = "Overage Active" if threshold_pct >= 100 else "Usage Alert"
+
+    body = (
+        f'<span style="{badge_style}">{badge_label}</span>'
+        f'<h1 style="font-size:22px;font-weight:700;color:#0D0D1A;margin:0 0 6px;letter-spacing:-0.02em">{tmpl["heading"]}</h1>'
+        f'<div style="font-size:14px;color:#6B7280;margin-bottom:24px">Hi {company} — here\'s your current usage.</div>'
+
+        # Progress bar
+        f'<div style="margin-bottom:24px">'
+        f'<div style="height:8px;background:#E8E6FF;border-radius:4px;overflow:hidden">'
+        f'<div style="height:8px;width:{bar_width}%;background:{bar_color};border-radius:4px"></div>'
+        f'</div>'
+        f'<div style="font-size:11px;color:#6B7280;margin-top:6px;text-align:right">{total_minutes} / {included_minutes} min used</div>'
+        f'</div>'
+
+        # Stats card
+        '<div style="padding:20px 24px;background:#F8F7FF;border-radius:12px;border:1px solid #E8E6FF;margin-bottom:24px">'
+        '<table width="100%" cellpadding="0" cellspacing="0">'
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #E8E6FF;font-size:14px;color:#6B7280">Minutes used so far</td>'
+        f'<td style="padding:8px 0;border-bottom:1px solid #E8E6FF;text-align:right;font-size:14px;font-weight:700;color:#0D0D1A">{total_minutes}</td></tr>'
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #E8E6FF;font-size:14px;color:#6B7280">Included minutes</td>'
+        f'<td style="padding:8px 0;border-bottom:1px solid #E8E6FF;text-align:right;font-size:14px;color:#0D0D1A">{included_minutes}</td></tr>'
+        f'<tr><td style="padding:10px 0 0;font-size:14px;color:#6B7280">Usage</td>'
+        f'<td style="padding:10px 0 0;text-align:right;font-size:20px;font-weight:700;color:{bar_color}">{usage_pct}%</td></tr>'
+        '</table>'
+        '</div>'
+
+        f'<div style="font-size:14px;color:#1A1A2E;line-height:1.7">{tmpl["body_extra"]}</div>'
+        f'<div style="margin-top:20px;font-size:13px;color:#6B7280">Questions? Email us at '
+        f'<a href="mailto:support@syntharra.com" style="color:#6C63FF;text-decoration:none;font-weight:500">support@syntharra.com</a></div>'
+    )
+
+    html = syntharra_email_shell(
+        header_context=f"Usage alert &nbsp;&middot;&nbsp; {threshold_pct}% of included minutes",
+        body_html=body,
+    )
     payload = {
         "sender": {"name": "Syntharra", "email": "support@syntharra.com"},
         "to": [{"email": sub["client_email"]}],
