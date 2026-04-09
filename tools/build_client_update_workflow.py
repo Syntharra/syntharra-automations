@@ -356,7 +356,6 @@ return [{ json: { row: updatedRow, field, newValue, oldValue, agentId: row.agent
         "nodes": nodes,
         "connections": connections,
         "settings": {"executionOrder": "v1"},
-        "active": True,
     }
 
 

@@ -4,9 +4,10 @@
     "flow_id": "conversation_flow_b0f2cf9a0e58",
     "phone_number": "+12292672271",
     "created": "2026-04-06",
-    "purpose": "Git-IaC candidate \u2014 pre-promotion staging",
+    "purpose": "Git-IaC candidate — pre-promotion staging (STALE — agent may not exist)",
     "baseline_tag": "baseline-100-percent-20260406",
-    "source_master_agent_id": "agent_4afbfdb3fcb1ba9569353af28d",
-    "source_master_flow_id": "conversation_flow_34d169608460"
+    "source_master_agent_id": "agent_b46aef9fd327ec60c657b7a30a",
+    "source_master_flow_id": "conversation_flow_19684fe03b61",
+    "_note": "source_master updated 2026-04-09 after MASTER re-registration. Clone agent itself not verified alive."
   }
 }

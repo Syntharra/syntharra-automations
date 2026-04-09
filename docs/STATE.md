@@ -5,7 +5,7 @@ _Last updated: 2026-04-09_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-493d69b docs(session): plan + session log for client-update form + pass 2
+47c9ecd docs(tasks): add MASTER re-register + usage_alert.py as P0; log agent deletion in FAILURES.md
 
 ## Go-live checklist
 see docs/TASKS.md
@@ -25,8 +25,8 @@ Repo stripped to lean core. retell-iac is Standard-only.
 
 ## What's live in production
 
-- **HVAC Standard MASTER (current, code-node arch)** — `agent_4afbfdb3fcb1ba9569353af28d` / `conversation_flow_34d169608460`, phone `+18129944371`. Promoted from TESTING on 2026-04-09. 19 nodes, all `code` / `conversation` / `transfer_call` / `end` / `extract_dynamic_variables`. Flow v28+. Pre-promotion snapshot (legacy subagent v27): `retell-iac/snapshots/2026-04-09_master-pre-promote/`. Post-promotion snapshot: `retell-iac/snapshots/2026-04-09_testing-autolayout-fixed/` (byte-identical to live).
-- **HVAC Standard TESTING agent** — `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270`. Was the authoritative source during the fix-and-promote cycle; MASTER is now aligned to it byte-for-byte.
+- **HVAC Standard MASTER** — `agent_b46aef9fd327ec60c657b7a30a` / `conversation_flow_19684fe03b61`, phone `+18129944371` (⚠️ bind in Retell dashboard). Re-registered 2026-04-09 from `retell-iac/snapshots/2026-04-09_testing-autolayout-fixed/` after Dan deleted both agents. 19 nodes, modern code-node arch, published. Clone source for Standard clients.
+- **HVAC Standard TESTING agent** — `agent_41e9758d8dc956843110e29a25` / `conversation_flow_bc8bb3565dbf`. Re-registered 2026-04-09 from same snapshot. Authoring surface — edit here, promote to MASTER via `retell-iac/scripts/promote.py`.
 - **`retell-iac/components/` is current.** Regenerated 2026-04-09 from the live snapshot via `scripts/split_snapshot.py`. 19 flat component files, new `flows/hvac-standard.template.json`, new `manifests/hvac-standard.yaml`. `build_agent.py` output is byte-identical to the live MASTER flow. Legacy subagent files archived at `components.legacy-subagent-20260409/`, `flows/hvac-standard.template.legacy-subagent-20260409.json`, `manifests/hvac-standard.legacy-subagent-20260409.yaml`.
 - **n8n onboarding workflow** — Standard `4Hx7aRdzMl5N0uJP`. Includes `slack_webhook_url` mapping from Jotform field `q76_slackIncoming` (2026-04-09) + Demo/Live agent naming patch at L25/L683 of `Build Retell Prompt` (2026-04-09).
 - **HVAC Call Processor — lean fan-out** — `Kg576YtPM9yEacKn`. Rewritten 2026-04-09 as 8-node fan-out (webhook → filter → lookup → build payload → email/slack/sms). Zero Supabase writes. Triggers on `is_lead OR urgency=emergency`. Brevo key inlined from vault. SMS stub marked `TELNYX-TODO`. Generator: [tools/build_call_processor_workflow.py](../tools/build_call_processor_workflow.py).

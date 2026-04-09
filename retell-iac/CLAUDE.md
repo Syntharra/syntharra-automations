@@ -60,12 +60,12 @@ python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_
 python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_master
 ```
 
-## Canonical Agents (updated 2026-04-09)
+## Canonical Agents (re-registered 2026-04-09)
 
 | Agent | agent_id | flow_id | Phone | Notes |
 |---|---|---|---|---|
-| **Standard TESTING (authoritative current)** | `agent_6e7a2ae03c2fbd7a251fafcd00` | `conversation_flow_90da7ca2b270` | _(none)_ | Modern `code`-node architecture. Autolayout-fixed 2026-04-09. Pending promotion to MASTER. |
-| Standard MASTER (legacy — stale) | `agent_4afbfdb3fcb1ba9569353af28d` | `conversation_flow_34d169608460` | `+18129944371` | Uses legacy `subagent` node type. Will be replaced by TESTING on next promotion. |
+| **Standard TESTING** | `agent_41e9758d8dc956843110e29a25` | `conversation_flow_bc8bb3565dbf` | _(none)_ | Re-registered 2026-04-09 from autolayout-fixed snapshot. Modern code-node architecture. Authoring surface. |
+| **Standard MASTER** | `agent_b46aef9fd327ec60c657b7a30a` | `conversation_flow_19684fe03b61` | `+18129944371` ⚠️ bind in dashboard | Re-registered 2026-04-09. Published. Modern code-node architecture, 19 nodes. |
 
 > **IaC is current as of 2026-04-09.** `flows/hvac-standard.template.json`, `components/` (flat, 19 files), and `manifests/hvac-standard.yaml` were regenerated from the live Standard TESTING snapshot via `scripts/split_snapshot.py`. `build_agent.py` output is byte-identical to the live flow. The legacy `subagent`-shape files are preserved at `components.legacy-subagent-20260409/`, `flows/hvac-standard.template.legacy-subagent-20260409.json`, and `manifests/hvac-standard.legacy-subagent-20260409.yaml` for reference — do not use for builds.
 >

@@ -9,7 +9,7 @@ Exit 0 = allow.
 import sys, json
 
 MASTER_AGENTS = {
-    "agent_4afbfdb3fcb1ba9569353af28d": "HVAC Standard MASTER",
+    "agent_b46aef9fd327ec60c657b7a30a": "HVAC Standard MASTER",
     "agent_9822f440f5c3a13bc4d283ea90": "HVAC Premium MASTER",
     "agent_b9d169e5290c609a8734e0bb45": "Demo Male MASTER",
     "agent_2723c07c83f65c71afd06e1d50": "Demo Female MASTER",
@@ -31,7 +31,7 @@ try:
                 if signal in command:
                     print(f"\n🚫 HOOK BLOCKED: Attempted write to {label} ({agent_id})")
                     print("   MASTER agents are read-only. Use TESTING agents only:")
-                    print("   Standard TESTING: agent_731f6f4d59b749a0aa11c26929")
+                    print("   Standard TESTING: agent_41e9758d8dc956843110e29a25")
                     print("   Premium TESTING:  agent_2cffe3d86d7e1990d08bea068f")
                     sys.exit(2)
 except Exception as e:

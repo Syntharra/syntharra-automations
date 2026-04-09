@@ -14,3 +14,4 @@
 | 2026-04-09 | plugin-inquiry | 5720caa | User asked about Claude Code plugins. Explained MCP servers, skills, and hooks as the extension mechanisms. No code changes. |
 | 2026-04-09 | prompt-compiler-merge | 723b243 | Merged prompt compiler + client-update CLI to main; n8n client-update form queued for next session |
 | 2026-04-09 | client-update-pass2-plan | 493d69b | Oriented session, identified go-live blockers (null webhook + broken billing), wrote 6-task plan for next session |
+| 2026-04-09 | re-register-agents-usage-alert-client-update-smoke | 47c9ecd | Re-registered MASTER+TESTING in Retell, built usage_alert.py, ran client-update workflow builder, smoke-tested update_client_agent.py (fixed 3 prompt_compiler bugs in the process) |

@@ -60,12 +60,11 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 
 | Item | Value |
 |---|---|
-| Agent Name | Arctic Breeze HVAC |
-| **MASTER Agent ID** | `agent_4afbfdb3fcb1ba9569353af28d` |
-| **TESTING Agent ID** | `agent_731f6f4d59b749a0aa11c26929` |
-| Phone Number | `+1 (812) 994-4371` |
-| Transfer Number | `+1 (856) 363-0633` |
-| **Conversation Flow** | `conversation_flow_34d169608460` |
+| **MASTER Agent ID** | `agent_b46aef9fd327ec60c657b7a30a` |
+| **MASTER Flow ID** | `conversation_flow_19684fe03b61` |
+| **TESTING Agent ID** | `agent_41e9758d8dc956843110e29a25` |
+| **TESTING Flow ID** | `conversation_flow_bc8bb3565dbf` |
+| Phone Number | `+1 (812) 994-4371` (⚠️ bind in Retell dashboard) |
 | Voice | Sophie (female) |
 
 ### Demo Agents (must always stay published)

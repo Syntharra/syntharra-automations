@@ -35,7 +35,8 @@ These 3 are the only agents hardcoded here because they're system-level, not cli
 
 | Agent | ID | Purpose |
 |---|---|---|
-| Arctic Breeze HVAC | `agent_4afbfdb3fcb1ba9569353af28d` | Test agent — demos + VSL recording |
+| HVAC Standard MASTER | `agent_b46aef9fd327ec60c657b7a30a` | MASTER — re-registered 2026-04-09, clone source for Standard clients |
+| HVAC Standard TESTING | `agent_41e9758d8dc956843110e29a25` | TESTING — authoring surface, promote to MASTER via promote.py |
 | Jake | `agent_b9d169e5290c609a8734e0bb45` | Demo agent — must stay published |
 | Sophie | `agent_2723c07c83f65c71afd06e1d50` | Demo agent — must stay published |
 
@@ -47,11 +48,12 @@ These 3 are the only agents hardcoded here because they're system-level, not cli
 
 | Item | Value |
 |---|---|
-| Flow ID | `conversation_flow_34d169608460` |
-| Node count | 12 |
+| MASTER Flow ID | `conversation_flow_19684fe03b61` |
+| TESTING Flow ID | `conversation_flow_bc8bb3565dbf` |
+| Node count | 19 |
 
-### Flow Nodes (in order)
-`greeting` → `identify_call` → `nonemergency_leadcapture` → `verify_emergency` → `callback` → `existing_customer` → `general_questions` → `spam_robocall` → `Transfer Call` → `transfer_failed` → `Ending` → `End Call`
+### Flow Nodes (current code-node arch, 19 nodes)
+`greeting` → `identify_call` → `call_style_detector` → `fallback_leadcapture` → `verify_emergency` → `callback` → `existing_customer` → `general_questions` → `spam_robocall` → `validate_phone` → `ending` → `Transfer Call` + more code nodes
 
 ---
 

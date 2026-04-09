@@ -7,8 +7,14 @@ import argparse, json, os, sys, requests
 
 MASTERS = {
     "standard_master": {
-        "agent_id": "agent_4afbfdb3fcb1ba9569353af28d",
-        "flow_id":  "conversation_flow_34d169608460",
+        "agent_id": "agent_b46aef9fd327ec60c657b7a30a",
+        "flow_id":  "conversation_flow_19684fe03b61",
+    },
+}
+TESTING = {
+    "standard_testing": {
+        "agent_id": "agent_41e9758d8dc956843110e29a25",
+        "flow_id":  "conversation_flow_bc8bb3565dbf",
     },
 }
 

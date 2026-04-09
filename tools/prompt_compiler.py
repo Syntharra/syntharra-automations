@@ -718,7 +718,7 @@ def compile(row: dict, *, now_iso: str | None = None) -> dict:
                     {"id": "edge-to-spam", "destination_node_id": "node-spam-robocall", "transition_condition": {"type": "prompt", "prompt": "Robocall, spam, automated message, silence after greeting"}}
                 ],
                 "finetune_transition_examples": [
-                    {"id": "fe-service", "destination_node_id": "node-fallback-leadcapture", "transcript": [{"role": "user", "content": "My AC isn't working\nI need a repair\nI need a tune-up\nI need maintenance\nI need an installation quote\nI want my system checked"}, {"role": "agent", "content": "I can help with that"}]},
+                    {"id": "fe-service", "destination_node_id": "node-call-style-detector", "transcript": [{"role": "user", "content": "My AC isn't working\nI need a repair\nI need a tune-up\nI need maintenance\nI need an installation quote\nI want my system checked"}, {"role": "agent", "content": "I can help with that"}]},
                     {"id": "fe-emergency", "destination_node_id": "node-verify-emergency", "transcript": [{"role": "user", "content": "no cooling\nno heating\nsystem not working\nwater leaking\nburning smell\nI smell gas\nurgent repair"}]},
                     {"id": "fe-callback", "destination_node_id": "node-callback", "transcript": [{"role": "user", "content": "I missed a call from this number\nSomeone called me from here\nI am calling back"}]},
                     {"id": "fe-existing", "destination_node_id": "node-existing-customer", "transcript": [{"role": "user", "content": "calling about my appointment\nwhere is the technician\nquestion about my invoice\ncalling about my quote"}]},
@@ -733,7 +733,10 @@ def compile(row: dict, *, now_iso: str | None = None) -> dict:
                 "code": _C_CALL_STYLE_DETECTOR,
                 "speak_during_execution": False,
                 "wait_for_result": True,
-                "edges": [],
+                "edges": [
+                    {"id": "edge-call-style-detector-after", "destination_node_id": "node-fallback-leadcapture",
+                     "transition_condition": {"type": "prompt", "prompt": "After caller style detection"}},
+                ],
                 "else_edge": {"id": "edge-style-else", "destination_node_id": "node-fallback-leadcapture", "transition_condition": {"type": "prompt", "prompt": "Else"}},
                 "display_position": {"x": 1386, "y": 726}
             },
@@ -843,7 +846,10 @@ def compile(row: dict, *, now_iso: str | None = None) -> dict:
                 "code": _C_VALIDATE_PHONE,
                 "speak_during_execution": False,
                 "wait_for_result": True,
-                "edges": [],
+                "edges": [
+                    {"id": "edge-validate-phone-after", "destination_node_id": "node-ending",
+                     "transition_condition": {"type": "prompt", "prompt": "After phone validation"}},
+                ],
                 "else_edge": {"id": "edge-validate-phone-else", "destination_node_id": "node-ending", "transition_condition": {"type": "prompt", "prompt": "Else"}},
                 "display_position": {"x": 900, "y": 1400}
             },

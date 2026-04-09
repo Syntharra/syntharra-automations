@@ -98,7 +98,7 @@ REFUSED_FIELDS = {
 }
 
 # MASTER ids — refuse unless --allow-master
-MASTER_AGENT_IDS = {"agent_4afbfdb3fcb1ba9569353af28d"}
+MASTER_AGENT_IDS = {"agent_b46aef9fd327ec60c657b7a30a"}
 
 RETELL_BASE = "https://api.retellai.com"
 
