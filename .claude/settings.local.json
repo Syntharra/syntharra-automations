@@ -3,7 +3,17 @@
     "allow": [
       "Bash(python tools/session_start.py)",
       "mcp__claude_ai_Github_MCP__get_file_contents",
-      "Bash(python tools/session_end.py --topic agentic-self-improvement --summary \"Built fully agentic loop: memory system, self-improvement skill, failure analyzer, hooks \\(bash-failure, edit-failures auto-memory, stop auto-push fix\\), weekly remote agent, session_end.py\")"
+      "Bash(python tools/session_end.py --topic agentic-self-improvement --summary \"Built fully agentic loop: memory system, self-improvement skill, failure analyzer, hooks \\(bash-failure, edit-failures auto-memory, stop auto-push fix\\), weekly remote agent, session_end.py\")",
+      "mcp__claude_ai_Jotform__create_submission",
+      "Bash(curl -s \"https://n8n.syntharra.com/api/v1/executions?workflowId=4Hx7aRdzMl5N0uJP&limit=5\" -H \"X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiODQxMGUzOGEtZmQxOC00YWMxLWJkZDctYWFkYmEwOGI3ZjFhIiwiaWF0IjoxNzc1NTIwOTAxfQ.GRY5cmlsDMiWDVDtxWvbBducCrEk7Vb1Ysbubr0DMuA\")",
+      "mcp__claude_ai_n8n__get_execution",
+      "Bash(curl -s \"https://n8n.syntharra.com/api/v1/executions/2503\" -H \"X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZWNlYWE0YS02ODgzLTQzNDAtODQxMy0zMjQ2MGY3YTk5MGIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiODQxMGUzOGEtZmQxOC00YWMxLWJkZDctYWFkYmEwOGI3ZjFhIiwiaWF0IjoxNzc1NTIwOTAxfQ.GRY5cmlsDMiWDVDtxWvbBducCrEk7Vb1Ysbubr0DMuA\")",
+      "Bash(python3 -c ':*)",
+      "Bash(python3 \"C:/Users/danie/AppData/Local/Temp/patch_parse_node.py\")",
+      "Bash(curl -s -X DELETE https://api.retellai.com/v2/agent/agent_8d49d333da8772174e4eba5d6c -H 'Authorization: Bearer key_0157d9401f66cfa1b51fadc66445' -H 'Content-Type: application/json')",
+      "Bash(echo \"exit: $?\")",
+      "Bash(curl -s -X POST https://api.retellai.com/publish-agent/agent_b585bac6ef2e169639f552d5d0 -H 'Authorization: Bearer key_0157d9401f66cfa1b51fadc66445' -H 'Content-Type: application/json' -d '{}' -w '\\\\nHTTP_STATUS:%{http_code}')",
+      "Bash(python3 \"C:/Users/danie/AppData/Local/Temp/patch_three_nodes.py\")"
     ]
   }
 }
