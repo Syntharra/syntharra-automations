@@ -19,6 +19,8 @@ Then run `python tools/session_start.py` to see the 15-line orientation block (l
 - **IDs only from `docs/REFERENCE.md`.** Never inline.
 - **Per-client data lives in Supabase**, not the repo. The `client_agents` table is the source. This is how we scale to 1000+.
 - **Every new failure gets a FAILURES.md row.** If it implies a standing rule, update RULES.md in the same commit.
+- **n8n = Railway only.** Syntharra's only n8n instance is self-hosted at `https://n8n.syntharra.com`. Never use any `mcp__claude_ai_n8n__*` tool — that MCP talks to a cloud account we do not use and will give phantom results. Always call the Railway REST API directly (`https://n8n.syntharra.com/api/v1/...`) with the `X-N8N-API-KEY` header. Key lives in `syntharra_vault` (service `n8n Railway`, key_type `api_key`).
+- **Never `DELETE` on n8n public API.** `DELETE /api/v1/workflows/{id}` is a **hard delete**, not soft archive. To archive: (1) backup the full JSON to `docs/audits/n8n-backups-YYYYMMDD/`, (2) `POST /workflows/{id}/deactivate`, (3) `PUT /workflows/{id}` with name prefixed `[ARCHIVED-YYYY-MM-DD]`, (4) ask Dan to click the UI "Archive" button (the `isArchived` flag isn't exposed on the public API). See FAILURES.md 2026-04-09.
 
 ## Tools
 

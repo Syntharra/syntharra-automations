@@ -4,22 +4,30 @@
 
 ## P0
 
-- **n8n onboarding naming patch** — Dan to paste 3-line diff into `Build Retell Prompt` code node of workflow `4Hx7aRdzMl5N0uJP`:
-  - L25: add `const isDemo = !!data.is_demo;` and `const agentDisplayName = \`${isDemo ? 'Demo' : 'Live'} — ${companyName}\`;`
-  - L683: change `agent_name: \`${agentName}\`,` → `agent_name: agentDisplayName,`
-- **Test call on MASTER `+18129944371`** — confirm code-node architecture swap works live. MASTER was rebuilt from byte-identical IaC output on 2026-04-09; testing agent already verified, but the swap is significant enough to warrant one live-call smoke before declaring done.
+- **Test call on MASTER `+18129944371`** — confirm code-node architecture swap + Call Processor fan-out work live. Validates (a) code-node flow end-to-end, (b) `is_lead`/`urgency`/`is_spam` custom analysis fields populate, (c) Brevo email lands in lead inbox, (d) Slack fan-out skipped cleanly when no webhook present.
+- **Telnyx SMS swap** — once Telnyx AI approval lands, replace the `SMS Stub (Telnyx TODO)` node in HVAC Call Processor with a real HTTP node calling Telnyx messaging API. Stub payload is already built in `Build Payload`.
 
 ## P1
 
 - **Stripe live mode** — add live secret key to vault, create $697/mo live price (test price created: `price_1TK5b1ECS71NQsk8Ru3Gyybl`)
 - **Who's hand-editing MASTER?** — 5 unpublished Retell revisions (v22→v27) accumulated on MASTER despite `retell-iac/CLAUDE.md` Rule 1. Find and close the loophole.
 
-## Completed (2026-04-09 — late session)
+## Completed (2026-04-09 — late session, notification + infra pass)
 
-- ~~Promote Standard TESTING → MASTER~~ — full architecture swap complete. MASTER flow v28, 19 code/conversation nodes, no `subagent`. Pre-promotion snapshot at `retell-iac/snapshots/2026-04-09_master-pre-promote/` (legacy v27) for rollback. Promote script output and verification in session log.
-- ~~Rewrite `retell-iac/components/` for code-node architecture~~ — `scripts/split_snapshot.py` regenerates template + components + manifest from any live snapshot. Ran against 2026-04-09 testing snapshot; `build_agent.py` output is byte-identical to live. Legacy subagent files archived with `.legacy-subagent-20260409` suffix. `retell-iac/CLAUDE.md` updated.
+- ~~Promote Standard TESTING → MASTER~~ — full architecture swap complete. MASTER flow v28, 19 code/conversation nodes, no `subagent`. Pre-promotion snapshot `retell-iac/snapshots/2026-04-09_master-pre-promote/`.
+- ~~Rewrite `retell-iac/components/`~~ — `scripts/split_snapshot.py` regenerates template+components+manifest from any live snapshot. Byte-identical parity verified. Legacy archived.
+- ~~MASTER custom post-call analysis fields~~ — `is_lead`, `urgency`, `is_spam` declared + published.
+- ~~n8n onboarding naming patch (L25/L683)~~ — applied via Railway API. Agent names now prefixed `Demo —` or `Live —`.
+- ~~Kill cloud n8n MCP~~ — all `mcp__claude_ai_n8n__*` entries purged from settings; CLAUDE.md rule added.
+- ~~n8n API key rotation + vault~~ — leaked key scrubbed from settings; new key in vault.
+- ~~n8n workflow audit~~ — 56 workflows catalogued, verdict table at `docs/audits/2026-04-09-n8n-workflow-audit.md`.
+- ~~Archive 7 obsolete workflows~~ — 6 Premium + Weekly Newsletter. Deactivated + renamed + Dan UI-archived.
+- ~~HVAC Call Processor rewrite~~ — 11 → 8 nodes, lean fan-out, Syntharra-branded email + Slack + SMS stub. Brevo key inlined from vault. Generator: `tools/build_call_processor_workflow.py`.
+- ~~Optional Slack field in Jotform~~ — `slackIncoming` (qid 76) added to Section 5; onboarding `Parse JotForm Data` maps to `slack_webhook_url`.
+- ~~Slack workspace cleanup~~ — 22 → 7 channels; bot token vaulted; 15 clutter channels archived; `#daily-digest` created.
+- ~~Weekly client report script~~ — `tools/weekly_client_report.py`. Per-TZ bucket invocation. Deploy deferred to first multi-client launch.
 
-## Completed (2026-04-09)
+## Completed (2026-04-09 — earlier)
 
 - ~~Update website pricing page~~ — `plan-quiz.html` updated: single product $697/mo, Premium tier removed, quiz always returns Standard, JSON-LD updated
 - ~~Update n8n onboarding workflow~~ — Premium onboarding (`kz1VmwNccunRMEaF`) deactivated; Standard workflow has no Premium branch

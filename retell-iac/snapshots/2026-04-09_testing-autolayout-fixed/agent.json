@@ -1,34 +1,49 @@
 {
-  "agent_id": "agent_6e7a2ae03c2fbd7a251fafcd00",
+  "agent_id": "agent_4afbfdb3fcb1ba9569353af28d",
   "channel": "voice",
-  "last_modification_timestamp": 1775722911880,
-  "agent_name": "Sophie",
+  "last_modification_timestamp": 1775739268502,
+  "agent_name": "Arctic Breeze Standard LIVE",
   "response_engine": {
     "type": "conversation-flow",
-    "version": 0,
-    "conversation_flow_id": "conversation_flow_90da7ca2b270"
+    "version": 30,
+    "conversation_flow_id": "conversation_flow_34d169608460"
   },
   "webhook_url": "https://n8n.syntharra.com/webhook/retell-hvac-webhook",
   "language": "multi",
   "data_storage_setting": "everything",
   "opt_in_signed_url": false,
-  "version": 0,
+  "end_call_after_silence_ms": 30000,
+  "version": 30,
   "is_published": false,
   "post_call_analysis_model": "gpt-4.1-mini",
   "pii_config": {
     "mode": "post_call",
     "categories": []
   },
+  "handbook_config": {
+    "echo_verification": true,
+    "speech_normalization": false,
+    "default_personality": false,
+    "scope_boundaries": true,
+    "natural_filler_words": true,
+    "nato_phonetic_alphabet": true,
+    "high_empathy": true,
+    "ai_disclosure": false,
+    "smart_matching": true
+  },
+  "analysis_successful_prompt": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail.",
+  "analysis_summary_prompt": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call.",
+  "analysis_user_sentiment_prompt": "Evaluate user's sentiment, mood and satisfaction level.",
   "post_call_analysis_data": [
     {
       "type": "system-presets",
       "name": "call_summary",
-      "description": "Write a 1-3 sentence summary of the call."
+      "description": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call."
     },
     {
       "type": "system-presets",
       "name": "call_successful",
-      "description": "Evaluate whether the agent had a successful call."
+      "description": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail."
     },
     {
       "type": "system-presets",
@@ -36,69 +51,30 @@
       "description": "Evaluate user's sentiment, mood and satisfaction level."
     },
     {
+      "name": "is_lead",
+      "description": "True if the caller is a potential customer requesting service, a quote, an estimate, or scheduling work (repair, installation, maintenance, tune-up, inspection). False if the caller is a wrong number, existing customer asking an admin question, spam, robocall, or employee-related call.",
       "type": "boolean",
-      "name": "lead_captured",
-      "description": "Was lead information successfully captured during this call? Return true or false."
+      "examples": [
+        "true",
+        "false"
+      ]
     },
     {
-      "type": "boolean",
-      "name": "caller_interested",
-      "description": "Was the caller interested in services? Return true or false."
-    },
-    {
-      "type": "string",
-      "name": "caller_name",
-      "description": "Full name of the caller if provided. Empty string if not."
-    },
-    {
-      "type": "string",
-      "name": "caller_phone",
-      "description": "Phone number of the caller if stated. Empty string if not."
-    },
-    {
-      "type": "string",
-      "name": "caller_email",
-      "description": "Email address of the caller if provided. Empty string if not."
-    },
-    {
-      "type": "string",
-      "name": "caller_address",
-      "description": "Service address if provided. Empty string if not."
-    },
-    {
-      "type": "string",
-      "name": "service_requested",
-      "description": "What service was requested. Short description."
-    },
-    {
-      "type": "string",
-      "name": "call_type",
-      "description": "Type of call: new_lead, emergency, callback, existing_customer, general_question, spam."
-    },
-    {
-      "type": "string",
       "name": "urgency",
-      "description": "Urgency level: low, medium, high, emergency."
+      "description": "Severity tier of the caller's need. 'emergency' = no heat in winter, no AC in heat wave, gas smell, water leak, CO alarm \u2014 needs same-day response. 'high' = system partially working, customer discomfort, can wait 24 hours. 'normal' = routine repair or estimate, flexible scheduling. 'low' = information request, future planning, tune-up. 'none' = not a service call.",
+      "type": "enum",
+      "choices": [
+        "emergency",
+        "high",
+        "normal",
+        "low",
+        "none"
+      ]
     },
     {
       "type": "boolean",
-      "name": "is_hot_lead",
-      "description": "Is this a hot lead? True if lead score would be 7 or above."
-    },
-    {
-      "type": "number",
-      "name": "lead_score",
-      "description": "Lead score 0-10. Lead captured with urgency=9-10. Lead captured=7-8. General inquiry=4-6. Spam=0."
-    },
-    {
-      "type": "string",
-      "name": "follow_up_action",
-      "description": "Recommended follow-up action: callback, callback_urgent, transfer_to_team, or none."
-    },
-    {
-      "type": "string",
-      "name": "special_notes",
-      "description": "Any special notes or flags about the call (e.g., technical caller, elderly, distressed, anti-AI)."
+      "name": "is_spam",
+      "description": "True if the call is a robocall, telemarketer, silent/dropped, obvious scam, or wrong number with no service intent. False for any legitimate caller regardless of whether they book."
     }
   ],
   "voice_id": "retell-Sloane",
@@ -108,13 +84,13 @@
   "volume": 1,
   "max_call_duration_ms": 600000,
   "interruption_sensitivity": 0.9,
-  "boosted_keywords": [
-    "AC Repair, Heating Repair, Duct Cleaning"
-  ],
   "ambient_sound": "call-center",
-  "ambient_sound_volume": 0.8,
+  "ambient_sound_volume": 0.7,
   "responsiveness": 0.9,
   "enable_dynamic_responsiveness": true,
   "allow_user_dtmf": true,
-  "user_dtmf_options": {}
+  "user_dtmf_options": {},
+  "webhook_events": [
+    "call_analyzed"
+  ]
 }

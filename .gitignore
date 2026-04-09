@@ -3,3 +3,9 @@ node_modules/
 .env.local
 *.log
 .DS_Store
+
+# Secrets / local-only (added 2026-04-09)
+.claude/settings.local.json
+docs/audits/2026-04-09-n8n-workflows-raw.json
+docs/audits/n8n-backups-*/
+retell-iac/snapshots/*_pre-*/agent.json

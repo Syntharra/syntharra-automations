@@ -1,0 +1,1036 @@
+[
+  {
+    "id": "C0AQ7DZ7P3R",
+    "created": 1775187832,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775187964343,
+    "name": "project-receptionist",
+    "name_normalized": "project-receptionist",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "This channel is for everything #new-channel. Hold meetings, share docs and make decisions together with your team.",
+      "creator": "U0AQSF7FDDJ",
+      "last_set": 1775187832
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "properties": {
+      "tabs": [
+        {
+          "id": "Ct0AQNTBD3S6",
+          "type": "canvas",
+          "data": {
+            "file_id": "F0AQKFCD28M",
+            "shared_ts": "1775187964.203179"
+          },
+          "label": ""
+        },
+        {
+          "id": "Ct0AQGG3LEKV",
+          "type": "list",
+          "data": {
+            "file_id": "F0AQLRHE20N",
+            "shared_ts": "1775187964.059889"
+          },
+          "label": ""
+        },
+        {
+          "type": "workflows",
+          "label": "",
+          "id": "workflows"
+        },
+        {
+          "label": "Canvas",
+          "type": "channel_canvas",
+          "is_disabled": true,
+          "id": "channel_canvas"
+        }
+      ],
+      "tabz": [
+        {
+          "id": "Ct0AQNTBD3S6",
+          "type": "canvas",
+          "data": {
+            "file_id": "F0AQKFCD28M",
+            "shared_ts": "1775187964.203179"
+          }
+        },
+        {
+          "id": "Ct0AQGG3LEKV",
+          "type": "list",
+          "data": {
+            "file_id": "F0AQLRHE20N",
+            "shared_ts": "1775187964.059889"
+          }
+        },
+        {
+          "type": "workflows"
+        },
+        {
+          "label": "Canvas",
+          "type": "channel_canvas",
+          "is_disabled": true
+        }
+      ],
+      "use_case": "PROJECT_SOLUTION"
+    },
+    "previous_names": [
+      "new-channel"
+    ]
+  },
+  {
+    "id": "C0AQ9LSREJK",
+    "created": 1775220241,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220241121,
+    "name": "receipts-syntharra-com",
+    "name_normalized": "receipts-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQ9MPAGNT",
+    "created": 1775220676,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220676690,
+    "name": "feedback-syntharra-com",
+    "name_normalized": "feedback-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQJN9N6LT",
+    "created": 1775219999,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775219999904,
+    "name": "support-syntharra-com",
+    "name_normalized": "support-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQJNE445R",
+    "created": 1775220068,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220068271,
+    "name": "solutions-syntharra-com",
+    "name_normalized": "solutions-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQKB6P51R",
+    "created": 1775227234,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775227234811,
+    "name": "to-do-list",
+    "name_normalized": "to-do-list",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 1,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQLRAKV7Y",
+    "created": 1775187784,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775187791448,
+    "name": "social",
+    "name_normalized": "social",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "Other channels are for work. This one\u2019s just for fun. Get to know your teammates and show your lighter side. \ud83c\udf88",
+      "creator": "U0AQSF7FDDJ",
+      "last_set": 1775187784
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 0,
+    "properties": {
+      "tabs": [
+        {
+          "id": "Ct0ARH5RBRA4",
+          "type": "canvas",
+          "data": {
+            "file_id": "F0ARH5QQPA4",
+            "shared_ts": "1775187791.215839"
+          },
+          "label": ""
+        }
+      ],
+      "tabz": [
+        {
+          "id": "Ct0ARH5RBRA4",
+          "type": "canvas",
+          "data": {
+            "file_id": "F0ARH5QQPA4",
+            "shared_ts": "1775187791.215839"
+          }
+        }
+      ],
+      "use_case": "random"
+    },
+    "previous_names": []
+  },
+  {
+    "id": "C0AQMKNQK0V",
+    "created": 1775219112,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775219112336,
+    "name": "weekly-reports",
+    "name_normalized": "weekly-reports",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQMN55H6H",
+    "created": 1775220302,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220302168,
+    "name": "onboarding-syntharra-com",
+    "name_normalized": "onboarding-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQNT2S6QJ",
+    "created": 1775187784,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775187819130,
+    "name": "all-syntharra",
+    "name_normalized": "all-syntharra",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": true,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "Share announcements and updates about company news, upcoming events or teammates who deserve some kudos. \u2b50",
+      "creator": "U0AQSF7FDDJ",
+      "last_set": 1775187784
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 1,
+    "properties": {
+      "use_case": "welcome"
+    },
+    "previous_names": [
+      "all-slack"
+    ]
+  },
+  {
+    "id": "C0AQP081RCN",
+    "created": 1775218991,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775218991134,
+    "name": "onboarding",
+    "name_normalized": "onboarding",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQP29J5KQ",
+    "created": 1775219972,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220031730,
+    "name": "alerts-syntharra-com",
+    "name_normalized": "alerts-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": [
+      "alerts-syntharra-com",
+      "alerts"
+    ]
+  },
+  {
+    "id": "C0AQR26PXNE",
+    "created": 1775219094,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775219094500,
+    "name": "leads",
+    "name_normalized": "leads",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQR2BAZHQ",
+    "created": 1775219171,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775219171313,
+    "name": "phone-pc",
+    "name_normalized": "phone-pc",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 1,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQR2CENAW",
+    "created": 1775219184,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220206735,
+    "name": "emails",
+    "name_normalized": "emails",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 4,
+    "properties": {
+      "tabs": [
+        {
+          "id": "Ct0AQMMYBN7P",
+          "type": "canvas",
+          "data": {
+            "file_id": "F0AQR4GF6F4",
+            "shared_ts": "1775220206.536499"
+          },
+          "label": ""
+        },
+        {
+          "id": "Ct0AQ9LQM2S3",
+          "type": "list",
+          "data": {
+            "file_id": "F0AQMMVLQPP",
+            "shared_ts": "1775220206.150879"
+          },
+          "label": ""
+        },
+        {
+          "type": "workflows",
+          "label": "",
+          "id": "workflows"
+        },
+        {
+          "label": "Canvas",
+          "type": "channel_canvas",
+          "is_disabled": true,
+          "id": "channel_canvas"
+        }
+      ],
+      "tabz": [
+        {
+          "id": "Ct0AQMMYBN7P",
+          "type": "canvas",
+          "data": {
+            "file_id": "F0AQR4GF6F4",
+            "shared_ts": "1775220206.536499"
+          }
+        },
+        {
+          "id": "Ct0AQ9LQM2S3",
+          "type": "list",
+          "data": {
+            "file_id": "F0AQMMVLQPP",
+            "shared_ts": "1775220206.150879"
+          }
+        },
+        {
+          "type": "workflows"
+        },
+        {
+          "label": "Canvas",
+          "type": "channel_canvas",
+          "is_disabled": true
+        }
+      ],
+      "use_case": "PROJECT_SOLUTION"
+    },
+    "previous_names": []
+  },
+  {
+    "id": "C0AQR4NPCJW",
+    "created": 1775220281,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220281192,
+    "name": "careers-syntharra-com",
+    "name_normalized": "careers-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQUKMD31A",
+    "created": 1775219071,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775219071788,
+    "name": "calls",
+    "name_normalized": "calls",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AQUMSD8TE",
+    "created": 1775220101,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220101157,
+    "name": "admin-syntharra-com",
+    "name_normalized": "admin-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AR3UH5R7B",
+    "created": 1775218972,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775218972991,
+    "name": "ops-alerts",
+    "name_normalized": "ops-alerts",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AR3UP8A7K",
+    "created": 1775219083,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775219083426,
+    "name": "billing",
+    "name_normalized": "billing",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0AR41A0H7B",
+    "created": 1775220050,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220050533,
+    "name": "sales-syntharra-com",
+    "name_normalized": "sales-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  },
+  {
+    "id": "C0ARKCCJMRN",
+    "created": 1775220079,
+    "creator": "U0AQSF7FDDJ",
+    "is_org_shared": false,
+    "is_im": false,
+    "context_team_id": "T0AQLRA9J5U",
+    "updated": 1775220079449,
+    "name": "info-syntharra-com",
+    "name_normalized": "info-syntharra-com",
+    "is_channel": true,
+    "is_group": false,
+    "is_mpim": false,
+    "is_private": false,
+    "is_archived": false,
+    "is_general": false,
+    "is_shared": false,
+    "is_ext_shared": false,
+    "unlinked": 0,
+    "is_pending_ext_shared": false,
+    "pending_shared": [],
+    "parent_conversation": null,
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "shared_team_ids": [
+      "T0AQLRA9J5U"
+    ],
+    "pending_connected_team_ids": [],
+    "is_member": false,
+    "num_members": 2,
+    "previous_names": []
+  }
+]
