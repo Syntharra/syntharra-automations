@@ -8,7 +8,7 @@ _Last updated: 2026-04-09_
 47c9ecd docs(tasks): add MASTER re-register + usage_alert.py as P0; log agent deletion in FAILURES.md
 
 ## Go-live checklist
-see docs/TASKS.md
+see docs/GO-LIVE.md
 
 ---
 
