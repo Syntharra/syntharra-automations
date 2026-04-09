@@ -47,6 +47,28 @@ Removed the speculative "store everything in Supabase" layer. Retell is the sour
 
 **Pass 2 prereq — verify before starting:** the retell-iac MASTER agent Post-Call Analysis block must declare custom variables `is_lead`, `urgency`, `is_spam` (and optionally `service_type`, `customer_name`). Retell only populates `call_analysis.custom_analysis_data.*` for fields declared on the agent. If missing, add them once in MASTER, promote, and the next billing cycle is the cutover.
 
+## Outstanding tasks from 2026-04-09 session (pick up next session)
+
+Alongside the Pass 2 billing/call-log migration above, three standalone tasks were deferred from the 2026-04-09 request and have not been started:
+
+### Task 2 — Fix Retell agent auto-layout fine-tuning error
+- **Agent:** `agent_4afbfdb3fcb1ba9569353af28d`, flow `conversation_flow_34d169608460`
+- **Symptom:** "Fine tuning error" preventing auto-layout of nodes in the Retell canvas
+- **Likely root cause:** phantom/placeholder component in the flow's `components[]` array — see FAILURES.md 2026-04-08 "Standard MASTER auto-layout blocked by phantom component". Same fix pattern: `PATCH components: []` (or delete the offending entry) after checking for entries with placeholder text or zero node references.
+- **Approach:** Clone live → TESTING via `retell-iac/scripts/promote.py`, diagnose on TESTING, promote fix. (RULES.md #1 applies — this is not covered by the Pass 2 one-time override, which is scoped only to the webhook repoint.)
+
+### Task 3 — Fetch + display current client dashboard
+- **Repo:** `Syntharra/syntharra-website`
+- **File:** `dashboard.html`
+- **Live URL pattern:** `https://syntharra.com/dashboard.html?a=<agent_id>`
+- **Data source:** `POST https://n8n.syntharra.com/webhook/retell-calls` (workflow `Y1EptXhOPAmosMbs`)
+- **Ask:** fetch current HTML via GitHub MCP and display to Dan so he can review the current state before any further edits.
+
+### Task 4 — Agent naming convention: `{Live|Demo} {Company Name}`
+- **Goal:** prevent accidentally working on live agents during testing/improvements by visually distinguishing Live vs Demo at agent-list level
+- **Where to change:** `retell-iac/` agent creation scripts, any n8n onboarding workflow nodes that set the Retell agent `agent_name`, and potentially the master template.
+- **Open question from last session:** what signal determines Live vs Demo? Candidates: promotion target (TESTING vs prod), env var, or an explicit CLI flag on `promote.py`. Needs Dan's decision before implementation.
+
 ## What's in flight
 
 - **Stripe live mode** — test price `price_1TK5b1ECS71NQsk8Ru3Gyybl` ($697/mo) created and old prices archived. Live key not yet in vault. P0 blocker pending Dan's timeline.
