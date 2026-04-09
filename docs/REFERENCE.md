@@ -82,7 +82,7 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 
 | Workflow | ID | Purpose |
 |---|---|---|
-| Client Agent Update Form | `6Mwire23i6InrnYZ` | Edit-after-onboarding: form → update Retell + Supabase. Form URL: https://n8n.syntharra.com/form/client-update |
+| Client Agent Update Form | `6Mwire23i6InrnYZ` | Edit-after-onboarding: branded form → update Retell + Supabase. Form URL: https://n8n.syntharra.com/webhook/client-update (GET=branded HTML, POST=process update) |
 | HVAC AI Receptionist Onboarding (Standard) | `4Hx7aRdzMl5N0uJP` | Standard onboarding: Jotform → Retell → Supabase → Stripe → email |
 | HVAC Call Processor (lean fan-out) | `Kg576YtPM9yEacKn` | Retell webhook → filter → lookup → email/Slack/SMS. Triggers on is_lead OR urgency=emergency |
 | Retell Proxy Webhook | `Y1EptXhOPAmosMbs` | Returns {calls:[...]} from Retell v2 for dashboard use |

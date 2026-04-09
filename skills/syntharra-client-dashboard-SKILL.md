@@ -50,7 +50,7 @@ At the **END** of every chat that changes the dashboard:
 | File path | `dashboard.html` |
 | Live URL | `https://syntharra.com/dashboard.html?a=<AGENT_ID>` |
 | JSX component | `shared/client-dashboard.jsx` in `syntharra-automations` |
-| Current SHA | `b0603b6e7fe6b92318d012e99edf362f11b04360` |
+| Current SHA | `8f3640813fccd2047268a011f4fa91b69d2badad` |
 
 ---
 
