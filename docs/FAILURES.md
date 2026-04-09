@@ -91,6 +91,17 @@ date | area | what failed | root cause | fix applied | skill updated
 **Fix:** Converted "Publish Retell Agent" from Code node to HTTP Request node (same type as Create Retell Agent) with `responseFormat: text` to handle empty 200 body. Added "Pass Through Agent Data" Code node after it to forward agent data to downstream nodes (HubSpot, email). Added "Update Agent Status: Active" PATCH node to set Supabase `agent_status = 'active'` after publish.
 **Rule:** Never use a Code node for outbound HTTP. Always use an HTTP Request node. When the response is empty (like Retell publish), set `options.response.response.responseFormat: 'text'` to avoid JSON parse failures.
 
+## 2026-04-09 — DROP TABLE blocked by dependent view (`infra_health_checks`)
+**What failed:** Batched `DROP TABLE IF EXISTS` migration aborted because `infra_health_checks` had a dependent view `infra_health_summary`.
+**Root cause:** Postgres blocks DROP on objects with dependent views unless CASCADE is specified. Migration was transactional, so all 5 drops rolled back.
+**Fix:** Added `CASCADE` only to the one table that had the dependent object. Re-ran; succeeded.
+**Rule:** Before batch DROP migrations, query `pg_depend` / `information_schema.view_table_usage` for dependent views or functions. Cascade explicitly per-target, never blanket.
+
+## 2026-04-09 — Pass 2 one-time override of RULES.md #1 (Retell live agent webhook repoint)
+**What will happen:** Pass 2 will repoint the post-call webhook URL on live agent `agent_4afbfdb3fcb1ba9569353af28d` from `HVAC Call Processor (Standard)` to new `Call Usage Logger` workflow.
+**Why the override is authorized:** Pre-launch. Zero live clients. The standing rule ("never test or fix on live Retell agents") exists to protect revenue and data — neither is at risk here. Override granted by Dan on 2026-04-09 for this specific change only.
+**Rule reinstated after Pass 2:** From the moment the first paying client is onboarded, the rule returns with no exceptions — clone → TESTING → promote via `retell-iac/scripts/promote.py`.
+
 ## 2026-04-08 — Standard MASTER auto-layout blocked by phantom component
 **What failed:** Retell canvas "Auto Layout" button threw an error on the Standard MASTER flow, blocking canvas operations
 **Root cause:** The flow's components[] array contained a blank inline component (cf-component-1774923921746, name "Component L1") with literal Retell placeholder text "Describe what the AI should say or do" — never filled in, never referenced by any node. Retell requires all components to be in a complete state before Auto Layout can run.
