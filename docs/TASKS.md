@@ -4,6 +4,12 @@
 
 ## P0
 
+- **Extract prompt compiler + ship client-update CLI** — the single biggest unlock for the edit-after-onboarding lifecycle. Build order:
+  1. `tools/prompt_compiler.py` — Python port of the n8n `Build Retell Prompt` 769-line JS code node. Single function `compile(client_row: dict) -> {global_prompt, flow_fields, agent_fields}`. Takes a `hvac_standard_agent` row, returns what to PATCH into Retell. **Parity-test against a snapshot of current MASTER's compiled prompt** — Python output must byte-match the JS output given the same input row before it's trusted.
+  2. `tools/update_client_agent.py` — CLI: `python tools/update_client_agent.py --agent_id agent_xxx --set lead_phone="555-1234" --set current_promotion="Spring tune-up $79" [--dry-run] [--email]`. Flow: read Supabase → apply --set → compile → diff vs live Retell → PATCH `update-conversation-flow` + `update-agent` → publish → write row back → print one-line undo command.
+  3. **Do NOT touch the n8n onboarding workflow yet.** Onboarding keeps using its own JS compiler until the Python one has been used in production for real updates and proven correct. Converge in a later session.
+  4. Test on a fresh clone of MASTER (`retell-iac/scripts/register.py` to spawn one), not on MASTER itself. Smoke with a harmless change (`--set current_promotion="TEST $1 off"`). Revert.
+  5. Budget: ~5.5h. Plan doc shape already agreed in session 2026-04-09. Explicitly out-of-scope for v1: auth, client UI, settings page, bulk updates, change history table, rollback beyond the printed undo line, any side effects (Stripe/HubSpot/welcome email).
 - **Test call on MASTER `+18129944371`** — confirm code-node architecture swap + Call Processor fan-out work live. Validates (a) code-node flow end-to-end, (b) `is_lead`/`urgency`/`is_spam` custom analysis fields populate, (c) Brevo email lands in lead inbox, (d) Slack fan-out skipped cleanly when no webhook present.
 - **Telnyx SMS swap** — once Telnyx AI approval lands, replace the `SMS Stub (Telnyx TODO)` node in HVAC Call Processor with a real HTTP node calling Telnyx messaging API. Stub payload is already built in `Build Payload`.
 
