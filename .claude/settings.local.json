@@ -35,7 +35,8 @@
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__list_tables",
       "Bash(ls *.json)",
-      "mcp__claude_ai_Supabase__apply_migration"
+      "mcp__claude_ai_Supabase__apply_migration",
+      "mcp__claude_ai_n8n__search_nodes"
     ]
   }
 }
