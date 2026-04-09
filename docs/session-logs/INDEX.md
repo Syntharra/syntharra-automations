@@ -16,3 +16,4 @@
 | 2026-04-09 | client-update-pass2-plan | 493d69b | Oriented session, identified go-live blockers (null webhook + broken billing), wrote 6-task plan for next session |
 | 2026-04-09 | re-register-agents-usage-alert-client-update-smoke | 47c9ecd | Re-registered MASTER+TESTING in Retell, built usage_alert.py, ran client-update workflow builder, smoke-tested update_client_agent.py (fixed 3 prompt_compiler bugs in the process) |
 | 2026-04-09 | agent-prompt-audit | f6b017c | Deep prompt audit: fixed 7 component issues, added vendor/wrong-number edges, hardcoded emergency number bug, all deployed to TESTING+MASTER; n8n workflow updated with same changes + timezone automation for new clients |
+| 2026-04-09 | rules-parity-fix | 2f38a3d | Added Rules 15-22 to RULES.md, closing FAILURES.md parity gap from agent prompt audit session |

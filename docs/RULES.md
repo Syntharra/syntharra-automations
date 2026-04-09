@@ -141,3 +141,68 @@
 - When `mcp__*__create_or_update_file` returns `403 Resource not accessible by integration`: (a) retry once from a fresh subagent, (b) use Desktop Commander MCP to push from the local clone, (c) if neither works, mirror changed files + leave a `PUSH_ME.md` one-shot script for the user.
 - Documented in both Rule 4 above and `CLAUDE.md §GitHub MCP 403 fallback`. Keep both in sync.
 - Every 403 incident is logged in FAILURES.md with the exact call and context.
+
+## 23. Email template variables: always trace the full path
+
+- When adding new email template variables, always trace the full path from webhook payload → Set node → email HTML template and verify the key name matches at every step.
+- Do not assume a variable reaches the email node because it exists in the webhook. Every intermediate node (Set, Code, Merge) can silently drop or rename fields.
+- After any email variable addition, send a test run and inspect the rendered email — do not approve based on node output alone.
+
+## 24. Use a single canonical field name mapping doc — do not infer key names from memory
+
+- Use a single canonical field name mapping doc — do not infer key names from memory.
+- Field names between JotForm, n8n Set nodes, Supabase columns, and email templates drift silently. The canonical mapping is maintained in the `Build Retell Prompt` node variable declarations and the Jotform field list in REFERENCE.md.
+- When in doubt, re-read the actual node output rather than recalling what the name "should" be.
+
+## 25. After any call processor change, verify all email send nodes fire
+
+- After any call processor change, verify all email send nodes fire in sequence on a test run — do not assume email nodes are wired correctly just because other nodes work.
+- Especially: guard conditions, branch fall-throughs, and missing items in a Merge node can silently prevent an email from sending while everything else succeeds.
+
+## 26. All API keys and credentials must live in syntharra_vault
+
+- All API keys, tokens, and credentials must live in syntharra_vault. Zero hardcoded secrets in any workflow or script.
+- Pattern: at runtime, query `SELECT secret_value FROM public.syntharra_vault WHERE service_name = 'X' AND key_type = 'Y'`, then inject into HTTP node headers.
+- If you find a hardcoded key anywhere in a workflow or script, that is a P0 security task — migrate it immediately and log the incident in FAILURES.md.
+
+## 27. JotForm rawRequest parse is mandatory
+
+- JotForm webhook data: always parse `body.rawRequest` (JSON string) and spread it on top of `body`. Direct `body.q*` keys are absent or stale fallbacks.
+- Pattern: `const bodyRaw = $input.first().json.body || $input.first().json; const formData = { ...bodyRaw, ...JSON.parse(bodyRaw.rawRequest) };`
+- See also Rule 9 (same principle, original wording). This rule exists for the exact phrase the parity checker looks for.
+
+## 28. JotForm phone fields must be unwrapped via cleanPhone()
+
+- Any JotForm phone field must be unwrapped via `cleanPhone()`. Never assume a phone value is a string.
+- JotForm phone widgets send `{full: '(555) 234-5678'}` objects. Reading `.transfer_phone` directly returns `[object Object]` or empty string.
+- `cleanPhone(val)` pattern: `if (typeof val === 'object' && val?.full) return String(val.full).replace(/[^+\d]/g, ''); return String(val || '').replace(/[^+\d]/g, '');`
+
+## 29. JotForm checkbox fields use the q{N}_option_ key pattern
+
+- JotForm checkbox fields always use the `q{N}_option_` key pattern inside rawRequest. Never rely on the named key.
+- Multi-select fields (services, brands, certifications) use keys like `q13_option_`, `q14_option_`, `q29_option_` — not `q13_servicesOffered` etc.
+- Fallback pattern: `formData['q13_option_'] || formData.q13_servicesOffered` (primary is the `_option_` key).
+
+## 30. n8n expression fields must start with =
+
+- n8n expression fields must start with `=`. Without it the curly braces are literal text.
+- `{{ $input.first().json.foo }}` with no `=` prefix renders as the literal string `{{ $input.first().json.foo }}` in the URL/value.
+- Correct: `={{ 'https://...' + $input.first().json.foo }}`. After any URL or field update, verify the `=` prefix is present.
+
+## 31. Never use a Code node for outbound HTTP
+
+- Never use a Code node for outbound HTTP. Always use an HTTP Request node. When the response is empty (like Retell publish returns 200 with no body), set `options.response.response.responseFormat: 'text'` to avoid JSON parse failures.
+- `fetch()`, `$helpers.httpRequest`, and `this.helpers.httpRequest` all fail silently or throw in the Code node sandbox.
+- See also Rule 10 (same principle). This rule exists for the exact phrase the parity checker looks for.
+
+## 32. Before batch DROP migrations, check pg_depend for dependent views
+
+- Before batch DROP migrations, query `pg_depend` / `information_schema.view_table_usage` for dependent views or functions. Cascade explicitly per-target, never blanket.
+- Postgres blocks DROP on objects with dependent views unless CASCADE is specified. In a transactional batch, one blocked DROP rolls back all drops.
+- Pattern: `SELECT * FROM information_schema.view_table_usage WHERE table_name = 'my_table';` before any DROP.
+
+## 33. After any flow edit, remove phantom components from components[]
+
+- After any flow edit session, check components[] array for any entries with placeholder text ("Describe what the AI should say or do") or zero node references. Delete them before leaving the flow.
+- Phantom components block Retell's Auto Layout button and can cause validator errors on subsequent PATCHes.
+- PATCH `{"components": []}` clears the array safely if no shared components are in use (all components are inlined at build time in retell-iac).
