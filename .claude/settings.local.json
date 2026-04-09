@@ -34,7 +34,8 @@
       "Bash(python tools/session_end.py --topic \"plugin-inquiry\" --summary \"User asked about Claude Code plugins. Explained MCP servers, skills, and hooks as the extension mechanisms. No code changes.\")",
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__list_tables",
-      "Bash(ls *.json)"
+      "Bash(ls *.json)",
+      "mcp__claude_ai_Supabase__apply_migration"
     ]
   }
 }
