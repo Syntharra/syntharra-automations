@@ -9,3 +9,20 @@ node_modules/
 docs/audits/2026-04-09-n8n-workflows-raw.json
 docs/audits/n8n-backups-*/
 retell-iac/snapshots/*_pre-*/agent.json
+
+# Python bytecode — never commit
+__pycache__/
+*.pyc
+*.pyo
+
+# External plugin trees dropped into the workspace for reference.
+# Not part of Syntharra; must never land in commits.
+plugins/
+
+# Raw automation-API dumps tend to contain inlined credentials (n8n HTTP
+# nodes bake keys into headers). Save under docs/audits/ (also gitignored)
+# or delete after use. See FAILURES.md 2026-04-09 prompt-compiler row.
+*_raw.json
+*.secrets.json
+tests/fixtures/prompt_compiler/brp_input.json
+tests/fixtures/prompt_compiler/_workflow_raw.json

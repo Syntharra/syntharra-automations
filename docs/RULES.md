@@ -83,3 +83,13 @@
 
 - The credentials table is `public.syntharra_vault`. There is no `public.vault` and no `active` column.
 - Query: `SELECT * FROM public.syntharra_vault WHERE service_name = 'X'`.
+
+## 14. Automation API dumps are secret material
+
+- n8n (`GET /api/v1/workflows/{id}`), Retell full-agent dumps, and any similar "give me the whole object" endpoint return documents that **embed credentials inline** — HTTP node headers, auth blocks, connection strings baked into the payload.
+- Treat any such dump as if it were a `.env` file:
+  - Save under `docs/audits/` (already gitignored) or to `/tmp`, or delete after use.
+  - **Never** commit one to the repo. Not even to a feature branch. Not even "temporarily, I'll strip it later".
+  - Extract what you actually need (e.g. a single code-node `jsCode` field) into a focused fixture, then delete the raw dump.
+- `.gitignore` blocks `*_raw.json` and `*.secrets.json` globally. If you name a dump anything else, you are on the hook for it.
+- **Why:** See FAILURES.md 2026-04-09 "stop hook / secrets" — an n8n workflow dump with 32 live credentials nearly hit GitHub via a broken auto-backup hook. The hook has been hardened (branch-gate + `git add -u` + pre-commit secret scan) but the discipline is still yours — belt AND braces.
