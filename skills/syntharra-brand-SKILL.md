@@ -71,11 +71,13 @@ description: >
 
 **Local path:** `C:\Users\danie\OneDrive\Desktop\Syntharra\syntharra_logo\`
 
-### Logo Construction
-- 4 ascending vertical bars, rounded corners, flat `#6C63FF`
-- Wordmark: Georgia / Times New Roman serif, 22px, normal weight, `#6C63FF`, letter-spacing 0.5px
-- Tagline: Arial / Helvetica, 8px, bold, uppercase, letter-spacing 3.5px, `#111111`
-- Tagline text: **"Global AI Solutions"** — always this exact phrase, always uppercase
+### Logo Construction (canonical — confirmed by Dan 2026-04-09)
+- 4 ascending vertical bars, rounded corners, flat `#6C63FF` — bars go shortest (left) → tallest (right)
+- Wordmark: Inter, bold (700–800), `#1A1A2E` (dark), letter-spacing -0.02em
+- Tagline: Inter, medium (500–600), `#6C63FF` (purple), uppercase, letter-spacing 1.2+, font-size 8–11px
+- Tagline text: **"Global AI Solutions"** — always this exact phrase, always uppercase or title-case
+
+> **Standard confirmed 2026-04-09:** Dark wordmark (`#1A1A2E`), purple tagline (`#6C63FF`). This is the correct and approved standard across ALL Syntharra web properties. The brand-skill previously listed an incorrect serif/violet wordmark — this entry supersedes that.
 
 ### Logo Rules
 - **Never** stretch, recolor, or add effects
