@@ -65,4 +65,6 @@ python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_
 | Agent | agent_id | flow_id | Phone |
 |---|---|---|---|
 | Standard MASTER | `agent_4afbfdb3fcb1ba9569353af28d` | `conversation_flow_34d169608460` | `+18129944371` |
-| Standard CLONE | `agent_201b8d1e9eee10303e79710bc9` | `conversation_flow_b0f2cf9a0e58` | `+12292672271` |
+| Standard CLONE (autolayout fix, 2026-04-09) | `agent_1d8d85fd2c1c21ede61c68b88c` | `conversation_flow_efe5cebb4d38` | _(none — test only)_ |
+
+> Previous clone (`agent_201b8d1e9eee10303e79710bc9` / `conversation_flow_b0f2cf9a0e58`) was deleted after 2026-04-06 promotion and re-created 2026-04-09 to validate the call_style_detector auto-layout fix before promotion. See `snapshots/2026-04-09_pre-fix/` for pre-fix MASTER baseline.
