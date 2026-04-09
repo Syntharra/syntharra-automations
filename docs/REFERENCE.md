@@ -10,7 +10,7 @@
 This is the ONLY supported path for creating a new client agent. Any deviation must be documented and approved.
 
 1. **Source of truth** = `retell-iac/` on `main`. Agent flows are built from YAML manifests + JSON templates, never hand-edited in the Retell UI.
-2. **Standard client** → cloned from `agent_4afbfdb3fcb1ba9569353af28d` (Standard MASTER, flow `conversation_flow_34d169608460`).
+2. **Standard client** → cloned from `agent_6e7a2ae03c2fbd7a251fafcd00` (Standard TESTING, flow `conversation_flow_90da7ca2b270`) — authoritative as of 2026-04-09. Legacy MASTER `agent_4afbfdb3fcb1ba9569353af28d` is stale and will be replaced on next promotion.
 3. **Premium client** → cloned from `agent_2cffe3d86d7e1990d08bea068f` (Premium MASTER = Premium TESTING, interim. Flow `conversation_flow_2ded0ed4f808`).
 4. **Clone trigger** = Jotform submission → n8n onboarding workflow:
    - Standard: `HVAC AI Receptionist - JotForm Onboarding (Supabase)` (`4Hx7aRdzMl5N0uJP`)
@@ -39,7 +39,8 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 ## Agent Registry
 | Agent | ID | Status |
 |---|---|---|
-| HVAC Standard (MASTER) | `agent_4afbfdb3fcb1ba9569353af28d` | ✅ MASTER — LIVE (promoted 2026-04-06, flow v22, 90/91 98%). Clone source for Standard clients. |
+| **HVAC Standard TESTING (authoritative — most up-to-date)** | `agent_6e7a2ae03c2fbd7a251fafcd00` | ✅ Current source of truth for Standard. Modern `code`-node architecture. Autolayout + finetune orphan fixed 2026-04-09. Pending promotion to MASTER. |
+| HVAC Standard MASTER (legacy — stale) | `agent_4afbfdb3fcb1ba9569353af28d` | ⚠️ Legacy `subagent` architecture. Last promoted 2026-04-06 (v22). Will be replaced wholesale by TESTING on next promotion. Do not use as clone source. |
 | HVAC Premium (MASTER = TESTING, interim) | `agent_2cffe3d86d7e1990d08bea068f` | ✅ Acting as Premium MASTER until post-launch split. Clone source for Premium clients. |
 | Demo Female / Sophie | `agent_2723c07c83f65c71afd06e1d50` | ✅ Live |
 | Demo Male / Jake | `agent_b9d169e5290c609a8734e0bb45` | ✅ Live |
@@ -49,8 +50,9 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 ## Conversation Flow Registry
 | Flow | ID | Bound to |
 |---|---|---|
-| HVAC Standard (MASTER) | `conversation_flow_34d169608460` | Standard MASTER agent |
-| HVAC Standard (TESTING) | `conversation_flow_a54448105a43` | Unbound — Standard TESTING agent deleted post-promotion |
+| **HVAC Standard TESTING (authoritative)** | `conversation_flow_90da7ca2b270` | Standard TESTING agent `agent_6e7a2ae03c2fbd7a251fafcd00` — the canonical current Standard flow |
+| HVAC Standard MASTER (legacy) | `conversation_flow_34d169608460` | Legacy Standard MASTER — subagent architecture, to be replaced |
+| HVAC Standard (OLD TESTING) | `conversation_flow_a54448105a43` | Unbound — old testing agent deleted post-2026-04-06 promotion, do not use |
 | HVAC Premium (MASTER/TESTING) | `conversation_flow_2ded0ed4f808` | Premium MASTER (interim — same agent as TESTING) |
 
 ## Phone Numbers
@@ -129,7 +131,8 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 
 | client_id | agent_id | flow_id | tier | status | notes |
 |---|---|---|---|---|---|
-| SYNTHARRA_MASTER_STD  | agent_4afbfdb3fcb1ba9569353af28d | conversation_flow_34d169608460 | std  | active | HVAC Standard MASTER |
+| SYNTHARRA_TESTING_STD | agent_6e7a2ae03c2fbd7a251fafcd00 | conversation_flow_90da7ca2b270 | std  | active | **Standard TESTING — authoritative as of 2026-04-09.** Modern code-node arch, autolayout fix applied. |
+| SYNTHARRA_MASTER_STD  | agent_4afbfdb3fcb1ba9569353af28d | conversation_flow_34d169608460 | std  | stale  | Legacy MASTER (subagent arch). Do not use. Pending full replacement. |
 | SYNTHARRA_MASTER_PREM | agent_2cffe3d86d7e1990d08bea068f | conversation_flow_2ded0ed4f808 | prem | active | HVAC Premium MASTER (provisional — confirm after scenario testing) |
 
 **Removed (do NOT use — these IDs no longer exist on Retell):**

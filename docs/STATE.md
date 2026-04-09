@@ -25,13 +25,15 @@ Repo stripped to lean core. retell-iac is Standard-only.
 
 ## What's live in production
 
-- **HVAC Standard agent** — MASTER at `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`. Agent ID `agent_4afbfdb3fcb1ba9569353af28d`, flow `conversation_flow_34d169608460`. retell-iac is the canonical source of truth for all changes.
+- **HVAC Standard TESTING agent (authoritative)** — `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270`. Modern `code`-node architecture. Autolayout + finetune orphan fix applied 2026-04-09. **This is the current source of truth for the Standard agent**, pending promotion to MASTER in a fresh session. Snapshot: `retell-iac/snapshots/2026-04-09_testing-autolayout-fixed/`.
+- **HVAC Standard MASTER (legacy, stale)** — `agent_4afbfdb3fcb1ba9569353af28d` / `conversation_flow_34d169608460`. Uses legacy `subagent` architecture. Will be fully replaced on next promotion. Do not use as clone source.
+- **`retell-iac/components/` is stale** — 19 component JSON files describe the legacy subagent shape and do not match the current testing flow. `build_agent.py` would produce invalid output until components are rewritten for flat `code`-node architecture. Tracked as P0 in TASKS.md.
 - **n8n onboarding workflow** — Standard `4Hx7aRdzMl5N0uJP`.
-- **Supabase schema** — `hvac_standard_agent`, `client_agents`, `stripe_payment_data`, `client_subscriptions`, `billing_cycles`, `overage_charges`, `website_leads`, `monthly_billing_snapshot`, `syntharra_vault`, `call_processor_dlq`. RLS hardened.
-- **Client dashboard** — `dashboard.html` in syntharra-website. Retell-native: fetches via `POST /webhook/retell-calls` → Retell `list-calls`. URL param `?a=AGENT_ID`.
+- **Supabase schema** — `hvac_standard_agent`, `client_agents`, `stripe_payment_data`, `client_subscriptions`, `billing_cycles`, `overage_charges`, `website_leads`, `monthly_billing_snapshot`, `syntharra_vault`, `client_dashboard_info` (view — narrow read subset for dashboard, 2026-04-09). RLS hardened. All 15 `hvac_call_log*` tables and `call_processor_dlq` dropped 2026-04-09 (backup preserved in `backup_hvac_call_log_prepart_20260409`).
+- **Client dashboard** — `dashboard.html` in syntharra-website. Full redesign shipped 2026-04-09 (a11y, dark mode, sentiment stat, CSV export, virtualisation, demo mode `?demo=1`, lead copy, triage flag, sparkline). Reads company info from `client_dashboard_info` view; reads calls via `POST /webhook/retell-calls` → Retell `list-calls`. URL param `?a=AGENT_ID`.
 - **Retell proxy webhook** — n8n `Y1EptXhOPAmosMbs`. Returns `{ calls: [...] }` from Retell v2. E2E tested 2026-04-08.
 - **OAuth server** — Railway-deployed.
-- **Stripe** — still in test mode. Live-mode migration is a P0 blocker (see TASKS.md).
+- **Stripe** — still in test mode. Live-mode migration is a P1 (see TASKS.md).
 
 ## 2026-04-09 — lean cleanup (Pass 1)
 
@@ -47,27 +49,25 @@ Removed the speculative "store everything in Supabase" layer. Retell is the sour
 
 **Pass 2 prereq — verify before starting:** the retell-iac MASTER agent Post-Call Analysis block must declare custom variables `is_lead`, `urgency`, `is_spam` (and optionally `service_type`, `customer_name`). Retell only populates `call_analysis.custom_analysis_data.*` for fields declared on the agent. If missing, add them once in MASTER, promote, and the next billing cycle is the cutover.
 
-## Outstanding tasks from 2026-04-09 session (pick up next session)
+## 2026-04-09 session — results
 
-Alongside the Pass 2 billing/call-log migration above, three standalone tasks were deferred from the 2026-04-09 request and have not been started:
+**Task 2 — Retell autolayout / finetune error: ✅ FIXED on testing agent `agent_6e7a2ae03c2fbd7a251fafcd00`.** Three fixes PATCHed directly via Retell API on `conversation_flow_90da7ca2b270`:
+  1. `node-identify-call.finetune_transition_examples[fe-service]` was orphaned (pointed at `node-fallback-leadcapture` with no matching edge). Repointed to `node-call-style-detector`. **This was the "fine tuning error" — Retell's validator caught it on every PATCH but not on GET.**
+  2. `node-call-style-detector` (code, `wait_for_result:true`) had empty `edges[]`. Added edge → `node-fallback-leadcapture`.
+  3. `node-validate-phone` (code, `wait_for_result:true`) had empty `edges[]`. Added edge → `node-ending`.
+  
+  Pending Dan's UI verification + promotion to MASTER (will be a full architecture swap — the legacy MASTER uses `subagent` nodes, the current testing uses flat `code` nodes).
 
-### Task 2 — Fix Retell agent auto-layout fine-tuning error
-- **Agent:** `agent_4afbfdb3fcb1ba9569353af28d`, flow `conversation_flow_34d169608460`
-- **Symptom:** "Fine tuning error" preventing auto-layout of nodes in the Retell canvas
-- **Likely root cause:** phantom/placeholder component in the flow's `components[]` array — see FAILURES.md 2026-04-08 "Standard MASTER auto-layout blocked by phantom component". Same fix pattern: `PATCH components: []` (or delete the offending entry) after checking for entries with placeholder text or zero node references.
-- **Approach:** Clone live → TESTING via `retell-iac/scripts/promote.py`, diagnose on TESTING, promote fix. (RULES.md #1 applies — this is not covered by the Pass 2 one-time override, which is scoped only to the webhook repoint.)
+**Task 3 — Dashboard redesign: ✅ SHIPPED.** Full rewrite merged to `main` in `Syntharra/syntharra-website`. Includes security hardening (URL whitelist, escHtml), a11y (keyboard, ARIA), dashboard-specific header, client monogram, sentiment stat with bar chart, CSV export, dark mode, virtualised rendering (25/batch via IntersectionObserver), demo preview (`?demo=1`), lead copy button, needs-followup triage flag, 7-day sparkline. Also fixed a silent-empty-read bug where the base-table fetch was returning nothing for every real client — created `client_dashboard_info` SECURITY DEFINER view exposing only 4 safe columns.
 
-### Task 3 — Fetch + display current client dashboard
-- **Repo:** `Syntharra/syntharra-website`
-- **File:** `dashboard.html`
-- **Live URL pattern:** `https://syntharra.com/dashboard.html?a=<agent_id>`
-- **Data source:** `POST https://n8n.syntharra.com/webhook/retell-calls` (workflow `Y1EptXhOPAmosMbs`)
-- **Ask:** fetch current HTML via GitHub MCP and display to Dan so he can review the current state before any further edits.
+**Task 4 — `Live — / Demo —` agent naming: ⏸ diff prepared, Dan will paste.** Location: `Build Retell Prompt` code node of workflow `4Hx7aRdzMl5N0uJP`, lines 25 + 683. Exact diff in TASKS.md P0.
 
-### Task 4 — Agent naming convention: `{Live|Demo} {Company Name}`
-- **Goal:** prevent accidentally working on live agents during testing/improvements by visually distinguishing Live vs Demo at agent-list level
-- **Where to change:** `retell-iac/` agent creation scripts, any n8n onboarding workflow nodes that set the Retell agent `agent_name`, and potentially the master template.
-- **Open question from last session:** what signal determines Live vs Demo? Candidates: promotion target (TESTING vs prod), env var, or an explicit CLI flag on `promote.py`. Needs Dan's decision before implementation.
+**Supabase cleanup: ✅ DONE.** Dropped 15 `hvac_call_log*` tables + `call_processor_dlq`. 9 rows preserved in `backup_hvac_call_log_prepart_20260409`. `syntharra_vault` explicitly preserved and protected via memory rule.
+
+### Carry-forward to next session (P0 in TASKS.md)
+- Verify autolayout fix works in Retell UI, then promote testing → MASTER (full architecture swap).
+- Rewrite `retell-iac/components/` for flat `code`-node architecture before any IaC rebuild is possible.
+- Paste Task 4 naming diff into the onboarding workflow.
 
 ## What's in flight
 
