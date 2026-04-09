@@ -52,3 +52,34 @@
 
 - STATE.md tells you what's in flight. If your change touches anything in the "in flight" section, coordinate — don't just land.
 - If STATE.md is out of date, that's a bug. Fix STATE.md in the same commit.
+
+## 9. JotForm webhook data lives in rawRequest, not the body
+
+- JotForm packs all q* field answers inside `body.rawRequest` as a JSON string. Direct `body.q*` keys are absent.
+- Always parse: `formData = { ...body, ...JSON.parse(body.rawRequest) }`.
+- Phone fields arrive as `{full: '(555) 234-5678'}` objects — unwrap with `cleanPhone()`.
+- Checkbox fields use `q{N}_option_` keys (e.g. `q13_option_`), NOT the named keys like `q13_servicesOffered`.
+
+## 10. n8n Code nodes cannot make outbound HTTP calls
+
+- `fetch()`, `$helpers.httpRequest`, and `this.helpers.httpRequest` all fail in Code node context.
+- For any outbound call, use an HTTP Request node. Build the payload in a Code node if needed, then chain to HTTP Request.
+- When an HTTP Request response is empty (e.g. Retell publish returns 200 with no body), set `options.response.response.responseFormat: 'text'` to prevent JSON parse errors.
+
+## 11. n8n REST API: use raw PUT for workflow patches
+
+- Never use n8n MCP to modify existing workflows — it does full rewrites that break unrelated nodes.
+- Pattern: GET `/api/v1/workflows/{id}` → modify target node(s) in Python → PUT back.
+- PUT payload: only `name`, `nodes`, `connections`, and `settings` (only `executionOrder` inside settings). Extra fields cause 400.
+- Credentials: n8n API key in `syntharra_vault` table (`service_name='n8n Railway'`).
+
+## 12. IF branches drop upstream context — always reach back
+
+- IF nodes pass the input from the node they receive data from, not the full upstream chain.
+- If data is lost at an IF branch (e.g. `submission_id` disappears after IF), reach back explicitly: `$('Node Name').first().json.field`.
+- After any workflow branch change, verify all required fields are present on both IF paths.
+
+## 13. Always query syntharra_vault, never vault
+
+- The credentials table is `public.syntharra_vault`. There is no `public.vault` and no `active` column.
+- Query: `SELECT * FROM public.syntharra_vault WHERE service_name = 'X'`.
