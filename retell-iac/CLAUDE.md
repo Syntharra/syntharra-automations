@@ -60,9 +60,11 @@ python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_
 python scripts/rollback.py --tag baseline-100-percent-20260406 --agent standard_master
 ```
 
-## MASTER IDs
+## Canonical Agents (updated 2026-04-09)
 
-| Agent | agent_id | flow_id | Phone |
-|---|---|---|---|
-| Standard MASTER | `agent_4afbfdb3fcb1ba9569353af28d` | `conversation_flow_34d169608460` | `+18129944371` |
-| Standard CLONE | `agent_201b8d1e9eee10303e79710bc9` | `conversation_flow_b0f2cf9a0e58` | `+12292672271` |
+| Agent | agent_id | flow_id | Phone | Notes |
+|---|---|---|---|---|
+| **Standard TESTING (authoritative current)** | `agent_6e7a2ae03c2fbd7a251fafcd00` | `conversation_flow_90da7ca2b270` | _(none)_ | Modern `code`-node architecture. Autolayout-fixed 2026-04-09. Pending promotion to MASTER. |
+| Standard MASTER (legacy — stale) | `agent_4afbfdb3fcb1ba9569353af28d` | `conversation_flow_34d169608460` | `+18129944371` | Uses legacy `subagent` node type. Will be replaced by TESTING on next promotion. |
+
+> **The `retell-iac/components/` directory is stale** — its component JSON files describe the legacy `subagent` shape. They do not match the current Standard TESTING flow, which uses flat `code` nodes with inline bodies. Do NOT rebuild Standard from IaC manifests until the components are rewritten to match the new architecture. Use the Retell API / snapshots as the current source of truth.

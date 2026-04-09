@@ -14,15 +14,24 @@
 - **3 follow-up additions** (commit 16158b3): lead copy button on detail toolbar (clipboard API + fallback), needs-followup triage flag (red accent bar + dot for negative/missed/keyword-match), 7-day sparkline inline SVG in Total Calls stat.
 - **Critical bug fix**: dashboard was silently returning empty from `hvac_standard_agent` fetch because RLS was enforced with no anon SELECT policy. Every real client saw the default "Your Business" placeholder. Introduced a `SECURITY DEFINER` view `public.client_dashboard_info` exposing only `agent_id, company_name, agent_name, service_area`. Dashboard now queries the view.
 
-### Retell-IaC (`syntharra-automations`, commit `a539756`)
-- **Root-cause diagnosis of MASTER auto-layout / fine-tuning error** — the `call_style_detector` subagent had `wait_for_result: true` but zero `edges[]`, only an `else_edge`. This is a schema contradiction that trips Retell's visual layout engine. Runtime was unaffected (`else_edge` always fires) so all call tests pass — the error was UI-only in the Retell dashboard.
-- **The bug was in `retell-iac/components/call_style_detector.json`**, not drift. Fixed by adding an `edges[]` array matching `validate_phone`'s working shape.
-- **Pre-fix snapshot** saved to `retell-iac/snapshots/2026-04-09_pre-fix/` (flow + agent) because MASTER is at v27 unpublished vs v22 last published — **5 revisions of drift accumulated** on MASTER that will be overwritten on next `promote.py`.
-- **New Standard CLONE created** (prior clone `agent_201b8d1e9eee10303e79710bc9` was deleted post-2026-04-06 promotion and retell-iac/CLAUDE.md was never updated):
-  - `agent_1d8d85fd2c1c21ede61c68b88c`
-  - `conversation_flow_efe5cebb4d38`
-  - Name: `Demo — Standard TESTING (autolayout fix)`
-- `retell-iac/CLAUDE.md` MASTER IDs table updated.
+### Retell-IaC — autolayout / finetune fix
+
+**First attempt was wrong.** Diagnosed and patched `retell-iac/components/call_style_detector.json` (legacy subagent shape), created a clone from the legacy MASTER (`agent_4afbfdb3fcb1ba9569353af28d`), pushed a commit. Dan flagged the mistake: the legacy MASTER uses `subagent` nodes, but the **actual current Standard TESTING agent is `agent_6e7a2ae03c2fbd7a251fafcd00`** on `conversation_flow_90da7ca2b270`, which uses modern flat `code`-node architecture. Subagents are deprecated.
+
+**Reverted** commit `a539756`. Deleted the bogus clone (`agent_1d8d85fd2c1c21ede61c68b88c` / `conversation_flow_efe5cebb4d38`).
+
+**Real diagnosis on `conversation_flow_90da7ca2b270`:**
+- Same class of bug on two `code` nodes: `node-call-style-detector` and `node-validate-phone` both had `wait_for_result: true` with empty `edges[]`. Runtime worked via `else_edge`; Retell's UI auto-layout threw.
+- **Plus a pre-existing orphan fine-tuning example**: `node-identify-call.finetune_transition_examples[fe-service].destination_node_id` pointed at `node-fallback-leadcapture`, but identify-call has no edge to fallback-leadcapture — the real routing goes through `node-call-style-detector`. This dangling reference was the "fine tuning error" Dan had been seeing; Retell's validator catches it on every PATCH but not on GET, so the stored state was silently broken.
+
+**Fix applied directly to `conversation_flow_90da7ca2b270` via Retell API PATCH** (no clone — the testing agent IS the clone):
+1. Repointed `fe-service.destination_node_id` → `node-call-style-detector`
+2. Added `edges[]` to `node-call-style-detector` → `node-fallback-leadcapture`
+3. Added `edges[]` to `node-validate-phone` → `node-ending`
+
+PATCH succeeded. Snapshot of the fixed flow + agent saved to `retell-iac/snapshots/2026-04-09_testing-autolayout-fixed/`. Pending Dan's promotion to MASTER in a fresh session.
+
+**Important follow-up**: all 19 JSON files in `retell-iac/components/` describe the legacy `subagent` architecture. `build_agent.py` from those manifests would produce an invalid flow for the new `code`-node standard. The IaC components need to be rewritten before any Standard rebuild via manifest is possible. Flagged as P0 in TASKS.md.
 
 ### Supabase
 - **16 tables dropped** (9 pre-partition rows backed up to `backup_hvac_call_log_prepart_20260409`):

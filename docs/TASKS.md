@@ -4,7 +4,8 @@
 
 ## P0
 
-- **Retell MASTER promote** — Dan to verify auto-layout fix on CLONE `agent_1d8d85fd2c1c21ede61c68b88c` in Retell UI, then run `build_agent.py → diff.py → promote.py`. **Warning:** MASTER is at v27 unpublished with 5 revisions of drift since v22 — those will be overwritten. Pre-fix baseline saved at `retell-iac/snapshots/2026-04-09_pre-fix/`. After promote, delete the test clone.
+- **Promote Standard TESTING → MASTER** — `agent_6e7a2ae03c2fbd7a251fafcd00` / `conversation_flow_90da7ca2b270` has been autolayout-fixed (2026-04-09) and is the canonical current agent. Verify it works end-to-end in Retell UI (click Auto Layout, run a test call), then promote to MASTER (`agent_4afbfdb3fcb1ba9569353af28d` / `conversation_flow_34d169608460`). **The current MASTER uses the legacy `subagent` node type** — promotion will be a full architecture swap to `code` nodes, not a delta merge. Snapshot of the fixed testing flow: `retell-iac/snapshots/2026-04-09_testing-autolayout-fixed/`.
+- **Rewrite `retell-iac/components/` for the new architecture** — all 19 component JSON files in `retell-iac/components/` describe the legacy `subagent` shape. They do NOT match the current Standard TESTING flow. `build_agent.py` would produce invalid output until the components are rewritten as `code`/`conversation` node bodies. Do not run any IaC rebuild on Standard until this is done.
 - **n8n onboarding naming patch** — Dan to paste 3-line diff into `Build Retell Prompt` code node of workflow `4Hx7aRdzMl5N0uJP`:
   - L25: add `const isDemo = !!data.is_demo;` and `const agentDisplayName = \`${isDemo ? 'Demo' : 'Live'} — ${companyName}\`;`
   - L683: change `agent_name: \`${agentName}\`,` → `agent_name: agentDisplayName,`
