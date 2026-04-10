@@ -1,0 +1,35 @@
+{
+  "_comment": "Maps known wrong file paths to their canonical equivalents. Add entries whenever a wrong-path mistake is made.",
+  "wrong_paths": [
+    {
+      "wrong_pattern": "syntharra-checkout/index.html",
+      "must_not_match": "syntharra-checkout/public/index.html",
+      "canonical": "syntharra-checkout/public/index.html",
+      "reason": "Root index.html is the OLD Standard/Premium 2-tier layout. public/index.html is the CURRENT 3-tier Starter/Professional/Business page. Always use public/."
+    },
+    {
+      "wrong_pattern": "syntharra-checkout\\index.html",
+      "must_not_match": "syntharra-checkout\\public\\index.html",
+      "canonical": "syntharra-checkout/public/index.html",
+      "reason": "Root index.html is the OLD Standard/Premium 2-tier layout. public/index.html is the CURRENT 3-tier page."
+    },
+    {
+      "wrong_pattern": "retell-agents/HVAC-STANDARD-AGENT-TEMPLATE",
+      "must_not_match": "retell-iac/components/",
+      "canonical": "retell-iac/components/*.json + retell-iac/manifests/hvac-standard.yaml",
+      "reason": "Legacy template path. All Retell agent source now lives in retell-iac/components/ (split architecture). Never edit legacy templates."
+    },
+    {
+      "wrong_pattern": "hvac_call_log",
+      "must_not_match": null,
+      "canonical": "Retell list-calls API (call data) or monthly_billing_snapshot (billing rollup)",
+      "reason": "hvac_call_log and all hvac_call_log_* tables were dropped 2026-04-09. Retell is the source of truth for call data."
+    },
+    {
+      "wrong_pattern": "mcp__claude_ai_n8n__",
+      "must_not_match": null,
+      "canonical": "Railway REST API: https://n8n.syntharra.com/api/v1/ with X-N8N-API-KEY header",
+      "reason": "n8n MCP talks to a cloud account Syntharra does not use. Always use Railway REST API directly."
+    }
+  ]
+}

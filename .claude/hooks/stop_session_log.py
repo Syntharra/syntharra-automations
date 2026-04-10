@@ -146,26 +146,82 @@ if TOKEN:
 else:
     print("[!] HOOK: GITHUB_TOKEN not set — cannot verify session log")
 
-# ── 3. Check if session_end.py was run today (INDEX.md entry) ────────────────
+# ── 3. Auto-run session_end.py if not already run today ──────────────────────
 session_end_ran = False
 if INDEX_PATH.exists():
     index_text = INDEX_PATH.read_text(encoding="utf-8")
     session_end_ran = TODAY in index_text
 
-if not session_end_ran:
-    print(f"\n{'='*60}")
-    print(f"  STOP HOOK WARNING: session_end.py NOT run for {TODAY}")
-    print(f"  This is REQUIRED per RULES.md section 5.")
-    print(f"  Run now:")
-    print(f'    python tools/session_end.py --topic <slug> --summary "<one-line>"')
-    print(f"  Without this: STATE.md is stale, INDEX.md is incomplete.")
-    print(f"{'='*60}")
-else:
-    print(f"\n[HOOK] session_end.py confirmed run today ({TODAY}) — INDEX.md entry found.")
+if not session_end_ran and repo_root:
+    print(f"\n[HOOK] session_end.py not run — auto-generating topic + summary...")
 
-# ── 4. Warn if FAILURES.md was modified in this session ──────────────────────
+    # Derive topic from last commit message
+    _, last_msg, _ = run("git log -1 --pretty=format:%s", cwd=repo_root)
+    # Strip conventional commit prefix (feat(x): → description)
+    topic_raw = re.sub(r'^(feat|fix|chore|docs|refactor|test|style|build|ci|perf|revert)(\([^)]+\))?:\s*', '', last_msg)
+    words = re.sub(r'[^a-z0-9\s-]', '', topic_raw.lower()).split()[:5]
+    topic = '-'.join(w for w in words if w)[:40] or 'auto-session'
+
+    # Derive summary from logs
+    corrections_log = ROOT / ".claude" / "session-corrections.log"
+    failures_log    = ROOT / ".claude" / "session-failures.log"
+    n_corrections, n_failures = 0, 0
+    if corrections_log.exists():
+        n_corrections = corrections_log.read_text(encoding="utf-8").count(f"[{TODAY}")
+    if failures_log.exists():
+        n_failures = failures_log.read_text(encoding="utf-8").count(f"[{TODAY}")
+
+    summary_parts = [last_msg[:120] or "auto-session"]
+    if n_corrections:
+        summary_parts.append(f"{n_corrections} user correction(s) captured")
+    if n_failures:
+        summary_parts.append(f"{n_failures} bash failure(s) logged")
+    summary = ". ".join(summary_parts)
+
+    code, out, err = run(
+        f'python tools/session_end.py --topic "{topic}" --summary "{summary}"',
+        cwd=repo_root,
+    )
+    if code == 0:
+        print(f"  [OK] session_end.py auto-ran: topic={topic}")
+        session_end_ran = True
+    else:
+        print(f"  [!] session_end.py failed: {err[:200]}")
+        print(f'  Manual fix: python tools/session_end.py --topic {topic} --summary "{summary}"')
+
+    # Now run distil_corrections.py to turn today's corrections into rules
+    dist_code, dist_out, dist_err = run(
+        "python tools/distil_corrections.py",
+        cwd=repo_root,
+    )
+    if dist_out:
+        print(dist_out)
+    if dist_err and dist_code != 0:
+        print(f"  [!] distil_corrections: {dist_err[:200]}")
+
+elif session_end_ran:
+    print(f"\n[HOOK] session_end.py already run today ({TODAY}) — INDEX.md confirmed.")
+    # Still run distillation to catch any late-session corrections
+    if repo_root:
+        run("python tools/distil_corrections.py", cwd=repo_root)
+
+# ── 4. Warn if FAILURES.md has unfilled [TODO] markers ───────────────────────
+if FAILURES_PATH.exists():
+    failures_text = FAILURES_PATH.read_text(encoding="utf-8")
+    todo_lines = [line.strip() for line in failures_text.splitlines() if "[TODO" in line]
+    if todo_lines:
+        print(f"\n{'!'*60}")
+        print(f"  STOP HOOK WARNING: {len(todo_lines)} unfilled [TODO] marker(s) in FAILURES.md")
+        for line in todo_lines[:5]:
+            print(f"  → {line[:100]}")
+        if len(todo_lines) > 5:
+            print(f"  ... and {len(todo_lines) - 5} more")
+        print(f"\n  Fill these in before closing — root causes that go unlogged repeat.")
+        print(f"{'!'*60}")
+
+# ── 5. Warn if FAILURES.md was modified in this session ──────────────────────
 if repo_root:
-    code, failures_diff, _ = run("git diff HEAD -- docs/FAILURES.md", cwd=repo_root)
+    code, failures_diff, _ = run("git diff HEAD -- docs/FAILURES.md", cwd=repo_root)  # noqa
     if not failures_diff:
         code, failures_diff, _ = run("git diff --cached -- docs/FAILURES.md", cwd=repo_root)
     if failures_diff and not session_end_ran:

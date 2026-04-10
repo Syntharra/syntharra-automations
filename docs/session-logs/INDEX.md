@@ -19,3 +19,4 @@
 | 2026-04-09 | rules-parity-fix | 2f38a3d | Added Rules 15-22 to RULES.md, closing FAILURES.md parity gap from agent prompt audit session |
 | 2026-04-10 | email-fixes-tier-testing | 4dbfec9 | Fixed garbled HTML in Send Welcome Email, agent_name now stores persona name (Emma not display name), added tier-aware plan card, restored PDF attachment |
 | 2026-04-10 | telnyx-phone-nodes | 5a98756 | Confirmed Business tier email (1400 min / $0.12/min), deleted 4 fake Stripe test records, built + deployed 5-node Telnyx phone purchase chain into onboarding workflow |
+| 2026-04-10 | billing-audit-cron-setup | d523528 | Tier-aware billing audit complete. Fixed 3 bugs in monthly_minutes.py + usage_alert.py + reconcile node. Dry-run verified all 3 tiers. Added deploy_billing_crons.py one-command Railway deployer. Consolidated GO-LIVE.md as single pre-launch checklist. railway.toml + requirements.txt added for Railway Nixpacks build. |

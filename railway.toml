@@ -12,7 +12,10 @@
 #   Start command:  python tools/monthly_minutes.py
 #   Cron schedule:  0 9 2 * *  (2nd of month 09:00 UTC)
 #
-# Both services require the same env vars — see docs/GO-LIVE.md §Cron Setup.
+# All services require the same env vars — see docs/GO-LIVE.md §Cron Setup.
+#
+# Note: weekly_self_improvement.py runs via Windows Task Scheduler (local),
+# not Railway — it requires Claude Code CLI which is not available in Railway.
 
 [build]
 builder = "NIXPACKS"

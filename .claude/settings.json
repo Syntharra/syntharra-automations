@@ -37,6 +37,20 @@
     ]
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/session_auto_start.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/correction_capture.py"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "bash",
@@ -72,6 +86,10 @@
           {
             "type": "command",
             "command": "python3 .claude/hooks/post_edit_failures.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_read_validate.py"
           }
         ]
       },
@@ -81,6 +99,19 @@
           {
             "type": "command",
             "command": "python3 .claude/hooks/post_edit_failures.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_read_validate.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_read_validate.py"
           }
         ]
       }
