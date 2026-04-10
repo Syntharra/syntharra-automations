@@ -586,6 +586,85 @@ The following live n8n workflows are suspected to touch `client_subscriptions` b
 - `supabase/schema_LIVE.md` — document the new columns + `status='pilot'` enum value.
 - `tools/monthly_minutes.py` and `tools/usage_alert.py` — add `&pilot_mode=eq.false` defensive filter to their SELECT URLs. Commit in the same PR as the migration.
 
+### 6.2.2 Reversibility & Rollback
+
+**Dan's explicit constraint (2026-04-10):** do not create irreversible changes that could regress the already-tested pipeline. Every migration step must be reversible or explicitly noted in the pre-live checklist.
+
+**Authoritative schema is in Supabase, not the repo.** `supabase/migrations/` contains only `client_agents_registry` and `partition_hvac_call_log_monthly` — there is no migration file for `client_subscriptions` because it was created via Supabase MCP `apply_migration` directly. **Consequence:** the exact `status` column type (TEXT vs ENUM vs CHECK-constrained) MUST be verified against the live Supabase schema on day 1 before any migration SQL is written. Procedure:
+
+```sql
+-- Run against Supabase via MCP list_tables or execute_sql to get ground truth:
+select column_name, data_type, column_default, is_nullable
+from information_schema.columns
+where table_schema = 'public' and table_name = 'client_subscriptions';
+
+-- And the CHECK constraints:
+select conname, pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'public.client_subscriptions'::regclass and contype = 'c';
+```
+
+**Reversibility matrix:**
+
+| Change | Reversible? | Rollback SQL | Edge cases |
+|---|---|---|---|
+| `ADD COLUMN pilot_mode boolean NOT NULL DEFAULT false` | ✅ Fully | `ALTER TABLE client_subscriptions DROP COLUMN pilot_mode;` | None — default-filled for all existing rows, no data loss |
+| `ADD COLUMN pilot_started_at timestamptz` (nullable) | ✅ Fully | `ALTER TABLE client_subscriptions DROP COLUMN pilot_started_at;` | None |
+| `ADD COLUMN pilot_ends_at timestamptz` | ✅ Fully | `DROP COLUMN pilot_ends_at` | None |
+| `ADD COLUMN pilot_minutes_allotted integer NOT NULL DEFAULT 0` | ✅ Fully | `DROP COLUMN pilot_minutes_allotted` | Existing rows get 0 — harmless since they're paid |
+| `ADD COLUMN pilot_minutes_used integer NOT NULL DEFAULT 0` | ✅ Fully | `DROP COLUMN pilot_minutes_used` | Same as above |
+| `ADD COLUMN payment_method_added_at timestamptz` | ✅ Fully | `DROP COLUMN payment_method_added_at` | None |
+| `ADD COLUMN first_touch_asset_id text` | ✅ Fully | `DROP COLUMN first_touch_asset_id` | None |
+| `ADD COLUMN last_touch_asset_id text` | ✅ Fully | `DROP COLUMN last_touch_asset_id` | None |
+| `ADD COLUMN first_touch_utm jsonb` | ✅ Fully | `DROP COLUMN first_touch_utm` | None |
+| `ADD COLUMN last_touch_utm jsonb` | ✅ Fully | `DROP COLUMN last_touch_utm` | None |
+| `CREATE INDEX ... WHERE pilot_mode = true` | ✅ Fully | `DROP INDEX` | None — partial index can only reference pilot rows, dropping it removes only the index |
+| `status='pilot'` as new allowed value | **Depends on current schema.** | See below | See below |
+| `CREATE TABLE marketing_events ...` | ✅ Fully | `DROP TABLE marketing_events CASCADE;` | Only removable while empty; once data exists, drop requires accepting data loss |
+| `CREATE TABLE marketing_assets ...` | ✅ Fully | `DROP TABLE marketing_assets CASCADE;` | Same as above |
+
+**The `status='pilot'` reversibility case (most complex):**
+
+- **If `status` is `TEXT` with no constraint** (most likely based on how the table was built): trivially reversible. Pilot rows can be updated to `status='cancelled'` or deleted. Zero DDL rollback needed.
+- **If `status` is `TEXT` with a `CHECK (status IN (...))` constraint**: adding `'pilot'` requires dropping and recreating the constraint (`ALTER TABLE ... DROP CONSTRAINT ...; ALTER TABLE ... ADD CONSTRAINT ... CHECK (status IN ('active', 'cancelled', 'past_due', 'pilot'));`). Rollback: drop the new constraint, delete or update pilot rows, re-add the old constraint. All reversible.
+- **If `status` is a PostgreSQL `ENUM` type**: adding a value via `ALTER TYPE ... ADD VALUE 'pilot'` is **one-directional and cannot be cleanly rolled back** without dropping the entire type and recreating. If this is the case, the spec's migration strategy changes: instead of adding to the enum, add a new `pilot_mode boolean` column (already in the migration) AS THE PRIMARY pilot indicator, and leave `status` alone. Billing tools already filter on `status=eq.active`, which means pilot rows would simply have some placeholder status (e.g., `'active'`) but be naturally excluded by the defensive `pilot_mode=eq.false` filter in the billing tools.
+- **Day-1 implementation branch:** the migration script starts with the verification query above. Based on the result, it selects one of three pre-written migration paths (no-constraint / check-constraint / enum). No guessing in prod.
+
+**Full rollback sequence if anything goes wrong:**
+
+```sql
+-- 1. Drop indexes (fast, reversible)
+drop index if exists idx_client_subscriptions_pilot_mode;
+drop index if exists idx_client_subscriptions_first_touch_asset;
+
+-- 2. Drop added columns (safe — default values mean existing rows lose nothing meaningful)
+alter table client_subscriptions
+  drop column if exists pilot_mode,
+  drop column if exists pilot_started_at,
+  drop column if exists pilot_ends_at,
+  drop column if exists pilot_minutes_allotted,
+  drop column if exists pilot_minutes_used,
+  drop column if exists payment_method_added_at,
+  drop column if exists first_touch_asset_id,
+  drop column if exists last_touch_asset_id,
+  drop column if exists first_touch_utm,
+  drop column if exists last_touch_utm;
+
+-- 3. Revert status constraint (only if it was modified in step 1 of migration)
+--    Branch: no-op if status was unchanged, otherwise restore original CHECK constraint
+
+-- 4. Drop new tables (only if no data in them yet; if data exists, accept drop or export first)
+drop table if exists marketing_events;
+drop table if exists marketing_assets;
+
+-- 5. Revert billing tool code changes via git revert on the Python files
+-- (Handled outside SQL, via git.)
+```
+
+**Dry-run requirement:** before the migration runs against prod, it must be dry-run against a Supabase branch (`mcp__claude_ai_Supabase__create_branch`) with a snapshot of prod data. The dry-run runs the forward migration, executes a suite of existing billing-tool queries, runs the rollback, and verifies the schema matches the pre-migration state byte-for-byte. Only after the dry-run passes does the prod migration run.
+
+**Hard commitment:** if the dry-run reveals ANY destructive side effect on existing paid customer rows, the migration does not run. The spec is revised and Dan is notified.
+
 ### 6.3 n8n onboarding workflow modifications
 
 **Workflow:** `4Hx7aRdzMl5N0uJP` (HVAC Standard onboarding)
@@ -989,7 +1068,94 @@ Phase 0 is complete — code-wise — when all 7 days of § 8 are done and the E
 - **Two or more benchmarks below target:** the offer is wrong, not the execution. Go back to brainstorming with new assumptions.
 - **Overall rate <2%:** do NOT advance to Phase 1. More traffic into a broken funnel wastes Phase 1 investment. Iterate until rate ≥3%.
 
-### 10.3 What Phase 0 explicitly does NOT promise
+### 10.3 Pre-Live Verification Checklist (added 2026-04-10 per Dan's request)
+
+**Every item on this list must pass before any smoke-test traffic hits `syntharra.com/start`.** This list exists because Dan explicitly asked (2026-04-10) for a pre-live checklist covering anything the Phase 0 build could disturb in the already-tested pipeline. Each item has a specific verification query, test, or sign-off — no hand-waved "looks good."
+
+**Schema safety (from § 6.2.1 and § 6.2.2):**
+
+- [ ] Live `client_subscriptions` schema queried via Supabase MCP; `status` column type + constraints documented in implementation plan
+- [ ] Migration path selected (no-constraint / check-constraint / enum) based on the schema query result
+- [ ] Supabase branch created (`mcp__claude_ai_Supabase__create_branch`)
+- [ ] Forward migration dry-run on branch: succeeds, no errors
+- [ ] All existing `tools/monthly_minutes.py` queries run against branched schema: return same rows as prod (sanity check — paid customers unchanged)
+- [ ] All existing `tools/usage_alert.py` queries run against branched schema: return same rows as prod
+- [ ] Rollback SQL dry-run on branch: schema returns to byte-identical pre-migration state
+- [ ] Full `client_subscriptions` data dump (`pg_dump`-equivalent via MCP) saved to `docs/audits/supabase-backups-20260410/client_subscriptions-pre-pilot-migration.sql`
+- [ ] Branch merged to prod (or prod migration applied independently, with same SQL)
+- [ ] Post-migration: `monthly_minutes.py --dry-run` run against prod, output matches pre-migration baseline (zero pilot rows yet, so zero difference)
+- [ ] Post-migration: `usage_alert.py --dry-run` run against prod, output matches pre-migration baseline
+
+**n8n workflow safety (from § 6.3 and § 8 day 1):**
+
+- [ ] All 5 suspect workflows pulled from Railway via `GET /api/v1/workflows/{id}` — JSON saved to `docs/audits/n8n-backups-20260410/{workflow_id}-pre-pilot.json`
+- [ ] Each workflow JSON grepped for `client_subscriptions` — all hits categorized (read-only vs. write) and documented
+- [ ] Any workflow node using `SELECT *` against `client_subscriptions` identified — verified that new columns don't break downstream JavaScript (test with a synthetic row in a branch)
+- [ ] Any workflow hard-coding `status === 'active'` as a proxy for "real customer" identified — patched to exclude `status === 'pilot'` explicitly (or patched to use `pilot_mode` instead)
+- [ ] Onboarding workflow `4Hx7aRdzMl5N0uJP`: full JSON backup saved BEFORE any modifications
+- [ ] Onboarding workflow modified (add `Is Pilot?` branch) via Railway REST `PUT /api/v1/workflows/{id}`
+- [ ] Post-modification: paid onboarding path E2E-tested with a Stripe test-mode checkout → new client_agents row has `status='active'`, `pilot_mode=false` (unchanged behavior)
+- [ ] Post-modification: pilot onboarding path E2E-tested with new pilot Jotform → new client_agents row has `status='pilot'`, `pilot_mode=true`, `pilot_ends_at` set to now() + 14 days
+
+**Retell agent safety (from § 6.5):**
+
+- [ ] HVAC Standard MASTER current state snapshotted to `retell-iac/snapshots/2026-04-10_pre-pilot-expired/` before any edits
+- [ ] TESTING agent (`agent_41e9758d8dc956843110e29a25`) updated with `pilot_expired` flow node
+- [ ] TESTING agent E2E call: dial from a personal cell with `pilot_expired=true` set on the agent's dynamic variables → call receives the graceful-pause message, hangs up cleanly
+- [ ] TESTING agent E2E call: dial with `pilot_expired=false` (or unset) → agent answers normally
+- [ ] MASTER promoted via `retell-iac/scripts/promote.py` (existing standing procedure)
+- [ ] Post-promotion: MASTER call test with `pilot_expired=false` → normal answer (paid-customer flow unchanged)
+- [ ] Existing live client_agents clones (if any) confirmed unaffected — they're clones from pre-pilot-expired MASTER. Per STATE.md there are zero live paying clients, so this verification is a no-op, but documented for completeness.
+
+**Dashboard safety (from § 6 and § 7.2):**
+
+- [ ] `dashboard.html` in `syntharra-website` modified to read `pilot_mode` from `client_subscriptions` via backend, render banner conditionally
+- [ ] E2E test: load `dashboard.html?a=<PAID_AGENT_ID>` — pilot banner does NOT render, page is byte-identical to pre-Phase-0 state
+- [ ] E2E test: load `dashboard.html?a=<PILOT_AGENT_ID>` — pilot banner renders with correct countdown (`pilot_ends_at - now()`) and minutes remaining
+- [ ] No CSS regression on the paid-customer view (Lighthouse / visual comparison against current prod `dashboard.html`)
+- [ ] `?demo=1` preview mode still works (existing feature)
+
+**Stripe safety (from § 6.4):**
+
+- [ ] Stripe test mode: Setup Intent hosted page flow works end-to-end with test card `4242 4242 4242 4242`
+- [ ] Stripe test mode: subscription created with `trial_end = pilot_ends_at`, verified via Stripe API
+- [ ] Stripe test mode: `customer.subscription.trial_will_end` webhook fires, handled by n8n Stripe webhook workflow `xKD3ny6kfHL0HHXq` (or new endpoint — decide during implementation)
+- [ ] Stripe test mode: compressed-time test — set `pilot_ends_at = now() + 10 min`, `trial_end` = same, run `pilot_lifecycle.py` manually at T+11min, verify subscription auto-activates and `status` flips from `'pilot'` to `'active'`
+- [ ] Stripe test mode: compressed-time test WITHOUT card — set same short window, run cron, verify Retell agent sets `pilot_expired=true`, status flips to `'expired'`, win-back email fires
+- [ ] Stripe live mode: secret key + webhook signing secret vaulted in `syntharra_vault` (Dan's P1 deliverable)
+- [ ] Stripe live mode: one-time real card test (Dan's own card, amount $1 test charge refunded same-day) to verify the live webhook endpoint actually fires
+- [ ] Stripe live mode webhook endpoint verified via `stripe listen` or the Stripe dashboard's webhook test feature
+
+**Event log safety (from § 7):**
+
+- [ ] `marketing_events` table created with RLS enabled
+- [ ] `marketing_assets` table created with RLS enabled
+- [ ] Anon role verified to have ZERO access: `SELECT * FROM marketing_events` via anon key returns permission denied
+- [ ] Service role verified to have full access: same query via service role returns rows
+- [ ] Edge Function `marketing-event-ingest` deployed and callable
+- [ ] Edge Function bot filter working: curl with `User-Agent: googlebot` → event not inserted
+- [ ] Edge Function rate limit working: 101 events from same `visitor_id` in 60 seconds → 101st silently dropped
+- [ ] Tracker JS emits `page_view` on `syntharra.com/start` load — verified in `marketing_events`
+- [ ] Tracker JS persists `stx_asset_id` to localStorage on first visit, carries to Jotform hidden field on CTA click — verified via browser devtools
+
+**Billing tool patch safety (from § 6.2.1):**
+
+- [ ] `tools/monthly_minutes.py` line 67 updated with `&pilot_mode=eq.false` defensive filter
+- [ ] `tools/usage_alert.py` line 70 updated with `&pilot_mode=eq.false` defensive filter
+- [ ] Both tools git-committed in the same PR as the schema migration
+- [ ] Dry-run `monthly_minutes.py` against prod post-patch: returns same row count as pre-migration (zero pilots yet, defensive filter is a no-op)
+- [ ] Dry-run `usage_alert.py` against prod post-patch: same
+
+**Final gate (after all above pass):**
+
+- [ ] Full compressed-time E2E: `syntharra.com/start` visit → VSL play (all 5 progress events) → CTA click → Jotform submit → n8n onboarding runs → Retell agent clone succeeds → pilot dashboard loads with correct state → card added via Stripe setup intent → compressed pilot_ends_at triggers cron → subscription auto-converts → `pilot_converted` event in `marketing_events`
+- [ ] Full compressed-time E2E (no-card path): same but without card add → cron fires at expiry → Retell agent pauses → `pilot_expired` event in `marketing_events` → win-back email fires
+- [ ] Dan signs off on VSL final cut (day 6 review gate)
+- [ ] Stripe LIVE mode active (not test mode) at the moment smoke-test traffic begins
+
+**If ANY item fails:** halt Phase 0, log the failure to `docs/FAILURES.md` per standing rules, fix root cause, re-run affected checks. **Do not proceed with a failed checklist item and "plan to fix it later."**
+
+### 10.4 What Phase 0 explicitly does NOT promise
 
 - It does not promise a paying customer. A paying customer is a **Phase 1 traffic + Phase 0 conversion** outcome. Phase 0 alone guarantees only that when traffic arrives, the funnel works.
 - It does not promise the VSL is optimal. v1 is a hypothesis. v2+ comes from Phase 3 Optimizer based on real data.
