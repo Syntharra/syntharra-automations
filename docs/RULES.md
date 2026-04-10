@@ -179,9 +179,11 @@
 
 ## 29. JotForm checkbox fields use the q{N}_option_ key pattern
 
-- JotForm checkbox fields always use the `q{N}_option_` key pattern inside rawRequest. Never rely on the named key.
-- Multi-select fields (services, brands, certifications) use keys like `q13_option_`, `q14_option_`, `q29_option_` — not `q13_servicesOffered` etc.
-- Fallback pattern: `formData['q13_option_'] || formData.q13_servicesOffered` (primary is the `_option_` key).
+- JotForm checkbox key format depends on how the field was created — **two patterns exist**:
+  - **Old-style checkboxes** (q13, q14, q29, q45, q49): use `q{N}_option_` key, value is a string. e.g. `formData['q13_option_']`
+  - **New-style checkboxes** (q79, q80, q81 — added 2026-04-10 via Jotform MCP): use `q{N}_{name}` key, value is an **array**. e.g. `formData['q79_uniqueSelling']` → `['Option A', 'Option B']`
+- Always use `normalizeList()` for both patterns — it handles both strings and arrays.
+- When adding a new checkbox via Jotform MCP: submit a test form, inspect the rawRequest keys in n8n webhook output, then update the parse node with the exact key. Do not assume `_option_` — verify first.
 
 ## 30. n8n expression fields must start with =
 
