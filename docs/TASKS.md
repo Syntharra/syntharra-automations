@@ -13,6 +13,7 @@
   4. Test on a fresh clone of MASTER (`retell-iac/scripts/register.py` to spawn one), not on MASTER itself. Smoke with a harmless change (`--set current_promotion="TEST $1 off"`). Revert.
   5. Budget: ~5.5h. Plan doc shape already agreed in session 2026-04-09. Explicitly out-of-scope for v1: auth, client UI, settings page, bulk updates, change history table, rollback beyond the printed undo line, any side effects (Stripe/HubSpot/welcome email).
 - **Test call on MASTER `+18129944371`** — confirm code-node architecture swap + Call Processor fan-out work live. Validates (a) code-node flow end-to-end, (b) `is_lead`/`urgency`/`is_spam` custom analysis fields populate, (c) Brevo email lands in lead inbox, (d) Slack fan-out skipped cleanly when no webhook present.
+- **Telnyx phone chain — BUILT 2026-04-10.** 5 nodes deployed to onboarding workflow `4Hx7aRdzMl5N0uJP`. **Blocked on 2 vault entries Dan must add:** `service_name='Telnyx', key_type='api_key'` (from portal.telnyx.com) and `key_type='retell_sip_connection_id'` (from Retell dashboard → Phone Numbers → SIP). Once both are vaulted, the chain activates automatically.
 - **Telnyx SMS swap** — once Telnyx AI approval lands, replace the `SMS Stub (Telnyx TODO)` node in HVAC Call Processor with a real HTTP node calling Telnyx messaging API. Stub payload is already built in `Build Payload`.
 
 ## P1 — 3-tier pricing end-to-end test (next session)

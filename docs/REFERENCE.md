@@ -64,13 +64,17 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 
 ## Telnyx Migration (post-Twilio)
 - Telnyx becomes the **permanent** phone provider the moment a Telnyx API key is added to Supabase vault (`service_name='Telnyx', key_type='api_key'`). Twilio usage stops at that point.
-- Onboarding "Purchase Number" HTTP node swap:
-  - Search: `GET https://api.telnyx.com/v2/available_phone_numbers?filter[country_code]=US&filter[locality]={client_city}&filter[features][]=voice&filter[features][]=sms`
-  - Order: `POST https://api.telnyx.com/v2/number_orders` with `phone_numbers: [{phone_number: <selected>}]`
-  - Bind to Retell SIP: `PATCH /v2/phone_numbers/{id}` setting `voice.connection_id` to the Retell SIP connection id.
-  - Auth header: `Authorization: Bearer <vault key>` on all three calls.
-- Once this swap is live, agent creation is fully automatic end-to-end — Jotform in, live phone number out, zero manual steps.
-- Tracked in TASKS.md until built.
+- **5-node chain BUILT and deployed 2026-04-10** into onboarding workflow `4Hx7aRdzMl5N0uJP` (nodes at y=700, x=1946–3296). Generator: `tools/build_telnyx_phone_nodes.py`.
+  - `Code: Fetch Telnyx Creds` — reads vault + derives area code from company_phone NPA
+  - `Telnyx: Search Available Numbers` — `GET /v2/available_phone_numbers?filter[national_destination_code]={NPA}`
+  - `Telnyx: Order Phone Number` — `POST /v2/number_orders` (picks first result)
+  - `Telnyx: Bind to Retell SIP` — `PATCH /v2/phone_numbers/{id}` sets `voice.connection_id`
+  - `Code: Extract Phone Result` — merges E.164 phone into downstream data (agent_phone_number)
+- **⚠️ Two vault entries required before chain executes** (both missing as of 2026-04-10 — Dan to add):
+  1. `service_name='Telnyx', key_type='api_key'` — Telnyx API key (Bearer token from portal.telnyx.com)
+  2. `service_name='Telnyx', key_type='retell_sip_connection_id'` — Retell SIP connection ID (find in Retell dashboard → Phone Numbers → SIP)
+- Once vault entries exist, agent creation is fully automatic end-to-end — Jotform in, live phone number out, zero manual steps.
+- `Pass Through Agent Data` node updated to carry `agent_phone_number` from Telnyx result.
 
 ## Simulator — Premium
 ```
