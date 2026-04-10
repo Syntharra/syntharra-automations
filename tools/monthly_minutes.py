@@ -63,8 +63,13 @@ def sb_headers() -> dict:
 
 
 def fetch_active_subscriptions() -> list[dict]:
+    # pilot_mode=eq.false is a defensive filter added 2026-04-11 (Phase 0).
+    # Pilot rows should have status='pilot' (naturally excluded by status=eq.active),
+    # but this belt-and-suspenders check prevents any future regression where a
+    # pilot row could accidentally end up with status='active' via manual edit
+    # or workflow bug. See docs/superpowers/specs/2026-04-10-phase-0-vsl-funnel-design.md § 6.2.1.
     url = env("SUPABASE_URL").rstrip("/") + \
-        "/rest/v1/client_subscriptions?status=eq.active&select=agent_id,company_name,client_email,included_minutes,overage_rate,tier,stripe_customer_id,stripe_subscription_id"
+        "/rest/v1/client_subscriptions?status=eq.active&pilot_mode=eq.false&select=agent_id,company_name,client_email,included_minutes,overage_rate,tier,stripe_customer_id,stripe_subscription_id"
     status, data = http_json("GET", url, sb_headers())
     if status != 200:
         sys.exit(f"Supabase fetch subscriptions failed: {status} {data}")

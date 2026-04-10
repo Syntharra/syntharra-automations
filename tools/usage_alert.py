@@ -66,9 +66,13 @@ def sb_headers() -> dict:
 # ---------- Supabase ----------
 
 def fetch_active_subscriptions() -> list[dict]:
+    # pilot_mode=eq.false is a defensive filter added 2026-04-11 (Phase 0).
+    # Pilot rows use status='pilot' and are naturally excluded by status=eq.active,
+    # but this defensive filter prevents any regression. See spec § 6.2.1.
     url = (env("SUPABASE_URL").rstrip("/") +
            "/rest/v1/client_subscriptions"
            "?status=eq.active"
+           "&pilot_mode=eq.false"
            "&select=agent_id,company_name,client_email,included_minutes,tier,overage_rate")
     status, data = http_json("GET", url, sb_headers())
     if status != 200:

@@ -122,8 +122,22 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 
 - **Spec:** `docs/superpowers/specs/2026-04-10-phase-0-vsl-funnel-design.md` — COMPLETE (1,182 lines, 3 commits). Covers VSL + pilot funnel + measurement spine.
 - **Plan:** `docs/superpowers/plans/2026-04-11-phase-0-vsl-funnel-implementation.md` — PARTIAL (~1,100 lines). Day 1 (Tasks 1-12) + Day 2 (Tasks 13-18) + Day 3 Task 19 skeleton written. Tasks 20-52 (Day 3 remainder + Days 4-7) pending.
-- **Execution status:** Not started. Awaiting Dan's greenlight to begin Day 1 Task 1.
 - **Resume pointer:** `memory/project_phase0_progress.md` (authoritative progress tracker, check first when resuming).
+
+### Day 1 — COMPLETE (2026-04-11)
+
+Schema migration `20260411_phase0_pilot_schema` applied to prod:
+- 10 pilot/attribution columns added to `client_subscriptions`
+- 3 new tables: `marketing_events`, `marketing_assets`, `pilot_email_sends` (all RLS-enabled, service-role-only)
+- `client_subscriptions_status_check` extended to allow `'pilot'` + `'expired'` (strict superset)
+- `tools/monthly_minutes.py` + `tools/usage_alert.py` patched with `pilot_mode=eq.false` defensive filter
+- Billing tool output parity verified byte-identical pre/post migration
+- Existing `client_subscriptions` row (Dan's test agent, `status='active'`) unchanged
+- Rollback SQL ready at `supabase/migrations/20260411_phase0_pilot_schema_rollback.sql`
+- Pre-migration backups: `docs/audits/supabase-backups-20260411/` + `docs/audits/n8n-backups-20260411/`
+- Scan report: `docs/audits/2026-04-11-phase0-schema-scan.md`
+
+**Next:** Day 2 — pilot Jotform fork + n8n onboarding branch (`Is Pilot?` IF node). Plan tasks 13-18.
 
 ## What's in flight
 
