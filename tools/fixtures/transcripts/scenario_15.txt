@@ -1,0 +1,33 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hola, buenos días. ¿Habla español?
+
+AGENT: Sí, con gusto le atiendo en español. ¿En qué le puedo ayudar hoy?
+
+CALLER: Gracias. Mire, tengo un problema con mi aire acondicionado. Dejó de funcionar completamente desde anoche y hace mucho calor en mi casa. Necesito que vengan a revisarlo lo antes posible.
+
+AGENT: Entiendo, qué incómodo, especialmente con este calor. No se preocupe, le vamos a ayudar. ¿Me puede dar su nombre completo, por favor?
+
+CALLER: Sí, me llamo Rosa Martínez.
+
+AGENT: Gracias, señora Martínez. ¿Y cuál es la dirección donde necesita el servicio?
+
+CALLER: Es en 4821 Calle Pino Verde, aquí en San Antonio.
+
+AGENT: Perfecto. ¿Y un número de teléfono donde podamos contactarla?
+
+CALLER: Mi celular es el 210-555-0374.
+
+AGENT: Muy bien. ¿Puede describirme brevemente qué está pasando con el equipo? Por ejemplo, ¿enciende pero no enfría, o no enciende del todo?
+
+CALLER: No enciende para nada. El termostato no responde y el ventilador tampoco funciona. Ya revisé el breaker y está bien.
+
+AGENT: Entendido, eso nos ayuda mucho. Voy a registrar su solicitud como una falla total del sistema de aire acondicionado. Tenemos disponibilidad para enviar un técnico certificado mañana en la mañana, entre las ocho y las doce. ¿Le funciona ese horario?
+
+CALLER: Sí, mañana en la mañana está bien. ¿Me van a llamar antes de llegar?
+
+AGENT: Así es, el técnico la llamará con aproximadamente treinta minutos de anticipación. También le llegará un mensaje de texto de confirmación en unos minutos. ¿Hay algo más en lo que le pueda ayudar, señora Martínez?
+
+CALLER: No, eso es todo. Muchas gracias, Alex.
+
+AGENT: Con mucho gusto. Que tenga buen día y nos vemos mañana.

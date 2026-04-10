@@ -1,0 +1,29 @@
+AGENT: Thank you for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, I'm hoping you can help me out. My air conditioner's been making this really loud banging noise every time it kicks on. Like a metal clanging sound. It's pretty alarming.
+
+AGENT: I'm sorry to hear that — a banging or clanging sound is definitely something we want to get looked at. Is the system still cooling your home, or has it stopped working altogether?
+
+CALLER: It's still running, sort of. The air coming out feels a little less cold than usual, but it's not totally out. It's just that noise that's got me worried.
+
+AGENT: That makes sense to be concerned — a metallic banging noise combined with reduced cooling can point to a few things, like a loose or bent fan blade, a failing blower motor, or sometimes debris that's gotten inside the unit. We'd want a technician to inspect it before it causes more damage.
+
+CALLER: Yeah, that's what I was thinking. I didn't want to just ignore it and end up with a bigger repair bill. How soon could someone come out?
+
+AGENT: Absolutely the right call. Let me pull up availability. Can I get your name and the address where the unit is located?
+
+CALLER: Sure, it's Marcus Delgado, and the address is 4817 Creekwood Drive.
+
+AGENT: Thank you, Marcus. And is this a central air system, or more of a split unit?
+
+CALLER: It's central air. The unit outside is where the noise is loudest, but I can also hear it a bit from the vents inside.
+
+AGENT: Got it — so the outdoor condenser unit is the main source. I have an opening tomorrow between 10 a.m. and 2 p.m. Would that window work for you?
+
+CALLER: Yeah, tomorrow works. I can be home in that window no problem.
+
+AGENT: Perfect. I'll get that scheduled for you. You'll receive a confirmation shortly, and the technician will call ahead before arriving. In the meantime, if the noise gets significantly worse or the system stops cooling entirely, don't hesitate to call us back. Is there anything else I can help you with today?
+
+CALLER: No, that covers it. Thanks a lot, Alex.
+
+AGENT: Of course, Marcus. We'll get that taken care of for you. Have a good day.

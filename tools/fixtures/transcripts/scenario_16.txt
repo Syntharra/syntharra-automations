@@ -1,0 +1,17 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi there, yes, I'm calling for the owner or whoever handles your marketing. My name is Brandon with Digital Reach Solutions, and I wanted to talk to you about some incredible opportunities we have for HVAC companies to dominate Google search results in your area.
+
+AGENT: I appreciate you reaching out, Brandon, but you've actually reached our customer service line. We're not the right department for that kind of inquiry.
+
+CALLER: Oh, no worries! I can work with whoever answers — honestly this will only take two minutes. We're seeing HVAC companies in your market leaving serious money on the table when it comes to Google Ads, and we've helped companies just like yours triple their inbound leads.
+
+AGENT: I understand, but I'm only able to assist customers with service-related needs. I'm not able to connect you with anyone regarding outside vendor services or marketing partnerships.
+
+CALLER: Is there a direct number or email I could use to reach someone in management? I promise it's worth a quick conversation.
+
+AGENT: I'm not able to provide internal contact information, but you're welcome to submit a business inquiry through our website. I hope you have a great day, Brandon.
+
+CALLER: Okay, sure, I'll do that. Thanks for your time.
+
+AGENT: Of course. Take care.

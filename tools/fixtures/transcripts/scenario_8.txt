@@ -1,0 +1,37 @@
+AGENT: Thank you for calling Bright Home Services, this is Alex, how can I help you today?
+
+CALLER: Hi, yeah, I'm not really sure if I want to set anything up yet, I'm just kind of looking into options for lawn care.
+
+AGENT: That's completely fine, no pressure at all. I'd be happy to give you some information and walk you through what we offer. May I ask who I'm speaking with?
+
+CALLER: Sure, it's Margaret Holloway.
+
+AGENT: Great, thank you Margaret. And just so I can look up what services might be available in your area, could I get your address?
+
+CALLER: It's 4821 Cresthaven Drive, Plano, Texas 75093.
+
+AGENT: Perfect, thank you. And the best callback number for you in case we get disconnected?
+
+CALLER: Oh, um, sure. It's 972-554-8801.
+
+AGENT: Got it, appreciate that. So Margaret, you mentioned you're looking into lawn care — are you thinking more along the lines of regular maintenance like mowing and edging, or something like fertilization and weed control?
+
+CALLER: Probably just the basic maintenance for now. My usual guy retired and I haven't found anyone reliable since.
+
+AGENT: Completely understandable, that's actually one of the most common reasons people reach out to us. We have weekly and bi-weekly plans in your area, and our crews are background-checked and fully insured. There's no contract required to get started.
+
+CALLER: That does sound pretty good. I just wasn't sure I was ready to commit to anything today.
+
+AGENT: No commitment needed at all. I've got your information noted, and I can have one of our local coordinators send you a free quote by email or give you a call — whichever you'd prefer. That way you can take your time and decide when you're ready.
+
+CALLER: Email would be great, honestly. That works for me.
+
+AGENT: Wonderful. I'll get that over to you, typically within one business day. Is there anything else I can help you with today, Margaret?
+
+CALLER: No, that's it. Thanks for not being pushy about it.
+
+AGENT: Of course, that's not how we operate. You have a great day, and don't hesitate to call back if you have any questions.
+
+CALLER: Will do, bye.
+
+AGENT: Bye-bye.

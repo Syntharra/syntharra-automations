@@ -1,0 +1,29 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, my AC just stopped working and it's like ninety degrees in my house. I need someone to come take a look.
+
+AGENT: Oh no, I'm sorry to hear that — we'll definitely get that taken care of for you. Can I start with your name?
+
+CALLER: Sure, it's Marcus Webb.
+
+AGENT: Thank you, Marcus. And what's the address we'd be sending a technician to?
+
+CALLER: That's actually the thing — I'm not at home right now, I'm at work, and I can never remember my exact address off the top of my head. I know, that sounds bad.
+
+AGENT: No worries at all, that happens more than you'd think. Can I grab a good phone number for you? Our technician can give you a call before heading out, and you can confirm the address then.
+
+CALLER: Yeah, absolutely. It's 407-555-0183.
+
+AGENT: Got it — 407-555-0183 for Marcus Webb. And just so we can get the right tech assigned, roughly what area of town are you in?
+
+CALLER: Southeast side, near the Millbrook area.
+
+AGENT: Perfect, that helps. Do you have any idea what's going on with the unit — is it running but not cooling, or completely off?
+
+CALLER: Completely off. I came home for lunch and it just wasn't doing anything. No sound, nothing.
+
+AGENT: Understood. I'll get a service request created and have someone from our team reach out to you at that number to schedule a visit and confirm your address. Is there anything else I can help you with?
+
+CALLER: No, that's it. Thank you.
+
+AGENT: Of course, Marcus. We'll be in touch shortly — stay cool out there.

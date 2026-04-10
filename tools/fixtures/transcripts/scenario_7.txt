@@ -1,0 +1,33 @@
+AGENT: Thank you for calling Comfort Home Services, this is Alex, how can I help you today?
+
+CALLER: Hi Alex, I just closed on a house last week and I'm hoping to get the HVAC system inspected before we move our stuff in. Is that something you guys do?
+
+AGENT: Absolutely, congratulations on the new home! Yes, we offer full HVAC inspections and that's actually a really smart thing to do before moving in. Can I ask, do you know the age of the system or what type of equipment is installed?
+
+CALLER: The listing said the furnace is about eleven years old, and there's central air too. I'm honestly not sure of the brands. I just want to make sure everything is in good working order before we're living there.
+
+AGENT: That makes complete sense. For a full inspection we go through the entire system — furnace heat exchanger, blower motor, electrical connections, refrigerant levels on the AC side, ductwork condition, thermostat calibration, filters, and we check for any carbon monoxide concerns as well. It's pretty thorough.
+
+CALLER: That sounds like exactly what I need. What would that run me?
+
+AGENT: Our full HVAC inspection is a flat rate of a hundred and forty-nine dollars, and that covers both the heating and cooling systems as one visit. If we find anything that needs repair, we'll give you a written estimate before doing any additional work — no surprises.
+
+CALLER: Okay, that's reasonable. And if they find something wrong, like a bigger issue, do they fix it the same day?
+
+AGENT: In many cases yes, our technicians carry common parts on the truck. For anything more involved, like a heat exchanger replacement or a refrigerant recharge, we'd schedule a follow-up, but most minor findings can be handled right then.
+
+CALLER: Good to know. How soon could someone come out? We're hoping to move in by the end of next week.
+
+AGENT: Let me check availability. We have openings this Thursday afternoon or Friday morning — would either of those work for you?
+
+CALLER: Friday morning would be perfect, actually.
+
+AGENT: Great. I'll get you scheduled for Friday. Can I grab your name, the service address, and a good callback number?
+
+CALLER: Sure, it's Marcus Webb, the address is 4412 Birchwood Court, and my number is 614-555-0183.
+
+AGENT: Perfect, Marcus. You're all set for Friday morning between eight and ten, and you'll get a text confirmation with the technician's name and a thirty-minute heads-up when they're on the way. Is there anything else I can help you with today?
+
+CALLER: No, that covers it. Thanks a lot, Alex.
+
+AGENT: My pleasure, and congratulations again on the new house. Have a great day!

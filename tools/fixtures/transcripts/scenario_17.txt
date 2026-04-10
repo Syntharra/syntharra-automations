@@ -1,0 +1,13 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: ...
+
+AGENT: Hello? Thanks for calling, can I help you with something?
+
+CALLER: ...
+
+AGENT: Hello, is anyone there?
+
+CALLER: [silence]
+
+AGENT: I'm not hearing anyone on the line. If you're having trouble, please call us back. Take care, goodbye.

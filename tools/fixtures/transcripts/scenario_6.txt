@@ -1,0 +1,33 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, I'm hoping you guys can help me out. I had ARS come out last week to look at my AC and they couldn't figure out what was wrong with it. I'm still without air conditioning and it's been miserable.
+
+AGENT: Oh, I'm really sorry to hear that — especially in this heat. You definitely shouldn't have to be sitting without AC after already having a technician out. We'd be happy to send someone for a second opinion and get you a quote. Can I get your name and the address we'd be coming out to?
+
+CALLER: Sure, it's Linda Marsh, and the address is 4821 Clearwater Drive.
+
+AGENT: Perfect, thank you Linda. And can I get a good callback number for you?
+
+CALLER: Yeah, it's 602-555-0174.
+
+AGENT: Got it. Can you tell me a little bit about what's going on with the unit? Like what symptoms you're seeing — is it not cooling at all, making a noise, anything like that?
+
+CALLER: It's just blowing warm air. ARS said they thought it might be the compressor but then said they weren't sure and that they'd have to order a part that could take weeks. I just want someone else to take a look before I commit to anything that expensive.
+
+AGENT: That makes complete sense, and honestly getting a second opinion on something like a compressor diagnosis is really smart — that's not a cheap repair. Our technician can do a full system diagnostic and give you a clear answer on what's actually going on and what it would cost to fix it.
+
+CALLER: Okay good. Do you know roughly what the diagnostic fee is?
+
+AGENT: There is a service call fee for the diagnostic visit, and I want to be upfront that the exact amount can vary, but our scheduling team can confirm that when we lock in your appointment. If you do move forward with the repair, that fee typically gets applied toward the work. Does that sound reasonable?
+
+CALLER: Yeah, that works for me. How soon could someone come out?
+
+AGENT: Let me check availability — we do have openings as early as tomorrow. Would a morning or afternoon window work better for you?
+
+CALLER: Morning would be great, if possible.
+
+AGENT: I can get you scheduled for tomorrow morning between eight and noon. You'll get a call from the technician before they head your way. Is there anything else I can help you with before we wrap up?
+
+CALLER: No, that's it. Thank you so much, I really appreciate it.
+
+AGENT: Absolutely, Linda. We'll get you taken care of. Have a good rest of your day!

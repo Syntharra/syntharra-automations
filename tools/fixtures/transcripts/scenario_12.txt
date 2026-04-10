@@ -1,0 +1,33 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi yes, this is an emergency, I need someone out today. My furnace just stopped working completely and it is freezing in my house right now.
+
+AGENT: I'm so sorry to hear that. You said this is an emergency — absolutely, let's get someone out to you today. Can I get your name and the address we'd be sending the technician to?
+
+CALLER: Yes, it's Sandra Kowalski, 4817 Birchwood Drive. Please, it's really cold in here, I've got my elderly mother with me and she can't handle this.
+
+AGENT: Understood, Sandra, I'm treating this as a priority dispatch. 4817 Birchwood Drive — can you confirm the city and zip code for me?
+
+CALLER: It's Lakewood, 44107.
+
+AGENT: Got it. And is this a gas furnace or electric, do you know?
+
+CALLER: It's gas. It just shut off about an hour ago, nothing's coming on, no heat at all.
+
+AGENT: Okay, that's helpful for our technician. I do have an emergency slot available this afternoon, we're looking at roughly a two to three hour window between one and four PM. Does that work for you?
+
+CALLER: Yes, yes that works, please just get someone here as soon as possible. What's the emergency service fee so I know what to expect?
+
+AGENT: The emergency dispatch fee is eighty-nine dollars, and that covers the visit and diagnosis. Any parts or labor beyond that the technician will go over with you on-site before any work begins. No surprises.
+
+CALLER: Okay, that's fine, I just need the heat back on. Can you call me when the technician is on the way?
+
+AGENT: Absolutely. We'll send you a text and give you a call about thirty minutes before arrival. I have your address — what's the best callback number for you?
+
+CALLER: It's 216-555-0183.
+
+AGENT: Perfect, Sandra. You're all set. We have you down as a priority emergency call this afternoon, one to four PM window, technician will call ahead. Is there anything else I can help you with?
+
+CALLER: No, that's everything. Thank you so much, I really appreciate it.
+
+AGENT: Of course. Stay warm as best you can and we'll have someone out there shortly. Take care.

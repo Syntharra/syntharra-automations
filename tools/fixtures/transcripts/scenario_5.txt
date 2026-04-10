@@ -1,0 +1,33 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi Alex, my name is Sandra Kowalski, I'm a property manager for a 12-unit apartment complex over on Meridian Drive. I'm looking to set up some kind of recurring maintenance agreement for the HVAC units in the building.
+
+AGENT: Hi Sandra, absolutely, you've reached the right place. We do offer commercial maintenance contracts for multi-unit properties. Can I ask — are all 12 units on separate systems, or do you have a mix of central and individual units?
+
+CALLER: It's a mix. We have two rooftop package units that handle the common areas and hallways, and then each apartment has its own split system. So 12 residential splits plus the two RTUs.
+
+AGENT: Got it, so 14 systems total. For a property that size we typically recommend our commercial tiered contract, which covers two scheduled maintenance visits per year per system, priority scheduling for service calls, and discounted labor rates if something does come up outside the scheduled visits. Does that sound like the kind of coverage you're looking for?
+
+CALLER: That sounds close. My main concern is that we had a couple units fail last summer during the heat wave and it took forever to get someone out. I need to make sure emergency response is part of whatever we agree to.
+
+AGENT: That's completely understandable, and honestly that's one of the biggest reasons property managers come to us. Our commercial contract includes a guaranteed 24-hour emergency response window, and if you add the premium tier it drops to four hours. Given that you're managing tenant comfort and habitability, the premium tier is usually what we recommend for residential rental properties.
+
+CALLER: What's the price difference between the two tiers?
+
+AGENT: For a property your size — 14 systems — the standard contract typically runs around eighteen hundred to twenty-two hundred dollars annually, and the premium with the four-hour emergency guarantee is usually in the twenty-eight to thirty-four hundred range. Those are ballpark figures though. I'd want to get one of our commercial account specialists to do a proper site assessment and give you an exact quote.
+
+CALLER: That's reasonable. The premium tier is probably worth it given we have tenants. Can someone come out to the property to take a look before we sign anything?
+
+AGENT: Absolutely. I can schedule a no-cost site assessment with one of our commercial specialists. They'll walk the property, document the equipment make, model, and age, and put together a formal contract proposal. What does your availability look like next week?
+
+CALLER: I'm on site Tuesdays and Thursdays, usually anytime after nine in the morning.
+
+AGENT: Perfect. I'll get you on the calendar for a Thursday morning assessment and have the specialist reach out to confirm. Can I grab your phone number and a good email address to send the confirmation to?
+
+CALLER: Sure, it's 614-555-0183, and the email is s.kowalski at meridianproperties dot com.
+
+AGENT: Got it, Sandra. You're all set. You'll get a confirmation within the hour and the specialist will call you the day before to confirm. Is there anything else I can help you with today?
+
+CALLER: No, that covers it. Thanks, Alex.
+
+AGENT: My pleasure. Thanks for calling and we'll talk soon.

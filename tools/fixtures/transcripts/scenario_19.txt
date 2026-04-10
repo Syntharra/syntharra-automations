@@ -1,0 +1,29 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi there, I was hoping you could give me the address for your office. I'd like to come in person to speak with someone.
+
+AGENT: Of course! I'd be happy to help with that. Are you looking to visit our main office, or is there a specific department you were hoping to meet with?
+
+CALLER: Just the main office, I have some questions about a service agreement and I'd rather talk to someone face to face.
+
+AGENT: Totally understandable. I do want to give you a heads up before you make the trip — our office is primarily an operations and dispatch center, so we don't typically have a customer-facing service desk or a walk-in area set up for consultations.
+
+CALLER: Oh, really? I didn't realize that. Is there any way to still come in and talk to someone?
+
+AGENT: We do have account managers who handle service agreements, but they work by appointment only. I'd hate for you to drive out and not have someone available to sit down with you. Would it be easier if I scheduled a call or an in-person appointment for you first?
+
+CALLER: Yeah, I guess that makes more sense. How does that work?
+
+AGENT: I can get your name and contact information and have one of our account managers reach out to you, usually within one business day. They can either set up a phone call or arrange a time to meet with you at the office if that's still your preference.
+
+CALLER: That works for me. My name is Robert Callahan and my number is 555-304-8821.
+
+AGENT: Perfect, let me get that noted — Robert Callahan, 555-304-8821. And just so the account manager has context, would you like me to note that you have questions about a service agreement?
+
+CALLER: Yes, exactly. It's regarding a contract I signed a few months back.
+
+AGENT: Got it, I'll make sure that's included in the note so they're prepared when they reach out. You should hear from someone by end of business tomorrow. Is there anything else I can help you with today?
+
+CALLER: No, that's everything. Thanks for the help.
+
+AGENT: Of course, thanks for calling and have a great day, Robert.

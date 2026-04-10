@@ -1,0 +1,31 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, I'm really frustrated right now. I had ARS come out twice to fix my AC unit and it's still not working. A friend told me you guys are good, so I figured I'd give you a call.
+
+AGENT: I'm really sorry to hear you've been dealing with that — two visits and still no resolution is absolutely frustrating. You've come to the right place. We'd be happy to take a look and get to the bottom of what's going on. Can I get your name and address?
+
+CALLER: Sure, it's Tom Walters, and I'm at 4821 Birchwood Drive.
+
+AGENT: Got it, Tom. And can you tell me a little more about what the AC is doing — or not doing? Is it not cooling at all, or is it running but just not keeping up?
+
+CALLER: It runs, but it barely cools the house. It'll get down to maybe 78 inside even when I set it to 70. And honestly it's been worse since ARS came out the second time.
+
+AGENT: That's really helpful, thank you. That kind of symptom — running but not reaching the set temperature — can point to a few things like low refrigerant, a dirty coil, or an airflow issue. We'll have one of our certified technicians do a full diagnostic so nothing gets missed. Do you have a preference for morning or afternoon appointments?
+
+CALLER: Morning works better for me. How soon can you get someone out?
+
+AGENT: Let me check our availability. We actually have an opening tomorrow morning between 8 and 11 — would that work for you?
+
+CALLER: Yeah, that works. Is there a diagnostic fee or anything I should know about upfront?
+
+AGENT: There is a diagnostic fee of $89, and that gets applied toward any repair if you decide to move forward with us. So if we fix it, it comes right off the top. No surprises.
+
+CALLER: That's fair. ARS charged me just to come out and then couldn't even tell me what was wrong for sure. I appreciate you being upfront about it.
+
+AGENT: Absolutely, transparency is important to us. You'll get a clear explanation of what we find and a written estimate before any work begins. I'll go ahead and get you booked for tomorrow morning — you'll receive a confirmation text and a call from the technician when he's about 30 minutes out. Is the best number to reach you the one you're calling from?
+
+CALLER: Yes, that's fine. Thank you, I really hope you guys can figure this out.
+
+AGENT: We'll do our best, Tom. You're all set for tomorrow. If anything comes up in the meantime, don't hesitate to call us back. Have a good evening.
+
+CALLER: You too, thanks.

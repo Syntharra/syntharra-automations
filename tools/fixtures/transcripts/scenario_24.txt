@@ -1,0 +1,9 @@
+AGENT: Thank you for calling, this is Alex, how can I help you today?
+
+CALLER: Hi yeah, my name is Marcus Delgado, my number is 555-308-4471, my AC is broken and I need someone to come out —
+
+AGENT: Of course, Mr. Delgado, I'd be happy to get that scheduled for you. Can you tell me a little more about what's hap —
+
+CALLER: *click*
+
+AGENT: Hello? Mr. Delgado? … Okay, caller disconnected. Logging the contact — name Marcus Delgado, callback 555-308-4471, AC not working, no further details. Will attempt callback.

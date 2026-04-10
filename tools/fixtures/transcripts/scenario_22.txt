@@ -1,0 +1,29 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, I just had a quick question about your services. I'm not ready to book anything or anything like that, just curious.
+
+AGENT: Of course, happy to help however I can. What would you like to know?
+
+CALLER: I was just wondering if you guys do whole-house water filtration installs, like under the sink and whole-home systems.
+
+AGENT: We do, yes. We handle everything from point-of-use under-sink filters to whole-home softener and filtration systems. We carry a few different brands depending on your water quality needs.
+
+CALLER: Okay, good to know. And roughly what does a whole-home system run, just ballpark?
+
+AGENT: Generally speaking, whole-home systems can range anywhere from around eight hundred dollars on the lower end up to two thousand or more depending on the system and your home's setup. That's including installation.
+
+CALLER: Alright, that's helpful. I'm just in the early research stage, honestly probably won't be doing anything for a few months at least. And I want to be clear — please don't call me back or send anyone out. I'm just gathering information right now.
+
+AGENT: Absolutely, I completely respect that. I'm not going to add you to any follow-up list or schedule anything. You're in full control of when and if you reach out to us.
+
+CALLER: Good, I just didn't want to end up with someone showing up at my door or getting a bunch of sales calls.
+
+AGENT: That won't happen. We don't do that. Whenever you're ready — whether it's two months from now or two years — you're always welcome to call back and we'll be glad to help.
+
+CALLER: Okay, great. Thanks for being straightforward about it.
+
+AGENT: Of course. Is there anything else I can answer for you while I have you?
+
+CALLER: No, that's all I needed. Thanks, Alex.
+
+AGENT: My pleasure. Take care, and have a great day.

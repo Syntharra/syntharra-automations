@@ -1,0 +1,37 @@
+AGENT: Thank you for calling Comfort Home Services, this is Alex, how can I help you today?
+
+CALLER: Hi, yeah, my AC stopped working and it's supposed to be in the mid-nineties this weekend. It's just blowing warm air.
+
+AGENT: Oh no, I'm sorry to hear that — especially with this heat coming. I'd be happy to get a technician out to take a look and give you a quote. Can I start with your full name?
+
+CALLER: Sure, it's Marcus Webb.
+
+AGENT: Thank you, Marcus. And what's the service address?
+
+CALLER: It's 4712 Sycamore Ridge Drive, in Lakewood.
+
+AGENT: Got it, 4712 Sycamore Ridge Drive, Lakewood. And the best callback number for you?
+
+CALLER: Yeah, that's 720-555-0183.
+
+AGENT: Perfect, I have that down. Can you tell me a little more about the unit — is it a central air system, and do you know roughly how old it is?
+
+CALLER: It's central air, yeah. The unit outside is probably eight, maybe nine years old. It was here when we bought the house.
+
+AGENT: That's helpful. And when did it stop cooling — was it sudden, or has it been gradually getting warmer over the past few days?
+
+CALLER: It was pretty sudden. Yesterday it was fine, today I noticed it was just running and running but the house wasn't getting any cooler.
+
+AGENT: Understood. That kind of symptom — running constantly but not cooling — is often something like a refrigerant issue or a capacitor, both of which our techs diagnose on the first visit. The service call fee is sixty-nine dollars, which is waived if you move forward with any repair. We can't give an exact quote until the tech assesses it, but most common repairs on a system that age run between one-fifty and four-fifty.
+
+CALLER: Okay, that sounds reasonable. How soon can someone come out?
+
+AGENT: We have availability tomorrow between ten and two, or if you'd prefer the afternoon, we have a two-to-six window as well. Which works better for you?
+
+CALLER: Morning window works. Ten to two is fine.
+
+AGENT: Great, I'll get Marcus Webb at 4712 Sycamore Ridge Drive booked for tomorrow, ten to two. You'll get a text confirmation shortly, and the tech will call about thirty minutes before arrival. Is there anything else I can help you with today?
+
+CALLER: No, that's everything. Thanks, Alex.
+
+AGENT: You're welcome, Marcus. Stay cool in the meantime, and we'll get you taken care of tomorrow. Have a good one!

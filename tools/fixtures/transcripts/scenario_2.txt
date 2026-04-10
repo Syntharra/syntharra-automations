@@ -1,0 +1,27 @@
+AGENT: Thank you for calling Comfort Home Services, this is Alex, how can I help?
+
+CALLER: Hi, yes, I need help — our furnace completely stopped working overnight. We woke up and the house is freezing. I have two young kids here and it's like 18 degrees outside.
+
+AGENT: I'm so sorry to hear that — that's definitely an emergency situation. I want to get someone out to you as fast as possible. Can I get your name and the address we'd be coming to?
+
+CALLER: It's Dana Kowalski, 4418 Birchwood Court. Please, my youngest is only four — we've got blankets on them but the house is down to 55 degrees and still dropping.
+
+AGENT: Understood, Dana, I'm flagging this as an emergency dispatch right now. 4418 Birchwood Court — can you confirm the city and zip for me?
+
+CALLER: Millbrook, 48532. How soon can someone get here? We've never had this happen before.
+
+AGENT: We have a technician currently about 35 minutes from your area. I'm contacting him directly as we speak to reroute him to you. Do you know if the furnace made any sounds before it went out, or did it just stop?
+
+CALLER: It just stopped. No weird noises. My husband checked the circuit breaker and the filter — everything looks normal, it just won't kick on at all.
+
+AGENT: That's really helpful information, I'll pass that along to the tech so he can come prepared. While you wait, if you have an electric oven or space heaters, it's safe to use those to keep the kids' room warm. Don't use a gas range for heat though.
+
+CALLER: Okay, yeah, we have a space heater. I'll set that up in their room now. Is there anything else the technician will need when he arrives?
+
+AGENT: Just make sure there's clear access to your utility room or wherever the furnace is located. The tech will call you when he's about ten minutes out — he'll be coming from our emergency line so it may show as a different number. Is the best number to reach you the one you're calling from?
+
+CALLER: Yes, this is my cell. Thank you so much — I was really panicking.
+
+AGENT: Completely understandable, and you did the right thing calling right away. You're all set, Dana — help is on the way. Stay warm and we'll have someone there shortly.
+
+CALLER: Thank you, Alex. Really appreciate it.

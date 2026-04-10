@@ -1,0 +1,25 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Yes, hi, my carbon monoxide detector just went off — the one right next to my furnace — and I don't know what to do, I grabbed my kids and we're outside right now.
+
+AGENT: Okay, you did exactly the right thing getting everyone outside. Are you and your family safe and away from the house right now?
+
+CALLER: Yes, we're in the driveway, all three of us. But I need someone out here fast, I don't know if it's the furnace leaking or what.
+
+AGENT: Absolutely, we're going to get someone to you right away. Before I dispatch a tech, I need to ask — have you called 911 or your gas company yet? For CO alarms, the fire department should clear the house first before we can safely work on the furnace.
+
+CALLER: No, I called you first. Should I hang up and call them?
+
+AGENT: Yes, call 911 right now — they'll come out, ventilate the house, and confirm it's safe to reenter. Don't go back inside until they give you the all-clear. Once they do, call us back and we will have a technician there within the hour to inspect your furnace.
+
+CALLER: Okay, okay. And you can actually get someone out today? Because it's cold and my kids can't be outside for long.
+
+AGENT: Yes, absolutely. Once the fire department clears you, call us back at this same number and I will personally flag your account as an emergency dispatch. We'll prioritize you at the top of the queue.
+
+CALLER: Thank you, I really appreciate it. I'll call 911 right now.
+
+AGENT: Please do. You're doing great — stay outside, keep the kids warm in your car if you need to, and call us back as soon as you have the all-clear. We'll take care of you.
+
+CALLER: Will do. Thank you, Alex.
+
+AGENT: Stay safe. We'll talk soon.

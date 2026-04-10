@@ -1,0 +1,33 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi Alex, I'm a landlord and I've got a situation on my hands. My tenant has been without air conditioning for two days now and it's July. She's been blowing up my phone and I really need someone out there today.
+
+AGENT: I completely understand, and with temperatures the way they've been this week, that's definitely a priority. I want to make sure we get someone out as soon as possible. Can I get your name and the service address for the property?
+
+CALLER: Sure, my name is Robert Haines. The unit is 4712 Clearwater Drive, Apartment B. I'm the owner but I won't be on site — my tenant Sarah is the one there.
+
+AGENT: Got it, Robert. And do you have a contact number for Sarah so our technician can reach her directly to confirm access and arrival time?
+
+CALLER: Yeah, her number is 555-304-8821. Look, I just want to be upfront — if this doesn't get fixed today or tomorrow, she's threatening to withhold rent and I've got real liability here. This needs to happen fast.
+
+AGENT: I hear you, and we do treat cooling outages in summer as urgent calls. Let me check our dispatch schedule. Can you tell me — has Sarah noticed anything specific, like the unit running but not cooling, or is it completely dead?
+
+CALLER: She said it's running but just blowing warm air. It's been like that since Monday morning.
+
+AGENT: That's helpful, thank you. That narrows it down for our tech. I do have an opening today between two and five p.m. — would Sarah be available in that window?
+
+CALLER: I'll make sure she is. Can you text me a confirmation so I have it in writing?
+
+AGENT: Absolutely. I'll send a confirmation to your number with the technician's name, the estimated window, and a job reference number. What's the best number for you?
+
+CALLER: 555-217-6640. And just so I'm clear — if there's a repair needed, they can proceed same day?
+
+AGENT: Our technician will diagnose on arrival and carry most common parts on the truck. If it's something they can resolve today, they will. If a part needs to be ordered, they'll give you options and an estimated timeline before any work is authorized.
+
+CALLER: That works. I just need something to show my tenant that I'm on it. She's already talking to someone about tenant rights and I don't need that headache.
+
+AGENT: We'll get someone out there this afternoon, Robert. You'll have your confirmation text within a few minutes. Is there anything else I can help you with today?
+
+CALLER: No, that's everything. Thank you, Alex.
+
+AGENT: Of course. We'll take good care of it. Have a good rest of your day.

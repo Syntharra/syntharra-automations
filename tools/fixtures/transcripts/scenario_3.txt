@@ -1,0 +1,29 @@
+AGENT: Thank you for calling Comfort Home Services, this is Alex, how can I help?
+
+CALLER: Oh, hello dear. Yes, I — I need some help. My heat stopped working, it's been out since yesterday morning and I don't know what to do.
+
+AGENT: I'm sorry to hear that. I want to make sure we get you taken care of right away. Can I get your name and the address where you're having the issue?
+
+CALLER: Yes, it's Margaret Hollis. I'm at 4417 Birchwood Lane. I'm 78 years old and I live alone, and it was 28 degrees last night. I had to sleep with my coat on.
+
+AGENT: Mrs. Hollis, I hear you and I want you to know we're treating this as an urgent situation. Are you safe right now — do you have blankets, or a neighbor you could stay with if needed?
+
+CALLER: I've got blankets but I'm not doing well. My hands are very cold and I've had the oven on a little bit just to take the chill off, but I know that's not right.
+
+AGENT: Please turn the oven off — I understand why you did it, but that can be dangerous. I'm flagging your account as a priority emergency right now. Can you confirm your phone number so our technician can reach you directly?
+
+CALLER: It's 555-0142. Do you think someone can come today? I don't know how much longer I can manage like this.
+
+AGENT: Absolutely. I'm escalating you to our emergency dispatch queue right now. With outdoor temps this low and your situation, you're at the top of the list. Someone will call you within the next 30 minutes to confirm arrival time, and we're aiming to have a technician there within two hours.
+
+CALLER: Oh thank goodness. I was so worried you'd say tomorrow. I just didn't know who else to call.
+
+AGENT: You did exactly the right thing calling us. While you wait, please stay in the warmest room in your house, keep those blankets close, and if you start to feel unwell at all, please call 911. Is there anyone I can contact on your behalf — a family member or neighbor?
+
+CALLER: My daughter. Her name is Carol, her number is 555-0289. Would you really call her?
+
+AGENT: I'll make a note for the technician to reach out to Carol as well, and I'd encourage you to give her a call yourself right now just so someone knows you're waiting. Mrs. Hollis, you're all set in our system. Help is on the way.
+
+CALLER: Thank you so much, dear. You've been so kind. I really appreciate it.
+
+AGENT: Of course. You stay warm and don't hesitate to call us back if anything changes. Take care, Mrs. Hollis.

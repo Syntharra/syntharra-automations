@@ -1,0 +1,29 @@
+AGENT: Thanks for calling Riverside Home Services, this is Alex, how can I help?
+
+CALLER: Hello! Are you the homeowner or decision-maker for your property? We're offering an exclusive limited-time opportunity to reduce your monthly energy bills by up to forty percent with our revolutionary—
+
+AGENT: I appreciate you reaching out, but this line is for our existing customers. You'll want to remove this number from your list. Is there anything else I can do for you?
+
+CALLER: Yes, absolutely, and I completely understand, but just thirty seconds of your time—our solar and insulation bundles are specifically designed for homeowners in your zip code and—
+
+AGENT: Sir, I do need to ask you to please remove this number. We'll be disconnecting now—
+
+CALLER: Wait, wait, please don't hang up. I'm sorry, I— look, I actually am a customer. I got transferred to this line and then the script just started playing, I don't know what happened. I'm calling because I need help.
+
+AGENT: Okay, I'm listening. What's going on?
+
+CALLER: I'm sorry, I'm a little shaken up. My furnace just made this loud bang and now I'm smelling something — it smells like burning, like smoke, coming from the utility room. I didn't know who else to call.
+
+AGENT: I understand, and I'm glad you stayed on the line. Can you tell me — is the smell getting stronger, and do you see any visible smoke or flames?
+
+CALLER: It's — yeah, it's getting stronger. I can see a little haze near the floor vent. Oh god.
+
+AGENT: Okay, I need you to do one thing right now — get yourself and anyone else in the home outside immediately. Don't stop to grab anything. Once you're out, call 911. Do not go back inside.
+
+CALLER: Okay, okay, I'm moving. Should I turn the furnace off first?
+
+AGENT: No — leave it and get out now. Your safety comes first. We will have a technician and our emergency line follow up the moment you're safe, but please get outside and call 911 right now.
+
+CALLER: Okay. Okay, I'm going. Thank you.
+
+AGENT: Go now. We're here when you're safe.

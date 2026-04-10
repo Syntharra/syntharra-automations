@@ -1,0 +1,29 @@
+AGENT: Thank you for calling Comfort Home Services, this is Alex, how can I help you today?
+
+CALLER: Hi, yes, please, I need someone out here as soon as possible. My AC just stopped working completely and I have a three-month-old baby at home. It is already 87 degrees inside and it's only noon.
+
+AGENT: I completely understand, and I want you to know we're treating this as a priority. Can I get your name and service address?
+
+CALLER: Yes, it's Maria Delgado, 4412 Suncrest Drive. Please, it's 95 outside and she's so little, I don't know what to do.
+
+AGENT: You're absolutely right to call, Maria. Infants can't regulate their body temperature and this is a genuine emergency for us. While I get you scheduled, can I ask — is the unit not turning on at all, or is it running but not cooling?
+
+CALLER: It was running this morning but blowing warm air, and then about an hour ago it just shut off entirely. I checked the thermostat, it's set right, and I reset the breaker but nothing happened.
+
+AGENT: Got it, that's really helpful. I have your address pulled up. I have a technician who just finished a job about twelve minutes from you — I can dispatch him right now and he should be there within the hour. Will that work?
+
+CALLER: Yes, yes please, that's — thank you. Should I do anything in the meantime? She keeps crying and I can tell she's hot.
+
+AGENT: Keep her in the lowest level of the home since cooler air settles there, use a battery-powered or handheld fan pointed near her without blowing directly on her face, and keep her in just a light onesie. Lukewarm — not cold — wet cloths on her feet can help too. And stay hydrated yourself.
+
+CALLER: Okay, okay, I'm doing that. The lowest level, got it. What's the technician's name so I know who to expect?
+
+AGENT: His name is Marcus, and you'll get an automated text to 832-555-0174 — is that the best number? — with his name, photo, and an updated ETA when he's en route.
+
+CALLER: Yes, that's my number. Thank you so much, Alex. I was panicking.
+
+AGENT: You did exactly the right thing calling us. Marcus will have your AC diagnosed and we'll do everything we can to get it running today. You'll receive that text within the next few minutes. Is there anything else I can do for you right now?
+
+CALLER: No, I think I'm okay. Thank you, really.
+
+AGENT: Of course. Hang tight, help is on the way. Take care of that little one.

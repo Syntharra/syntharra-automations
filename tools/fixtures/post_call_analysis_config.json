@@ -1,0 +1,43 @@
+[
+  {
+    "type": "system-presets",
+    "name": "call_summary",
+    "description": "Write a 1-3 sentence summary of the call based on the call transcript. Should capture the important information and actions taken during the call."
+  },
+  {
+    "type": "system-presets",
+    "name": "call_successful",
+    "description": "Evaluate whether the agent had a successful call with the user. For a successful call, the agent should have a complete conversation with user, finished the task, and have not ran into technical issues, or caused user frustration. Besides, the agent was not blocked by a call screen or encountered voicemail."
+  },
+  {
+    "type": "system-presets",
+    "name": "user_sentiment",
+    "description": "Evaluate user's sentiment, mood and satisfaction level."
+  },
+  {
+    "name": "is_lead",
+    "description": "True if the caller is a potential customer requesting service, a quote, an estimate, or scheduling work (repair, installation, maintenance, tune-up, inspection). False if the caller is a wrong number, existing customer asking an admin question, spam, robocall, or employee-related call.",
+    "type": "boolean",
+    "examples": [
+      "true",
+      "false"
+    ]
+  },
+  {
+    "name": "urgency",
+    "description": "Severity tier of the caller's need. 'emergency' = no heat in winter, no AC in heat wave, gas smell, water leak, CO alarm \u2014 needs same-day response. 'high' = system partially working, customer discomfort, can wait 24 hours. 'normal' = routine repair or estimate, flexible scheduling. 'low' = information request, future planning, tune-up. 'none' = not a service call.",
+    "type": "enum",
+    "choices": [
+      "emergency",
+      "high",
+      "normal",
+      "low",
+      "none"
+    ]
+  },
+  {
+    "type": "boolean",
+    "name": "is_spam",
+    "description": "True if the call is a robocall, telemarketer, silent/dropped, obvious scam, or wrong number with no service intent. False for any legitimate caller regardless of whether they book."
+  }
+]

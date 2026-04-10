@@ -1,0 +1,33 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, you guys came out last summer and fixed my AC unit, and now I'm having a problem with my furnace.
+
+AGENT: Of course, I'd be happy to help you get that taken care of. Can I get your name and the address on the account?
+
+CALLER: Sure, it's Mark Hensley, 4218 Birchwood Drive.
+
+AGENT: Great, I'm pulling up your account now, Mr. Hensley. I can see the AC work we did for you in July. What's going on with the furnace today?
+
+CALLER: It's making this loud banging noise when it kicks on, and then it shuts off after like a minute. This started happening yesterday and now my house is getting cold.
+
+AGENT: That banging on startup followed by a short cycle could be a few different things — could be the heat exchanger, a dirty burner, or an ignition issue. Definitely something we want to get a technician out to look at. Are you available for a service visit?
+
+CALLER: Yeah, sooner the better. It's supposed to drop into the thirties tonight and I've got kids at home.
+
+AGENT: Understood, let me see what we have open. I can get someone out to you tomorrow morning between eight and eleven — would that work, or do you need same-day?
+
+CALLER: Same-day would be great if you have it. I don't want to go through a cold night with the kids.
+
+AGENT: Let me check our same-day availability. I do have a technician who could be there between four and six this afternoon. Does that work for you?
+
+CALLER: Yes, absolutely. That's perfect.
+
+AGENT: Great, I've got you scheduled for today between four and six PM. You'll get a text confirmation and the tech will call about thirty minutes before arrival. Is the best number to reach you the one on file ending in 7742?
+
+CALLER: That's the one, yes.
+
+AGENT: Perfect. Is there anything else I can help you with today, Mr. Hensley?
+
+CALLER: No, that's everything. Thanks for fitting me in.
+
+AGENT: Of course, stay warm and we'll see you this afternoon.

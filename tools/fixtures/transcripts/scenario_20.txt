@@ -1,0 +1,29 @@
+AGENT: Thanks for calling, this is Alex, how can I help?
+
+CALLER: Hi, yeah, I just got my invoice in the email and there's a charge on here I don't recognize. It says "service fee" for like forty-two dollars and I'm not sure what that's for.
+
+AGENT: Sure, I'd be happy to look into that for you. Can I get your name and the account number or the address on the account?
+
+CALLER: Yeah it's Linda Marsh, and the address is 4817 Creekside Drive.
+
+AGENT: Perfect, thank you Linda. Give me just one moment while I pull up your account. Okay, I'm looking at your most recent invoice here. The forty-two dollar service fee — that would be the quarterly maintenance plan charge. It looks like your account is enrolled in our annual maintenance program, which bills in four installments throughout the year.
+
+CALLER: Oh. I didn't realize it was quarterly. I thought that was a one-time thing when I signed up.
+
+AGENT: I understand the confusion. When you enrolled last spring, it was set up as an annual plan that renews automatically and bills quarterly rather than all at once. The total for the year comes to a hundred and sixty-eight dollars, so it breaks into four payments of forty-two.
+
+CALLER: Okay, so when did I sign up for that exactly?
+
+AGENT: Your enrollment date shows April 14th of last year. The plan covers annual HVAC inspections, priority scheduling, and discounted labor rates on any service calls.
+
+CALLER: Hmm, okay. I do remember signing up for something like that. I just didn't realize it would keep charging. Is there any way to cancel it if I wanted to?
+
+AGENT: Absolutely. You can cancel at any time without a penalty fee. If you cancel before the next billing cycle, you won't see another charge. Would you like me to go ahead and process that, or would you prefer to keep the plan active?
+
+CALLER: I think I'll keep it for now, I just wanted to understand what it was. That makes sense. Thank you.
+
+AGENT: Of course, glad I could clear that up. Is there anything else I can help you with today?
+
+CALLER: No, that's everything. Thanks Alex.
+
+AGENT: You're welcome, Linda. Have a great day.

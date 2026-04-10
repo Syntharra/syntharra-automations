@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "name": "New customer, AC not cooling, wants quote",
+    "description": "Homeowner calls because AC stopped cooling. Gives name, address, phone. Asks for a quote.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 2,
+    "name": "Furnace dead in winter, family inside",
+    "description": "Caller's furnace died overnight. It's mid-winter. Family including children at home with no heat.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "emergency", "is_spam": false}
+  },
+  {
+    "id": 3,
+    "name": "Elderly caller, heat not working, elderly home",
+    "description": "Elderly person calls - they're 78 years old, heat has been out since yesterday, temperature dropping outside.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "emergency", "is_spam": false}
+  },
+  {
+    "id": 4,
+    "name": "Caller has infant, AC out in summer heat",
+    "description": "Parent calls - has a 3-month-old baby at home, AC stopped working, it's 95 degrees outside.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "emergency", "is_spam": false}
+  },
+  {
+    "id": 5,
+    "name": "Commercial building, wants maintenance contract",
+    "description": "Property manager for a 12-unit apartment complex calls wanting a recurring maintenance contract for the HVAC systems.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 6,
+    "name": "Caller mentions competitor couldn't fix it",
+    "description": "Caller says ARS came out last week and couldn't fix their AC problem. Wants a second opinion and a quote.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 7,
+    "name": "New homeowner, wants full HVAC inspection",
+    "description": "Just bought a house, wants a full HVAC system inspection before moving in. Asks what it would cost.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 8,
+    "name": "Caller unsure but gave address and phone",
+    "description": "Caller says 'I'm not sure if I want service yet' but gives their full name, address, and phone number when asked.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 9,
+    "name": "Carbon monoxide detector went off near furnace",
+    "description": "Caller is panicked - CO detector went off near furnace. They opened windows and stepped outside. Wants someone out immediately.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "emergency", "is_spam": false}
+  },
+  {
+    "id": 10,
+    "name": "Rental property owner, tenant unit needs fix ASAP",
+    "description": "Landlord calls - tenant has been complaining about AC for 2 days, it's July, needs it fixed urgently to avoid lease issues.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "high", "is_spam": false}
+  },
+  {
+    "id": 11,
+    "name": "AC making loud banging noise, wants it looked at",
+    "description": "Caller hears a loud banging or clanging noise from their AC unit when it runs. System still kind of works. Wants it diagnosed.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 12,
+    "name": "Caller explicitly says it is an emergency",
+    "description": "Caller says the words 'this is an emergency' - furnace stopped working, it's cold, they need someone today.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "emergency", "is_spam": false}
+  },
+  {
+    "id": 13,
+    "name": "Caller gave only name and problem, no address yet",
+    "description": "Caller gives name and says AC is broken but doesn't have their address memorized. Leaves phone number.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 14,
+    "name": "Existing customer reporting new issue",
+    "description": "Caller says 'you fixed my AC last year, now my furnace has a problem' - clearly a real customer with a new service need.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 15,
+    "name": "Spanish-speaking caller, clear HVAC repair request",
+    "description": "Caller speaks Spanish. Clearly communicates that their air conditioning is broken and they need a technician. Gives contact info.",
+    "group": "A",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 16,
+    "name": "Telemarketer trying to sell the company something",
+    "description": "Caller is a salesperson trying to sell SEO services or Google Ads management to the HVAC company. No service need.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": true}
+  },
+  {
+    "id": 17,
+    "name": "Robocall, dead air, no real caller",
+    "description": "Robocall - automated voice or silence. Sophie says hello a few times, no real person responds.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": true}
+  },
+  {
+    "id": 18,
+    "name": "Wrong number, caller hung up after hello",
+    "description": "Caller realizes immediately they dialed the wrong number and hangs up after a brief exchange.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": false}
+  },
+  {
+    "id": 19,
+    "name": "Caller asking for directions to office",
+    "description": "Caller is asking where the physical office is located - wants to come in person. No repair or service request.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": false}
+  },
+  {
+    "id": 20,
+    "name": "Existing client asking about their invoice",
+    "description": "Existing customer calls to ask about a charge on their invoice. Billing question only, no new service needed.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": false}
+  },
+  {
+    "id": 21,
+    "name": "Prank call or incoherent caller",
+    "description": "Caller is clearly prank calling - laughing, saying nonsense, not requesting any real service.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": true}
+  },
+  {
+    "id": 22,
+    "name": "Caller explicitly says do not call me back",
+    "description": "Caller says 'I'm just curious, not ready yet, please don't call me back or send anyone out'.",
+    "group": "B",
+    "expected": {"is_lead": false, "is_spam": false}
+  },
+  {
+    "id": 23,
+    "name": "Spam caller BUT mentions smoke smell near furnace",
+    "description": "Caller initially seems like a robocall or spam but suddenly mentions they smell smoke near their furnace - safety emergency.",
+    "group": "C",
+    "expected": {"is_lead": true, "urgency": "emergency", "is_spam": false}
+  },
+  {
+    "id": 24,
+    "name": "Very short call, name plus phone plus AC broken then hung up",
+    "description": "Very brief call - caller gives name, phone, says 'my AC is broken' and hangs up before Sophie can ask more.",
+    "group": "C",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  },
+  {
+    "id": 25,
+    "name": "Caller mentions competitor explicitly",
+    "description": "Caller says 'ARS couldn't fix it, can you help?' - warm lead with frustration at a competitor.",
+    "group": "C",
+    "expected": {"is_lead": true, "urgency": "normal", "is_spam": false}
+  }
+]
