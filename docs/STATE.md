@@ -116,11 +116,19 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-Telnyx vault keys from Dan (phone chain), Stripe live mode migration
+**Phase 0 marketing build — Day 1 execution.** Spec and partial plan committed 2026-04-11. Awaiting Dan's greenlight on Day 1 Task 1 (read-only credentials fetch + tool verification). Resume pointer: `memory/project_phase0_progress.md`. Once greenlit, Tasks 1-7 execute without per-task confirmation; HARD GATE at Task 8 (prod schema migration) requires Dan's explicit go-ahead. Also pending: Telnyx vault keys, Stripe live mode migration (both required before first paying customer regardless of Phase 0 progress).
+
+## Phase 0 progress (marketing build)
+
+- **Spec:** `docs/superpowers/specs/2026-04-10-phase-0-vsl-funnel-design.md` — COMPLETE (1,182 lines, 3 commits). Covers VSL + pilot funnel + measurement spine.
+- **Plan:** `docs/superpowers/plans/2026-04-11-phase-0-vsl-funnel-implementation.md` — PARTIAL (~1,100 lines). Day 1 (Tasks 1-12) + Day 2 (Tasks 13-18) + Day 3 Task 19 skeleton written. Tasks 20-52 (Day 3 remainder + Days 4-7) pending.
+- **Execution status:** Not started. Awaiting Dan's greenlight to begin Day 1 Task 1.
+- **Resume pointer:** `memory/project_phase0_progress.md` (authoritative progress tracker, check first when resuming).
 
 ## What's in flight
 
-- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client.
+- **Phase 0 marketing build** — spec complete, plan partial, execution awaiting greenlight. See Phase 0 progress section above.
+- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client AND before Phase 0 smoke-test traffic (day 7).
 - **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`.
 
 ## What's blocked
