@@ -5,7 +5,7 @@ _Last updated: 2026-04-10_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-44a971a feat(testing): implement 3-layer agent testing system
+34169b0 feat(phase0): Day 1 COMPLETE â€” migration applied to prod, billing tools patched
 
 ## Go-live checklist
 see docs/GO-LIVE.md
