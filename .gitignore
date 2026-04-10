@@ -26,3 +26,5 @@ plugins/
 *.secrets.json
 tests/fixtures/prompt_compiler/brp_input.json
 tests/fixtures/prompt_compiler/_workflow_raw.json
+.aidesigner/*
+!.aidesigner/.gitkeep
