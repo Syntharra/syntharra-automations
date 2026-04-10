@@ -115,10 +115,16 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
+## Next session — pick up here
+
+- E2E test: fresh Jotform submission → full pipeline → dashboard shows zero calls correctly for new client
+- Lead alert testing: verify SMS + email fire from Retell call logs via call processor `Kg576YtPM9yEacKn`
+- 42-scenario suite: run once lead alerts confirmed working
+
 ## What's in flight
 
-- **3-tier pricing — testing** — all backend wired and checkout page live, but untested end-to-end. Full test plan in TASKS.md.
-- **Stripe live mode** — test-mode only. Dan to provide live secret key. All 7 test prices documented in vault. P0 blocker.
+- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client.
+- **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`.
 
 ## What's blocked
 

@@ -136,6 +136,33 @@ def create_session_log(today: str, topic: str, summary: str):
     print(f"  [OK] Session log created: docs/session-logs/{log_path.name}")
 
 
+def write_next_session_priorities(priorities: str):
+    """Write or replace the ## Next session — pick up here section in STATE.md."""
+    if not STATE.exists() or not priorities.strip():
+        return
+    text = STATE.read_text(encoding="utf-8")
+    section_header = "## Next session — pick up here"
+    new_section = f"{section_header}\n{priorities.strip()}\n"
+
+    if section_header in text:
+        # Replace existing section
+        text = re.sub(
+            rf"^{re.escape(section_header)}\n.*?(?=\n## |\Z)",
+            new_section,
+            text,
+            flags=re.MULTILINE | re.DOTALL,
+        )
+    else:
+        # Insert before ## What's in flight (or append)
+        if "## What's in flight" in text:
+            text = text.replace("## What's in flight", f"{new_section}\n## What's in flight", 1)
+        else:
+            text = text.rstrip() + f"\n\n{new_section}"
+
+    STATE.write_text(text, encoding="utf-8")
+    print(f"  [OK] STATE.md 'Next session' priorities written")
+
+
 def check_failures_rules_parity():
     """Warn if FAILURES.md has new entries whose Rule: field isn't in RULES.md."""
     if not FAILURES.exists() or not RULES.exists():
@@ -167,6 +194,7 @@ def main():
     parser = argparse.ArgumentParser(description="Close a Syntharra Cowork session")
     parser.add_argument("--topic", required=True, help="Short slug for this session (e.g. agentic-setup)")
     parser.add_argument("--summary", required=True, help="One-line summary of what was done")
+    parser.add_argument("--priorities", default="", help="Next session priorities (multiline ok, use \\n)")
     args = parser.parse_args()
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -179,6 +207,9 @@ def main():
     update_state_header(today, sha)
     append_index_row(today, args.topic, sha, args.summary)
     create_session_log(today, args.topic, args.summary)
+    if args.priorities:
+        priorities_text = args.priorities.replace("\\n", "\n")
+        write_next_session_priorities(priorities_text)
     check_failures_rules_parity()
 
     print()

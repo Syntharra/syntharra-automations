@@ -18,7 +18,15 @@ Run:
 python tools/session_start.py
 ```
 
-This prints: last session topic + summary, last commit, last 3 failures, and any open TODOs in STATE.md. It tells you where to pick up.
+This prints:
+- **Last session** from `INDEX.md` + ⚠️ ghost-session warning if commits happened after `session_end` wasn't run
+- **Recent commits** (last 8) — the ground truth regardless of whether `session_end` was called
+- **Last 3 failures** from `FAILURES.md`
+- **In flight / blocked** from `STATE.md`
+- **Next session priorities** from `STATE.md` — written by the previous `session_end --priorities`
+- **Uncommitted files**
+
+If the ghost-session warning fires, read the listed commits to reconstruct what was done. The commit log is always accurate; `INDEX.md` is only accurate if `session_end` was run.
 
 ## 3. Work rules
 
@@ -30,15 +38,16 @@ This prints: last session topic + summary, last commit, last 3 failures, and any
 ## 4. At session end (always)
 
 ```
-python tools/session_end.py --topic <short-slug> --summary "<one-line>"
+python tools/session_end.py --topic <short-slug> --summary "<one-line>" [--priorities "- item 1\n- item 2"]
 ```
 
 This:
-- Refreshes STATE.md's header (last updated, last commit, checklist count)
+- Refreshes STATE.md's header (last updated, last commit)
 - Appends a row to `docs/session-logs/INDEX.md`
+- Writes `--priorities` into STATE.md `## Next session — pick up here` (shown at next session start)
 - Warns if you added a FAILURES row without a matching RULES update
 
-If the session produced a new standing rule, add it to RULES.md in the same commit.
+**Always pass `--priorities`** with what the next session should pick up. This is the primary handoff mechanism — it shows up first thing next session. If the session produced a new standing rule, add it to RULES.md in the same commit.
 
 ## 5. Scale-to-1000 invariants
 

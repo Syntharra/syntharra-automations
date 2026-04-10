@@ -22,6 +22,10 @@ import shutil
 import subprocess
 import sys
 
+# Ensure Unicode output works on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 INDEX = ROOT / "docs" / "session-logs" / "INDEX.md"
 FAILURES = ROOT / "docs" / "FAILURES.md"
@@ -73,16 +77,43 @@ def print_header():
     print(BAR)
 
 
+def last_index_sha():
+    """Return the commit SHA from the last INDEX.md row, or None."""
+    if not INDEX.exists():
+        return None
+    lines = [l for l in INDEX.read_text(encoding="utf-8").splitlines()
+             if l.startswith("|") and not l.startswith("| Date") and not l.startswith("|---")]
+    if not lines:
+        return None
+    parts = [p.strip() for p in lines[-1].split("|")]
+    # Row: | date | topic | sha | summary |
+    return parts[3] if len(parts) >= 5 else None
+
+
 def print_last_session():
     if not INDEX.exists():
         print("LAST SESSION: (no session-logs/INDEX.md yet)")
         return
-    lines = [l for l in INDEX.read_text(encoding="utf-8").splitlines() if l.startswith("|") and not l.startswith("| Date") and not l.startswith("|---")]
+    lines = [l for l in INDEX.read_text(encoding="utf-8").splitlines()
+             if l.startswith("|") and not l.startswith("| Date") and not l.startswith("|---")]
     if not lines:
         print("LAST SESSION: (no rows)")
         return
     print("LAST SESSION:")
     print(f"  {lines[-1]}")
+
+    # Ghost-session detection: commits since the last session_end
+    idx_sha = last_index_sha()
+    head_sha = sh("log", "-1", "--pretty=format:%h")
+    if idx_sha and head_sha and not head_sha.startswith(idx_sha) and not idx_sha.startswith(head_sha):
+        # Check if idx_sha is actually in the log (it may predate the repo clone)
+        ancestor = sh("merge-base", "--is-ancestor", idx_sha, "HEAD")
+        ghost_log = sh("log", f"{idx_sha}..HEAD", "--oneline")
+        if ghost_log:
+            count = len(ghost_log.splitlines())
+            print(f"\n  [!!] GHOST SESSIONS -- {count} commit(s) since last session_end:")
+            for line in ghost_log.splitlines():
+                print(f"     {line}")
 
 
 def print_recent_failures(n=3):
@@ -110,7 +141,6 @@ def print_state_sections():
         return m.group(1).strip() if m else ""
 
     in_flight = extract("What's in flight")
-    next_session = extract("Next session — pick up here")
     blocked = extract("What's blocked")
 
     if in_flight:
@@ -123,9 +153,28 @@ def print_state_sections():
         for line in blocked.splitlines()[:4]:
             if line.strip():
                 print(f"  {line}")
-    if next_session:
-        print("NEXT SESSION:")
-        for line in next_session.splitlines()[:6]:
+
+
+def print_recent_commits(n=8):
+    log = sh("log", f"-{n}", "--pretty=format:%h %ad %s", "--date=short")
+    if not log:
+        return
+    print(f"RECENT COMMITS (last {n}):")
+    for line in log.splitlines():
+        print(f"  {line}")
+
+
+def print_next_session():
+    if not STATE.exists():
+        return
+    text = STATE.read_text(encoding="utf-8")
+    m = re.search(r"^## Next session — pick up here\n(.*?)(?=\n## |\Z)", text, re.MULTILINE | re.DOTALL)
+    if not m:
+        return
+    content = m.group(1).strip()
+    if content:
+        print("NEXT SESSION PRIORITIES:")
+        for line in content.splitlines()[:8]:
             if line.strip():
                 print(f"  {line}")
 
@@ -144,9 +193,12 @@ def main():
     print_header()
     print_last_session()
     print()
+    print_recent_commits()
+    print()
     print_recent_failures()
     print()
     print_state_sections()
+    print_next_session()
     print()
     print_dirty_state()
     print(BAR)
