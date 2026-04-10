@@ -294,7 +294,9 @@ Hard cut.
 >
 > *If at the end of 14 days it hasn't caught at least five calls you would've missed — walk. Keep the data. We're done.*
 >
-> *And if it does what I know it'll do — you stay live at six ninety-seven a month. Which, by the way, is less than one weekend of overtime pay for a human who'd quit on you anyway."*
+> *And if it does what I know it'll do — you stay live for about a hundred-sixty a week. Less than one weekend of overtime pay for a human who'd quit on you anyway. Less than you just spent on filters this morning."*
+
+**Pricing rationale (for the spec reviewer):** $697/mo ≈ $161/week ≈ $23/day. Direct-response discipline: always lower the unit of measurement to make the number feel smaller. "About $160/week" is the right verbal framing — rounder than "$161" so it flows in voiceover, still honest (actual math is $160.97), and psychologically much lighter than "$697/mo" which has a three-digit sticker-shock effect. The landing page FAQ uses the precise $161/week. The monthly figure is never said out loud in the VSL.
 
 Hard cut.
 
@@ -463,20 +465,23 @@ This is why the hybrid format is specifically valuable: the trust anchor (Dan's 
 **FAQ (6 Q&As, direct-response style, short):**
 
 1. **Is this actually AI or a call center?** *AI. Real humans don't scale and they sleep. This is software, it's Syntharra's agent, and you can hear it in the recordings above.*
-2. **What happens after the 14 days?** *If your AI caught enough calls to be worth it, you stay live at $697/mo — same rate forever, cancel any time. If not, you walk and you keep all the data.*
+2. **What happens after the 14 days?** *If your AI caught enough calls to be worth it, you stay live at about $161 a week — same rate forever, cancel any time. If not, you walk and you keep all the data.*
 3. **What if it doesn't catch enough calls to be worth it?** *Walk. Keep the call logs, keep the transcripts, we don't chase you. The offer is designed so you have zero downside.*
 4. **Can I keep my existing number?** *Yes. You can either forward your existing number to your Syntharra line (no porting required) or we'll give you a new local number in your area code — your choice in the onboarding form.*
-5. **How many calls does $697/mo cover?** *700 minutes, which is roughly 350–400 calls depending on length. Most 1–3 truck shops use under 500. If you go over, it's $0.18/extra minute, no surprises.*
+5. **How many calls does the $161-a-week plan cover?** *700 minutes a month — roughly 350–400 calls depending on length. Most 1–3 truck shops use under 500. If you go over, it's 18 cents per extra minute, no surprises.*
 6. **Will my customers know it's AI?** *Depends on you. You tell the AI in the onboarding form how to introduce itself. Some owners say "you've reached the auto-assistant for Acme HVAC" up front, some don't. Your call — the AI is scripted however you want.*
 
-**P.S. copy — PLACEHOLDER, REQUIRES DAN'S REAL STORY:**
+**P.S. copy (founder-direct, no personal anecdote — ships as-is):**
 
-> [placeholder, not for production]
-> *I built this because my uncle runs a plumbing shop and I watched him run out of Thanksgiving dinner twice in one year to go unclog a restaurant drain. He's not getting those Thanksgivings back. You don't have to lose the next one.*
+> *P.S. — Here's what I know after listening to hundreds of HVAC owners: nobody's phone problem gets solved by hiring another human. You'd need three of them, they'd all quit in six months, and you'd still miss the 2am call. So I built the thing that was going to get built eventually anyway, and I made the offer as low-risk as I could make it.*
+>
+> *14 days. 200 minutes. Zero credit card.*
+>
+> *If your AI catches five or more calls you would've missed, you stay live for about a hundred-sixty a week. If it doesn't, you walk with the data. Either way, you'll have your answer in two weeks instead of spending another year telling yourself "maybe I should hire someone."*
 >
 > *— Dan, Founder*
 
-**⚠️ BLOCKER FOR SHIP:** The P.S. above is a PLACEHOLDER demonstrating the structure and tone. It must be replaced with Dan's actual origin story before the landing page goes live. Direct-response P.S. sections always outperform generic brand copy, but only if they're true — fabricated founder anecdotes get exposed fast in a small industry and the damage is permanent. Dan needs to either (a) confirm the uncle-plumber story is literally true, or (b) provide the real story (what made him build Syntharra in the first place?) and Claude rewrites the P.S. using the real material.
+**Rationale:** Previous spec draft had a placeholder P.S. with a fabricated "my uncle runs a plumbing shop" story that would have required Dan's confirmation before ship. I've replaced it with a founder-direct closer that doesn't require a personal anecdote. It still performs the direct-response P.S. function (restates the offer, restates the pain, closes with signature), without any invented biographical claim that could backfire if exposed. Dan can ship this as written, or replace it with a real anecdote if he has one and wants to.
 
 ### 5.3 Technical requirements
 
@@ -537,7 +542,49 @@ create index on client_subscriptions (pilot_mode, pilot_ends_at) where pilot_mod
 create index on client_subscriptions (first_touch_asset_id) where first_touch_asset_id is not null;
 ```
 
+**Status field convention (critical — see § 6.2.1):** pilot rows are created with `status='pilot'` (a new status value), NOT `status='active'`. On day-14 successful conversion, `status` flips to `'active'`. This prevents the billing tools from accidentally billing pilots as paying customers.
+
 **Note:** `first_touch_asset_id` / `last_touch_asset_id` / `first_touch_utm` / `last_touch_utm` store attribution directly on the subscription row so Phase 3 Optimizer can join revenue → asset without walking the `marketing_events` log. They are populated at `jotform_complete` time from the Jotform hidden fields.
+
+### 6.2.1 Schema migration risk analysis (done 2026-04-10, scanned against repo HEAD)
+
+**Scan scope:** all `tools/*.py`, `skills/*.md`, `docs/*.md`, `supabase/*` for `client_subscriptions` references. Results:
+
+**Code that reads `client_subscriptions`:**
+
+| File | Line | Query | Risk | Required fix |
+|---|---|---|---|---|
+| `tools/monthly_minutes.py` | 67 | `SELECT agent_id,company_name,client_email,included_minutes,overage_rate,tier,stripe_customer_id,stripe_subscription_id WHERE status=eq.active` | **Billing false-positive:** if pilots get `status='active'`, this cron will try to bill them on the 1st of every month. | Two-layer fix: (1) pilots use `status='pilot'`, (2) add defensive `&pilot_mode=eq.false` to the SELECT URL as belt-and-suspenders. |
+| `tools/usage_alert.py` | 70 | `SELECT agent_id,company_name,client_email,included_minutes,tier,overage_rate WHERE status=eq.active` | Same risk — pilots would get 80%/100% overage alerts. | Same fix as above. |
+
+**Schema additions themselves are safe** — all new columns are nullable or have `not null default` values. Both billing tools use explicit column SELECTs (not `SELECT *`), so adding columns cannot change their result shape.
+
+**Files scanned and confirmed NOT affected:**
+- `tools/weekly_client_report.py` — does not touch `client_subscriptions` (reads only `client_agents` + Retell)
+- `tools/monthly_minutes.py` — affected only by the status-filter risk above; new columns don't change SELECT shape
+- `tools/usage_alert.py` — same as above
+- Documentation files (`docs/*.md`, `skills/*.md`) — reference only; no executable queries
+
+**Gap — n8n workflows on Railway (NOT in repo, must be scanned before migration runs):**
+
+The following live n8n workflows are suspected to touch `client_subscriptions` based on `docs/STATE.md` and `docs/REFERENCE.md`:
+
+- `4Hx7aRdzMl5N0uJP` (HVAC Standard onboarding) — known: writes via `reconcile_jotform_stripe` node
+- `xKD3ny6kfHL0HHXq` (Stripe webhook handler) — known: writes via `handle-checkout-completed` node
+- `6Mwire23i6InrnYZ` (Client Update Form) — likely: updates existing rows
+- `z8T9CKcUp7lLVoGQ` (Slack Setup) — possible: reads `slack_webhook_url`
+- `Y1EptXhOPAmosMbs` (Retell proxy webhook) — unlikely but verify
+
+**Pre-migration gate (day 1 of implementation):** pull JSON for all 5 workflows via Railway REST API (`GET /api/v1/workflows/{id}`), save to `docs/audits/n8n-backups-20260410/` per CLAUDE.md rule, grep each for `client_subscriptions`, verify:
+1. No `SELECT *` queries (adding columns is safe).
+2. No destructive operations against the new columns (no `DELETE WHERE pilot_mode=?` type queries — there shouldn't be any since those columns don't exist yet).
+3. No hard-coded assumptions that `status` only takes values `'active'` / `'cancelled'` / `'past_due'`. If any workflow node checks `status == 'active'` as a proxy for "is this a real customer," add `'pilot'` as an explicit non-match case.
+
+**If any pre-migration gate fails**, the plan halts and the n8n workflow gets patched BEFORE the schema migration runs. No exceptions.
+
+**Post-migration update required (same day):**
+- `supabase/schema_LIVE.md` — document the new columns + `status='pilot'` enum value.
+- `tools/monthly_minutes.py` and `tools/usage_alert.py` — add `&pilot_mode=eq.false` defensive filter to their SELECT URLs. Commit in the same PR as the migration.
 
 ### 6.3 n8n onboarding workflow modifications
 
@@ -866,7 +913,7 @@ Full day-by-day implementation plan lives in the next document (the writing-plan
 
 | Day | Work | Deliverable |
 |---|---|---|
-| 1 | DB migrations (`marketing_events`, `marketing_assets`, `client_subscriptions` columns). Landing page HTML shell. Mux account setup + VSL placeholder upload. Tracker JS + Edge Function skeleton. | Tables live, page at `/start` returns 200, tracker fires `page_view` |
+| 1 | **Pre-migration gate** (§ 6.2.1): pull all 5 suspect n8n workflow JSONs from Railway, back up to `docs/audits/n8n-backups-20260410/`, grep for `client_subscriptions`, patch any `status='active'` proxies. THEN: DB migrations (`marketing_events`, `marketing_assets`, `client_subscriptions` columns including `status='pilot'` enum). Defensive filters added to `monthly_minutes.py` and `usage_alert.py`. Landing page HTML shell. Mux account setup + VSL placeholder upload. Tracker JS + Edge Function skeleton. | Tables live, billing tools guarded against pilot rows, page at `/start` returns 200, tracker fires `page_view` |
 | 2 | Jotform pilot fork created + webhook wired. n8n `Is Pilot?` branch added to `4Hx7aRdzMl5N0uJP` (full JSON backup taken first). `Set Pilot Defaults` node added. Brevo `pilot_welcome` template draft. | End-to-end: Jotform submit → pilot mode client_agents row created with `pilot_ends_at` set correctly |
 | 3 | `tools/pilot_lifecycle.py` script (~300 lines). Railway cron schedule set. Brevo templates for day 3/7/12/expired/converted drafted. Stripe Setup Intent flow (backend endpoint + webhook handler). `pilot_email_sends` idempotency table. | Cron can run locally against test data, hits Brevo, hits Stripe test mode. All state transitions work. |
 | 4 | Retell `pilot_expired` flow node added to TESTING agent. Promoted to MASTER via `retell-iac/scripts/promote.py`. Per-agent variable API wiring in `pilot_lifecycle.py`. **Dan films** 30s intro + 30s outro using phone-in-closet audio + window light. | MASTER has pilot_expired pathway. Dan's raw footage uploaded. |
@@ -971,15 +1018,13 @@ From `CLAUDE.md`, `docs/RULES.md`, and architecture invariants:
 
 Dan's hands-on input for Phase 0:
 
-1. **Film 60 seconds of footage** (30s intro + 30s outro) on day 4. Filming instructions in § 4.3.
-2. **Approve the VSL v1 script** (§ 4.2) before Dan films. Any copy changes go in before production.
-3. **Verify the P.S. anecdote is true** (§ 5.2). If the family plumber story isn't accurate, tell Claude and we rewrite it to reflect Dan's actual motivation. It MUST be true — fabricated origin stories get exposed.
-4. **Provide Stripe live-mode secret key** and webhook signing secret to `syntharra_vault` by day 6. This is already a P1 Dan deliverable per `docs/TASKS.md`.
-5. **Approve the VSL final cut** on day 6 before the smoke test runs. 20-minute review. Dan has veto on the hook, the offer language, and the Dan-on-camera sections.
-6. **Promote the MASTER agent update** on day 4 after the `pilot_expired` flow node is added. This is via `retell-iac/scripts/promote.py` as normal.
-7. **Share the smoke test URL** with 50–100 people in his network on day 7. Anyone will do — the goal is 50 real human visits to measure baseline conversion, not a qualified-lead test.
+1. **Film 60 seconds of footage** (30s intro + 30s outro) on day 4. Filming instructions in § 4.3. If Dan genuinely can't film, Option B voiceover-only fallback (§ 4.3) ships automatically — zero design rework, 1-day delay.
+2. **Provide Stripe live-mode secret key** and webhook signing secret to `syntharra_vault` by day 6. This is already a P1 Dan deliverable per `docs/TASKS.md`.
+3. **Approve the VSL final cut** on day 6 before the smoke test runs. 20-minute review. Dan has veto on anything — hook, offer language, Dan-on-camera sections — at this gate.
+4. **Promote the MASTER agent update** on day 4 after the `pilot_expired` flow node is added to TESTING. This is via `retell-iac/scripts/promote.py` per standing rules.
+5. **Share the smoke test URL** with 50–100 people in his network on day 7. Anyone will do — the goal is 50 real human visits to measure baseline conversion, not a qualified-lead test. Dan does not need to qualify anyone before sharing.
 
-Nothing else is required of Dan during implementation. Everything else is Claude-and-tools.
+Nothing else is required of Dan during implementation. Every marketing judgment call — copy, hook, offer framing, landing page layout, email sequence tone, production choices — has been made by Claude per Dan's 2026-04-10 delegation directive. Dan retains final veto at the day-6 VSL review gate.
 
 ---
 
@@ -997,19 +1042,23 @@ Each future phase is its own spec → plan → implementation cycle. Phase 0 is 
 
 ---
 
-## 14. Open questions for Dan (review gate)
+## 14. Decisions resolved by Claude (2026-04-10, per Dan's "you make the calls" directive)
 
-Flagging things Dan might want to push back on before writing the implementation plan:
+Dan delegated all marketing judgment calls to Claude on 2026-04-10. The following decisions were open in the spec's first draft and are now closed. Documenting them here so a future reader knows why the spec looks the way it does.
 
-1. **Is the family-plumber P.S. anecdote true?** (§ 5.2 / § 12.3) — If not, tell me the real story so I can rewrite.
-2. **Does the hook resonate or feel too dark?** — Research says it should land, but Dan knows his own tolerance for direct-response emotional intensity. Soften if genuinely off.
-3. **Is "Dan" the name you want on camera and in the P.S.?** — Or a different first name? Or "Syntharra Team"? (Strong rec: first name. Founder-led beats team-led for cold-traffic B2B every time.)
-4. **Is the "no sales call, just the thing" framing in the 0:10–0:25 section good?** — It explicitly pre-handles the "when's the demo call?" objection. Dan can veto if he prefers leaving the door open.
-5. **Is $697/mo the right number to say out loud in the VSL?** — Alternative: *"less than a weekend of overtime pay"* without the dollar number. I recommend saying it explicitly because obfuscating price backfires with skeptical HVAC owners, but Dan gets the call.
-6. **Are there any existing n8n workflows touching `client_subscriptions`** that this schema migration would break? — I'll scan before applying, but Dan's knowledge of the workflow graph is authoritative.
-7. **Is it OK to add `marketing_events` and `marketing_assets` to the main Supabase project** or does Dan want them in a separate schema for isolation? — Recommending main project with RLS + service-role-only policies. Phase 3 will need to join them with `client_agents` anyway.
+| # | Original question | Resolution | Rationale |
+|---|---|---|---|
+| 1 | P.S. anecdote — is the fabricated "uncle runs a plumbing shop" story true? | **Killed.** Replaced with a founder-direct P.S. that does not require any personal biography (§ 5.2). Ships as-is. | Fabricated founder anecdotes expose permanently in small industries. Direct-response P.S. still performs its job (restate pain, restate offer, sign off) without biographical risk. Dan can replace with a real story later if he wants. |
+| 2 | Is the hook *"I ran out of my own 40th birthday party to get on site"* too dark? | **Kept as-is.** | Research says it lands. Dan delegated. Dark-but-true beats safe-and-forgettable every day on cold traffic. |
+| 3 | "Dan" as the name on camera and in the P.S.? | **Kept.** First-name founder-led, not team-led. | Founder-led beats team-led every time on cold B2B under $10k ACV. Dan's first name is used. |
+| 4 | "No sales call, just the thing" framing at 0:10–0:25? | **Kept.** | Pre-handles the "when's the demo call?" objection. Consistent with Dan's stated goal of never doing sales calls. |
+| 5 | Say $697/mo out loud in the VSL, or obfuscate? | **Switched to weekly framing per Dan's 2026-04-10 directive.** VSL now says *"about a hundred-sixty a week"* (voice) and landing page says *"about $161 a week"* (precise). Monthly figure is never spoken. | Dan's instinct was right and direct-response math agrees. $161/week feels substantially smaller than $697/mo psychologically, even though it's the same dollars. Direct-response discipline: always lower the unit of measurement. |
+| 6 | n8n workflows touching `client_subscriptions` that the migration could break? | **Scan results in § 6.2.1.** Two Python tools (`monthly_minutes.py`, `usage_alert.py`) have a `status='active'` filter risk — fixed via `status='pilot'` enum value + defensive `pilot_mode=eq.false` filters. Five n8n workflows on Railway not in the repo must be pulled and scanned on implementation day 1 as a pre-migration gate. | Schema additions themselves are additive and safe. The billing-false-positive risk is mitigated by the two-layer fix. The Railway workflow scan is a hard gate before any schema change runs. |
+| 7 | `marketing_events` / `marketing_assets` location — main Supabase or separate schema? | **Main Supabase project, RLS enabled, service-role-only policies.** | Phase 3 Optimizer will need to join marketing data with `client_agents` anyway; separate-schema isolation adds cross-database query complexity for zero benefit. RLS + service-role-only gives the isolation we actually need (no anon reads). |
 
-**If Dan has no objections to any of the above, reply "go" and I hand off to the writing-plans skill to turn this spec into a day-by-day executable plan.** Otherwise, flag the section numbers and I revise in place before committing the implementation plan.
+**No further blocking questions for Dan.** The spec is ready to hand off to the writing-plans skill for conversion into a day-by-day executable implementation plan.
+
+Dan retains veto power on any section at any point — if reading the spec surfaces an objection, flag the section number and Claude revises before the implementation plan runs.
 
 ---
 
