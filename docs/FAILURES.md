@@ -141,3 +141,27 @@ date | area | what failed | root cause | fix applied | skill updated
 **Root cause:** The flow's components[] array contained a blank inline component (cf-component-1774923921746, name "Component L1") with literal Retell placeholder text "Describe what the AI should say or do" — never filled in, never referenced by any node. Retell requires all components to be in a complete state before Auto Layout can run.
 **Fix:** PATCH components: [] on the flow. Auto Layout unblocked.
 **Rule:** After any flow edit session, check components[] array for any entries with placeholder text or zero node references. Delete them before leaving the flow.
+
+## 2026-04-10 — n8n Retell proxy returned 0-byte body for new clients with zero calls
+**What failed:** `POST /webhook/retell-calls` returned an empty body (0 bytes) for any agent with no call history, causing the dashboard to throw on `.json()` and fall into the MOCK data catch block.
+**Root cause:** Retell's `v2/list-calls` returns `[]` (bare array) when no calls exist, not `{calls:[]}`. n8n's HTTP Request node splits array responses into individual items — 0 items for an empty array. The downstream Code node (`Aggregate Calls`) had `runOnceForAllItems` mode, so it never executed with 0 inputs. `Return Calls` never fired. Empty response body.
+**Fix:** Merged `Fetch Retell Calls` (HTTP node) + `Aggregate Calls` (Code node) into a single consolidated Code node using `this.helpers.httpRequest`. The Code node always receives one item (from the upstream `Get Retell Key` node) and always returns one item `{ json: { calls: [...] } }` — even when Retell returns an empty array.
+**Rule:** In n8n, never rely on HTTP → Code chains where the HTTP response might be an empty array. The HTTP node will produce 0 items and downstream Code nodes will not execute. Pattern: use a single Code node with `this.helpers.httpRequest` that always returns at least one item.
+
+## 2026-04-10 — Dashboard loading MOCK data for new clients (zero calls)
+**What failed:** New clients saw sample/demo call data on their dashboard instead of an empty state.
+**Root cause:** Dashboard fetch used `r.json()` which throws `SyntaxError` on an empty response body (0-byte). The catch block loaded MOCK sample data and displayed a "Cached data" banner — originally intended for network errors, now firing on every new-client page load.
+**Fix:** Changed to `r.text()` then conditional `JSON.parse`: `var data = (text && text.trim()) ? JSON.parse(text) : {}`. Empty body now resolves to `{}`, `allCalls` is set to `[]`, dashboard renders "no calls yet" state correctly.
+**Rule:** Never use `.json()` on responses from n8n webhooks or other proxies that might return empty bodies. Use `.text()` + conditional parse. Treat empty body as valid empty state, not an error.
+
+## 2026-04-10 — PDF dark theme stripped when saving via Chrome print
+**What failed:** Saving the call forwarding guide via Chrome → Print → Save as PDF produced a light-background document — all dark gradient backgrounds, colored section bars, and brand colors were lost.
+**Root cause:** Chrome strips background colors and images by default when printing, even for `@media print` stylesheets. The CSS was correct for screen but Chrome's print pipeline ignores backgrounds unless explicitly told not to.
+**Fix (CSS side):** Added `* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }` inside `@media print`. **Fix (user side):** User must also tick "Background graphics" checkbox in Chrome's print dialog — CSS alone is not sufficient.
+**Rule:** For any HTML document that must print with dark/colored backgrounds: (1) add `print-color-adjust: exact !important` on `*` in `@media print`, and (2) document that the user must enable "Background graphics" in Chrome print dialog. Both are required.
+
+## 2026-04-10 — PDF pages bleeding/overlapping (sections embedded inside shared page divs)
+**What failed:** Multiple sections of the call forwarding PDF guide bled into each other when printed — e.g. Section 4 (Dashboard) spilled into Section 5 (Call Summaries), Section 6 into Section 7, Section 1 carrier QRs cut off entirely.
+**Root cause:** Two or more sections were embedded inside a single `.page` div whose content exceeded 297mm (A4 height). `overflow: hidden` in print CSS silently cut off content; without it, content spilled to the next physical page mid-div.
+**Fix:** Each section was split into its own top-level `.page` div. Closing `</div>` + `</div>` (page-inner + page) before each new section, then opening fresh `<div class="page"><div class="page-inner">`. Orphaned `</div>` tags from old wrapper elements cleaned up after each split.
+**Rule:** In A4 print-optimized HTML, every section that might not share a page with another must be its own `.page` div. Never embed two section-bars inside one `.page`. Estimate content height before placing: section-bar ≈30mm, each content block ≈10-15mm, A4 usable ≈257mm (297 − 18mm top − 22mm bottom padding). When in doubt, split.
