@@ -108,6 +108,34 @@ date | area | what failed | root cause | fix applied | skill updated
 **Why the override is authorized:** Pre-launch. Zero live clients. The standing rule ("never test or fix on live Retell agents") exists to protect revenue and data — neither is at risk here. Override granted by Dan on 2026-04-09 for this specific change only.
 **Rule reinstated after Pass 2:** From the moment the first paying client is onboarded, the rule returns with no exceptions — clone → TESTING → promote via `retell-iac/scripts/promote.py`.
 
+## 2026-04-10 — Reconcile node: wrong email field + PATCH on empty table (silent double failure)
+**What failed:** `client_subscriptions` never got written after any Jotform submission. Reconcile node reported `stripe_reconciliation: 'skipped'` silently.
+**Root cause — Bug 1 (email field mismatch):** Line 3 of reconcile code read `d.email || d.notification_email` but the Jotform onboarding data arrives with field `d.client_email`. Since neither `d.email` nor `d.notification_email` existed, email resolved to `''` and the node exited immediately with `skipped`.
+**Root cause — Bug 2 (PATCH on empty table):** Even when email resolved correctly, the code did `PATCH /rest/v1/client_subscriptions?agent_id=eq.{id}`. The `client_subscriptions` table has zero rows at reconcile time (nothing earlier in the workflow inserts into it). Supabase PATCH on 0 matched rows does nothing and returns 200 — silent no-op.
+**Fix:** (1) Changed email lookup to `d.email || d.notification_email || d.client_email`. (2) Changed `PATCH` → `POST` (INSERT) including `agent_id` in the body.
+**Hidden issue found during fix:** `plan_type` column is NOT NULL with a `CHECK (plan_type IN ('standard', 'premium'))` constraint — no default. INSERT would have failed without it. Added `plan_type: 'standard'` to the body.
+**Rule:** When a reconcile/enrichment node fires at end of a pipeline, always verify the target table has rows to PATCH. If the node is the CREATOR of that row (not an updater), use POST not PATCH. When adding Supabase INSERTs, always inspect `information_schema.columns` and `pg_constraint` for NOT NULL + CHECK constraints first.
+
+## 2026-04-10 — n8n onboarding crashed on every execution (3 compounding root causes)
+**What failed:** Every execution of `4Hx7aRdzMl5N0uJP` completed with `status=error`. `client_subscriptions` was never reached.
+**Root cause 1:** `Code: Fetch Telnyx Creds` did a hard `throw new Error(...)` when Telnyx vault entries were missing. This crashed the execution immediately.
+**Root cause 2:** After fixing root cause 1, the three Telnyx HTTP nodes (`Search Available Numbers`, `Order Phone Number`, `Bind to Retell SIP`) still fired with empty credentials → Telnyx returned 401 → n8n execution error.
+**Root cause 3:** Eight downstream nodes (`Build Onboarding Pack HTML`, `Send Setup Instructions Email`, `Reconcile: Check Stripe Payment`, `Validate: Token Budget`, `HubSpot - Update Deal (Active)`, `Slack: Agent Live`, `Send Welcome Email`, `Update Agent Status: Active`) had no `onError` setting — any single node failure crashed the whole execution before later nodes could run.
+**Fix:** (1) `Fetch Telnyx Creds` now returns `{ _telnyx_skip: true, ... }` gracefully instead of throwing. (2) Set `onError: continueRegularOutput` on all three Telnyx HTTP nodes. (3) Set `onError: continueRegularOutput` on all eight brittle downstream nodes.
+**Rule:** Any node that depends on optional external credentials (Telnyx, etc.) MUST gracefully return a skip marker rather than throw. Any node that can fail independently of the happy path (email, HubSpot, Slack) MUST have `onError: continueRegularOutput` set so failures don't cascade.
+
+## 2026-04-10 — n8n workflow PUT: Windows cp1252 encoding error
+**What failed:** Python `print()` of n8n workflow JSON (containing unicode chars from n8n node code) crashed with `UnicodeEncodeError: 'charmap' codec can't encode character`.
+**Root cause:** Windows default stdout encoding is cp1252. n8n Code nodes contain unicode (emoji, special chars). `print()` tried to encode to cp1252 and failed.
+**Fix:** Write output to file with `encoding='utf-8'` instead of printing to stdout.
+**Rule:** On Windows, never print n8n workflow JSON to stdout. Always write to a file with `open(path, 'w', encoding='utf-8')`.
+
+## 2026-04-10 — client_subscriptions schema: hidden NOT NULL + CHECK constraints
+**What failed:** First attempt at Supabase INSERT to `client_subscriptions` failed with `violates check constraint "client_subscriptions_plan_type_check"`.
+**Root cause:** `plan_type` column is NOT NULL with CHECK constraint limiting values to `('standard', 'premium')`. This was not obvious from the column name alone — `'hvac_standard'` was the natural guess but is rejected.
+**Fix:** Queried `information_schema.columns` + `pg_constraint` first. Used `plan_type: 'standard'`.
+**Rule:** Before any INSERT to a Supabase table, run `SELECT column_name, is_nullable, column_default FROM information_schema.columns WHERE table_name = '...'` AND `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = '...'::regclass AND contype = 'c'`. Never guess enum/check values.
+
 ## 2026-04-08 — Standard MASTER auto-layout blocked by phantom component
 **What failed:** Retell canvas "Auto Layout" button threw an error on the Standard MASTER flow, blocking canvas operations
 **Root cause:** The flow's components[] array contained a blank inline component (cf-component-1774923921746, name "Component L1") with literal Retell placeholder text "Describe what the AI should say or do" — never filled in, never referenced by any node. Retell requires all components to be in a complete state before Auto Layout can run.
