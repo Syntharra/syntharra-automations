@@ -102,8 +102,8 @@ def ensure_billing_cycle(agent_id: str, billing_month: str,
         "included_minutes": included_minutes,
         "alert_80_sent": False,
         "alert_100_sent": False,
-        "cycle_start": f"{billing_month}-01",
-        "cycle_end": f"{billing_month}-{last_day:02d}",
+        "period_start": f"{billing_month}-01",
+        "period_end": f"{billing_month}-{last_day:02d}",
     }
     url = env("SUPABASE_URL").rstrip("/") + "/rest/v1/billing_cycles"
     headers = {**sb_headers(), "Prefer": "return=representation"}

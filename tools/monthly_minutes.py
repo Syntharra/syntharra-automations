@@ -60,7 +60,7 @@ def sb_headers() -> dict:
 
 def fetch_active_subscriptions() -> list[dict]:
     url = env("SUPABASE_URL").rstrip("/") + \
-        "/rest/v1/client_subscriptions?status=eq.active&select=agent_id,company_name,client_email,included_minutes,overage_rate_cents,stripe_customer_id,stripe_subscription_id"
+        "/rest/v1/client_subscriptions?status=eq.active&select=agent_id,company_name,client_email,included_minutes,overage_rate,tier,stripe_customer_id,stripe_subscription_id"
     status, data = http_json("GET", url, sb_headers())
     if status != 200:
         sys.exit(f"Supabase fetch subscriptions failed: {status} {data}")
@@ -260,8 +260,9 @@ def process_subscription(sub: dict, year: int, month: int, dry_run: bool) -> Non
     total_ms = sum(c.get("duration_ms") or 0 for c in calls)
     total_seconds = total_ms // 1000
     total_minutes = math.ceil(total_ms / 60_000)
-    included_minutes = sub.get("included_minutes") or 500
-    overage_rate_cents = sub.get("overage_rate_cents") or 25
+    included_minutes = sub.get("included_minutes") or 700
+    overage_rate = float(sub.get("overage_rate") or 0.18)
+    overage_rate_cents = round(overage_rate * 100)
     overage_minutes = max(0, total_minutes - included_minutes)
     overage_amount_cents = overage_minutes * overage_rate_cents
     usage_percent = round((total_minutes / included_minutes * 100)) if included_minutes else 0
