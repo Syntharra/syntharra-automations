@@ -423,8 +423,10 @@ Headers: apikey + Authorization: Bearer {SB_SERVICE_ROLE_KEY}
 
 # TEST SUITES
 
-Two test suites. Run before any production change. Run order: E2E → Call Processor.
+Three active test suites + one in-design. Run before any production change. Run order: E2E → Call Processor → (Post-Call Analysis when built).
 > Agent Simulator (`tools/openai-agent-simulator.py`) is archived infra — was used for conversation flow testing. May be revived if agent prompt changes need validation.
+
+> **Testing System Design (2026-04-10):** Full multi-layer testing architecture documented at `docs/TESTING-SYSTEM-DESIGN.md`. Build it in the next session. Near-zero cost — no Retell voice minutes used.
 
 ---
 
@@ -521,12 +523,34 @@ python tools/test_call_processor.py --dry-run    # print payloads only
 
 ---
 
+## TEST SUITE 4 — Post-Call Analysis Quality (DESIGN READY, NOT YET BUILT)
+
+**Design:** `docs/TESTING-SYSTEM-DESIGN.md`
+**Status: Not yet built — build in next session**
+
+Tests whether Retell's gpt-4.1-mini post-call analysis correctly classifies transcripts as `is_lead`, `urgency`, `is_spam`. This is the gap that existing suites don't cover.
+
+| Layer | Script (to build) | What it tests | Cost |
+|---|---|---|---|
+| 1 | `tools/test_post_call_analysis.py` | 25 transcript scenarios → correct `is_lead`/`urgency`/`is_spam` | FREE (`claude -p`) |
+| 2 | `tools/test_email_delivery.py` | Brevo actually delivered to inbox | FREE (Gmail MCP) |
+| Runner | `tools/run_full_test_suite.py` | Orchestrates all 3 layers | — |
+
+**25 scenarios:** 15 should-notify (lead/emergency), 7 should-filter (spam/wrong number/billing), 3 edge cases.
+**Swarm:** 5 parallel subagents × 5 scenarios each. ~30s total vs 2min serial.
+**Fix rule:** When a scenario fails, update the post-call analysis config (not Sophie's conversation prompt). Max 10 words per fix.
+
+---
+
 ## Test Run Order & Go-Live Gate
 
 ```bash
 # Before any production change:
 python tools/test_e2e_pipeline.py          # must be 13/13
 python tools/test_call_processor.py        # must be 90/90
+
+# Once TEST SUITE 4 is built:
+python tools/run_full_test_suite.py        # all 3 layers in one run
 
 # Before go-live:
 # 1. Dan: add Telnyx vault keys (api_key + retell_sip_connection_id)
