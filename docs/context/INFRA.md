@@ -26,7 +26,7 @@
 |---|---|---|---|---|
 | `syntharra-usage-alert` | `syntharra-automations` | `python tools/usage_alert.py` | `0 8 * * *` | First live client |
 | `syntharra-monthly-billing` | `syntharra-automations` | `python tools/monthly_minutes.py` | `0 9 2 * *` | First live client |
-| `syntharra-weekly-report` | `syntharra-automations` | `TZ=America/New_York python tools/weekly_client_report.py --tz America/New_York` | `0 18 * * 0` | Second live client |
+| `syntharra-weekly-report` | `syntharra-automations` | `TZ=America/New_York python tools/weekly_client_report.py --tz America/New_York` | `0 18 * * 0` | First live client (part of $1k/mo value-add) |
 
 ## Ops Monitor
 - Service ID: `7ce0f943-5216-4a16-8aeb-794cc7cc1e65`

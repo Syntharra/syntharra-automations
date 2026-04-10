@@ -16,11 +16,11 @@ Nothing goes live until Stripe switches. Checklist:
 - [ ] Telnyx: buy toll-free number once AI evaluation approved, set `SMS_ENABLED=true`
 - [ ] Unpause ops monitor (Railway — service ID `7ce0f943-5216-4a16-8aeb-794cc7cc1e65`)
 - [ ] Set `PRE_LAUNCH_MODE=false` in ops monitor `retell.js`
-- [ ] Confirm all 15 n8n workflows are Active
+- [ ] Confirm all active n8n workflows are enabled
 - [ ] Smoke test: call test phone number, submit test Jotform as a real client would
-- [ ] **Deploy `syntharra-usage-alert` cron** on Railway — daily 08:00 UTC, `python tools/usage_alert.py` (see GO-LIVE.md §Cron Setup)
-- [ ] **Deploy `syntharra-monthly-billing` cron** on Railway — 2nd of month 09:00 UTC, `python tools/monthly_minutes.py` (see GO-LIVE.md §Cron Setup)
-- [ ] **Swap `STRIPE_SECRET_KEY` to `sk_live_`** in all Railway cron service env vars once Stripe goes live
+- [ ] **Deploy billing crons** — `RAILWAY_TOKEN=<token> python tools/deploy_billing_crons.py` (see GO-LIVE.md §Cron Deployment for full detail)
+
+> Full authoritative checklist lives in **docs/GO-LIVE.md** — that is the single source of truth.
 
 ## What's Working (TEST MODE)
 - Standard pipeline: onboarding → Jotform → agent provisioning → call processing ✅
