@@ -1,0 +1,9 @@
+Monthly Minutes Calculator — 2026-03  dry_run=True
+Found 1 active subscription(s)
+
+--- None (agent_289988041e7089ba61cc46c6b4) ---
+  period: 2026-03-01 → 2026-03-31
+  calls=0  minutes=0/1400 (0%)
+  [DRY-RUN] would send usage email to xskllxmarksman@gmail.com
+
+Done.
