@@ -1,11 +1,11 @@
 # Syntharra — Slack Internal Notifications Skill
-> Updated 2026-04-03 — COMPLETE. 16/16 channels confirmed. chat:write.public active. Ops monitor email paused. Email intelligence live.
+> Updated 2026-04-10 — Workspace cleaned 2026-04-09: 22 → 7 channels. 15 clutter channels archived. `#daily-digest` added.
 
 ---
 
-## Status: COMPLETE ✅
+## Status: COMPLETE ✅ (cleaned 2026-04-09)
 All internal @syntharra.com email notifications replaced with Slack.
-All 16 channels live and tested. Email intelligence scanning 10 aliases every 15 min.
+7 active channels. 15 clutter channels archived via `conversations.archive`.
 
 ---
 
@@ -36,46 +36,34 @@ All 16 channels live and tested. Email intelligence scanning 10 aliases every 15
 
 ---
 
-## Channel Map — All IDs Confirmed ✅
+## Channel Map — 7 Active Channels (cleaned 2026-04-09)
 
-### Operational Channels
-| Channel | ID | Purpose | Emoji |
-|---|---|---|---|
-| `#billing` | `C0AR3UP8A7K` | Stripe payments, renewals, failed charges | 💰 |
-| `#onboarding` | `C0AQP081RCN` | Agent go-live (Std + Prem), new client activations | ✅ |
-| `#ops-alerts` | `C0AR3UH5R7B` | Supabase failures, system errors, infra alerts | 🚨 |
-| `#calls` | `C0AQUKMD31A` | Lead call summaries (hot/warm only, after HubSpot) | 📞 |
-| `#weekly-reports` | `C0AQMKNQK0V` | Weekly report sent confirmations per client | 📊 |
-| `#leads` | `C0AQR26PXNE` | Website AI-scored leads, free report sends | 🎯 |
-| `#emails` | `C0AQR2CENAW` | Fallback / feedback@ (no dedicated sub-channel yet) | 📧 |
+> 15 clutter channels archived. Only these 7 remain active.
 
-### Email Sub-Channels
-| Channel | ID | Alias |
+| Channel | ID | Purpose |
 |---|---|---|
-| `#sales-syntharra-com` | `C0AR41A0H7B` | sales@syntharra.com |
-| `#support-syntharra-com` | `C0AQJN9N6LT` | support@syntharra.com |
-| `#solutions-syntharra-com` | `C0AQJNE445R` | solutions@syntharra.com |
-| `#onboarding-syntharra-com` | `C0AQMN55H6H` | onboarding@syntharra.com |
-| `#info-syntharra-com` | `C0ARKCCJMRN` | info@syntharra.com |
-| `#careers-syntharra-com` | `C0AQR4NPCJW` | careers@syntharra.com |
-| `#alerts-syntharra-com` | `C0AQP29J5KQ` | alerts@syntharra.com |
-| `#admin-syntharra-com` | `C0AQUMSD8TE` | admin@syntharra.com |
-| `#receipts-syntharra-com` | `C0AQ9LSREJK` | receipts@syntharra.com |
+| `#all-syntharra` | — | General + incoming webhook default |
+| `#billing` | `C0AR3UP8A7K` | Stripe payments, renewals, failed charges |
+| `#calls` | `C0AQUKMD31A` | Lead call summaries from call processor |
+| `#daily-digest` | — | Automated daily ops digest (created 2026-04-09) |
+| `#leads` | `C0AQR26PXNE` | Website AI-scored leads, free report sends |
+| `#onboarding` | `C0AQP081RCN` | Agent go-live, new client activations |
+| `#ops-alerts` | `C0AR3UH5R7B` | System errors, infra alerts |
+
+> Archived channels included: `#weekly-reports`, `#emails`, all `#*-syntharra-com` alias channels, and other legacy channels.
 
 ---
 
 ## Workflow Coverage — All Live
 
-| Workflow | n8n ID | Slack Node | Channel ID |
+| Workflow | n8n ID | Slack Node | Channel |
 |---|---|---|---|
-| Stripe Workflow | `xKD3ny6kfHL0HHXq` | `Send Internal Notification` | `C0AR3UP8A7K` billing |
-| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | `Slack: Agent Live` | `C0AQP081RCN` onboarding |
-| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | `Slack: Agent Live (Premium)` | `C0AQP081RCN` onboarding |
-| HVAC Std Call Processor | `Kg576YtPM9yEacKn` | `Slack: Supabase Write Failed` | `C0AR3UH5R7B` ops-alerts |
-| HVAC Std Call Processor | `Kg576YtPM9yEacKn` | `Slack: Lead Call Alert` | `C0AQUKMD31A` calls |
-| HVAC Prem Call Processor | `STQ4Gt3rH8ptlvMi` | `Slack: Supabase Write Failed` | `C0AR3UH5R7B` ops-alerts |
-| HVAC Prem Call Processor | `STQ4Gt3rH8ptlvMi` | `Slack: Lead Call Alert` | `C0AQUKMD31A` calls |
-| Usage Alert Monitor | `Wa3pHRMwSjbZHqMC` | `Slack: Usage Alert (Internal)` | `C0AR3UH5R7B` ops-alerts |
+| Stripe Workflow | `xKD3ny6kfHL0HHXq` | `Send Internal Notification` | `#billing` |
+| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | `Slack: Agent Live` | `#onboarding` |
+| HVAC Call Processor | `Kg576YtPM9yEacKn` | `Post to Client Slack` | client's own webhook URL (per-client) |
+| `tools/usage_alert.py` | — | — | `#ops-alerts` (if wired) |
+
+> HVAC Premium call processor archived 2026-04-08. Client Slack webhooks now come through the call processor fan-out — each client optionally provides their own webhook URL via Jotform field `q76_slackIncoming`.
 | Weekly Lead Report | `iLPb6ByiytisqUJC` | `Slack: Weekly Report Summary` | `C0AQMKNQK0V` weekly-reports |
 | Email Intelligence | `PavRLBVQQpWrKUYs` | `Slack: Post to Channel` | per-alias channel ID |
 

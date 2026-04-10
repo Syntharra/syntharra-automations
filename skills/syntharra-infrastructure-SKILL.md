@@ -9,7 +9,7 @@ description: >
   service IDs, API tokens, webhook URLs, or any infrastructure-level task across Syntharra's stack.
 ---
 
-> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+> **Last verified: 2026-04-10** — Premium retired, hvac_call_log dropped, Brevo replaces SMTP2GO, 3-tier pricing
 
 ---
 
@@ -108,39 +108,27 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 | Railway n8n API key | `{{N8N_API_KEY}}` |
 | Migration status | Complete ✅ — all 19 workflows imported, credentials re-entered, CNAME live |
 
-### All n8n Workflows (verified live 2026-04-04 — 47 total, 37 labelled)
+### Active n8n Workflows (verified live 2026-04-10)
 
 > Source of truth: live n8n instance. IDs below are current.
 > n8n API key: `service_name='n8n Railway', key_type='api_key'` in syntharra_vault
+> **Never use `mcp__claude_ai_n8n__*` tools** — always Railway REST API directly.
 
-#### HVAC Standard
+#### HVAC Standard (current product — $697/mo)
 | Workflow | ID | Active |
 |---|---|---|
-| HVAC AI Receptionist - JotForm Onboarding (Supabase) | `4Hx7aRdzMl5N0uJP` | ✅ |
-| HVAC Call Processor - Retell Webhook (Supabase) | `Kg576YtPM9yEacKn` | ✅ |
-| HVAC Weekly Lead Report (Supabase) | `iLPb6ByiytisqUJC` | ✅ |
+| HVAC AI Receptionist - JotForm Onboarding | `4Hx7aRdzMl5N0uJP` | ✅ |
+| HVAC Call Processor - Retell Webhook (lean fan-out) | `Kg576YtPM9yEacKn` | ✅ |
+| Retell Proxy (dashboard calls) | `Y1EptXhOPAmosMbs` | ✅ |
 
-#### HVAC Premium
+> ⚠️ **HVAC Premium workflows are archived** (retired 2026-04-08). Do not activate.
+
+#### Billing & Stripe
 | Workflow | ID | Active |
 |---|---|---|
-| HVAC Prem Onboarding | `kz1VmwNccunRMEaF` | ✅ |
-| HVAC Premium Call Processor | `STQ4Gt3rH8ptlvMi` | ✅ |
-| Premium Integration Dispatcher | `73Y0MHVBu05bIm5p` | ✅ |
-| Premium Dispatcher — Outlook | `La99yvfmWg6AuvM2` | ✅ |
-| Premium Dispatcher — Calendly | `b9xRG7wtqCZ5fdxo` | ✅ |
-| Premium Dispatcher — Jobber | `BxnR17qUfAb5BZCz` | ✅ |
-| Premium Dispatcher — HubSpot | `msEy13eRz66LPxW6` | ✅ |
-| Premium Dispatcher — Google Calendar | `rGrnCr5mPFP2TIc7` | ✅ |
-| Premium — Integration Connected Handler | `a0IAwwUJP4YgwgjG` | ✅ |
-| Premium — Daily Token Refresh | `5vphecmEhxnwFz2X` | ✅ |
-| Premium — Send You're Live Email | `ptDdy38HKt9DUOAV` | ✅ |
-
-#### Billing
-| Workflow | ID | Active |
-|---|---|---|
-| Stripe Workflow | `xKD3ny6kfHL0HHXq` | ✅ |
-| Monthly Minutes Calculator & Overage Billing | `z1DNTjvTDAkExsX8` | ✅ |
-| Usage Alert Monitor (80% & 100% Warnings) | `Wa3pHRMwSjbZHqMC` | ✅ |
+| Stripe Webhook | `xKD3ny6kfHL0HHXq` | ✅ |
+| Monthly Minutes Calculator & Overage Billing | `z1DNTjvTDAkExsX8` | ⚫ ARCHIVED — replaced by `tools/monthly_minutes.py` |
+| Usage Alert Monitor | `Wa3pHRMwSjbZHqMC` | ⚫ ARCHIVED — replaced by `tools/usage_alert.py` |
 
 #### Marketing & Leads
 | Workflow | ID | Active |
@@ -197,7 +185,7 @@ NOT `/orgs/{org}/repos` — that returns 404 for org-type accounts with personal
 - PUT workflow payload: only `name`, `nodes`, `connections`, `settings` (only `executionOrder` from settings)
 - Extra fields (`id`, `createdAt`, `versionId`, etc.) cause 400 errors
 - **Always click Publish after any workflow edits**
-- All email nodes: SMTP2GO credential name `"SMTP2GO - Syntharra"`
+- **Email via Brevo HTTP API** (not SMTP2GO). POST to `https://api.brevo.com/v3/smtp/email`. API key from vault (`service_name='Brevo'`, `key_type='api_key'`). The n8n Brevo credential node is not used — direct HTTP Request node.
 
 ### n8n Workflow Labelling — MANDATORY
 > Full standard: `docs/STANDARDS.md`. Summary rules here for quick reference.
@@ -244,13 +232,17 @@ curl -X PUT https://n8n.syntharra.com/api/v1/workflows/{ID}/tags \
 ### Tables
 | Table | Purpose |
 |---|---|
-| `hvac_standard_agent` | Client config |
-| `hvac_call_log` | Call records |
-| `stripe_payment_data` | Checkout sessions |
-| `client_subscriptions` | Active subscriptions |
-| `billing_cycles` | Billing cycle records |
-| `overage_charges` | Usage overages |
-| `website_leads` | Website demo leads (anon key, no webhook) |
+| `hvac_standard_agent` | Client config (per-agent Jotform data, agent_id, etc.) |
+| `client_subscriptions` | Tier, overage_rate, billing_cycle, stripe_price_id |
+| `billing_cycles` | Per-client billing month tracking |
+| `overage_charges` | Usage overages charged via Stripe |
+| `monthly_billing_snapshot` | Immutable rollup written at invoice time (dispute defense) |
+| `stripe_payment_data` | Stripe checkout session records |
+| `syntharra_vault` | All API keys/secrets |
+| `website_leads` | Website demo leads (anon key access) |
+| `client_dashboard_info` | SECURITY DEFINER view — safe read subset for dashboard |
+
+> ⚠️ **`hvac_call_log` dropped 2026-04-09.** All 15 `hvac_call_log*` tables deleted. No per-call storage in Supabase. Retell is source of truth for call data.
 
 ---
 
@@ -264,17 +256,21 @@ curl -X PUT https://n8n.syntharra.com/api/v1/workflows/{ID}/tags \
 | Webhook signing secret | `{{STRIPE_WEBHOOK_SECRET}}` |
 | Event | `checkout.session.completed` |
 
-### Products & Prices
-| Plan | Product ID | Monthly Price | Annual Price | Setup Price |
+### Products & Prices (3-tier, TEST MODE — all IDs in syntharra_vault)
+| Tier | Monthly | Annual | Minutes | Overage |
 |---|---|---|---|---|
-| Standard | `prod_UC0hZtntx3VEg2` | `price_1TDckaECS71NQsk8DdNsWy1o` | `price_1TDckiECS71NQsk8fqDio8pw` | `price_1TEKKrECS71NQsk8Mw3Z8CoC` |
-| Premium | `prod_UC0mYC90fSItcq` | `price_1TDclGECS71NQsk8OoLoMV0q` | `price_1TDclPECS71NQsk8S9bAPGoJ` | `price_1TEKKvECS71NQsk8vWGjHLUP` |
+| Starter | $397/mo | $330/mo | 350 | $0.25/min |
+| Professional (hero) | $697/mo | $581/mo | 700 | $0.18/min |
+| Business | $1,097/mo | $914/mo | 1,400 | $0.12/min |
+
+- Activation Fee: $997 (one-time, all tiers) — `price_activation_fee` in vault
+- All product/price IDs stored in vault under `service_name='Stripe'`, `key_type='prod_*'` / `key_type='price_*'`
+- ⚠️ **TEST MODE only** — Dan to provide live key, replicate 7 prices in live mode before first paying client
+- Old single-tier Standard ($497/mo) superseded by 3-tier system 2026-04-09. Old price IDs retired.
 
 ### Discount Codes (TEST MODE — recreate in live, same names)
 | Code | ID | Discount |
 |---|---|---|
-| FOUNDING-STANDARD | `gzp8vnD7` | $1,499 off once |
-| FOUNDING-PREMIUM | `RsOnUuo4` | $2,499 off once |
 | CLOSER-250 | `mGTTQZOw` | $250 off once |
 | CLOSER-500 | `GJiRoaMY` | $500 off once |
 | CLOSER-750 | `fUzLNIgz` | $750 off once |

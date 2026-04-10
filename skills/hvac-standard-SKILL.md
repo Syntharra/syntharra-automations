@@ -11,9 +11,9 @@ description: >
   Sub-skills: e2e-hvac-standard | standard-call-processor-testing | hvac-standard-agent-testing
 ---
 
-> **This is now the single Syntharra product — $697/mo. Premium tier retired 2026-04-08.**
-> **Last verified: 2026-04-05** — COMPONENTS architecture deployed, Standard E2E 93/93 passing, warm_transfer enabled.
-> **System status: PRE-LAUNCH — ready for live calls. SMS pending Telnyx approval.**
+> **Single Syntharra product — $697/mo HVAC Standard. Premium retired 2026-04-08.**
+> **Last verified: 2026-04-10** — E2E 13/13 passing, 30-scenario call processor 90/90 passing.
+> **System status: PRE-LAUNCH — Telnyx vault keys needed from Dan; Stripe live mode pending.**
 
 ## retell-iac change workflow (canonical — do not bypass)
 
@@ -34,13 +34,17 @@ All agent changes go through `retell-iac/` on `main`. Never edit the Retell dash
 ```
 Client pays (Stripe)
   → Jotform onboarding form submitted
-    → n8n: provision Retell agent + conversation flow
+    → n8n: provision Retell agent + conversation flow + Telnyx phone number
       → Retell agent live on client's phone number
         → Caller rings → Sophie answers → lead captured
           → Retell post-call analysis (gpt-4.1-mini) extracts all fields
-            → n8n call processor: extract fields → Supabase log → email/Slack alert
-              → HubSpot: call note logged on client contact
+            → n8n call processor (lean fan-out): filter → lookup client →
+                build payload → Brevo email + Slack (if configured) + SMS stub
 ```
+
+> **Architecture change (2026-04-09):** Call processor rewritten as lean fan-out.
+> No Supabase writes. No HubSpot writes. Zero per-call storage in Supabase.
+> Retell is the source of truth for all call data.
 
 > **Architecture change (2026-04-04):** GPT/Groq transcript analysis removed from n8n.
 > Retell's built-in `post_call_analysis_data` (21 custom fields + 3 system presets) now
@@ -52,7 +56,8 @@ Note: the above ``` closes the architecture note block. Remove if rendering is o
 ```
 
 One Retell agent per client. All config stored in `hvac_standard_agent` (Supabase).
-Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
+**No per-call Supabase storage** — Retell owns call data. Dashboard reads Retell directly via proxy webhook.
+HubSpot writes removed from call processor 2026-04-09.
 
 ---
 
@@ -141,22 +146,24 @@ Call logs in `hvac_call_log` (Supabase). CRM in HubSpot.
 
 | Workflow | ID | Purpose |
 |---|---|---|
-| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | Build code: COMPONENTS architecture, 15 nodes, Retell agent provisioning |
-| HVAC Std Call Processor | `Kg576YtPM9yEacKn` | Post-call webhook → Retell analysis → Supabase (Prefer: resolution=merge-duplicates) |
-| Cleanup (E2E) | `URbQPNQP26OIdYMo` | Auto-deletes test agents after E2E run |
-| Stripe Workflow | `ydzfhitWiF5wNzEy` | Stripe checkout → welcome email |
-| Weekly Lead Report | `mFuiB4pyXyWSIM5P` | Weekly digest to clients |
-| Minutes Calculator | `9SuchBjqhFmLbH8o` | Usage tracking |
-| Usage Alert Monitor | `lQsYJWQeP5YPikam` | Alerts on high usage |
-| Publish Retell Agent | `sBFhshlsz31L6FV8` | Utility: publish agent via webhook |
+| HVAC Std Onboarding | `4Hx7aRdzMl5N0uJP` | Retell agent provisioning + Telnyx phone chain |
+| HVAC Call Processor | `Kg576YtPM9yEacKn` | Lean fan-out: filter → lookup → Brevo email + Slack + SMS stub |
+| Stripe Webhook | `xKD3ny6kfHL0HHXq` | Stripe checkout → tier-aware welcome email + Supabase write |
+| Retell Proxy | `Y1EptXhOPAmosMbs` | Dashboard: POST /webhook/retell-calls → Retell list-calls |
 | Nightly GitHub Backup | `EAHgqAfQoCDumvPU` | Repo backup |
 
+> ⚠️ **Monthly Minutes** (`z1DNTjvTDAkExsX8`) and **Usage Alert Monitor** (`Wa3pHRMwSjbZHqMC`) are **archived** — replaced by `tools/monthly_minutes.py` and `tools/usage_alert.py` respectively.
+> **Weekly client report** → `tools/weekly_client_report.py` (deploy cron once second client lands).
+> **E2E Cleanup** workflow (`URbQPNQP26OIdYMo`) was never built — cleanup is manual for now.
+
 - **n8n instance:** `https://n8n.syntharra.com`
+- **Never use `mcp__claude_ai_n8n__*` tools** — that MCP talks to a cloud account. Always use Railway REST API directly.
 - **Always publish after any workflow edit**
 - **n8n PUT payload fields:** only `name`, `nodes`, `connections`, `settings` (only `executionOrder` inside settings) — extra fields cause 400 errors
-- All email nodes use SMTP2GO credential: `"SMTP2GO - Syntharra"`
+- **Email via Brevo HTTP API** (not SMTP2GO, not n8n Brevo node) — POST to `https://api.brevo.com/v3/smtp/email` with Brevo API key from vault.
 - **n8n Code nodes cannot make outbound HTTP calls** — `fetch()`, `$helpers.httpRequest`, and `this.helpers.httpRequest` all fail. Always use an HTTP Request node for any outbound call.
 - When an HTTP Request node returns an empty body (e.g. Retell publish returns 200 with no body), set `options.response.response.responseFormat: 'text'` to prevent JSON parse errors.
+- **Telnyx HTTP nodes must have `continueOnFail: true`** — they will 401 when vault keys missing; without this flag they kill the whole workflow.
 
 ### Email Routing
 | Type | To |
@@ -261,86 +268,56 @@ Code: `formData['q13_option_'] || formData.q13_servicesOffered` (fallback for sa
 |---|---|
 | URL | `https://hgheyqwnrcvwtgngqdnq.supabase.co` |
 | Client config table | `hvac_standard_agent` |
-| Call log table | `hvac_call_log` |
+| Billing state tables | `client_subscriptions`, `billing_cycles`, `overage_charges`, `monthly_billing_snapshot` |
+| Vault table | `syntharra_vault` |
+| Dashboard view | `client_dashboard_info` (narrow read-only subset — SECURITY DEFINER) |
 
-### `hvac_call_log` Fields (30+ — Retell-native extraction since 2026-04-04)
+> ⚠️ **`hvac_call_log` was dropped 2026-04-09.** All 15 `hvac_call_log*` tables deleted (backup in `backup_hvac_call_log_prepart_20260409`). **Retell is the source of truth for call data.** The dashboard reads calls via Retell `list-calls` API, not Supabase. No per-call writes happen anywhere in n8n.
 
-| Field | Type | Source | Notes |
-|---|---|---|---|
-| `call_id` | text | Retell | Dedup key — duplicates rejected |
-| `agent_id` | text | Retell | FK to `hvac_standard_agent` |
-| `company_name` | text | Supabase lookup | From client record |
-| `call_tier` | text | Parse Lead Data | Default "Standard" |
-| `caller_name` | text | Retell custom analysis | Full name as stated |
-| `caller_phone` | text | Retell custom analysis | Falls back to `from_number` |
-| `caller_address` | text | Retell custom analysis | Full service address |
-| `service_requested` | text | Retell custom analysis | Short description |
-| `job_type` | text | Retell custom analysis | repair, install, maintenance, quote, emergency, etc |
-| `lead_score` | int | Retell custom analysis | 1–10 |
-| `is_lead` | bool | n8n computed | lead_score >= 5 AND not spam/wrong_number |
-| `urgency` | text | Retell custom analysis | emergency, high, medium, low |
-| `retell_sentiment` | text | Retell system preset | "Positive", "Neutral", "Negative" (TEXT not int) |
-| `vulnerable_occupant` | bool | Retell custom analysis | Elderly, children, medical equipment |
-| `transfer_attempted` | bool | Retell custom analysis | True if live transfer initiated |
-| `summary` | text | Retell system preset | call_summary — 2-3 sentence summary |
-| `notes` | text | Retell custom analysis | Additional context |
-| `duration_seconds` | int | Retell webhook | `Math.round(duration_ms / 1000)` |
-| `from_number` | text | Retell webhook | Caller ID |
-| `recording_url` | text | Retell webhook | S3 URL to recording |
-| `public_log_url` | text | Retell webhook | Retell dashboard link |
-| `disconnection_reason` | text | Retell webhook | user_hangup, agent_hangup, etc |
-| `transcript` | text | Retell webhook | Full call transcript |
-| `latency_p50_ms` | int | Retell webhook | e2e latency p50 |
-| `call_cost_cents` | int | n8n computed | unit_price * duration / 60000 * 100 |
-| `retell_summary` | text | Retell system preset | Same as summary (compatibility) |
-| `call_successful` | bool | Retell system preset | Conversation completed naturally |
-| `call_type` | text | Retell custom analysis | new_service, emergency, callback, etc |
-| `is_hot_lead` | bool | Retell custom analysis | Wants service soon + gave contact |
-| `transfer_success` | bool | Retell custom analysis | Transfer connected |
-| `emergency` | bool | Retell custom analysis | Genuine HVAC emergency |
-| `notification_type` | text | Retell custom analysis | Routing: emergency, hot_lead, etc |
-| `language` | text | Retell custom analysis | en, es, other |
-| `booking_attempted` | bool | Retell custom analysis | Always false for Standard |
-| `booking_success` | bool | Retell custom analysis | Always false for Standard |
-| `is_repeat_caller` | bool | n8n computed | from_number seen before |
-| `repeat_call_count` | int | n8n computed | Count of prior calls |
-
-### is_lead logic (n8n Extract Call Data node)
+### Call Processor filter logic (n8n IF node)
 ```javascript
-const NON_LEAD_TYPES = ['spam', 'wrong_number'];
-const is_lead = NON_LEAD_TYPES.includes(call_type) ? false : (lead_score >= 5);
+// Filter: Lead or Emergency
+event === "call_analyzed"
+AND (is_lead === true OR urgency === "emergency")
 ```
-
-### retell_sentiment — TEXT string, NOT integer
-> **Breaking change from pre-enhancement:** Old system used integer `caller_sentiment`.
-> New system stores Retell's native text in `retell_sentiment`: "Positive", "Neutral", "Negative".
+- `is_lead` and `urgency` come pre-computed in `call.call_analysis.custom_analysis_data`
+- Retell's post-call analysis (gpt-4.1-mini) populates these fields — n8n reads, does not recompute
+- Calls that fail the filter silently drop (false branch unconnected)
 
 ---
 
-## Call Processor — Architecture (Retell-native, post-enhancement 2026-04-04)
+## Call Processor — Architecture (lean fan-out, rewritten 2026-04-09)
 
 ```
-Retell POST (call_analyzed event)
-  → Filter: call_analyzed only [IF node]
-  → Extract Call Data [Code — reads call.call_analysis.custom_analysis_data]
-  → Supabase: Lookup Client [HTTP — get company_name by agent_id]
-  → Parse Client Data [Code]
-  → Check Repeat Caller [Code — query hvac_call_log by from_number]
-  → Is Lead? [IF — lead_score >= 5 AND not spam/wrong_number]
-      ├─ Both → Supabase: Log Call [HTTP POST] → HubSpot Note [Code] → Slack Alert [Code]
-      └─ Error → Alert: Supabase Write Failed [Code]
+Retell POST → Webhook: retell-hvac-webhook
+  → Filter: Lead or Emergency [IF — event=call_analyzed AND (is_lead OR urgency=emergency)]
+      FALSE branch → silent drop (dead end)
+      TRUE branch:
+        → Lookup Client [HTTP GET Supabase hvac_standard_agent by agent_id]
+        → Build Payload [Code — assembles email HTML, Slack blocks, SMS stub]
+        → Send Lead Email (Brevo) [HTTP POST → api.brevo.com/v3/smtp/email]
+        → Has Slack? [IF — slack_webhook_url non-null]
+            TRUE → Post to Client Slack [HTTP POST → client webhook URL]
+        → SMS Stub (Telnyx TODO) [Code — no-op, logs to console, returns sms_pending:true]
 ```
 
-> **No LLM calls in n8n.** All field extraction done by Retell post_call_analysis (gpt-4.1-mini).
-> GPT and Groq HTTP nodes removed. n8n reads structured JSON from webhook.
+**7 nodes total. Zero Supabase writes. Zero HubSpot writes. Retell is source of truth.**
+
+Generator: `tools/build_call_processor_workflow.py` (not yet updated to match current live — use n8n API to edit live).
 
 ### Retell Post-Call Analysis
 | Item | Value |
 |---|---|
 | Model | `gpt-4.1-mini` (set on Retell agent) |
-| Custom fields | 21 (all call data) |
-| System presets | call_summary, call_successful, user_sentiment |
-| webhook_events | call_analyzed only |
+| Custom fields | `is_lead`, `urgency`, `is_spam` (+ 18 others) |
+| System presets | `call_summary`, `call_successful`, `user_sentiment` |
+| webhook_events | `call_analyzed` only |
+
+### Client Slack webhook — how it works
+- Jotform field `q76_slackIncoming` (Section 5, optional)
+- Onboarding workflow maps it to `slack_webhook_url` in `hvac_standard_agent`
+- Call processor checks `Has Slack?` IF node — only posts if non-null/non-empty
+- Null/blank: silently skipped, email + SMS stub still fire
 
 ---
 
@@ -380,19 +357,21 @@ This tells Supabase to resolve duplicates instead of 409 failing. Applied 2026-0
 
 ---
 
-## Stripe (TEST MODE)
+## Stripe (TEST MODE — live mode migration P1 blocker)
 
-| Item | Value |
-|---|---|
-| Standard product | `prod_UC0hZtntx3VEg2` |
-| Monthly price | `price_1TDckaECS71NQsk8DdNsWy1o` · $497/mo |
-| Annual price | `price_1TDckiECS71NQsk8fqDio8pw` · $414/mo |
-| Setup fee | `price_1TEKKrECS71NQsk8Mw3Z8CoC` · $1,499 |
-| Founding discount | `FOUNDING-STANDARD` → `gzp8vnD7` ($1,499 off once) |
-| Closer $250 off | `CLOSER-250` → `mGTTQZOw` |
-| Closer $500 off | `CLOSER-500` → `GJiRoaMY` |
-| Closer $750 off | `CLOSER-750` → `fUzLNIgz` |
-| Closer $1000 off | `CLOSER-1000` → `3wraC3tQ` |
+3-tier pricing as of 2026-04-09. All IDs in `syntharra_vault` (service_name='Stripe').
+
+| Tier | Monthly | Annual | Minutes | Overage |
+|---|---|---|---|---|
+| Starter | $397/mo | $330/mo | 350 min | $0.25/min |
+| **Professional** (hero) | **$697/mo** | **$581/mo** | **700 min** | **$0.18/min** |
+| Business | $1,097/mo | $914/mo | 1,400 min | $0.12/min |
+
+- Activation Fee: $997 (one-time, all tiers)
+- Annual = 2 months free (annual price × 12)
+- ⚠️ **All IDs are TEST MODE.** Dan to provide live secret key before first paying client.
+- Stripe webhook workflow: `xKD3ny6kfHL0HHXq` — maps all 6 price IDs → tier config → welcome email
+- Checkout server: Railway-deployed OAuth server handles `/create-checkout-session`
 
 ---
 
@@ -404,9 +383,8 @@ This tells Supabase to resolve duplicates instead of 409 failing. Applied 2026-0
 ---
 
 ## HubSpot Integration
-- All call activity auto-logged as contact notes after each processed call
-- Client contacts created at signup (Stripe), updated at onboarding (Jotform), active stage on go-live
-- Pipeline: Lead → Demo Booked → Paid Client → Active
+> ⚠️ **HubSpot removed from call processor 2026-04-09.** The lean fan-out call processor no longer writes call notes to HubSpot. If re-adding, build a separate fan-out node — do NOT add Supabase writes.
+- Client contacts: created at Stripe signup, updated at Jotform onboarding (still relevant for CRM)
 - API key: vault `service_name='HubSpot'`, `key_type='api_key'`
 
 ---
@@ -429,9 +407,14 @@ Headers: apikey + Authorization: Bearer {SB_SERVICE_ROLE_KEY}
 | `Supabase` | `service_role_key` | Full admin key |
 | `Jotform` | `api_key` | Jotform API key |
 | `Jotform` | `form_id_standard` | `260795139953066` |
-| `Stripe` | `price_standard_monthly` | $497/mo price ID |
-| `Stripe` | `price_standard_annual` | $414/mo price ID |
-| `Stripe` | `price_standard_setup` | $1,499 setup price ID |
+| `Stripe` | `prod_starter` / `prod_professional` / `prod_business` | Product IDs (3 tiers) |
+| `Stripe` | `price_starter_monthly` / `price_professional_monthly` / `price_business_monthly` | Monthly price IDs |
+| `Stripe` | `price_starter_annual` / `price_professional_annual` / `price_business_annual` | Annual price IDs |
+| `Stripe` | `price_activation_fee` | $997 one-time activation fee |
+| `Telnyx` | `api_key` | Telnyx API key (needed to activate phone chain) |
+| `Telnyx` | `retell_sip_connection_id` | Retell SIP connection ID (needed to bind phone numbers) |
+| `Brevo` | `api_key` | Email API key (call processor + welcome emails) |
+| `Slack` | `bot_token` | Slack bot token |
 | `GitHub` | `personal_access_token` | GitHub PAT |
 
 ---
@@ -440,165 +423,118 @@ Headers: apikey + Authorization: Bearer {SB_SERVICE_ROLE_KEY}
 
 # TEST SUITES
 
-Three independent test suites. All must pass before any production change. Run order: E2E → Agent Simulator → Call Processor.
+Two test suites. Run before any production change. Run order: E2E → Call Processor.
+> Agent Simulator (`tools/openai-agent-simulator.py`) is archived infra — was used for conversation flow testing. May be revived if agent prompt changes need validation.
 
 ---
 
 ## TEST SUITE 1 — E2E Pipeline Test
 
-**Script:** `python3 shared/e2e-test.py`
-**Status: 98 assertions — Updated 2026-04-04 for Retell-native fields**
-**Sub-skill:** `e2e-hvac-standard` (load for deep detail)
+**Script:** `python tools/test_e2e_pipeline.py`
+**Status: 13/13 ✅ — Verified 2026-04-10**
 
-Tests the full provisioning pipeline: Jotform → n8n → Supabase → Retell → Call Processor.
+Tests the full provisioning pipeline: Jotform webhook → n8n execution → Supabase row → Dashboard 0-calls.
 
-| Phase | What's checked | Assertions |
+```bash
+python tools/test_e2e_pipeline.py              # full run (auto-cleanup)
+python tools/test_e2e_pipeline.py --no-clean   # skip cleanup (inspect artefacts)
+python tools/test_e2e_pipeline.py --dry-run    # print payload only
+```
+
+| Phase | What's checked | Checks |
 |---|---|---|
-| 1 | Jotform webhook accepted | HTTP 200 |
-| 2 | n8n onboarding workflow completes | status = success (polls up to 45s) |
-| 3 | Supabase `hvac_standard_agent` — all 40+ fields populated | 40+ field checks |
-| 4 | Retell agent exists, published, correct voice/webhook/language | Agent health |
-| 5 | Conversation flow — exactly 12 nodes, correct structure | Node count + IDs |
-| 6 | Call processor — fake call with Retell post-call analysis payload, all 30+ fields verified | Row + 15 new field assertions |
-| 7 | Stripe gate — SMS correctly skipped in test mode | Gate check |
+| 1 | Jotform webhook accepted (HTTP 200) | 1 |
+| 2 | n8n onboarding execution found + succeeded | 2 |
+| 3 | Supabase row created, 7 key fields populated | 8 |
+| 4 | Retell agent exists + published | 2 (skipped if no RETELL_API_KEY) |
+| 5 | Dashboard proxy returns 0 calls for new agent | 2 |
 
-Self-cleaning: test agent, flow, and Supabase row auto-deleted 5 min after run.
+**Cleanup:** on success, triggers cleanup webhook (manual delete until E2E cleanup workflow built).
 
 ### When to run
 - Before any n8n onboarding workflow change
 - After any Retell conversation flow structural change
 - Before going live with a new client
-- After any Supabase schema change
+- After any Supabase schema change to `hvac_standard_agent`
 
 ### Key E2E IDs
 | Resource | ID |
 |---|---|
 | Onboarding workflow | `4Hx7aRdzMl5N0uJP` |
-| Call processor workflow | `Kg576YtPM9yEacKn` |
-| Cleanup workflow | `URbQPNQP26OIdYMo` |
 | Jotform Standard form | `260795139953066` |
-
-### Adding a new field to the pipeline
-1. Parse Jotform Data node — add mapping
-2. Build Retell Prompt extractedData — add field
-3. Merge LLM & Agent Data node — add field
-4. E2E test payload — add Jotform key + value
-5. E2E test assertion — add check
-6. Run test — verify N+1 passing
-7. Update this skill + `retell-agents/HVAC-STANDARD-AGENT-TEMPLATE.md`
+| Webhook path | `/webhook/jotform-hvac-onboarding` |
+| Dashboard proxy webhook | `/webhook/retell-calls` |
 
 ### E2E Gotchas
-- Phase 2 fails with `exec status unknown` → n8n slow, increase polling attempts
-- Phase 3 field null → wrong Jotform key in Parse node or test payload
-- Phase 5 wrong node count → Build Retell Prompt node builds wrong number of nodes
-- Phase 6 call not logged → call processor webhook path changed
-- Cleanup doesn't fire → Cleanup workflow `URbQPNQP26OIdYMo` is paused
+- **Execution not found** → n8n server clock ~300ms behind local. Script uses 3s lookback buffer.
+- **Execution `running` forever** → script polls specific exec ID by `/api/v1/executions/{id}` until done.
+- **Supabase query 400** → use `company_name=eq.{name}` not `submission_id=eq.{id}` (underscores cause issues).
+- **Telnyx nodes fail** → expected — vault keys not yet added. Nodes have `continueOnFail: true`.
+- **Cleanup 404** → E2E cleanup workflow not yet built. Delete test agent manually from Retell dashboard.
 
 ---
 
-## TEST SUITE 2 — Agent Behaviour Simulator
+## TEST SUITE 2 — Agent Behaviour Simulator (ARCHIVED)
 
-**Script:** `python3 tools/openai-agent-simulator.py --group {group}`
-**Status: 80/80 ✅ — All groups 100% — Verified 2026-04-03**
-**Sub-skill:** `hvac-standard-agent-testing` (load for deep detail)
-
-Tests Sophie's behaviour across 80 realistic caller scenarios using an LLM evaluator.
-Operates on **TESTING agent only** — never MASTER.
-
-| Group | Scenarios | Score | What it tests |
-|---|---|---|---|
-| `core_flow` | 15 | 15/15 ✅ | Standard service calls, lead capture, callbacks |
-| `pricing_traps` | 8 | 8/8 ✅ | Pricing questions, Sophie must not quote fees |
-| `personalities` | 15 | 15/15 ✅ | Chatty, abrupt, technical, distracted, angry callers |
-| `boundary_safety` | 12 | 12/12 ✅ | Attempts to break Sophie out of role |
-| `edge_cases` | 15 | 15/15 ✅ | Wrong number, out-of-area, spam, vendor, job applicant |
-| `info_collection` | 15 | 15/15 ✅ | Address formats, phonetic numbers, WhatsApp, commercial |
-
-### When to run
-- After any prompt or node instruction change
-- After any conversation flow structural change
-- Before promoting TESTING → MASTER
+> **Status: Archived infra.** The OpenAI simulator (`tools/openai-agent-simulator.py`) and its 91-scenario suite are in `archived/testing-infra/`. Groq free tier (500k TPD limit) was exhausted by full runs. Revive if major prompt surgery is needed.
 
 ### Promoting TESTING → MASTER
 Only promote when:
-1. All 6 simulator groups ≥ 95% on TESTING agent
-2. E2E passes on TESTING agent
-3. Then patch MASTER in place (never delete, never recreate)
-4. Publish MASTER immediately after patch
-
-### Agent Simulator Gotchas
-- **Rate limits:** Never run more than 2 groups in parallel — hammers OpenAI RPM
-- **Evaluator variance:** A single FAIL on an otherwise-passing scenario = run it twice in isolation before changing the prompt. Cost: ~$0.002.
-- **Two failure types:** (a) Sophie does the wrong thing → fix prompt; (b) Sophie does the right thing, evaluator fails → fix `expectedBehaviour` in scenarios.json
-- **Prompt length:** Global prompt must stay under ~5,000 chars. Beyond ~15k chars, instructions at the bottom are ignored by the model. Personality handling MUST be in the code node injection, not appended to global prompt.
-- **callerPrompt quality:** If `expectedBehaviour` requires Sophie to handle an interruption/distraction, the `callerPrompt` must actually simulate it. Read the transcript before fixing Sophie.
-- **Targeted runs first:** Always `--scenarios 18,21` before `--group personalities` — validates the fix fast before full run.
+1. E2E passes on TESTING agent
+2. Call processor test passes
+3. Manual phone test confirms Sophie behaves correctly on a real call
+4. Then patch MASTER in place via `retell-iac/scripts/promote.py` — never delete, never recreate
+5. Publish MASTER immediately after patch
 
 ---
 
 ## TEST SUITE 3 — Call Processor Test
 
-**Script:** `python3 tests/call-processor-test.py`
-**Status: 20/20 ✅ — Verified 2026-04-04 (confirmed with fresh Groq quota)**
-**Sub-skill:** `standard-call-processor-testing` (load for deep detail)
+**Script:** `python tools/test_call_processor.py`
+**Status: 90/90 ✅ — 30 scenarios — Verified 2026-04-10**
 
-Tests the n8n call processor workflow in isolation, firing 20 fake post-call webhooks and asserting on the resulting `hvac_call_log` rows.
+Tests the n8n call processor workflow in isolation. Fires fake Retell post-call webhooks with pre-set `is_lead`/`urgency` flags and verifies n8n execution status. Does NOT check email delivery (Brevo has no read API).
 
-| Scenario range | What's covered |
-|---|---|
-| 1–5 | Core leads: repair, install, maintenance, follow-up, emergency |
-| 6–10 | Edge cases: early hangup, wrong number, spam, out-of-area, live transfer |
-| 11–15 | Lead scoring: commercial, pricing-only, phonetic phone, dedup, silent call |
-| 16–20 | Field accuracy: sentiment, geocode, no-address, vendor, job applicant |
-
-### When to run
-- After any call processor n8n workflow change
-- After any change to the Groq prompt or Parse Lead Data code
-- After any `hvac_call_log` schema change
-- Before go-live
-
-### Running the test
 ```bash
-python3 tests/call-processor-test.py
-# Runs in 4 batches — ~8 minutes total
-# 12s spacing between calls to respect Groq free-tier RPM limit
-# Wait 60s after any 429 error, then resume
+python tools/test_call_processor.py              # run all 30 scenarios
+python tools/test_call_processor.py --scenario 3 # run one scenario by ID
+python tools/test_call_processor.py --dry-run    # print payloads only
 ```
 
-### Call Processor Gotchas
-- **No LLM calls in call processor** — Groq/OpenAI removed. All extraction by Retell post_call_analysis.
-- **`retell_sentiment` is TEXT** — "Positive"/"Neutral"/"Negative". Old `caller_sentiment` INTEGER deprecated.
-- **`fetch()` not defined in n8n Code nodes** — split into Code (build body) + HTTP Request (fire)
-- **IIFE expressions fail in n8n jsonBody** — put all logic in Code node, keep jsonBody as `$json.field` refs
-- **SB_ANON key has RLS restrictions** — always use SB_SVC (service role) for test reads
-- **Dedup via `call_id`** — same call_id resent = early exit, no second row
-- **Fake webhooks must include `custom_analysis_data`** — n8n reads directly from this, not from transcript
-- **is_lead computed in n8n** — `lead_score >= 5 AND call_type not in [spam, wrong_number]`
-
-### Assertion calibration (Retell-native — deterministic extraction)
-| Field | Groq behaviour | Correct assertion |
+| Scenario range | Category | What's covered |
 |---|---|---|
-| `caller_address` | Full address as stated during call | Assert `present` (non-empty string) |
-| `urgency` | One of: emergency, high, medium, low | Assert `in list` |
-| `call_type` | One of 7 defined values | Assert `in list` |
-| `retell_sentiment` | Capitalised text | Assert `present` and is string |
-| `lead_score` | Integer 1-10 | Assert `>= 1` |
+| 1–15 | Should notify | Lead/emergency: repair, install, maintenance, emergency, commercial, transfer, vulnerable occupant |
+| 16–25 | Should filter | Spam, wrong number, out-of-area, pricing-only, silence, vendor, job applicant, urgency=high (not emergency) |
+| 26–30 | Edge cases | Wrong event type, max lead score, empty fields, score=0+emergency, is_spam+is_lead |
+
+### When to run
+- After any change to the call processor n8n workflow (`Kg576YtPM9yEacKn`)
+- After any change to the filter logic (`is_lead` OR `urgency=emergency`)
+- Before go-live
+
+### Call Processor Gotchas
+- **`urgency=high` does NOT trigger** — only `urgency=emergency` passes the filter. `high` is filtered.
+- **is_lead=true always triggers** regardless of lead_score or is_spam value — the filter only checks those two fields.
+- **Wrong event type filtered** — only `event=call_analyzed` passes. `call_started`, `call_ended` are dropped.
+- **n8n clock skew** — test sets trigger_time 3s in the past to handle ~300ms server clock offset vs local clock.
+- **Execution discovery** — test polls `status=running` first, then tracks specific exec ID to completion. Default listing excludes running executions.
 
 ---
 
 ## Test Run Order & Go-Live Gate
 
-```
-Before any production change:
-  1. python3 shared/e2e-test.py              → must be 75/75
-  2. python3 tools/openai-agent-simulator.py → must be ≥ 95% per group
-  3. python3 tests/call-processor-test.py    → must be 20/20
+```bash
+# Before any production change:
+python tools/test_e2e_pipeline.py          # must be 13/13
+python tools/test_call_processor.py        # must be 90/90
 
-Before go-live:
-  4. 3–5 real phone calls to +18129944371   → manual smoke test (Dan)
-  5. Confirm hvac_call_log rows appear for real calls
-  6. Unpause syntharra-ops-monitor on Railway
-  7. Set SMS_ENABLED=true once Telnyx approved
+# Before go-live:
+# 1. Dan: add Telnyx vault keys (api_key + retell_sip_connection_id)
+# 2. Dan: provide Stripe live secret key → replicate 7 prices in live mode
+# 3. Dan: bind +18129944371 to MASTER in Retell dashboard (Phone Numbers)
+# 4. 3-5 real phone calls to +18129944371 → manual smoke (Dan)
+# 5. Confirm lead emails arrive at test-e2e@syntharra.com
+# 6. Deploy monthly_minutes.py + usage_alert.py crons on Railway
 ```
 
 ---

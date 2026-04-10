@@ -10,22 +10,33 @@ description: >
   This skill is the single source of truth for all Syntharra email standards.
 ---
 
-> **Last verified: 2026-04-02** — add freshness date each time skill is confirmed current
+> **Last verified: 2026-04-10** — Migrated from SMTP2GO to Brevo (2026-04-06). All active email nodes use Brevo HTTP API.
 
 # Syntharra — Email Reference
 
 ---
 
-## SMTP2GO
+## Brevo (primary email provider — migrated 2026-04-06)
 
 | Item | Value |
 |---|---|
-| API Key | query `syntharra_vault` → `service_name = 'smtp2go'` |
-| n8n credential name | `"SMTP2GO - Syntharra"` |
-| REST endpoint | `POST https://api.smtp2go.com/v3/email/send` |
-| Sender address | `noreply@syntharra.com` |
+| API Key | query `syntharra_vault` → `service_name = 'Brevo'`, `key_type = 'api_key'` |
+| REST endpoint | `POST https://api.brevo.com/v3/smtp/email` |
+| Sender address | `leads@syntharra.com` (call processor) or `noreply@syntharra.com` (transactional) |
+| n8n integration | Direct HTTP Request node — NOT the n8n Brevo credential node |
 
-**On Railway:** NEVER use nodemailer/SMTP — Railway blocks all SMTP ports (25, 465, 587, 2525). Always use SMTP2GO REST API over HTTPS port 443.
+**Payload format:**
+```json
+{
+  "sender": { "name": "Syntharra", "email": "leads@syntharra.com" },
+  "to": [{ "email": "recipient@example.com", "name": "Recipient Name" }],
+  "subject": "Subject line",
+  "htmlContent": "<html>...</html>"
+}
+```
+
+> ⚠️ **SMTP2GO is decommissioned.** Do not use `api.smtp2go.com` or the `"SMTP2GO - Syntharra"` n8n credential in any new workflow or template. Remove from any existing nodes still referencing it.
+> **On Railway:** NEVER use nodemailer/SMTP — Railway blocks all SMTP ports. Always use Brevo REST API over HTTPS 443.
 
 ---
 
@@ -45,16 +56,16 @@ description: >
 | `daniel@syntharra.com` | **NEVER** use in any workflow, template, or website |  |
 
 ### Per-Workflow Routing
-| Workflow | Internal → | Customer contact ref |
-|---|---|---|
-| HVAC Std Onboarding `4Hx7aRdzMl5N0uJP` | `onboarding@` | `support@` |
-| HVAC Prem Onboarding `kz1VmwNccunRMEaF` | `onboarding@` | `support@` |
-| Stripe Workflow `xKD3ny6kfHL0HHXq` | `onboarding@` | `support@` |
-| HVAC Std Call Processor `Kg576YtPM9yEacKn` | `admin@` | — |
-| HVAC Prem Call Processor `STQ4Gt3rH8ptlvMi` | `admin@` | `support@` |
-| Scenario Runner `Ex90zUMSEWwVk4Wv` | `admin@` | — |
-| Usage Alert Monitor `Wa3pHRMwSjbZHqMC` | `admin@` | `support@` |
-| Monthly Minutes Calculator `z1DNTjvTDAkExsX8` | — | `support@` |
+| Workflow | Sender | Internal → | Customer contact ref |
+|---|---|---|---|
+| HVAC Std Onboarding `4Hx7aRdzMl5N0uJP` | `noreply@` | `onboarding@` | `support@` |
+| Stripe Workflow `xKD3ny6kfHL0HHXq` | `noreply@` | `onboarding@` | `support@` |
+| HVAC Call Processor `Kg576YtPM9yEacKn` | `leads@` | `admin@` | — |
+| `tools/usage_alert.py` | `noreply@` | `admin@` | `support@` |
+| `tools/monthly_minutes.py` | `noreply@` | — | `support@` |
+| `tools/weekly_client_report.py` | `noreply@` | — | client |
+
+> HVAC Premium call processor (`STQ4Gt3rH8ptlvMi`) and Scenario Runner (`Ex90zUMSEWwVk4Wv`) archived 2026-04-08/09.
 
 ---
 
