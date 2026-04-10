@@ -238,3 +238,22 @@
 - Before any INSERT to a Supabase table, run `SELECT column_name, is_nullable, column_default FROM information_schema.columns WHERE table_name = '...'` AND `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = '...'::regclass AND contype = 'c'`.
 - Hidden NOT NULL and CHECK constraints exist on many tables (e.g. `client_subscriptions.plan_type` requires `'standard'` or `'premium'` — `'hvac_standard'` is rejected).
 - Never guess enum/check values — query the schema first.
+
+## 39. All `claude -p` subprocesses used for neutral inference MUST run from a temp dir with a neutral CLAUDE.md
+
+- `claude -p` always loads the nearest `CLAUDE.md` up the directory tree plus `~/.claude/CLAUDE.md`. Running from the project root loads all Syntharra skills and context, making Claude behave as an HVAC assistant regardless of the prompt.
+- Pattern: `tmpdir = tempfile.mkdtemp(); open(os.path.join(tmpdir, 'CLAUDE.md'), 'w').write('Output only valid JSON.')` then `subprocess.run(cmd, cwd=tmpdir, ...)`.
+- Pass prompts via stdin with `--input-format text`, not as CLI args (avoids Windows 8191-char limit and CLAUDE.md context activation from arg text).
+- Do NOT use `--tools ""` as a workaround — it produces empty output.
+
+## 40. On Windows, `claude -p` subprocesses must use `['cmd', '/c', 'claude', ...]`
+
+- Python subprocess does not resolve `.cmd` extensions on Windows without `shell=True`. `claude` is installed as `claude.cmd`.
+- Fix: `cmd = ['cmd', '/c', 'claude'] + args` when `platform.system() == 'Windows'`.
+- Never use `shell=True` as the fix — it breaks stdin piping and introduces injection risk.
+
+## 41. All Python tools must call `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` at module level
+
+- Windows default stdout encoding is cp1252. Any tool that prints non-ASCII content (unicode arrows, emoji, special chars from FAILURES.md, n8n JSON) will crash with `UnicodeEncodeError`.
+- Add `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` immediately after `import sys` in every Python tool.
+- This is already the pattern in most tools — apply it universally when creating new tools.

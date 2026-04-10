@@ -165,3 +165,27 @@ date | area | what failed | root cause | fix applied | skill updated
 **Root cause:** Two or more sections were embedded inside a single `.page` div whose content exceeded 297mm (A4 height). `overflow: hidden` in print CSS silently cut off content; without it, content spilled to the next physical page mid-div.
 **Fix:** Each section was split into its own top-level `.page` div. Closing `</div>` + `</div>` (page-inner + page) before each new section, then opening fresh `<div class="page"><div class="page-inner">`. Orphaned `</div>` tags from old wrapper elements cleaned up after each split.
 **Rule:** In A4 print-optimized HTML, every section that might not share a page with another must be its own `.page` div. Never embed two section-bars inside one `.page`. Estimate content height before placing: section-bar ≈30mm, each content block ≈10-15mm, A4 usable ≈257mm (297 − 18mm top − 22mm bottom padding). When in doubt, split.
+
+## 2026-04-10 — claude -p subprocess generated wrong transcripts (inherited project HVAC context)
+**What failed:** `gen_transcripts.py` asked claude to generate telemarketer/robocall/wrong-number transcripts (Group B scenarios) but received HVAC repair call transcripts instead.
+**Root cause:** `claude -p` always loads the nearest `CLAUDE.md` up the directory tree, plus the user-level `~/.claude/CLAUDE.md`. Running from the project root loaded the Syntharra CLAUDE.md + superpowers skills, causing Claude to behave as an HVAC assistant and generate HVAC content regardless of the prompt.
+**Fix:** Run each subprocess from a `tempfile.mkdtemp()` directory with a minimal `CLAUDE.md` written into it (e.g. "Generate transcripts as requested. No tools needed."). This shadows the project CLAUDE.md. Also pass prompts via stdin with `--input-format text` flag, not as CLI args.
+**Rule:** Any `claude -p` subprocess used for neutral inference (JSON extraction, transcript generation, classification) MUST run from a temp directory with a minimal neutral CLAUDE.md. Never run from the project root — it inherits all Syntharra skills and context.
+
+## 2026-04-10 — claude -p subprocess returned HVAC assistant response instead of JSON
+**What failed:** `test_post_call_analysis.py` ran analysis prompts via `claude -p` but received "Ready to perform post-call analysis for Sophie..." instead of a JSON object.
+**Root cause:** Same as above — project CLAUDE.md loaded superpowers skills which activated the Syntharra HVAC context. The prompt asked for JSON but Claude was in "HVAC assistant" mode and added preamble before the JSON.
+**Fix:** Same temp dir + neutral CLAUDE.md pattern. Also confirmed that `--tools ""` is NOT the fix — it produces empty `{}` output. The CLAUDE.md isolation is the only reliable approach.
+**Rule:** Do not attempt to use `--tools ""` or `--no-tools` to strip context from `claude -p`. These flags break output. The only reliable isolation is running from a temp dir with a neutral CLAUDE.md file.
+
+## 2026-04-10 — Windows `claude` subprocess FileNotFoundError (`.cmd` extension not resolved)
+**What failed:** `subprocess.run(['claude', '-p', ...])` raised `FileNotFoundError: [WinError 2]` on Windows.
+**Root cause:** On Windows, `claude` is installed as `claude.cmd`. Python's `subprocess` does not resolve `.cmd` extensions unless `shell=True` is used — but `shell=True` introduces injection risk and breaks stdin piping reliably.
+**Fix:** Use `['cmd', '/c', 'claude', ...]` instead of `['claude', ...]` on Windows. `cmd.exe` resolves `.cmd` extensions automatically.
+**Rule:** On Windows, all `claude -p` subprocesses must use `['cmd', '/c', 'claude', ...]`. Detect with `platform.system() == 'Windows'`. Never use `shell=True` as the fix.
+
+## 2026-04-10 — session_end.py crashed with UnicodeEncodeError on Windows (cp1252 stdout)
+**What failed:** `session_end.py` raised `UnicodeEncodeError: 'charmap' codec can't encode character '\u2192'` when printing RULES.md parity warnings.
+**Root cause:** FAILURES.md entries contain unicode arrow characters (`→`). Windows default stdout encoding is cp1252 which can't encode them. `print()` crashed instead of degrading gracefully.
+**Fix:** Added `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` at the top of the script.
+**Rule:** All Python tools in this repo that may print non-ASCII content must call `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` at module level (after `import sys`). This is already the pattern in most tools — apply it universally.
