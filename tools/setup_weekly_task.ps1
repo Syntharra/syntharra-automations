@@ -1,11 +1,11 @@
 # setup_weekly_task.ps1
-# Registers a Windows Task Scheduler job that runs the weekly self-improvement
-# script every Monday at 07:00 using your Claude Code subscription.
+# Registers a Windows Task Scheduler job that runs the daily self-improvement
+# script every day at 07:00 using your Claude Code subscription.
 #
 # Run once (as Administrator):
 #   powershell -ExecutionPolicy Bypass -File tools\setup_weekly_task.ps1
 
-$TaskName   = "Syntharra-WeeklySelfImprovement"
+$TaskName   = "Syntharra-DailySelfImprovement"
 $RepoRoot   = "c:\Users\danie\Desktop\Syntharra\Cowork\Syntharra Project\syntharra-automations"
 $PythonExe  = (Get-Command python -ErrorAction SilentlyContinue).Source
 # Ensure npm global bin is on PATH so claude.cmd is found
@@ -24,8 +24,7 @@ $Action = New-ScheduledTaskAction `
     -WorkingDirectory $RepoRoot
 
 $Trigger = New-ScheduledTaskTrigger `
-    -Weekly `
-    -DaysOfWeek Monday `
+    -Daily `
     -At "07:00AM"
 
 $Settings = New-ScheduledTaskSettingsSet `
@@ -37,8 +36,8 @@ $Settings = New-ScheduledTaskSettingsSet `
 $WrapperScript = Join-Path $RepoRoot ".claude\run_weekly.ps1"
 @"
 Set-Location '$RepoRoot'
-$timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
-Add-Content '$LogPath' "[`$timestamp] Weekly self-improvement started"
+`$timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
+Add-Content '$LogPath' "[`$timestamp] Daily self-improvement started"
 & '$PythonExe' '$ScriptPath' >> '$LogPath' 2>&1
 Add-Content '$LogPath' "[`$timestamp] Done"
 "@ | Set-Content $WrapperScript
@@ -52,13 +51,15 @@ Register-ScheduledTask `
     -Action $Action `
     -Trigger $Trigger `
     -Settings $Settings `
-    -Description "Syntharra: weekly Claude Code self-improvement synthesis. Reads FAILURES.md + corrections, writes new rules to RULES.md." `
+    -Description "Syntharra: daily Claude Code self-improvement synthesis. Reads FAILURES.md + corrections (last 2 days), writes new rules to RULES.md." `
     -Force
 
 Write-Host ""
 Write-Host "Task registered: $TaskName"
-Write-Host "Runs: Every Monday at 07:00"
+Write-Host "Runs: Every day at 07:00 (last 2 days lookback)"
 Write-Host "Log:  $LogPath"
 Write-Host ""
 Write-Host "To run now (test): python tools\weekly_self_improvement.py --dry-run"
+Write-Host "To run full week:  python tools\weekly_self_improvement.py --days 7"
 Write-Host "To remove task:    Unregister-ScheduledTask -TaskName '$TaskName' -Confirm:`$false"
+Write-Host "To remove OLD task: Unregister-ScheduledTask -TaskName 'Syntharra-WeeklySelfImprovement' -Confirm:`$false"

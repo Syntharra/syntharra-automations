@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-weekly_self_improvement.py — Reviews the past week of failures and corrections,
+weekly_self_improvement.py — Reviews recent failures and corrections,
 then uses Claude Code CLI to synthesise new rules and update RULES.md + memory.
 
 Uses the Claude Code subscription — no separate API key required.
 
 Schedule: Windows Task Scheduler — run tools/setup_weekly_task.ps1 once to register.
-  Weekly on Monday at 07:00 — reviews the weekend + previous week.
+  Daily at 07:00 — reviews the previous 2 days (catches yesterday + any overnight work).
 
 Manual run:     python tools/weekly_self_improvement.py
 Dry run:        python tools/weekly_self_improvement.py --dry-run
+Full week:      python tools/weekly_self_improvement.py --days 7
 """
 from __future__ import annotations
 import argparse
@@ -143,13 +144,15 @@ def log_run(today: str, note: str):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--days", type=int, default=2,
+                        help="How many days back to scan (default: 2)")
     args = parser.parse_args()
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    since = since_date(7)
+    since = since_date(args.days)
 
     print(BAR)
-    print(f"  WEEKLY SELF-IMPROVEMENT — {today}  (since {since})")
+    print(f"  DAILY SELF-IMPROVEMENT — {today}  (since {since}, last {args.days}d)")
     if args.dry_run:
         print("  DRY RUN — no files will be written")
     print(BAR)
@@ -167,7 +170,7 @@ def main():
 
     if output:
         print(f"\n{output}\n")
-        log_run(today, f"{'DRY RUN' if args.dry_run else 'LIVE'} — completed")
+        log_run(today, f"{'DRY RUN' if args.dry_run else 'LIVE'} — completed (last {args.days}d)")
     else:
         print("  [!] No output from Claude. Is Claude Code running and authenticated?")
         log_run(today, "FAILED — no output from claude CLI")
