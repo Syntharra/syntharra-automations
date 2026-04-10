@@ -18,6 +18,9 @@ Nothing goes live until Stripe switches. Checklist:
 - [ ] Set `PRE_LAUNCH_MODE=false` in ops monitor `retell.js`
 - [ ] Confirm all 15 n8n workflows are Active
 - [ ] Smoke test: call test phone number, submit test Jotform as a real client would
+- [ ] **Deploy `syntharra-usage-alert` cron** on Railway — daily 08:00 UTC, `python tools/usage_alert.py` (see GO-LIVE.md §Cron Setup)
+- [ ] **Deploy `syntharra-monthly-billing` cron** on Railway — 2nd of month 09:00 UTC, `python tools/monthly_minutes.py` (see GO-LIVE.md §Cron Setup)
+- [ ] **Swap `STRIPE_SECRET_KEY` to `sk_live_`** in all Railway cron service env vars once Stripe goes live
 
 ## What's Working (TEST MODE)
 - Standard pipeline: onboarding → Jotform → agent provisioning → call processing ✅

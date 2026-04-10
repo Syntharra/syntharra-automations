@@ -1,0 +1,21 @@
+# railway.toml — Syntharra Billing Cron Services
+#
+# This repo deploys TWO Railway cron services from the same source.
+# Create each as a separate Railway service pointing to this repo,
+# with the start command and schedule configured per service.
+#
+# Service 1: syntharra-usage-alert
+#   Start command:  python tools/usage_alert.py
+#   Cron schedule:  0 8 * * *  (daily 08:00 UTC)
+#
+# Service 2: syntharra-monthly-billing
+#   Start command:  python tools/monthly_minutes.py
+#   Cron schedule:  0 9 2 * *  (2nd of month 09:00 UTC)
+#
+# Both services require the same env vars — see docs/GO-LIVE.md §Cron Setup.
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+restartPolicyType = "NEVER"

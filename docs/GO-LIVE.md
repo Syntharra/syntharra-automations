@@ -18,9 +18,63 @@
 
 - [x] **Client-update form** — `https://n8n.syntharra.com/webhook/client-update` live with Syntharra branding (matches Slack setup page). "Update My Settings" button in dashboard header links to it with agentId pre-filled. Dashboard SHA `8f3640813fccd2047268a011f4fa91b69d2badad`.
 - [ ] **Telnyx SMS** — waiting on Telnyx AI evaluation approval. Once approved: replace `SMS Stub (Telnyx TODO)` node in HVAC Call Processor with real Telnyx HTTP node.
-- [ ] **Weekly client report cron** — `tools/weekly_client_report.py` is written and tested. Deploy cron (`TZ=America/New_York python tools/weekly_client_report.py --tz America/New_York` Sunday 18:00) once second client lands. Firing into the void with one client is fine but pointless.
-- [ ] **Monthly minutes cron** — `tools/monthly_minutes.py` replaces `z1DNTjvTDAkExsX8` (archived). Deploy 1st-of-month cron once live clients exist.
-- [ ] **Usage alert cron** — `tools/usage_alert.py` written 2026-04-09. Deploy daily cron once live clients exist.
+- [ ] **Weekly client report cron** — `tools/weekly_client_report.py` written and tested. Deploy once second client lands (firing with one client is pointless). See §Cron Setup below.
+- [ ] **Monthly billing cron** — `tools/monthly_minutes.py`. Reads Retell calls, calculates overage per tier, charges Stripe at client's plan rate, sends usage email. See §Cron Setup below.
+- [ ] **Usage alert cron** — `tools/usage_alert.py`. Daily mid-month 80%/100% usage emails, tier-aware rate per client. See §Cron Setup below.
+
+---
+
+## Cron Setup — Railway (deploy when first client lands)
+
+All three billing scripts are ready. Deploy them as Railway Cron services from the
+`Syntharra/syntharra-automations` repo. The `railway.toml` at repo root handles build config.
+
+### Services to create in Railway
+
+| Railway service name | Start command | Cron schedule | When to deploy |
+|---|---|---|---|
+| `syntharra-usage-alert` | `python tools/usage_alert.py` | `0 8 * * *` | First live client |
+| `syntharra-monthly-billing` | `python tools/monthly_minutes.py` | `0 9 2 * *` | First live client |
+| `syntharra-weekly-report` | `TZ=America/New_York python tools/weekly_client_report.py --tz America/New_York` | `0 18 * * 0` | Second live client |
+
+**Schedule notes:**
+- Usage alert: **daily 08:00 UTC** — checks month-to-date, sends at 80%/100% once each
+- Monthly billing: **2nd of month 09:00 UTC** — not 1st, to give Retell time to finalise last-day calls
+- Weekly report: **Sunday 18:00 local** — replicate with other `--tz` values as clients expand to new time zones
+
+### Steps to create each service
+
+1. Railway dashboard → New Service → GitHub repo → `Syntharra/syntharra-automations`
+2. Set **Service Type** to **Cron Job**
+3. Set **Cron Schedule** (see table above)
+4. Set **Start Command** (see table above)
+5. Add environment variables (see §Env Vars below)
+6. Deploy — Railway will run it on schedule, exit cleanly, retry on failure
+
+### Env vars required (set in Railway service → Variables)
+
+Fetch all values from `syntharra_vault` in Supabase. All three services need:
+
+| Env var | Vault lookup |
+|---|---|
+| `SUPABASE_URL` | `https://hgheyqwnrcvwtgngqdnq.supabase.co` (hardcoded) |
+| `SUPABASE_SERVICE_KEY` | `service_name='Supabase', key_type='service_role_key'` |
+| `RETELL_API_KEY` | `service_name='Retell AI', key_type='api_key'` |
+| `BREVO_API_KEY` | `service_name='Brevo', key_type='api_key'` |
+| `STRIPE_SECRET_KEY` | `service_name='Stripe', key_type='secret_key_test'` → swap for `secret_key_live` at go-live |
+
+`syntharra-weekly-report` does not need `STRIPE_SECRET_KEY`.
+
+### Smoke test before first real billing run
+
+```bash
+# From local machine with env vars exported:
+python tools/usage_alert.py --dry-run
+python tools/monthly_minutes.py --dry-run --month YYYY-MM
+```
+
+Both scripts are fully idempotent — a double-run skips already-processed records.
+`monthly_billing_snapshot` guards against duplicate Stripe charges.
 
 ---
 

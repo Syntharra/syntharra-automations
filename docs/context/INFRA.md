@@ -8,7 +8,9 @@
 - GraphQL API: `https://backboard.railway.com/graphql/v2`
 - Auto-deploy: all services deploy from `main` branch of their GitHub repo (~60s)
 
-## Railway Services (7 total — verified live)
+## Railway Services (7 live + 3 pending cron)
+
+### Live services
 | Service ID | Name | URL | Status |
 |---|---|---|---|
 | `c40f1306-0544-4915-a304-f33fdb8d4385` | syntharra-n8n | `https://n8n.syntharra.com` | Active |
@@ -18,6 +20,13 @@
 | `7ce0f943-5216-4a16-8aeb-794cc7cc1e65` | syntharra-ops-monitor | `syntharra-ops-monitor-production.up.railway.app` | **PAUSED** |
 | `9285c656-12b4-44f5-8338-9b569c5e42dc` | n8n-redis | Internal (n8n queue backing store) | Active |
 | `97e13df6-6a68-435e-95db-47fd03c10fe3` | n8n-postgres | Internal (n8n database) | Active |
+
+### Pending cron services (deploy when first client lands — see docs/GO-LIVE.md §Cron Setup)
+| Name | Repo | Start command | Schedule | Deploy trigger |
+|---|---|---|---|---|
+| `syntharra-usage-alert` | `syntharra-automations` | `python tools/usage_alert.py` | `0 8 * * *` | First live client |
+| `syntharra-monthly-billing` | `syntharra-automations` | `python tools/monthly_minutes.py` | `0 9 2 * *` | First live client |
+| `syntharra-weekly-report` | `syntharra-automations` | `TZ=America/New_York python tools/weekly_client_report.py --tz America/New_York` | `0 18 * * 0` | Second live client |
 
 ## Ops Monitor
 - Service ID: `7ce0f943-5216-4a16-8aeb-794cc7cc1e65`

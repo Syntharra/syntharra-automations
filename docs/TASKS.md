@@ -53,12 +53,12 @@ Run in order. All test-mode. Grab a Stripe test card (4242 4242 4242 4242).
 - [ ] Overage rate visible (if dashboard surfaces it)
 
 ### 6. Usage alert
-- [ ] Run `python tools/usage_alert.py` manually against a test subscription
-- [ ] Alert email shows correct `$X.XX/min` overage rate for that tier (not hardcoded 0.18)
+- [x] Run `python tools/usage_alert.py` manually against a test subscription — ✅ 2026-04-10
+- [x] Alert email shows correct `$X.XX/min` overage rate for that tier — ✅ verified all 3 tiers: Starter $0.25, Pro $0.18, Biz $0.12
 
 ### 7. Overage charges
-- [ ] `python tools/monthly_minutes.py` — verify overage calculation uses `client_subscriptions.overage_rate`
-- [ ] Confirm Stripe charge amount matches minutes × rate for the correct tier
+- [x] `python tools/monthly_minutes.py` — verified uses `client_subscriptions.overage_rate` (decimal) — ✅ 2026-04-10 (3 bugs fixed, see commit 8c12711)
+- [ ] Confirm Stripe charge amount matches minutes × rate — **needs live call data** (agents have 0 calls, re-registered 2026-04-09). Test again once MASTER has real call history.
 
 ### Blockers before test session
 - [x] **Backend `/create-checkout-session`** — ✅ verified 2026-04-09: handles all 6 plan strings, price IDs match n8n PLANS map exactly.
