@@ -903,11 +903,16 @@ li {
   html, body { background: none; }
   .page {
     width: 210mm;
+    height: 297mm;
+    min-height: unset;
     margin: 0;
     box-shadow: none;
     page-break-after: always;
+    break-after: page;
+    overflow: hidden;
   }
-  .page:last-child { page-break-after: auto; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .page-inner { min-height: unset; }
   @page {
     size: A4;
     margin: 0;
@@ -1022,6 +1027,14 @@ li {
             <div class="step-desc">Return to the previous screen. To cancel, toggle it OFF here.</div>
           </div>
         </div>
+        <!-- iPhone QR -->
+        <div style="margin-top:3mm;background:var(--v-light);border:1px solid var(--border);border-radius:2mm;padding:3mm 4mm;display:flex;align-items:center;gap:3.5mm;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF0AAABdAQAAAADvClduAAABVUlEQVR4nI1UO27DMAwl7QDOpPgABtwTdNYmbzlHewIH3WP5Akkv0Ht0dCePuUALyFCBjLXRRQZos0iHflKAKaFBhAg+vkdSyPBlY/R9B/jlgDsdE+80gBbCPAdXtcyBZyEsgrrI0/GqLrr0/OWHLQCgs70bHv8mOAvLbtDdn5xIrI22mocLtU24PKbw+lBgJGVjZl83pAxzkEDrJu8h3gcqRdBp/WTNtFkuZAr7QBhI6XyQQHlgqhruNfdSsxwGQs5nAyuZAmfbxA+Bd5daj8HbJLcS06xex/aQrQYoRXl3QMo4lbhKqo02DNiSMoQihVm70kAV/F7Ujdt4NqQ0iYIQAJSJtxCLgjCzwya2xovz1iFCmTgY4b25IK8y+Wy82FNvNSkdz6eRkxYQ4HjXOGxf3go5DBRMqTbSnn5ulkp4NtlGAF1MCO720F2Pz0rIhv/7kT4AjtW1mWRcRdkAAAAASUVORK5CYII=" width="46" height="46" style="border-radius:1mm;border:1px solid var(--border);flex-shrink:0;" alt="QR: iPhone Call Forwarding">
+          <div>
+            <div style="font-size:8pt;font-weight:700;color:var(--v-deep);margin-bottom:1mm;">Quick Setup &mdash; Scan with iPhone Camera</div>
+            <div style="font-size:7.5pt;color:var(--muted);line-height:1.4;">Opens Settings &rarr; Call Forwarding directly. Toggle on, then enter your AI number.</div>
+          </div>
+        </div>
       </div>
 
       <!-- Android -->
@@ -1099,6 +1112,37 @@ li {
         </tr>
       </tbody>
     </table>
+
+    <!-- Carrier QR codes -->
+    <div style="margin:3mm 0 4mm;">
+      <div style="font-size:7.5pt;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--v);margin-bottom:2.5mm;">Scan to Dial &mdash; AT&amp;T / T-Mobile / GSM Carriers</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3mm;margin-bottom:3mm;">
+        <div style="background:var(--v-light);border:1px solid var(--border);border-radius:2mm;padding:3mm;display:flex;align-items:center;gap:2.5mm;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAABRAQAAAACC9HebAAABJklEQVR4nH2TQWrDMBBF/1guzqZ1toEUB3IJGQr2LvfIRRLvumpyg17FhkKy6wkKTqy9m2Yjg+0phqZtSkezkD7DYzTSfBHjEpn3LYErfSAym9jPyL/O45dWbCfH1zbkUmaQpebZgulv/icGPV3uZ//lL+EPy22shk2us8oNEhA7mI5GatyUJ5qJDDHQ3fTu9zHbZr4u/I/GOPrhxVu9aJ72jn6maHyyOKWue5030Xg/j/hBZgzHhtOiHr3IzOTE5Z3G2TrOMhzPUCT3jnmBs131rhFaXotMSbYMcyCoRMaL+gBA1UOehXcgwjLBVsseQ8WWNzvVQ8n9VGvdIgACmRm06jX3unV61WyLTuWOf4FVPjnqoCZHnY5GJnwEWdk/gw+/QvThJwBLbgJXmIr5AAAAAElFTkSuQmCC" width="38" height="38" style="border-radius:1mm;flex-shrink:0;" alt="QR">
+          <div><div style="font-size:7.5pt;font-weight:700;color:var(--v-deep);margin-bottom:0.5mm;">Forward All Calls</div><div style="font-family:var(--mono);font-size:7pt;color:var(--muted);">**21*[number]#</div></div>
+        </div>
+        <div style="background:var(--v-light);border:1px solid var(--border);border-radius:2mm;padding:3mm;display:flex;align-items:center;gap:2.5mm;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAABRAQAAAACC9HebAAABIklEQVR4nIVTS2qEQBSsp4Ku0jmAxoFcooWAXiVHyOxDxqxmM8ELJGdRCEyOoSjMMjrZKGi/YMjPMN15i6Yoitf1ql8T46tS6xsCC1wRNcfBSclZ8viFbe59FqPgUq9BmlQXEkx/+Z+asU/b1Sl+gY9Dc5L/LAt3+aGNQWzQTOThMSo7Wmk1YGZW8XxutH2abAjs1Jkt6e+6EbVyh4cXg59QDcFaoktMc2Xxfuddhnxl0FAaWChevWetxpnWqnwq8NYbPDe3UXxexIHhvcAdcyshekM+1S5qxBadaIw515zXyrUNfYhwHyOT+h1Dzf0o9raCoQ/SBNfJZLn/7NiZZCVHo+awKSYL+n/x4QfS5tyQz0TenA+kPh8nZKDFCNfXat4Bmd56/1oW4tQAAAAASUVORK5CYII=" width="38" height="38" style="border-radius:1mm;flex-shrink:0;" alt="QR">
+          <div><div style="font-size:7.5pt;font-weight:700;color:var(--v-deep);margin-bottom:0.5mm;">Forward Unanswered</div><div style="font-family:var(--mono);font-size:7pt;color:var(--muted);">**61*[number]#</div></div>
+        </div>
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:2mm;padding:3mm;display:flex;align-items:center;gap:2.5mm;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAABRAQAAAACC9HebAAABKElEQVR4nH2SwUrDQBRF78sMNKuELIWUBvwCdw0UJjt/x7rqRtvsuin2C/yP7iIE684vEGYk4DapG4uNTwK1WunMXV0uh8fMe5cYP8q9gwWOvCEy4ww5yeMcf7zgjzgsqpC1nUGe4c5PmP7nv+r8W9OczI984+uT+V4epgUCjIgdTEs+lsOyocTKEANV0Os591Nx2l/4ffIrx3s2z7uN0lfb2M6cRStQngSuf4mZEuHlOiocjFlQW3fOda9XdT5YpWayszLgGeKQMV7zzM7UCrdDTcXAykhzvxViDp7Y9wNm1oESXz37HM8QYfOglxf2jknBW0mPyee16xZ5Vt1kLx5Gzo4NopXKuXQyba3K4Mk1Z1qA09Sk9nvJlqDf5yMJ+5u7Hu5l7eE3+1Zlzbuo9jIAAAAASUVORK5CYII=" width="38" height="38" style="border-radius:1mm;flex-shrink:0;" alt="QR">
+          <div><div style="font-size:7.5pt;font-weight:700;color:#B91C1C;margin-bottom:0.5mm;">Cancel Forwarding</div><div style="font-family:var(--mono);font-size:7pt;color:#B91C1C;">##21#</div></div>
+        </div>
+      </div>
+      <div style="font-size:7.5pt;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--v);margin-bottom:2.5mm;">Scan to Dial &mdash; Verizon / CDMA Carriers</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3mm;">
+        <div style="background:var(--v-light);border:1px solid var(--border);border-radius:2mm;padding:3mm;display:flex;align-items:center;gap:2.5mm;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFEAAABRAQAAAACC9HebAAABKElEQVR4nH1TwWrCQBSctyvEU7TH0EDyC72lICS3fE5rPyAmNy/F/I43BUFv/YWkLvSo8ZRAt68EaqvF3TkNw/B2mPeWGGcU4pcCV7wm0jQcFDS41nHBJbegFiOuzB4UiTwkFdN//Q8914v5Tf2SS/EwuaWfITBb1ToFscWjaSjH3aah0OgBM3OxlcycG+eo07o+TL0XWx6dO777th93lg6D0aOiJZ5SyxwFJ5imIc19s8dbLHXRoISy7OsYo9xtXFtmVZACvPfIslPvywnyOMRuYu6wcqPKdYBIGjscBA3UUezvhTS/VRN5IgrL2JJZcqsy4Hlt9mCfR8xcwTHn6XktOj+LPq136GeOOq0tPWO2Ajp5t7XsS9PwY5Tq18R8G/0d/8D4T78BPrtkAjs9PxsAAAAASUVORK5CYII=" width="38" height="38" style="border-radius:1mm;flex-shrink:0;" alt="QR">
+          <div><div style="font-size:7.5pt;font-weight:700;color:var(--v-deep);margin-bottom:0.5mm;">Forward All Calls</div><div style="font-family:var(--mono);font-size:7pt;color:var(--muted);">*72[number]</div></div>
+        </div>
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:2mm;padding:3mm;display:flex;align-items:center;gap:2.5mm;">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAABFAQAAAAA09haEAAAA2ElEQVR4nH2SvQ3CMBSEz3YkqAiUkZACW4QuXeZhgYRMELEAe9CFijUMiZTWocGRMA/xI2iecXXy6az3vbMgvM8gPwL4KWiATAIknCsV2VNZ0x1sttkkN2H1hM8CQM7cfVUXpl63qCOD2PCuE+NuCiFZN4gJ7jwinle21UrN6vbiISoJoY2Nh2gyqCI7TPksmZEObdNb357nedJ4Xo6JjqrCjuc9CRGZAfzMz45AmeM7kijTdrtf8NkAr6n08urrqK0y5VJ+V2RvhcWa5Q2cgKaUejYr/v7JB1vpV4RSBL0zAAAAAElFTkSuQmCC" width="38" height="38" style="border-radius:1mm;flex-shrink:0;" alt="QR">
+          <div><div style="font-size:7.5pt;font-weight:700;color:#B91C1C;margin-bottom:0.5mm;">Cancel Forwarding</div><div style="font-family:var(--mono);font-size:7pt;color:#B91C1C;">*73</div></div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:2mm;font-size:7pt;">Replace <span style="font-family:var(--mono);">[number]</span> with your AI number including country code (e.g. 18129944371). Your personalised scan-to-dial QR codes with your exact number are also in your welcome email.</p>
+    </div>
 
     <!-- VoIP -->
     <h3>VoIP, Office Lines &amp; Landlines</h3>
@@ -1370,9 +1414,10 @@ li {
       </div>
       <div>
         <h4>How to Request Changes</h4>
-        <p>Email <strong style="color:var(--v-deep)">support@syntharra.com</strong> with your change request. Most changes are live within 24 hours.</p>
-        <div class="alert">
-          <p><strong>Pro tip:</strong> If you're launching a promotion or changing pricing, email us 24 hours before you want it live so your AI is updated in time.</p>
+        <p><strong style="color:var(--v-deep)">Option 1 &mdash; Dashboard (easiest)</strong><br>Log in at <strong>syntharra.com/dashboard</strong> and click <strong>Update My AI</strong>. Submit what you'd like changed &mdash; no email needed.</p>
+        <p style="margin-top:2mm;"><strong style="color:var(--v-deep)">Option 2 &mdash; Email</strong><br>Send your request to <strong style="color:var(--v-deep)">support@syntharra.com</strong>. Most changes are live within 24 hours.</p>
+        <div class="alert" style="margin-top:2mm;">
+          <p><strong>Pro tip:</strong> For promotions or pricing changes, submit 24 hours before go-live so your AI is ready in time.</p>
         </div>
       </div>
     </div>
@@ -1474,7 +1519,7 @@ li {
       <div class="quick-ref-item">
         <div class="quick-ref-q">"I want to update my business hours"</div>
         <div class="quick-ref-arrow">→</div>
-        <div class="quick-ref-a">Email <strong>support@syntharra.com</strong> with your new hours</div>
+        <div class="quick-ref-a">Use <strong>Update My AI</strong> on your dashboard, or email <strong>support@syntharra.com</strong></div>
       </div>
       <div class="quick-ref-item">
         <div class="quick-ref-q">"I want to add another notification email"</div>
