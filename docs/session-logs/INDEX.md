@@ -17,3 +17,4 @@
 | 2026-04-09 | re-register-agents-usage-alert-client-update-smoke | 47c9ecd | Re-registered MASTER+TESTING in Retell, built usage_alert.py, ran client-update workflow builder, smoke-tested update_client_agent.py (fixed 3 prompt_compiler bugs in the process) |
 | 2026-04-09 | agent-prompt-audit | f6b017c | Deep prompt audit: fixed 7 component issues, added vendor/wrong-number edges, hardcoded emergency number bug, all deployed to TESTING+MASTER; n8n workflow updated with same changes + timezone automation for new clients |
 | 2026-04-09 | rules-parity-fix | 2f38a3d | Added Rules 15-22 to RULES.md, closing FAILURES.md parity gap from agent prompt audit session |
+| 2026-04-10 | email-fixes-tier-testing | 4dbfec9 | Fixed garbled HTML in Send Welcome Email, agent_name now stores persona name (Emma not display name), added tier-aware plan card, restored PDF attachment |

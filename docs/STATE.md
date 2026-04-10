@@ -1,11 +1,11 @@
 # State — Syntharra Automations
 
-_Last updated: 2026-04-09_
+_Last updated: 2026-04-10_
 
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-2f38a3d chore(session): auto-backup local changes 2026-04-09
+4dbfec9 docs(rules): update Rule 29 â€” JotForm checkbox dual key pattern
 
 ## Go-live checklist
 see docs/GO-LIVE.md
