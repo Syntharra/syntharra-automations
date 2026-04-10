@@ -9,6 +9,10 @@ sends usage report email via Brevo.
 
 Idempotent: skips any (agent_id, billing_month) already in monthly_billing_snapshot.
 
+Schedule: runs on the 2nd of each month at 09:00 UTC (bills for the previous month).
+  0 9 2 * *  python tools/monthly_minutes.py
+  (2nd not 1st — gives Retell time to finalise last call records from month-end)
+
 Usage:
   python tools/monthly_minutes.py                   # previous calendar month
   python tools/monthly_minutes.py --month 2026-03   # specific month YYYY-MM

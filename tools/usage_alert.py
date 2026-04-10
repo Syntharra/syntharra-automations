@@ -14,6 +14,9 @@ Logic per active subscription:
 Billing cycle assumption: calendar month (matches monthly_minutes.py).
 billing_cycles row is created if it doesn't exist for the current month.
 
+Schedule: runs daily at 08:00 UTC.
+  0 8 * * *  python tools/usage_alert.py
+
 Usage:
   python tools/usage_alert.py                  # current month
   python tools/usage_alert.py --dry-run        # compute + log, no emails or DB writes
