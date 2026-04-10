@@ -21,6 +21,8 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 STATE    = ROOT / "docs" / "STATE.md"
 INDEX    = ROOT / "docs" / "session-logs" / "INDEX.md"

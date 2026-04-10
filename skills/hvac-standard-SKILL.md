@@ -12,7 +12,7 @@ description: >
 ---
 
 > **Single Syntharra product — $697/mo HVAC Standard. Premium retired 2026-04-08.**
-> **Last verified: 2026-04-10** — E2E 13/13 passing, 30-scenario call processor 90/90 passing.
+> **Last verified: 2026-04-10** — E2E 13/13, call processor 90/90, post-call analysis 25/25, email delivery 3/3.
 > **System status: PRE-LAUNCH — Telnyx vault keys needed from Dan; Stripe live mode pending.**
 
 ## retell-iac change workflow (canonical — do not bypass)
@@ -423,10 +423,8 @@ Headers: apikey + Authorization: Bearer {SB_SERVICE_ROLE_KEY}
 
 # TEST SUITES
 
-Three active test suites + one in-design. Run before any production change. Run order: E2E → Call Processor → (Post-Call Analysis when built).
+Four active test suites. Run before any production change. Run order: E2E → Call Processor → Post-Call Analysis → Email Delivery. Or run all at once with `python tools/run_full_test_suite.py`.
 > Agent Simulator (`tools/openai-agent-simulator.py`) is archived infra — was used for conversation flow testing. May be revived if agent prompt changes need validation.
-
-> **Testing System Design (2026-04-10):** Full multi-layer testing architecture documented at `docs/TESTING-SYSTEM-DESIGN.md`. Build it in the next session. Near-zero cost — no Retell voice minutes used.
 
 ---
 
@@ -523,20 +521,59 @@ python tools/test_call_processor.py --dry-run    # print payloads only
 
 ---
 
-## TEST SUITE 4 — Post-Call Analysis Quality (DESIGN READY, NOT YET BUILT)
+## TEST SUITE 4 — Post-Call Analysis Quality + Email Delivery
 
-**Design:** `docs/TESTING-SYSTEM-DESIGN.md`
-**Status: Not yet built — build in next session**
+**Status: 25/25 ✅ (Layer 1) + 3/3 ✅ (Layer 3) — Verified 2026-04-10**
+**Design doc:** `docs/TESTING-SYSTEM-DESIGN.md`
 
-Tests whether Retell's gpt-4.1-mini post-call analysis correctly classifies transcripts as `is_lead`, `urgency`, `is_spam`. This is the gap that existing suites don't cover.
+Tests whether Retell's gpt-4.1-mini post-call analysis correctly classifies transcripts as `is_lead`, `urgency`, `is_spam`, and that Brevo delivers the resulting email end-to-end.
 
-| Layer | Script (to build) | What it tests | Cost |
-|---|---|---|---|
-| 1 | `tools/test_post_call_analysis.py` | 25 transcript scenarios → correct `is_lead`/`urgency`/`is_spam` | FREE (`claude -p`) |
-| 2 | `tools/test_email_delivery.py` | Brevo actually delivered to inbox | FREE (Gmail MCP) |
-| Runner | `tools/run_full_test_suite.py` | Orchestrates all 3 layers | — |
+```bash
+python tools/run_full_test_suite.py              # run all 3 layers (recommended)
+python tools/run_full_test_suite.py --layer 1    # post-call analysis only
+python tools/run_full_test_suite.py --layer 3    # email delivery only
+python tools/run_full_test_suite.py --skip-gen   # skip transcript generation
+python tools/run_full_test_suite.py --no-email   # skip Layer 3 (no Gmail MCP needed)
+```
 
-**25 scenarios:** 15 should-notify (lead/emergency), 7 should-filter (spam/wrong number/billing), 3 edge cases.
+| Layer | Script | What it tests | Cost | Threshold |
+|---|---|---|---|---|
+| 1 | `tools/test_post_call_analysis.py` | 25 transcripts → correct `is_lead`/`urgency`/`is_spam` | FREE (`claude -p`) | 95% (24/25) |
+| 2 | (call processor — see Suite 3) | n8n routing filter | FREE | 90/90 |
+| 3 | `tools/test_email_delivery.py` | Brevo delivered to inbox | FREE (Gmail MCP) | 3/3 |
+
+**Supporting tools:**
+- `tools/gen_transcripts.py` — generate synthetic transcripts once, cached. `--force` to regenerate.
+- `tools/fixtures/scenarios.json` — 25 scenario definitions (groups A/B/C, expected fields)
+- `tools/fixtures/post_call_analysis_config.json` — field defs pulled from MASTER agent via Retell API
+- `tools/fixtures/transcripts/scenario_{id}.txt` — cached transcripts (run `gen_transcripts.py` first)
+
+**25 scenarios:** 15 should-notify (group A: lead/emergency), 7 should-filter (group B: spam/wrong-number/billing), 3 edge cases (group C).
+
+### Urgency check logic
+Only `emergency` vs non-emergency matters for routing. The test enforces:
+- `expected=emergency` → must be emergency (safety-critical, always fail if missed)
+- `expected=none` → must NOT be emergency (spam/robocall false-alarm would be wrong)
+- `expected=normal/high/low` → NOT enforced — n8n only gates on `urgency=emergency`
+
+### Implementation details (critical for debugging)
+- `claude -p` subprocesses **must** run from a temp directory with a neutral `CLAUDE.md` ("Output only valid JSON.") — otherwise the project CLAUDE.md + superpowers skills activate and Claude returns HVAC assistant responses instead of JSON.
+- Prompts passed via **stdin** (`--input-format text`), not CLI args — avoids Windows 8191-char limit.
+- Windows subprocess: `['cmd', '/c', 'claude', ...]` not `['claude', ...]` — resolves `claude.cmd`.
+- Layer 1 uses `ThreadPoolExecutor(max_workers=5)` — wall-clock ~30s vs 2+ min serial.
+- Layer 3 uses test agent `agent_9cb7cb7259ed42205734e36365` (Syntharra Test HVAC, `lead_email=daniel@syntharra.com`).
+
+### When to run
+- After any change to `post_call_analysis_data` prompt on the MASTER agent
+- After any change to post-call analysis field definitions in Retell
+- Before promoting TESTING → MASTER (run on TESTING agent field config)
+- Anytime Brevo deliverability is in question (run Layer 3 standalone)
+
+### Post-Call Analysis Gotchas
+- **Transcripts cached** — `gen_transcripts.py` skips existing files. Use `--force` if scenario descriptions changed.
+- **Group B transcripts must be non-HVAC** — generation prompt deliberately neutral (no "Sophie"/"HVAC"). If re-generating, verify group B transcripts don't describe HVAC repair calls.
+- **is_spam field** — only checked when `expected` explicitly includes it. Spam+emergency (scenario 23) is an edge case: spam flag is suppressed but emergency routing still fires.
+- **Fix discipline** — when a scenario fails: max 10 words per fix, change `post_call_analysis_data` prompt only. NEVER touch Sophie's conversation prompt to fix analysis failures.
 **Swarm:** 5 parallel subagents × 5 scenarios each. ~30s total vs 2min serial.
 **Fix rule:** When a scenario fails, update the post-call analysis config (not Sophie's conversation prompt). Max 10 words per fix.
 

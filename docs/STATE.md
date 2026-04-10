@@ -5,7 +5,7 @@ _Last updated: 2026-04-10_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-2c41bba docs(skills): update all Syntharra skills to current architecture (2026-04-10)
+44a971a feat(testing): implement 3-layer agent testing system
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,11 +116,7 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- Dan: add Telnyx vault keys (api_key + retell_sip_connection_id) to activate phone chain
-- Dan: provide Stripe live secret key for live mode migration (P1 go-live blocker)
-- Dan: bind +18129944371 to MASTER in Retell dashboard
-- Run P1 3-tier pricing E2E test (TASKS.md)
-- Build real E2E cleanup workflow (URbQPNQP26OIdYMo placeholder currently 404)
+Telnyx vault keys from Dan (phone chain), Stripe live mode migration
 
 ## What's in flight
 
