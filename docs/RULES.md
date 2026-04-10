@@ -208,3 +208,33 @@
 - After any flow edit session, check components[] array for any entries with placeholder text ("Describe what the AI should say or do") or zero node references. Delete them before leaving the flow.
 - Phantom components block Retell's Auto Layout button and can cause validator errors on subsequent PATCHes.
 - PATCH `{"components": []}` clears the array safely if no shared components are in use (all components are inlined at build time in retell-iac).
+
+## 34. JotForm checkbox fields always use the `q{N}_option_` key pattern inside rawRequest
+
+- JotForm checkbox fields always use the `q{N}_option_` key pattern inside rawRequest — NOT the named key shown in the Jotform field editor.
+- New-style checkboxes (added via MCP) may use `q{N}_{camelName}` and return arrays. Always `normalizeList()` to handle both patterns.
+- After adding any new checkbox field: submit a test form, inspect the rawRequest keys in n8n webhook output, then update the parse node with the exact key. Never assume.
+
+## 35. When a reconcile/enrichment node fires at end of a pipeline, always verify the target table has rows
+
+- When a reconcile/enrichment node fires at end of a pipeline, always verify the target table has rows to PATCH. If the node is the CREATOR of that row (not an updater), use POST not PATCH.
+- Supabase PATCH on 0 matched rows returns 200 — a silent no-op with no error signal.
+- Before any INSERT, inspect `information_schema.columns` and `pg_constraint` for NOT NULL + CHECK constraints. Never guess enum values.
+
+## 36. Any node that depends on optional external credentials (Telnyx, etc.) MUST gracefully skip
+
+- Any node that depends on optional external credentials (Telnyx, etc.) MUST gracefully return a skip marker rather than throw. Any node that can fail independently of the happy path (email, HubSpot, Slack) MUST have `onError: continueRegularOutput` set.
+- A hard `throw` in a Code node crashes the entire workflow execution even when the failing operation was optional.
+- Pattern: `if (!apiKey) return [{ json: { _skip: true, reason: 'vault key missing' } }];`
+
+## 37. On Windows, never print n8n workflow JSON to stdout
+
+- On Windows, never print n8n workflow JSON to stdout. Always write to a file with `open(path, 'w', encoding='utf-8')`.
+- Windows default stdout encoding is cp1252. n8n Code nodes contain unicode (emoji, special chars). `print()` crashes with `UnicodeEncodeError`.
+- All Python tools that handle n8n workflow JSON must use explicit `encoding='utf-8'` for any file I/O.
+
+## 38. Before any INSERT to a Supabase table, run a schema check for NOT NULL + CHECK constraints
+
+- Before any INSERT to a Supabase table, run `SELECT column_name, is_nullable, column_default FROM information_schema.columns WHERE table_name = '...'` AND `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = '...'::regclass AND contype = 'c'`.
+- Hidden NOT NULL and CHECK constraints exist on many tables (e.g. `client_subscriptions.plan_type` requires `'standard'` or `'premium'` — `'hvac_standard'` is rejected).
+- Never guess enum/check values — query the schema first.
