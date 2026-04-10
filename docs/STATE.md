@@ -5,7 +5,7 @@ _Last updated: 2026-04-10_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-5a98756 chore(session): session-end 2026-04-10 email-fixes-tier-testing
+d523528 feat(infra): deploy_billing_crons.py + consolidated go-live checklist
 
 ## Go-live checklist
 see docs/GO-LIVE.md
