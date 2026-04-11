@@ -308,8 +308,85 @@ def sb_post(table: str, payload: dict, sb_key: str) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
+# Blog publisher trigger + run logger
+# ---------------------------------------------------------------------------
+
+N8N_BASE = "https://n8n.syntharra.com"
+BLOG_PUBLISHER_WF_ID = "j8hExewOREmRp3Oq"
+
+
+def trigger_n8n_blog_publisher() -> bool:
+    """
+    Trigger one blog post publish via the n8n Blog Auto-Publisher workflow.
+    Calls POST /api/v1/workflows/{id}/run on the n8n Railway instance.
+    Returns True on success, False on failure.
+    Requires n8n Railway api_key in syntharra_vault.
+    """
+    n8n_key = fetch_vault("n8n Railway", "api_key")
+    if not n8n_key:
+        print("  [WARN] n8n api_key not in vault — blog trigger skipped", file=sys.stderr)
+        return False
+    url = f"{N8N_BASE}/api/v1/workflows/{BLOG_PUBLISHER_WF_ID}/run"
+    req = urllib.request.Request(
+        url, data=b"{}", method="POST",
+        headers={"X-N8N-API-KEY": n8n_key, "Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            exec_id = result.get("executionId") or result.get("data", {}).get("executionId")
+            print(f"  [Blog] Triggered blog publisher — execution {exec_id}")
+            return True
+    except Exception as exc:
+        print(f"  [WARN] Blog publisher trigger failed: {exc}", file=sys.stderr)
+        return False
+
+
+def log_brain_run(
+    run_at: str,
+    status: str,
+    plan: dict,
+    results: list,
+    sb_key: str,
+) -> None:
+    """
+    Write a summary row to marketing_brain_log in Supabase.
+    Table columns: run_at, status, plan (jsonb), results (jsonb).
+    Silently skips if the table doesn't exist yet.
+    """
+    row = {
+        "run_at": run_at,
+        "status": status,
+        "plan": json.dumps(plan),
+        "results": json.dumps(results),
+    }
+    result = sb_post("marketing_brain_log", row, sb_key)
+    if result and isinstance(result, list) and result:
+        print(f"  [Log] Run logged → id={result[0].get('id')}")
+    else:
+        print("  [Log] marketing_brain_log write skipped (table may not exist yet)")
+
+
+# ---------------------------------------------------------------------------
 # Phase 1 — REVIEW
 # ---------------------------------------------------------------------------
+
+
+def get_top_intelligence(sb_key: str, limit: int = 10) -> list[dict]:
+    """
+    Read top-confidence rows from marketing_intelligence written by research_agent.py.
+    Returns a list of findings sorted by confidence desc, capped at `limit`.
+    Gracefully returns [] if the table doesn't exist or has no rows yet.
+    """
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    rows = sb_get("marketing_intelligence", {
+        "created_at": f"gte.{cutoff}",
+        "confidence": "gte.0.6",
+        "select": "source,title,url,hook,angle,confidence,view_count",
+        "order": "confidence.desc",
+        "limit": str(limit),
+    }, sb_key)
+    return rows if isinstance(rows, list) else []
 
 
 def get_last_week_performance(sb_key: str) -> dict:
@@ -438,12 +515,19 @@ def _pick_subject_variant(performance: dict) -> str:
     return DEFAULT_SUBJECT_VARIANTS[0]
 
 
-def generate_weekly_plan(performance: dict, variants: list) -> dict:
+def generate_weekly_plan(
+    performance: dict,
+    variants: list,
+    intelligence: list | None = None,
+) -> dict:
     """
     Generate the structured weekly marketing plan.
 
     Returns a dict with cold_email, reddit, linkedin, short_form, rationale.
+    If `intelligence` is provided (from research_agent / marketing_intelligence table),
+    the top signals are included in the plan rationale and short-form hooks.
     """
+    intelligence = intelligence or []
     cities = _pick_cities(performance, count=3)
     best_subject = _pick_subject_variant(performance)
 
@@ -503,6 +587,19 @@ def generate_weekly_plan(performance: dict, variants: list) -> dict:
             "platform": SHORT_FORM_VARIANTS[key]["platform"],
         })
 
+    # Incorporate top intelligence signals into rationale + short-form hooks
+    top_signals = intelligence[:3] if intelligence else []
+    if top_signals:
+        sig_titles = [s["title"][:80] for s in top_signals]
+        rationale_parts.append(
+            f"Top research signals this week: {'; '.join(sig_titles)}"
+        )
+        # Override first short-form hook with the highest-confidence signal hook
+        best_signal = top_signals[0]
+        if short_form_plan and best_signal.get("hook"):
+            short_form_plan[0]["hook"] = best_signal["hook"][:200]
+            short_form_plan[0]["intelligence_source"] = best_signal.get("url", "")
+
     return {
         "week_of": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "cold_email": [
@@ -517,6 +614,7 @@ def generate_weekly_plan(performance: dict, variants: list) -> dict:
         "reddit": reddit_plan,
         "linkedin": linkedin_plan,
         "short_form": short_form_plan,
+        "intelligence_signals": top_signals,
         "rationale": " ".join(rationale_parts),
     }
 
@@ -1074,6 +1172,15 @@ def run_weekly_cycle(dry_run: bool = False, force_execute: bool = False, review_
     variants = score_variant_performance(sb_key)
     print(f"  Content variants scored: {len(variants)}")
 
+    # Read top-confidence signals from research_agent (daily Reddit/YouTube scrape)
+    intelligence = get_top_intelligence(sb_key, limit=10)
+    if intelligence:
+        print(f"  Marketing intelligence signals (top {len(intelligence)}, conf ≥0.6):")
+        for sig in intelligence[:5]:
+            print(f"    [{sig['source']}] conf={sig['confidence']} — {sig['title'][:72]}")
+    else:
+        print("  No recent marketing intelligence — research_agent may not have run yet.")
+
     if review_only:
         print("\n[--review-only] Stopping after review.")
         return
@@ -1082,7 +1189,7 @@ def run_weekly_cycle(dry_run: bool = False, force_execute: bool = False, review_
     # Phase 2 — PLAN                                                       #
     # ------------------------------------------------------------------ #
     print("\n--- Phase 2: PLAN ---")
-    plan = generate_weekly_plan(performance, variants)
+    plan = generate_weekly_plan(performance, variants, intelligence=intelligence)
     cities_display = [c['city'] + ", " + c['state'] for c in plan['cold_email']]
     print(f"  Cities: {cities_display}")
     print(f"  Reddit: {[r['subreddit'] for r in plan['reddit']]}")
@@ -1187,9 +1294,18 @@ def run_weekly_cycle(dry_run: bool = False, force_execute: bool = False, review_
     for sf in plan.get("short_form", []):
         all_results.append(("short_form", {**sf, "status": "scripts_posted_to_slack"}))
 
+    # Blog publisher — trigger one post publish per weekly cycle
+    print("\n  [Blog] Triggering n8n blog publisher…")
+    if not dry_run:
+        blog_triggered = trigger_n8n_blog_publisher()
+        all_results.append(("blog", {"status": "triggered" if blog_triggered else "failed"}))
+    else:
+        print("  [Blog] DRY RUN — blog publisher trigger skipped")
+
     # ------------------------------------------------------------------ #
     # Phase 5 — TRACK                                                      #
     # ------------------------------------------------------------------ #
+    run_at = datetime.now(timezone.utc).isoformat()
     print("\n--- Phase 5: TRACK ---")
     for channel, details in all_results:
         campaign_id = record_campaign(channel, details, sb_key)
@@ -1197,6 +1313,16 @@ def run_weekly_cycle(dry_run: bool = False, force_execute: bool = False, review_
             print(f"  Logged {channel} campaign → id={campaign_id}")
         else:
             print(f"  [WARN] Failed to log {channel} campaign to Supabase")
+
+    # Write marketing_brain_log entry
+    if not dry_run:
+        log_brain_run(
+            run_at=run_at,
+            status="complete",
+            plan=plan,
+            results=[{"channel": ch, **r} for ch, r in all_results],
+            sb_key=sb_key,
+        )
 
     # Final summary to Slack
     if slack_token:
@@ -1207,6 +1333,7 @@ def run_weekly_cycle(dry_run: bool = False, force_execute: bool = False, review_
             f"  • Reddit posts: {sum(1 for ch, r in all_results if ch == 'reddit' and r.get('status') == 'posted')}/3\n"
             f"  • LinkedIn posts: {sum(1 for ch, r in all_results if ch == 'linkedin' and r.get('status') == 'posted')}/2\n"
             f"  • Short-form scripts: posted to this channel for filming\n"
+            f"  • Blog post: {'triggered' if not dry_run else 'skipped (dry run)'}\n"
             f"  Total campaigns logged to Supabase: {len(all_results)}"
         )
         _slack_reply(SLACK_CHANNEL, plan_ts or "", summary, slack_token)

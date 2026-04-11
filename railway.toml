@@ -1,6 +1,6 @@
-# railway.toml — Syntharra Billing Cron Services
+# railway.toml — Syntharra Cron Services
 #
-# This repo deploys TWO Railway cron services from the same source.
+# This repo deploys THREE Railway cron services from the same source.
 # Create each as a separate Railway service pointing to this repo,
 # with the start command and schedule configured per service.
 #
@@ -11,6 +11,14 @@
 # Service 2: syntharra-monthly-billing
 #   Start command:  python tools/monthly_minutes.py
 #   Cron schedule:  0 9 2 * *  (2nd of month 09:00 UTC)
+#
+# Service 3: syntharra-research-agent
+#   Start command:  python tools/research_agent.py
+#   Cron schedule:  0 6 * * *  (daily 06:00 UTC)
+#   Purpose: Scrapes Reddit + YouTube for HVAC niche signals, writes to
+#            marketing_intelligence table in Supabase. Feeds marketing_brain
+#            Phase 1 REVIEW with top-confidence content opportunities.
+#   Env vars needed: SUPABASE_URL, SUPABASE_SERVICE_KEY (same as other services)
 #
 # All services require the same env vars — see docs/GO-LIVE.md §Cron Setup.
 #
