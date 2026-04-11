@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-3be1694 feat(phase0): marketing digest + cost tracker + pilot cron + Retell TESTING ready
+a5982f3 feat(phase0): Phase 0 expansion â€” Railway crons LIVE + community + press + link building
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,19 +116,19 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- DAN [5 MIN]: Retell dashboard click test per docs/retell_pilot_expired_test_plan.md — set agent_level_dynamic_variables.pilot_expired='true' on TESTING agent, start a web call, verify pilot-expired message plays, remove variable, verify normal flow still works. Reply 'go' and I'll run promote.py --dry-run then promote.py for real.
-- DAN: verify the 9 SEO comparison pages render correctly on syntharra.com (spot-check 2-3 of them)
-- DAN: review leads/affiliate_outreach_20260411.txt — verify personalization hooks against each of the 8 HVAC YouTubers' real recent videos, tweak before sending
-- DAN: deploy pilot_lifecycle cron — run 'python tools/deploy_billing_crons.py' (4 entries in CRON_SERVICES, 1 new 'syntharra-pilot-lifecycle'). Safe no-op while there are 0 live pilots.
-- DAN: run 'python tools/upload_brevo_templates.py --update' after smoke-testing one template (Brevo PUT endpoint shape unverified)
-- DAN [BLOCKER]: film founder VSL (spec § 3.2, ~1 hour)
-- DAN [BLOCKER]: Telnyx vault keys (api_key + retell_sip_connection_id) — without this pilots can't receive calls
-- DAN [BLOCKER]: Stripe secret_key_live — Day 7 smoke test blocker
-- DAN [BLOCKER]: register stripe-webhook URL in Stripe dashboard + vault webhook_signing_secret, rotate Mux secret
-- Next autonomous work: build a daily marketing digest cron (schedule marketing_digest.py --post-to-slack daily 08:00 UTC via deploy_billing_crons.py)
-- Next autonomous work: more community posts (r/smallbusiness, r/Entrepreneur, r/HVAC_Trade)
-- Next autonomous work: SEO comparison pages 10-15 (Answer4u, Davinci Virtual, SBA answering services, niche HVAC-specific services)
-- Next autonomous work: build a syntharra.com/affiliate?ref=slug attribution JS snippet if affiliate.html doesn't already handle it
+- DAN [5 MIN — ONLY THING BLOCKING PILOT_EXPIRED PROMOTION]: Retell dashboard click test per docs/retell_pilot_expired_test_plan.md. Set agent_level_dynamic_variables.pilot_expired='true' on TESTING, web call, verify, remove variable, web call again, verify. Reply 'go' and I'll run promote.py.
+- DAN: VSL filming (~1 hour, spec § 3.2) — blocks start.html Mux embed
+- DAN: vault Telnyx api_key + retell_sip_connection_id — without these pilots can't receive calls
+- DAN: vault Stripe secret_key_live — Day 7 smoke test blocker
+- DAN: register stripe-webhook URL + vault webhook_signing_secret
+- DAN: rotate Mux secret (original sent in plaintext chat)
+- Next autonomous work: WebFetch each link-building target, resolve contact_url_or_unknown → real contact form URLs
+- Next autonomous work: spot-check UNVERIFIED pricing claims on the 10 new brand comparison pages against their live pricing pages
+- Next autonomous work: build syntharra.com/partners?ref=slug attribution page (currently reuses affiliate.html)
+- Next autonomous work: Google Search Console setup docs — submit 34 pages via sitemap, verify ownership via DNS TXT
+- Next autonomous work: sitemap.xml auto-generation tool (currently syntharra.com may not have one)
+- Next autonomous work: daily marketing digest cron (marketing_digest.py --post-to-slack daily 08:00 UTC via deploy_billing_crons.py)
+- Next autonomous work: deploy_billing_crons.py idempotency: add service_id vault lookup so re-runs skip existing services cleanly (currently relies on service_exists() name match which is fine but brittle)
 
 ## Phase 0 progress (marketing build)
 
@@ -174,6 +174,30 @@ Day 3 closed the loop on the dark-launched pilot funnel. Every system in the lea
 - **Mux credentials VAULTED 2026-04-11** as `service_name='Mux'`, `key_type='token_id'` + `key_type='secret_key'`. Day 5 Task 35 (Mux upload) is unblocked once VSL is filmed. Dan should rotate the secret in Mux dashboard ASAP since the original was sent in chat (leak vector exists in conversation log).
 - **Phase 0 landing page scaffolded in syntharra-website sibling repo** (commit `f9cddc1`, NOT pushed). `start.html` (227 lines, 1 style block, light-theme Syntharra chrome, hero with the r/HVAC quote, VSL placeholder div, 200-min/14-day pilot offer card, 4-question FAQ, final CTA pointing to pilot Jotform `261002359315044?pilot_mode=true`) + `marketing-tracker.js` (234 lines, vanilla, sendBeacon-preferred, fires page_view/cta_click/scroll_depth/vsl_*_pct events to the marketing-event-ingest Edge Function). Pushing requires Mux playback ID swap-in OR explicit dark-launch decision.
 - **`docs/RULES.md` #42 added:** `pause_retell_agent` must NEVER target MASTER. Track B's safety rail captured as a standing rule.
+
+### Post-Day-4 expansion batch 4 — 2026-04-11 — Absurd-growth expansion (Dan: "do everything")
+
+Dan's direction: "grow grow grow at an absurd rate — do everything except Stripe live, Telnyx, VSL film." Full-delegation session. 5 parallel subagents + sequential work by me.
+
+**PROD-IMPACT WORK:**
+- **9 Brevo pilot templates RE-UPLOADED** via `upload_brevo_templates.py --update`. Light-theme rebrand LIVE on Brevo. All template IDs 1-9 preserved. Brevo PUT shape worked first-try.
+- **4 Railway cron services DEPLOYED for the first time** (previously existed as Python tools but never pushed): `syntharra-usage-alert` / `syntharra-monthly-billing` / `syntharra-weekly-report` / `syntharra-pilot-lifecycle`. All service IDs vaulted. Billing / reporting / pilot state machine now running automatically.
+- **`deploy_billing_crons.py` bug-fix trilogy** — 3 bugs blocked live deploy: URL-encoding (literal space in "Retell AI"), cp1252 em-dash crash, and `ServiceCreateInput.branch` schema drift (Railway moved it from `ServiceSourceInput` to top-level; verified via GraphQL introspection). Plus Cloudflare 1010 bypass via User-Agent header. All fixed.
+- **Hunter.io key VAULTED** (`service_name='Hunter.io', key_type='api_key'`). `find_email_from_website.py` auto-uses as fallback when homepage scrape misses — verified end-to-end.
+
+**SEO EXPANSION (`syntharra-website` commit `9b7366a`):**
+- **25 new landing pages** bringing total from 9 → **34 live pages** on syntharra.com.
+- **10 more brand comparison pages:** `vs-answerforce`, `vs-nexa`, `vs-specialty-answering`, `vs-davinci-virtual`, `vs-voicenation`, `vs-gabbyville`, `vs-unicom`, `vs-no-more-phone-tag`, `vs-posh`, `vs-map-communications`. 5 math box + 5 2am test split. 10 fresh cities (San Diego / Kansas City / Nashville / Minneapolis / Indianapolis / St. Louis / Columbus / Louisville / Salt Lake City / Portland).
+- **15 city-targeted landing pages** (`hvac-answering-service-{city}.html`) with per-city seasonal pain angles (monsoons, freeze events, Gulf humidity, altitude/wildfire, etc.). LocalBusiness + FAQPage JSON-LD per page. Cities: Phoenix / Dallas / Houston / Atlanta / Miami / Tampa / Las Vegas / Denver / Charlotte / Orlando / San Antonio / Jacksonville / Austin / Oklahoma City / Tucson.
+
+**AUTOMATIONS CONTENT + TOOLS (commit `a5982f3`):**
+- **`docs/community_post_drafts.md`** expanded 174 → 845 lines. 20 new drafts: Reddit (8) / FB groups (5) / LinkedIn (5) / HVAC-Talk (2). First-person founder voice.
+- **`tools/generate_press_release.py`** (NEW, 406 lines) — AP-style launch/feature/milestone releases + 11-publication TRADE_PUBLICATIONS constant.
+- **`tools/build_linkbuilding_outreach.py`** (NEW, 772 lines) — 30 link-building targets, 2-touch sequences, tier/category filtering.
+- **`tools/build_affiliate_outreach.py`** — fixed 4 broken YouTube URLs + creator-name data bug; HVAC_YOUTUBERS now **7 verified** (was 8 with 4 broken). All 7 hooks rewritten with real video references.
+- **9 live SEO pages verified rendering correctly** via raw curl (all HTTP 200, head metadata present).
+
+**Client production impact: zero.** MASTER Retell agent unchanged. Still awaiting Dan's 5-min click test before promotion.
 
 ### Post-Day-4 expansion batch 3 — 2026-04-11 — 4 more SEO pages + marketing digest + cost tracker + pilot cron + Retell TESTING ready
 
