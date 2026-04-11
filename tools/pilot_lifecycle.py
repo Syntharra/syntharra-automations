@@ -59,25 +59,33 @@ from typing import Optional
 # Constants — verify against docs/REFERENCE.md before go-live
 # --------------------------------------------------------------------------
 
-# TODO: fetch real price ID from docs/REFERENCE.md after stripe_pilot_setup.py runs.
-# This is the $697/mo HVAC Standard recurring price created in Stripe test mode.
-STRIPE_HVAC_STANDARD_PRICE_ID = "price_TODO"
+# Stripe HVAC Standard recurring price — $697/mo, USD, charge_automatically.
+# Created 2026-04-11 in TEST MODE via tools/stripe_pilot_setup.py.
+# Product: prod_UJb4pQDwyQ7lgW
+# When Stripe live mode is unblocked, run stripe_pilot_setup.py with the live
+# secret and replace this constant. Also vault the live price ID under
+# service_name='Stripe', key_type='price_hvac_standard_live'.
+STRIPE_HVAC_STANDARD_PRICE_ID = "price_1TKxruECS71NQsk8yspZnj2B"
 
-# Brevo template IDs — populated after upload_brevo_templates.py runs.
-# TODO: replace with real integer IDs from Brevo after upload.
+# Brevo template IDs — populated by tools/upload_brevo_templates.py 2026-04-11.
+# These IDs are stable across runs because the upload script is idempotent
+# (find-by-name then return existing ID; otherwise POST new).
+# Sender during upload was daniel@syntharra.com (only verified sender on the
+# Syntharra Brevo account as of 2026-04-11). Per-template sender override is
+# possible at send time via the body of POST /v3/smtp/email if needed.
 BREVO_TEMPLATE_IDS: dict[str, int] = {
-    "pilot-welcome": 0,           # TODO
-    "pilot-day-3": 0,             # TODO
-    "pilot-day-7": 0,             # TODO
-    "pilot-day-12": 0,            # TODO
-    "pilot-converted": 0,         # TODO
-    "pilot-card-added": 0,        # TODO
-    "pilot-expired": 0,           # TODO
-    "pilot-winback-16": 0,        # TODO
-    "pilot-winback-30": 0,        # TODO
+    "pilot-welcome":    7,
+    "pilot-day-3":      4,
+    "pilot-day-7":      5,
+    "pilot-day-12":     3,
+    "pilot-converted":  2,
+    "pilot-card-added": 1,
+    "pilot-expired":    6,
+    "pilot-winback-16": 8,
+    "pilot-winback-30": 9,
 }
 
-BRAND_SENDER = {"name": "Syntharra", "email": "founders@syntharra.com"}
+BRAND_SENDER = {"name": "Syntharra", "email": "daniel@syntharra.com"}
 DASHBOARD_BASE = "https://syntharra.com/dashboard.html"
 ADD_CARD_BASE = "https://syntharra.com/add-card"  # TODO: confirm against landing page once built
 

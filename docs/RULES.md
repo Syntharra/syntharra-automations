@@ -257,3 +257,10 @@
 - Windows default stdout encoding is cp1252. Any tool that prints non-ASCII content (unicode arrows, emoji, special chars from FAILURES.md, n8n JSON) will crash with `UnicodeEncodeError`.
 - Add `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` immediately after `import sys` in every Python tool.
 - This is already the pattern in most tools — apply it universally when creating new tools.
+
+## 42. `pause_retell_agent` must NEVER be called with the MASTER agent ID
+
+- `pause_retell_agent` (defined in `tools/pilot_lifecycle.py` Day 4 work) PATCHes a Retell agent's `agent_level_dynamic_variables.pilot_expired = 'true'` to gracefully end calls during pilot expiration. It is meant for **pilot client clones only**.
+- If anyone ever passes the Standard MASTER `agent_b46aef9fd327ec60c657b7a30a` to this function, every future client clone inherits the paused state when the n8n onboarding workflow clones from MASTER. The entire HVAC Standard product breaks for new signups.
+- Any function that takes `agent_id` and PATCHes Retell variables MUST add an explicit guard: `if agent_id == 'agent_b46aef9fd327ec60c657b7a30a': raise ValueError('refusing to pause MASTER')`.
+- This rule was raised by Track B during Phase 0 plan-writing 2026-04-11 as a safety rail. Add the explicit guard to `pause_retell_agent` when implementing Day 4 Task 22.

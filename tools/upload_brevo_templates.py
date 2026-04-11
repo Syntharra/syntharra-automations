@@ -33,7 +33,12 @@ import urllib.request
 TEMPLATE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "shared", "email-templates"
 )
-SENDER = {"name": "Syntharra", "email": "founders@syntharra.com"}
+# Brevo requires the sender to be a verified Sender Identity (or come from an
+# authenticated domain). As of 2026-04-11 the only verified sender on the
+# Syntharra Brevo account is daniel@syntharra.com (verified via GET /v3/senders).
+# If you add founders@/support@/reports@ in the Brevo dashboard, switch back.
+# The transactional send call can override `sender` per email if needed.
+SENDER = {"name": "Syntharra", "email": "daniel@syntharra.com"}
 BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/templates"
 SUBJECT_RE = re.compile(r"<!--\s*subject:\s*(.+?)\s*-->", re.IGNORECASE | re.DOTALL)
 
@@ -59,7 +64,46 @@ def extract_subject(html: str, fallback: str) -> str:
     return m.group(1).strip()
 
 
+def _brevo_headers() -> dict:
+    return {
+        "api-key": env("BREVO_API_KEY"),
+        "Content-Type": "application/json",
+        "accept": "application/json",
+    }
+
+
+def find_existing(template_name: str) -> int | None:
+    """Idempotency check: GET /v3/smtp/templates and return the ID of any
+    template whose name matches `template_name`. Returns None if no match.
+    Brevo paginates at 50 items max per page; we walk pages until we find or
+    exhaust."""
+    offset = 0
+    page_size = 50
+    while True:
+        url = f"{BREVO_ENDPOINT}?limit={page_size}&offset={offset}&sort=desc"
+        req = urllib.request.Request(url, headers=_brevo_headers(), method="GET")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read().decode("utf-8") or "{}")
+        except urllib.error.HTTPError as e:
+            sys.exit(f"Brevo list failed: {e.code} {e.read().decode()[:500]}")
+        templates = data.get("templates") or []
+        for t in templates:
+            if t.get("name") == template_name:
+                return int(t.get("id"))
+        if len(templates) < page_size:
+            return None
+        offset += page_size
+
+
 def upload(template_name: str, subject: str, html: str) -> dict:
+    """Idempotent upload: if a template with this exact name already exists,
+    return its existing id (no PUT, no POST). Otherwise POST a new one. This
+    means re-running the script after a partial failure is safe."""
+    existing = find_existing(template_name)
+    if existing is not None:
+        return {"id": existing, "_source": "existing"}
+
     payload = {
         "sender": SENDER,
         "templateName": template_name,
@@ -71,15 +115,13 @@ def upload(template_name: str, subject: str, html: str) -> dict:
         BREVO_ENDPOINT,
         data=json.dumps(payload).encode("utf-8"),
         method="POST",
-        headers={
-            "api-key": env("BREVO_API_KEY"),
-            "Content-Type": "application/json",
-            "accept": "application/json",
-        },
+        headers=_brevo_headers(),
     )
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
-            return json.loads(resp.read().decode("utf-8") or "{}")
+            data = json.loads(resp.read().decode("utf-8") or "{}")
+            data["_source"] = "created"
+            return data
     except urllib.error.HTTPError as e:
         sys.exit(f"Brevo upload failed for {template_name}: {e.code} {e.read().decode()[:500]}")
 
@@ -105,8 +147,9 @@ def main() -> None:
             continue
         data = upload(template_name=slug, subject=subject, html=html)
         template_id = data.get("id")
-        results.append({"slug": slug, "template_id": template_id, "subject": subject})
-        print(f"    → Brevo ID: {template_id}")
+        source = data.get("_source", "?")
+        results.append({"slug": slug, "template_id": template_id, "subject": subject, "source": source})
+        print(f"    -> Brevo ID: {template_id}  ({source})")
 
     if args.dry_run:
         print("\n[DRY-RUN] No uploads performed.")
