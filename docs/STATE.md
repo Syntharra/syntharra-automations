@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-42a544e feat(phase0): Day 3 dark-launch â€” Brevo upload + Stripe setup + 3 Edge Functions + Send Welcome pilot-skip + RULES #42
+eee258c feat(phase0): Day 4 â€” Retell pilot_expired component + cold outreach engine + community post drafts
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,10 +116,13 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- Day 4: draft Retell pilot_expired component into retell-iac/components/ + manifest update + build TESTING (no MASTER promote without Dan)
-- Dan unblockers (top to bottom): Telnyx vault keys (waiting on business number), Stripe secret_key_live, film 60s founder VSL, push syntharra-website start.html when ready, register stripe-webhook URL in Stripe dashboard + vault webhook_signing_secret, rotate Mux secret (security)
-- Followups carried forward: rebrand pilot Brevo templates from dark to light theme, fix _brevo_params_for to fetch owner_name + agent_phone_number from hvac_standard_agent
-- Resume pointer: memory/project_phase0_progress.md (updated 2026-04-11 with Day 2 + Day 3 results + Mux unblock)
+- Day 5+: Build SEO comparison pages 2-5 (Smith.AI, Answering Service Care, Abby Connect, Best of HVAC services)
+- Rebrand 9 Brevo pilot templates from dark to light theme + re-upload (idempotent script needs UPDATE-mode added)
+- Add Hunter.io free tier to find_email_from_website.py for higher email hit rate
+- Affiliate outreach script generator targeting HVAC YouTubers (Bryan Orr, AC Service Tech, etc.)
+- Day 6 Railway deploy of pilot_lifecycle.py cron
+- DAN unblockers (still): Telnyx vault keys (waiting on business number), Stripe secret_key_live, film founder VSL, register stripe-webhook URL in Stripe dashboard + vault webhook_signing_secret, rotate Mux secret (security)
+- DAN test action: build TESTING agent from updated retell-iac, verify pilot_expired branch fires when {{pilot_expired}}=true, then promote.py if clean
 
 ## Phase 0 progress (marketing build)
 
@@ -166,7 +169,30 @@ Day 3 closed the loop on the dark-launched pilot funnel. Every system in the lea
 - **Phase 0 landing page scaffolded in syntharra-website sibling repo** (commit `f9cddc1`, NOT pushed). `start.html` (227 lines, 1 style block, light-theme Syntharra chrome, hero with the r/HVAC quote, VSL placeholder div, 200-min/14-day pilot offer card, 4-question FAQ, final CTA pointing to pilot Jotform `261002359315044?pilot_mode=true`) + `marketing-tracker.js` (234 lines, vanilla, sendBeacon-preferred, fires page_view/cta_click/scroll_depth/vsl_*_pct events to the marketing-event-ingest Edge Function). Pushing requires Mux playback ID swap-in OR explicit dark-launch decision.
 - **`docs/RULES.md` #42 added:** `pause_retell_agent` must NEVER target MASTER. Track B's safety rail captured as a standing rule.
 
-**Next:** Day 4 work — Retell `pilot_expired` flow component in `retell-iac/components/`, manifest update, build TESTING (NO promote), Dan films VSL, Railway-deploy `pilot_lifecycle.py` cron. Plan tasks 24-29.
+### Day 4 — COMPLETE (2026-04-11) — Retell pilot_expired drafted + cold outreach engine + 1st SEO comparison page LIVE
+
+Day 4 went hard. Drafted the Retell pilot_expired flow node, shipped a complete $0 cold outreach toolchain with end-to-end smoke test, wrote a comprehensive cold outreach playbook, drafted 5 community posts for Reddit/FB, and pushed the first SEO comparison page (`vs-ruby-receptionists.html`) live to syntharra.com. **The lead-generation machine is now operational.**
+
+- **Retell `pilot_expired` flow component drafted** (NOT promoted to MASTER — Dan's gate). New `retell-iac/components/pilot_expired_node.json` with the apologetic pilot-ended message + visit-to-reactivate CTA. Added to `retell-iac/manifests/hvac-standard.yaml`. Flow template patched: new `node-pilot-expired` (now 20 nodes total), single edge to `node-end-call`, two new conditional edges PREPENDED to `node-greeting` (equation-type primary + prompt-type fallback). Build verified with `retell-iac/scripts/build_agent.py` — 20 nodes, body inlined, greeting edges in correct order. ⚠ Dan must build TESTING + verify the pilot_expired branch fires before running `promote.py` (equation syntax is speculative — fallback prompt-type edge exists as belt-and-suspenders).
+- **Cold outreach engine ($0 stack)** — 4 new tools, all stdlib, all idempotent, end-to-end smoke-tested on Las Vegas leads:
+  - `tools/scrape_hvac_directory.py` — scrapes US HVAC contractors by city via OpenStreetMap Overpass (multi-mirror retry) with Nominatim fallback and Yelp Fusion as optional. Hardcoded city center bboxes for 30 priority US cities. Smoke test: Las Vegas → 6 OSM businesses in 3 seconds.
+  - `tools/find_email_from_website.py` — visits each business website + common contact paths, scrapes emails, filters junk. Smoke test: 3/6 emails found (50% hit rate, industry-normal for SMB).
+  - `tools/build_cold_outreach.py` — generates personalized 3-touch sequence per lead. Subject line variants, NOT_A_NAME filter for first-name extraction, CAN-SPAM compliant footer.
+  - `tools/send_cold_outreach.py` — configurable backend (print/brevo/mailgun) with hard safety rails. Defaults to print mode. Real send REQUIRES `--i-know-this-is-real`. Tracks state in `leads/.send_state.json` (gitignored).
+- **`docs/cold_outreach_strategy.md`** — comprehensive playbook: target persona, 20 priority US cities ranked by HVAC after-hours emergency density, full toolchain command flow, sequence design, expected metrics, CAN-SPAM compliance, Brevo TOS warning, Mailgun/Smartlead scale-up path, 5 SEO comparison pages prioritized, paid ads + affiliate deferred to Phase 1, combined month-1/3/6 projections. **Realistic month-1: 6-17 paying customers from cold email + SEO + community alone (assuming Telnyx + Stripe live land within first week).**
+- **`docs/community_post_drafts.md`** — 5 ready-to-post drafts for r/HVAC, r/HVACTech, r/smallbusiness, FB "HVAC Owners & Operators". Founder-direct voice, no marketing speak, link goes in follow-up comment after upvotes (Reddit anti-spam compliance). Posting checklist + what-works principles included. Designed for Dan to copy-paste manually.
+- **`vs-ruby-receptionists.html` LIVE on syntharra.com** (309 lines, 1 style block, light-theme chrome). Comparison table, 2 a.m. test scenario, honest "what Ruby is better at" section, 5-question FAQ, schema.org FAQPage markup. CTA → `/start` with `utm_source=vs-ruby` for attribution.
+- **`leads/` and `build/` added to .gitignore** — real business data and regenerable build artifacts never committed.
+
+**Next session — Day 5+ work** (when Dan unblockers land OR independent improvements):
+- Build comparison pages 2-5 (Smith.AI, Answering Service Care, Abby Connect, Best of Best HVAC answering services)
+- Rebrand 9 Brevo pilot templates from dark theme to light theme + re-upload
+- Add Hunter.io free integration to `find_email_from_website.py` for higher email enrichment hit rate
+- Wire inbox monitoring webhook so cold sender state file auto-updates on STOP replies
+- Affiliate outreach script generator (target HVAC YouTubers: Bryan Orr / HVAC School, AC Service Tech, Word of Advice TV)
+- Day 5 VSL pipeline (when filming + Mux upload happen)
+- Day 6 Railway deploy of `pilot_lifecycle.py` cron
+- Day 7 pre-live checklist + first cold-traffic smoke test (when Telnyx + Stripe live land)
 
 ## What's in flight
 
