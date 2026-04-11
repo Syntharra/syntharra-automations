@@ -40,3 +40,4 @@
 | 2026-04-11 | agentic-brain-build | e34cbaa | Built Syntharra brain: PLAYBOOKS.md (10 op guides), DECISIONS.md (10 arch decisions), extended daily synthesis with git mining + quality gate, fixed hook_env.py Unicode + Windows subprocess bugs, added Rule 51-57 |
 | 2026-04-11 | agentic-learning-loop-hooks | 371384a | Improved correction_capture.py with 9 new patterns and fixed false-positive guard; wired post_bash_failure.py directly to memory anti-patterns |
 | 2026-04-11 | city-pages-usa-expansion | 371384a | Expanded HVAC SEO city pages from 25 to 145 — 120 new cities via 6-agent parallel swarm covering all major US regions |
+| 2026-04-11 | git-cleanup | ed214b3 | Committed 31 accumulated files: ops project, HVAC/SEO tools, docs, .gitignore cleanup |
