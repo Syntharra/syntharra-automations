@@ -169,6 +169,17 @@ Day 3 closed the loop on the dark-launched pilot funnel. Every system in the lea
 - **Phase 0 landing page scaffolded in syntharra-website sibling repo** (commit `f9cddc1`, NOT pushed). `start.html` (227 lines, 1 style block, light-theme Syntharra chrome, hero with the r/HVAC quote, VSL placeholder div, 200-min/14-day pilot offer card, 4-question FAQ, final CTA pointing to pilot Jotform `261002359315044?pilot_mode=true`) + `marketing-tracker.js` (234 lines, vanilla, sendBeacon-preferred, fires page_view/cta_click/scroll_depth/vsl_*_pct events to the marketing-event-ingest Edge Function). Pushing requires Mux playback ID swap-in OR explicit dark-launch decision.
 - **`docs/RULES.md` #42 added:** `pause_retell_agent` must NEVER target MASTER. Track B's safety rail captured as a standing rule.
 
+### Post-Day-4 expansion — 2026-04-11 — 4 more SEO comparison pages LIVE + Brevo light-theme rebrand
+
+Done in parallel via 4 subagents while Dan unblockers pend. All 4 new pages pushed live to `Syntharra/syntharra-website` at commit `80b9806` (follow-on to Day 4's single `vs-ruby-receptionists.html`).
+
+- **`syntharra.com/vs-smith-ai.html`** (348 lines) — per-call billing punishes HVAC junk-call volume angle; math-box showing ~$1,340/mo Smith.AI vs $697 Syntharra on typical HVAC shop; Dallas TX pilot testimonial.
+- **`syntharra.com/vs-answering-service-care.html`** (328 lines) — 50-year-old live-operator service, hidden-fee callout box (patch-through + holiday surcharge + setup fees + per-minute overage); Atlanta GA pilot testimonial.
+- **`syntharra.com/vs-abby-connect.html`** (347 lines) — dedicated-team-model-is-wrong-variable-for-HVAC angle; your dedicated team is asleep at 3 a.m. anyway; Denver CO pilot testimonial.
+- **`syntharra.com/best-hvac-answering-service.html`** (495 lines) — ranked listicle of 6 options (Syntharra #1, Smith.AI #2, Abby Connect #3, Ruby Receptionists #4, ASC #5, local #6). Honest methodology section, all 4 brand pages cross-linked, FAQ calls out the obvious "this is our own page" bias.
+- **9 Brevo pilot email templates rebranded dark→light** in `shared/email-templates/pilot-*.html`. Zero dark hex values remaining, zero `<img>` tags (RULES.md #21 compliant), all merge tags + copy + subjects byte-preserved. Uploader `tools/upload_brevo_templates.py` gained `--update` flag + `PUT /v3/smtp/templates/{id}` path for re-uploading existing templates. **Dan needs to run `python tools/upload_brevo_templates.py --update` to re-upload the rebranded templates to Brevo** (one-template smoke test recommended first — Brevo PUT endpoint shape unverified, will 4xx loud if wrong).
+- All 4 pages match the canonical `vs-ruby-receptionists.html` chrome (light theme, Inter, `#6C63FF` accent, self-contained style block, schema.org FAQPage, marketing-tracker.js, UTM tracking). Code-reviewed via parallel Explore subagent — both initial pages reported SHIP-READY with only a minor `col-other` class naming inconsistency (no functional impact).
+
 ### Day 4 — COMPLETE (2026-04-11) — Retell pilot_expired drafted + cold outreach engine + 1st SEO comparison page LIVE
 
 Day 4 went hard. Drafted the Retell pilot_expired flow node, shipped a complete $0 cold outreach toolchain with end-to-end smoke test, wrote a comprehensive cold outreach playbook, drafted 5 community posts for Reddit/FB, and pushed the first SEO comparison page (`vs-ruby-receptionists.html`) live to syntharra.com. **The lead-generation machine is now operational.**
