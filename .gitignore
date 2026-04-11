@@ -28,6 +28,18 @@ __pycache__/
 # External plugin trees dropped into the workspace for reference.
 # Not part of Syntharra; must never land in commits.
 plugins/
+everything-claude-code/
+excalidraw-diagram-skill/
+notebooklm/
+
+# Screenshots and design artifacts — generated locally, not source of truth
+*.png
+*.jpg
+*.jpeg
+
+# Claude Code / tooling artifacts
+.claude/scheduled_tasks.lock
+.playwright-mcp/
 
 # Raw automation-API dumps tend to contain inlined credentials (n8n HTTP
 # nodes bake keys into headers). Save under docs/audits/ (also gitignored)

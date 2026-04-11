@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-e34cbaa chore(session): session-end 2026-04-11 homepage-hero-redesign
+371384a feat(hooks): improve agentic learning loop â€” correction capture + bash failure memory
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -120,10 +120,9 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- Resume Phase 0 Day 3: Brevo upload + cron deployment + onboarding workflow pilot branch patch
-- Telnyx vault entries still needed from Dan (blocks phone provisioning)
-- Stripe live key still needed from Dan (blocks first paying client)
-- Run: python tools/weekly_self_improvement.py --days 7 (full week review now that brain is built)
+- Rotate GitHub PAT (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) — was briefly in a local file this session, should be cycled at github.com/settings/tokens
+- Consider building a /city/ index page linking all 145 city pages to boost internal linking for SEO
+- Consider submitting updated sitemap to Google Search Console now that 120 new pages are live
 
 ## Phase 0 progress (marketing build)
 
