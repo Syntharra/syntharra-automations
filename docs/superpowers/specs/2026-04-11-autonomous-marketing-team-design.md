@@ -13,7 +13,7 @@
 Short-form video (YouTube/TikTok/Instagram/Facebook)
   → syntharra.com
   → VSL (video sales letter)
-  → 14-day free trial signup
+  → 200-minute free pilot (cost-capped trial)
   → Onboarded client
 ```
 
