@@ -31,6 +31,12 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
+# Add tools/ dir to sys.path so we can import sibling helpers
+# (content_preview_mode) regardless of whether this script is run from
+# repo root or the tools/ directory.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from content_preview_mode import is_cold_email_enabled  # noqa: E402
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -1128,14 +1134,20 @@ def run_weekly_cycle(dry_run: bool = False, force_execute: bool = False, review_
 
     all_results = []
 
-    # Cold email campaigns
-    for city_plan in plan.get("cold_email", []):
-        print(f"\n  [Email] {city_plan['city']}, {city_plan['state']}")
-        result = execute_cold_email_campaign(city_plan, sb_key, brevo_key)
-        all_results.append(("cold_email", result))
-        print(f"    → status={result['status']} sent={result['emails_sent']} enriched={result['emails_enriched']}")
-        if result.get("error"):
-            print(f"    [ERR] {result['error']}")
+    # Cold email campaigns — gated on COLD_EMAIL_ENABLED env var.
+    # Dan's 2026-04-11 decision: pause cold outbound, focus on organic
+    # social content. Flip COLD_EMAIL_ENABLED=true in Railway env to resume.
+    if is_cold_email_enabled():
+        for city_plan in plan.get("cold_email", []):
+            print(f"\n  [Email] {city_plan['city']}, {city_plan['state']}")
+            result = execute_cold_email_campaign(city_plan, sb_key, brevo_key)
+            all_results.append(("cold_email", result))
+            print(f"    → status={result['status']} sent={result['emails_sent']} enriched={result['emails_enriched']}")
+            if result.get("error"):
+                print(f"    [ERR] {result['error']}")
+    else:
+        planned = len(plan.get("cold_email", []))
+        print(f"\n  [Email] SKIP — COLD_EMAIL_ENABLED=false ({planned} city plans not executed)")
 
     # Reddit posts
     reddit_pending_credentials = not any(reddit_creds.values())
