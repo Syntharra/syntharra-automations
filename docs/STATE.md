@@ -137,13 +137,30 @@ Schema migration `20260411_phase0_pilot_schema` applied to prod:
 - Pre-migration backups: `docs/audits/supabase-backups-20260411/` + `docs/audits/n8n-backups-20260411/`
 - Scan report: `docs/audits/2026-04-11-phase0-schema-scan.md`
 
-**Next:** Day 2 — pilot Jotform fork + n8n onboarding branch (`Is Pilot?` IF node). Plan tasks 13-18.
+### Day 2 — COMPLETE (2026-04-11) — pilot infrastructure dark-launched
+
+Pilot signup machine is **live and ready to receive traffic**, but won't get any until Days 5-7 unblock the landing page + VSL. Per-pilot cost in dark-launched state: **~$0** (Telnyx graceful skip + cron not yet deployed + Brevo templates not yet uploaded).
+
+- **Jotform pilot fork `261002359315044`** created from paid form `260795139953066`. Title "Start your free 14-day Syntharra pilot". 7 hidden tracking fields (`stx_asset_id`, `utm_source/medium/campaign/content/term`, `pilot_mode=true`). Webhook inherited correctly — same `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding` URL as paid form. Registered in `docs/REFERENCE.md` Jotform Forms section.
+- **n8n workflow `4Hx7aRdzMl5N0uJP` patched** in-place (deviation from plan: surgical Reconcile Code-node modification, NOT the proposed IF+Set node insertion — see commit `ba0b8f1` for the reasoning). The `Reconcile: Check Stripe Payment` jsCode now has a Phase 0 pilot block at the top that reaches back to the JotForm Webhook Trigger to read `pilot_mode`, and on `pilot_mode='true'` writes a `client_subscriptions` row with `status='pilot' + pilot_started_at + pilot_ends_at + pilot_minutes_allotted=200 + first/last_touch_asset_id + first/last_touch_utm` and returns early (skipping the 60s Stripe wait). Paid path is byte-identical below the pilot block (verified post-patch: 84/84 lines match, only 1 of 32 nodes differs).
+- **Synthetic pilot row test** (no real Retell/Telnyx/Brevo cost): inserted via SQL with the same shape the pilot block writes, confirmed (a) billing-cron defensive filter excludes pilots (0 rows), (b) pilot lifecycle query includes pilots (1 row), (c) `status='pilot'` passes the CHECK constraint, (d) timestamps consistent. Synthetic row deleted. `client_subscriptions` is back to 1 row (Dan's test agent).
+- **Track C drafts committed (`e52ade2`):** `tools/pilot_lifecycle.py` (611 lines, full state machine, **14/14 unit tests passing**), `tools/test_pilot_lifecycle.py`, `tools/stripe_pilot_setup.py` (test mode, idempotent), `tools/test_e2e_pilot.py` (programmatic webhook submitter for Day 7 smoke test), `tools/upload_brevo_templates.py`, 9 Brevo email HTML templates in `shared/email-templates/pilot-*.html` (Syntharra dark theme, 600px Gmail-compat layout). All Python files syntax-clean. `pilot_lifecycle.py` SELECT was patched to drop 3 columns that don't exist on `client_subscriptions` (they live on `hvac_standard_agent`) and to use `payment_method_added_at IS NOT NULL` instead of the imaginary `stripe_setup_intent_succeeded` column.
+- **New tools committed (`ba0b8f1`):** `tools/build_pilot_jotform.py`, `tools/patch_pilot_jotform_hidden_fields.py`, `tools/patch_onboarding_workflow_add_pilot_branch.py` (idempotent via `// === Phase 0 pilot block === //` marker), `tools/fetch_vault.py` (vault helper).
+- **Backups (gitignored):** `docs/audits/n8n-backups-20260411/4Hx7aRdzMl5N0uJP-pre-pilot-branch.json` (290KB, sha256-verified pre-apply), `-pre-apply-recheck.json`, `-post-pilot-branch.json` for rollback if ever needed.
+
+### Day 3 followup — `Send Welcome Email` node still fires paid welcome for pilots
+
+The n8n `Send Welcome Email` node is unconditional — when a pilot signs up they currently receive the existing **paid** welcome email ("you're live at $697/mo, here's your billing date") which contradicts the pilot offer. **Will be addressed in Day 3** by patching that node to skip when `pilot_mode='true'` and letting `pilot_lifecycle.py` send `pilot-welcome.html` instead. Risk in the interim: low (no traffic to the pilot form yet — landing page is Day 6).
+
+**Next:** Day 3 — pilot lifecycle Railway deploy + Brevo template upload + Stripe Setup Intent webhook + the `Send Welcome Email` pilot-skip patch. Plan tasks 19-23 (Track B is writing tasks 20-23 right now).
 
 ## What's in flight
 
-- **Phase 0 marketing build** — spec complete, plan partial, execution awaiting greenlight. See Phase 0 progress section above.
-- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client AND before Phase 0 smoke-test traffic (day 7).
-- **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`.
+- **Phase 0 marketing build** — Day 1 + Day 2 LIVE in prod. Plan Days 3-7 still being expanded (Track B). Day 3 cron + Brevo upload + Day 3 followup (`Send Welcome Email` node patch) is the next executable batch. Days 5-7 are blocked on Dan unblockers below.
+- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client AND before Phase 0 Day 7 smoke test.
+- **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`. **Without these, Phase 0 pilot signups will create Retell agents but provision no phone number — the AI receptionist exists but can't actually receive calls.** Top priority unblocker.
+- **Mux account + creds** — needed for Day 5 VSL upload. Vault as `service_name='Mux'`, key types `data_token` + `playback_signing_key`.
+- **Founder VSL filming** — Dan-only, ~1 hour shoot, script in spec § 3.2. Day 5 blocker.
 
 ## What's blocked
 
