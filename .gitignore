@@ -10,6 +10,12 @@ docs/audits/2026-04-09-n8n-workflows-raw.json
 docs/audits/n8n-backups-*/
 retell-iac/snapshots/*_pre-*/agent.json
 
+# Cold outreach lead lists — contain real business contact info, never commit
+leads/
+
+# retell-iac build artifacts (gitignored, regenerable from manifest)
+build/
+
 # Python bytecode — never commit
 __pycache__/
 *.pyc

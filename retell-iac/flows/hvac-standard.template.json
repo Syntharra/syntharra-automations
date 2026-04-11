@@ -24,6 +24,29 @@
       },
       "edges": [
         {
+          "destination_node_id": "node-pilot-expired",
+          "id": "edge-greeting-to-pilot-expired-equation",
+          "transition_condition": {
+            "equations": [
+              {
+                "left": "{{pilot_expired}}",
+                "operator": "==",
+                "right": "true"
+              }
+            ],
+            "operator": "&&",
+            "type": "equation"
+          }
+        },
+        {
+          "destination_node_id": "node-pilot-expired",
+          "id": "edge-greeting-to-pilot-expired-prompt-fallback",
+          "transition_condition": {
+            "prompt": "The pilot_expired dynamic variable is set to true. This caller's free trial has ended.",
+            "type": "prompt"
+          }
+        },
+        {
           "destination_node_id": "node-identify-call",
           "id": "edge-greeting-to-identify",
           "transition_condition": {
@@ -524,6 +547,26 @@
       "id": "node-extract-caller-data",
       "name": "Extract Caller Data",
       "type": "extract_dynamic_variables"
+    },
+    {
+      "__COMPONENT__": "pilot_expired_node",
+      "display_position": {
+        "x": 558,
+        "y": 1080
+      },
+      "edges": [
+        {
+          "destination_node_id": "node-end-call",
+          "id": "edge-pilot-expired-to-end",
+          "transition_condition": {
+            "prompt": "Always \u2014 after delivering the apology message",
+            "type": "prompt"
+          }
+        }
+      ],
+      "id": "node-pilot-expired",
+      "name": "Pilot Expired",
+      "type": "conversation"
     }
   ],
   "start_node_id": "node-greeting",
