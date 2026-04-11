@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-eee258c feat(phase0): Day 4 â€” Retell pilot_expired component + cold outreach engine + community post drafts
+dbe3562 feat(phase0): post-Day-4 expansion â€” Brevo light-theme rebrand + 4 SEO pages coordinated
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,13 +116,15 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- Day 5+: Build SEO comparison pages 2-5 (Smith.AI, Answering Service Care, Abby Connect, Best of HVAC services)
-- Rebrand 9 Brevo pilot templates from dark to light theme + re-upload (idempotent script needs UPDATE-mode added)
-- Add Hunter.io free tier to find_email_from_website.py for higher email hit rate
-- Affiliate outreach script generator targeting HVAC YouTubers (Bryan Orr, AC Service Tech, etc.)
-- Day 6 Railway deploy of pilot_lifecycle.py cron
-- DAN unblockers (still): Telnyx vault keys (waiting on business number), Stripe secret_key_live, film founder VSL, register stripe-webhook URL in Stripe dashboard + vault webhook_signing_secret, rotate Mux secret (security)
-- DAN test action: build TESTING agent from updated retell-iac, verify pilot_expired branch fires when {{pilot_expired}}=true, then promote.py if clean
+- Dan: run `python tools/upload_brevo_templates.py --update` after smoke-testing one template (verify Brevo PUT endpoint shape first)
+- Dan: verify 4 new SEO pages render correctly on syntharra.com (vs-smith-ai, vs-answering-service-care, vs-abby-connect, best-hvac-answering-service)
+- Dan test action (still): build TESTING agent from updated retell-iac, verify pilot_expired branch fires when {{pilot_expired}}=true, then promote.py if clean
+- DAN unblockers (still): Telnyx vault keys (api_key + retell_sip_connection_id), Stripe secret_key_live, register stripe-webhook URL + vault webhook_signing_secret, rotate Mux secret, film founder VSL
+- Next autonomous work: Hunter.io free-tier integration into tools/find_email_from_website.py (higher email enrichment hit rate)
+- Next autonomous work: affiliate outreach script generator targeting HVAC YouTubers (Bryan Orr, AC Service Tech, Word of Advice TV)
+- Next autonomous work: Day 6 Railway deploy of pilot_lifecycle.py cron (mirror monthly_minutes.py config)
+- Nice-to-have: rename col-other CSS class in vs-smith-ai/vs-asc to col-smith-ai/col-asc for consistency with col-ruby pattern
+- Nice-to-have: add open graph + twitter card meta tags to all 5 comparison pages for social sharing
 
 ## Phase 0 progress (marketing build)
 
