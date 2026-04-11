@@ -56,6 +56,13 @@ CRON_SERVICES = [
         "desc":     "Sunday 18:00 UTC — weekly call stats email to all NY-tz clients",
         "needs_stripe": False,
     },
+    {
+        "name":     "syntharra-pilot-lifecycle",
+        "command":  "python tools/pilot_lifecycle.py",
+        "schedule": "0 0 * * *",
+        "desc":     "Daily 00:00 UTC — Phase 0 pilot state machine: day-3/7/12 engagement emails, day-14 convert-or-expire, winback 16/30. Graceful no-op while there are no live pilots.",
+        "needs_stripe": True,
+    },
 ]
 
 
