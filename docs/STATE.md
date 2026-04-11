@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-c0b1b5c feat(phase0): Hunter.io fallback on email enricher + affiliate outreach generator
+3be1694 feat(phase0): marketing digest + cost tracker + pilot cron + Retell TESTING ready
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,17 +116,19 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- DAN: sign up for Hunter.io free tier, vault service_name=Hunter.io key_type=api_key (enables 25/mo email enrichment fallback, ~50% -> ~75% hit rate on cold enrichment)
-- DAN: review leads/affiliate_outreach_20260411.txt, verify personalization hooks against each YouTuber's actual recent videos (all marked # UNVERIFIED), tweak before sending
-- DAN: build syntharra.com/affiliate?ref=... landing page so affiliate tracking URLs resolve (blocks any actual affiliate send)
-- DAN: run `python tools/upload_brevo_templates.py --update` after smoke-testing one template (verify Brevo PUT /v3/smtp/templates/{id} shape first; will 4xx loud if wrong)
-- DAN: verify all 5 comparison pages render correctly on syntharra.com with OG previews working (test by pasting URLs into a Slack/Discord/FB compose field)
-- DAN test action (still): build TESTING agent from updated retell-iac, verify pilot_expired branch fires when {{pilot_expired}}=true, then promote.py if clean
-- DAN unblockers (still): Telnyx vault keys (api_key + retell_sip_connection_id), Stripe secret_key_live, register stripe-webhook URL + vault webhook_signing_secret, rotate Mux secret, film founder VSL
-- Next autonomous work: Day 6 Railway deploy of pilot_lifecycle.py cron (mirror monthly_minutes.py config)
-- Next autonomous work: syntharra.com/affiliate landing page build (blocks affiliate sends)
-- Nice-to-have: rename col-other CSS class in vs-smith-ai/vs-asc to col-smith-ai/col-asc for consistency with col-ruby
-- Nice-to-have: audience_hook cosmetic line-wrap fix in affiliate touch-1 body
+- DAN [5 MIN]: Retell dashboard click test per docs/retell_pilot_expired_test_plan.md — set agent_level_dynamic_variables.pilot_expired='true' on TESTING agent, start a web call, verify pilot-expired message plays, remove variable, verify normal flow still works. Reply 'go' and I'll run promote.py --dry-run then promote.py for real.
+- DAN: verify the 9 SEO comparison pages render correctly on syntharra.com (spot-check 2-3 of them)
+- DAN: review leads/affiliate_outreach_20260411.txt — verify personalization hooks against each of the 8 HVAC YouTubers' real recent videos, tweak before sending
+- DAN: deploy pilot_lifecycle cron — run 'python tools/deploy_billing_crons.py' (4 entries in CRON_SERVICES, 1 new 'syntharra-pilot-lifecycle'). Safe no-op while there are 0 live pilots.
+- DAN: run 'python tools/upload_brevo_templates.py --update' after smoke-testing one template (Brevo PUT endpoint shape unverified)
+- DAN [BLOCKER]: film founder VSL (spec § 3.2, ~1 hour)
+- DAN [BLOCKER]: Telnyx vault keys (api_key + retell_sip_connection_id) — without this pilots can't receive calls
+- DAN [BLOCKER]: Stripe secret_key_live — Day 7 smoke test blocker
+- DAN [BLOCKER]: register stripe-webhook URL in Stripe dashboard + vault webhook_signing_secret, rotate Mux secret
+- Next autonomous work: build a daily marketing digest cron (schedule marketing_digest.py --post-to-slack daily 08:00 UTC via deploy_billing_crons.py)
+- Next autonomous work: more community posts (r/smallbusiness, r/Entrepreneur, r/HVAC_Trade)
+- Next autonomous work: SEO comparison pages 10-15 (Answer4u, Davinci Virtual, SBA answering services, niche HVAC-specific services)
+- Next autonomous work: build a syntharra.com/affiliate?ref=slug attribution JS snippet if affiliate.html doesn't already handle it
 
 ## Phase 0 progress (marketing build)
 
@@ -172,6 +174,24 @@ Day 3 closed the loop on the dark-launched pilot funnel. Every system in the lea
 - **Mux credentials VAULTED 2026-04-11** as `service_name='Mux'`, `key_type='token_id'` + `key_type='secret_key'`. Day 5 Task 35 (Mux upload) is unblocked once VSL is filmed. Dan should rotate the secret in Mux dashboard ASAP since the original was sent in chat (leak vector exists in conversation log).
 - **Phase 0 landing page scaffolded in syntharra-website sibling repo** (commit `f9cddc1`, NOT pushed). `start.html` (227 lines, 1 style block, light-theme Syntharra chrome, hero with the r/HVAC quote, VSL placeholder div, 200-min/14-day pilot offer card, 4-question FAQ, final CTA pointing to pilot Jotform `261002359315044?pilot_mode=true`) + `marketing-tracker.js` (234 lines, vanilla, sendBeacon-preferred, fires page_view/cta_click/scroll_depth/vsl_*_pct events to the marketing-event-ingest Edge Function). Pushing requires Mux playback ID swap-in OR explicit dark-launch decision.
 - **`docs/RULES.md` #42 added:** `pause_retell_agent` must NEVER target MASTER. Track B's safety rail captured as a standing rule.
+
+### Post-Day-4 expansion batch 3 — 2026-04-11 — 4 more SEO pages + marketing digest + cost tracker + pilot cron + Retell TESTING ready
+
+Third coordinator batch. 3 parallel subagents + sequential work by me. Dan delegated "everything except Stripe live, Telnyx, VSL film" so I went as wide as I could.
+
+- **4 more SEO comparison pages LIVE at `syntharra-website` commit `73f3531`:** `vs-patlive.html`, `vs-answer24.html`, `vs-moneypenny.html`, `vs-answerconnect.html`. All match the `vs-smith-ai.html` chrome (light theme, OG + Twitter meta, schema.org FAQPage, UTM tracking). Fresh testimonial cities (Houston/Chicago/Miami/Seattle). **9 HVAC answering service comparison pages now live total** (Ruby, Smith.AI, ASC, Abby Connect, best-hvac listicle, PATLive, Answer24, Moneypenny, AnswerConnect).
+
+- **`tools/marketing_digest.py` (NEW, 718 lines)** — weekly funnel rollup. Reads `marketing_events` + `client_subscriptions` + `leads/.send_state.json` for the window, computes traffic → pilot → paid conversion funnel, outputs text / JSON / Slack blocks. Live dry-run against prod returned 0 events / 0 pilots / 3 cold-outreach sends cleanly. Stdlib-only, read-only, graceful skip on missing data. Has `--post-to-slack` flag wired for future daily digest cron.
+
+- **`docs/marketing_costs.md` (NEW)** — transparent cost ledger per Dan's 2026-04-11 direction. Current marketing-team-attributable cost **$0/mo** (all tools on free tiers). Phased unlock strategy: **Stage 0** (now, $0) → **Stage 1** (triggered at 2 clients signed via marketing team, ~$130-$235/mo for Hunter.io paid + Mailgun Foundation) → **Stage 2** (triggered at 10+ clients with no Dan input, uncapped paid ads). Target CAC ranges + channel hypotheses documented. Decision log captures the Hunter.io-free-tier-approved + Yelp-Fusion-deferred + paid-ads-deferred decisions.
+
+- **`tools/deploy_billing_crons.py` extended with `syntharra-pilot-lifecycle` entry** (+7 lines). Schedule `0 0 * * *` (daily 00:00 UTC). Extends the proven pattern — 4 cron entries now (usage_alert, monthly_minutes, weekly_report, pilot_lifecycle). `docs/railway_pilot_lifecycle_deploy.md` has full deploy walkthrough + pre-deploy checklist + rollback plan. Ready to run when Dan wants.
+
+- **Hunter.io API key VAULTED** as `service_name='Hunter.io', key_type='api_key'` (40 chars, Dan-provided free-tier key). `find_email_from_website.py` now auto-uses as fallback when homepage scrape misses — verified end-to-end with `.env.local` sourced showing `[enrich] Hunter.io fallback enabled`. Free tier (25 searches/mo) approved; paid upgrade gated on Stage 1 trigger per cost doc.
+
+- **Retell TESTING agent updated and published.** `retell-iac/scripts/build_agent.py` regenerated the built flow (20 nodes, includes `node-pilot-expired` with 3 greeting edges). Direct PATCH to `conversation_flow_bc8bb3565dbf` → flow version 3. TESTING agent `agent_41e9758d8dc956843110e29a25` published. **MASTER unchanged** (still 19 nodes, still on production flow version) per `retell-iac/CLAUDE.md` explicit-approval rule. `docs/retell_pilot_expired_test_plan.md` gives Dan the 5-minute dashboard click test (set `agent_level_dynamic_variables.pilot_expired='true'`, start web call, verify, then remove variable and verify normal flow). **Dan must green-light before `promote.py` runs.**
+
+- **Client production impact: zero.** All changes either went to TESTING-only (Retell), were docs-only, or were new standalone files. Existing client clones still have the 19-node flow and the pre-Phase-0 onboarding state machine.
 
 ### Post-Day-4 expansion batch 2 — 2026-04-11 — OG meta + Hunter.io fallback + affiliate outreach generator
 
