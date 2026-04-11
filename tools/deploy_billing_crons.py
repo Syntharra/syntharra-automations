@@ -26,6 +26,13 @@ Env vars are pulled from syntharra_vault so no secrets are stored in this file.
 from __future__ import annotations
 import argparse, json, os, sys, time, urllib.error, urllib.parse, urllib.request
 
+# RULES.md #41 — Windows stdout defaults to cp1252; em-dashes in the cron desc
+# text would crash without this reconfigure on Python 3.14.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # ── Constants ────────────────────────────────────────────────────────────────
 
 RAILWAY_GQL      = "https://backboard.railway.com/graphql/v2"
@@ -84,9 +91,17 @@ def railway_gql(token: str, query: str, variables: dict = None):
     body = {"query": query}
     if variables:
         body["variables"] = variables
+    # Railway's edge sits behind Cloudflare. Cloudflare error 1010 fires when
+    # the request is missing a plausible User-Agent — default urllib UA looks
+    # like a bot. Setting a real-looking UA fixes it.
     status, resp = http_json(
         "POST", RAILWAY_GQL,
-        {"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "Syntharra-Deployer/1.0 (python-urllib)",
+            "Accept": "application/json",
+        },
         body,
     )
     if status != 200:
@@ -98,8 +113,20 @@ def railway_gql(token: str, query: str, variables: dict = None):
 
 
 def sb_get(path: str, sb_key: str) -> list:
+    # Python 3.14 strictly rejects URLs with control chars / literal spaces.
+    # Service names like "Retell AI" must be URL-encoded (%20) inside query params.
+    # We split on the first '?' and quote the query portion.
+    if "?" in path:
+        base, _, query = path.partition("?")
+        # Safe chars: everything that PostgREST filter syntax uses.
+        # We keep = & , . ( ) * ! $ : + - unencoded so query operators still work,
+        # and only force-encode the spaces inside service_name values.
+        encoded_query = urllib.parse.quote(query, safe="=&,.()*!$:+-")
+        url = f"{SUPABASE_URL}{base}?{encoded_query}"
+    else:
+        url = SUPABASE_URL + path
     status, data = http_json(
-        "GET", SUPABASE_URL + path,
+        "GET", url,
         {"apikey": sb_key, "Authorization": f"Bearer {sb_key}"},
     )
     if status != 200:
@@ -168,7 +195,12 @@ def service_exists(token: str, name: str) -> bool:
 
 
 def create_service(token: str, env_id: str, svc: dict) -> str:
-    """Create a Railway service and return its ID."""
+    """Create a Railway service and return its ID.
+
+    Railway's ServiceCreateInput schema: `branch` is a top-level field, and
+    ServiceSourceInput only has `repo` + `image` (no nested `branch`). Verified
+    via GraphQL introspection 2026-04-11.
+    """
     data = railway_gql(token, """
         mutation($input: ServiceCreateInput!) {
           serviceCreate(input: $input) { id name }
@@ -177,9 +209,10 @@ def create_service(token: str, env_id: str, svc: dict) -> str:
         "input": {
             "name":          svc["name"],
             "projectId":     RAILWAY_PROJECT,
+            "environmentId": env_id,
+            "branch":        GITHUB_BRANCH,
             "source": {
-                "repo":   GITHUB_REPO,
-                "branch": GITHUB_BRANCH,
+                "repo": GITHUB_REPO,
             },
         }
     })

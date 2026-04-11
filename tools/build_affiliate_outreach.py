@@ -79,15 +79,15 @@ HVAC_YOUTUBERS = [
         "creator_name_or_unknown": "Bryan Orr",
         "channel_url": "https://www.youtube.com/@HVACS",
         "audience_hook": "serious HVAC techs who want to understand the physics",
-        "personalization_hook": "I've been following your refrigerant charging deep-dives for a while now.",  # UNVERIFIED
+        "personalization_hook": "Your recent video on HVAC control board troubleshooting — walking through the voltages, error codes and common failures — is exactly the kind of patient, first-principles teaching the industry needs more of.",
     },
     {
         "slug": "ac-service-tech",
         "channel_name": "AC Service Tech LLC",
         "creator_name_or_unknown": "Craig Migliaccio",
-        "channel_url": "https://www.youtube.com/@acservicetech",
+        "channel_url": "https://www.youtube.com/@acservicetechchannel",
         "audience_hook": "field techs and HVAC business owners",
-        "personalization_hook": "Your 'common HVAC repairs' playlist is genuinely the most useful free training I've pointed new Syntharra customers at.",  # UNVERIFIED
+        "personalization_hook": "Your capacitor testing video — three methods, underload, bench test, visual inspection — is the exact sort of step-by-step breakdown I wish every new tech watched before their first service call.",
     },
     {
         "slug": "word-of-advice-tv",
@@ -95,31 +95,27 @@ HVAC_YOUTUBERS = [
         "creator_name_or_unknown": None,
         "channel_url": "https://www.youtube.com/@wordofadvicetv",
         "audience_hook": "owner-operators and techs moving into residential HVAC",
-        "personalization_hook": "I appreciated your recent video on when to walk away from a repair — that judgment call is exactly the moment our AI tries to capture upstream on the call.",  # UNVERIFIED
+        "personalization_hook": "Your 'High Efficiency Heat Pump vs Standard Heat Pump' breakdown is the kind of straight-talking homeowner guidance we try to live up to on the phone side — cutting through the jargon so people actually make a decision.",
     },
     {
         "slug": "quality-hvac",
-        "channel_name": "Quality HVAC",
-        "creator_name_or_unknown": "Joshua Griffin",
+        "channel_name": "Quality HVACR",
+        "creator_name_or_unknown": None,  # family-owned middle-TN shop, no named creator
         "channel_url": "https://www.youtube.com/@qualityhvacr",
-        "audience_hook": "commercial HVAC refrigeration techs",
-        "personalization_hook": "Your commercial refrigeration troubleshooting content is niche in the best way.",  # UNVERIFIED
+        "audience_hook": "owner-operators learning residential diagnostic technique",
+        "personalization_hook": "Your recent 'Goodman Furnace Leaking Gas — How I Fixed It' video is exactly the middle-TN, in-the-field content that makes your channel stand out — no BS, just the fix.",
     },
-    {
-        "slug": "hvac-shop-talk",
-        "channel_name": "HVAC Shop Talk",
-        "creator_name_or_unknown": None,
-        "channel_url": "https://www.youtube.com/@HVACShopTalk",
-        "audience_hook": "HVAC business owners talking shop, business-of-HVAC angle",
-        "personalization_hook": "Your business-side content — pricing, hiring, phones ringing at 2 a.m. — is exactly the conversation our product lives in.",  # UNVERIFIED
-    },
+    # HVAC Shop Talk entry removed 2026-04-11 — @HVACShopTalk handle does not
+    # resolve on YouTube and no clean substitute channel was found by the
+    # verification agent. If the real channel is rediscovered, add it back
+    # with the verified URL and a verified personalization hook.
     {
         "slug": "hvac-guide-for-homeowners",
         "channel_name": "HVAC Guide for Homeowners",
-        "creator_name_or_unknown": None,
-        "channel_url": "https://www.youtube.com/@HVAC_GUIDE",
+        "creator_name_or_unknown": "Joshua Griffin",  # confirmed — Griffin runs this channel, not Quality HVACR
+        "channel_url": "https://www.youtube.com/channel/UCp_5AZlvvW9jn6L4EZuCbNQ",
         "audience_hook": "homeowners researching HVAC — drives qualified calls into contractor shops",
-        "personalization_hook": "Your homeowner-focused content drives qualified calls into HVAC shops — and the shops that get those calls are exactly our customer base.",  # UNVERIFIED
+        "personalization_hook": "Your 'HVAC Techs are the Problem' video hit a nerve for the right reasons — the shops you're steering homeowners toward are exactly the owner-operators we built Syntharra for.",
     },
     {
         "slug": "hvac-tactical",
@@ -127,15 +123,15 @@ HVAC_YOUTUBERS = [
         "creator_name_or_unknown": None,
         "channel_url": "https://www.youtube.com/@HVACTactical",
         "audience_hook": "HVAC techs learning diagnostics",
-        "personalization_hook": "I watched your series on reading pressure gauges — genuinely the clearest teaching I've seen on the topic.",  # UNVERIFIED
+        "personalization_hook": "Your highlights reel from the 2026 HVAC Tactical Awards captured something I don't see anywhere else in the trade — that mix of 'blue collar meets black tie' actually puts the work on a pedestal instead of apologising for it.",
     },
     {
         "slug": "stephen-rardon-heating-and-air",
         "channel_name": "Stephen Rardon Heating and Air",
         "creator_name_or_unknown": "Stephen Rardon",
-        "channel_url": "https://www.youtube.com/@stephenrardonheatingandair",
+        "channel_url": "https://www.youtube.com/@StephenRardon",
         "audience_hook": "small owner-operators running lean",
-        "personalization_hook": "Your small-shop-running-lean content resonates with exactly the owner-operators we built Syntharra for.",  # UNVERIFIED
+        "personalization_hook": "Your 'Pandora's Box — Owning a Home with Problems' series is a masterclass in zonal pressure diagnostics and duct leakage, and it resonates with exactly the owner-operators we built Syntharra for.",
     },
 ]
 
