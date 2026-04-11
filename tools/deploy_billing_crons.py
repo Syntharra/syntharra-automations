@@ -70,6 +70,14 @@ CRON_SERVICES = [
         "desc":     "Daily 00:00 UTC — Phase 0 pilot state machine: day-3/7/12 engagement emails, day-14 convert-or-expire, winback 16/30. Graceful no-op while there are no live pilots.",
         "needs_stripe": True,
     },
+    {
+        "name":     "syntharra-marketing-digest",
+        "command":  "python tools/marketing_digest.py --since 1d --post-to-slack",
+        "schedule": "0 9 * * *",
+        "desc":     "Daily 09:00 UTC — funnel rollup (page views + pilot signups + conversions) posted to Slack #daily-digest.",
+        "needs_stripe": False,
+        "needs_slack": True,
+    },
 ]
 
 
@@ -145,16 +153,19 @@ def fetch_env_vars(sb_key: str) -> dict:
         "&or=(and(service_name.eq.Supabase,key_type.eq.service_role_key)"
         ",and(service_name.eq.Retell AI,key_type.eq.api_key)"
         ",and(service_name.eq.Brevo,key_type.eq.api_key)"
-        ",and(service_name.eq.Stripe,key_type.eq.secret_key_test))",
+        ",and(service_name.eq.Stripe,key_type.eq.secret_key_test)"
+        ",and(service_name.eq.Slack,key_type.eq.bot_token))",
         sb_key,
     )
     lookup = {(r["service_name"], r["key_type"]): r["key_value"] for r in rows}
+    slack_token = lookup.get(("Slack", "bot_token"), "")
     return {
         "SUPABASE_URL":          SUPABASE_URL,
         "SUPABASE_SERVICE_KEY":  lookup[("Supabase", "service_role_key")],
         "RETELL_API_KEY":        lookup[("Retell AI", "api_key")],
         "BREVO_API_KEY":         lookup[("Brevo", "api_key")],
         "STRIPE_SECRET_KEY":     lookup[("Stripe", "secret_key_test")],
+        "SLACK_BOT_TOKEN":       slack_token,
     }
 
 
@@ -236,10 +247,14 @@ def set_cron_schedule(token: str, service_id: str, env_id: str, svc: dict):
     })
 
 
-def set_env_vars(token: str, service_id: str, env_id: str, env_vars: dict, needs_stripe: bool):
+def set_env_vars(token: str, service_id: str, env_id: str, env_vars: dict, needs_stripe: bool, needs_slack: bool = False):
     """Upsert env vars on the service."""
     for name, value in env_vars.items():
         if name == "STRIPE_SECRET_KEY" and not needs_stripe:
+            continue
+        if name == "SLACK_BOT_TOKEN" and not needs_slack:
+            continue
+        if not value:  # skip empty/missing optional tokens
             continue
         railway_gql(token, """
             mutation($input: VariableUpsertInput!) {
@@ -326,7 +341,7 @@ def main():
             set_cron_schedule(railway_token, service_id, env_id, svc)
 
             print(f"  Setting env vars...")
-            set_env_vars(railway_token, service_id, env_id, env_vars, svc["needs_stripe"])
+            set_env_vars(railway_token, service_id, env_id, env_vars, svc["needs_stripe"], svc.get("needs_slack", False))
             print(f"  Done.")
 
         time.sleep(0.5)  # brief pause between mutations
