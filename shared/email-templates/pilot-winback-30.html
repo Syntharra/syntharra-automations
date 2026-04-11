@@ -1,0 +1,62 @@
+<!--subject: Last one from me — your number expires in 14 days. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Last chance on your number</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0e1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#e6eaf2">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0a0e1a;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;background:#0f1524;border-radius:14px;overflow:hidden;border:1px solid #1a2236;box-shadow:0 10px 40px rgba(0,0,0,0.45)">
+
+<tr><td style="height:3px;background:linear-gradient(90deg,#f59e0b,#ef4444);font-size:0;line-height:0">&nbsp;</td></tr>
+
+<tr><td style="padding:28px 36px 10px">
+<div style="font-size:13px;font-weight:700;color:#f59e0b;letter-spacing:0.12em;text-transform:uppercase">Syntharra &middot; Final notice</div>
+</td></tr>
+
+<tr><td style="padding:4px 36px 6px">
+<h1 style="font-size:26px;font-weight:700;color:#ffffff;margin:0;line-height:1.25;letter-spacing:-0.01em">
+Last one from me, {{ params.first_name }}.
+</h1>
+</td></tr>
+
+<tr><td style="padding:10px 36px 22px">
+<div style="font-size:15px;color:#9aa3b8;line-height:1.65">
+<!-- TODO: copy approval — spec § 6.7 says "last chance" tone with specific-number hook. -->
+Your pilot ended 30 days ago. We've held {{ params.company_name }}'s dedicated phone number since then, but we can't hold it forever. <strong style="color:#e6eaf2">In 14 days, the number gets released back to the pool</strong> and won't come back. After that, even if you change your mind, you'll have to start over with a new number.
+</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 22px">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0a1020;border:1px solid #1a2236;border-radius:12px">
+<tr><td style="padding:20px 24px">
+<div style="font-size:13px;color:#c5cbda;line-height:1.7">
+This is the last email you'll get from me about the pilot. If you want to keep your number and your setup, reactivate now. If not, no hard feelings — I'll take you off the list.
+</div>
+</td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding:6px 36px 18px" align="center">
+<a href="{{ params.add_card_url }}" style="display:inline-block;background:#00d4ff;color:#0a0e1a;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none;padding:14px 30px;letter-spacing:0.01em">Keep my number &rarr;</a>
+</td></tr>
+
+<tr><td style="padding:0 36px 26px" align="center">
+<div style="font-size:12px;color:#6b7388">$697/mo &middot; cancel anytime &middot; number released after 14 days</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 28px;border-top:1px solid #1a2236">
+<div style="padding-top:18px;font-size:12px;color:#6b7388;line-height:1.6">
+Syntharra &middot; <a href="mailto:founders@syntharra.com" style="color:#00d4ff;text-decoration:none">founders@syntharra.com</a><br>
+<a href="{{ params.unsubscribe_url }}" style="color:#6b7388;text-decoration:underline">Unsubscribe</a>
+</div>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
