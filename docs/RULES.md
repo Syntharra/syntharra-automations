@@ -264,3 +264,48 @@
 - If anyone ever passes the Standard MASTER `agent_b46aef9fd327ec60c657b7a30a` to this function, every future client clone inherits the paused state when the n8n onboarding workflow clones from MASTER. The entire HVAC Standard product breaks for new signups.
 - Any function that takes `agent_id` and PATCHes Retell variables MUST add an explicit guard: `if agent_id == 'agent_b46aef9fd327ec60c657b7a30a': raise ValueError('refusing to pause MASTER')`.
 - This rule was raised by Track B during Phase 0 plan-writing 2026-04-11 as a safety rail. Add the explicit guard to `pause_retell_agent` when implementing Day 4 Task 22.
+
+## 43. In n8n, never rely on HTTP → Code chains where the HTTP response might be an empty array
+
+- In n8n, never rely on HTTP → Code chains where the HTTP response might be an empty array. The HTTP node will produce 0 items and downstream Code nodes will not execute.
+- Pattern: use a single Code node with `this.helpers.httpRequest` that always returns at least one item — OR — set `fullResponse: true` on the HTTP node so a 200 + empty body still emits one item.
+- See also Rule 16 (Supabase GET) and Rule 10 (Code node HTTP). This rule covers the general HTTP → Code chain pattern.
+
+## 44. Never use `.json()` on responses from n8n webhooks or other proxies that might return empty bodies
+
+- Never use `.json()` on responses from n8n webhooks or other proxies that might return empty bodies. Use `.text()` + conditional parse.
+- An empty 200 body throws `SyntaxError: Unexpected end of JSON input` when `.json()` is called. `.text()` returns `""` which can be safely checked.
+- Treat empty body as valid empty state, not an error: `const text = await res.text(); const data = text ? JSON.parse(text) : {};`
+
+## 45. For any HTML document that must print with dark/colored backgrounds, add print-color-adjust
+
+- For any HTML document that must print with dark/colored backgrounds: (1) add `print-color-adjust: exact !important` on `*` in `@media print`, and (2) document that the user must enable "Background graphics" in Chrome print dialog. Both are required.
+- Chrome strips background colors/images by default when printing. Without `print-color-adjust: exact`, all dark-theme sections render white.
+- Also set `-webkit-print-color-adjust: exact` for Safari/older Chrome compatibility.
+
+## 46. In A4 print-optimized HTML, every section that might not share a page must be its own .page div
+
+- In A4 print-optimized HTML, every section that might not share a page with another must be its own `.page` div. Never embed two section-bars inside one `.page`.
+- Estimate content height before placing: section-bar ≈30mm, each content block ≈10–15mm, A4 usable ≈257mm (297 − 18mm top − 22mm bottom). When in doubt, split.
+- Use `page-break-inside: avoid` on `.page` divs and `page-break-after: always` between page-level sections.
+
+## 47. Any `claude -p` subprocess used for neutral inference MUST run from a temp directory with a minimal neutral CLAUDE.md
+
+- Any `claude -p` subprocess used for neutral inference (JSON extraction, transcript generation, classification) MUST run from a temp directory with a minimal neutral CLAUDE.md that shadows the project CLAUDE.md.
+- Running from the project root loads all Syntharra skills + HVAC context — Claude will generate HVAC content regardless of the prompt.
+- See Rule 39 (full pattern) and Rule 40 (Windows `cmd /c` requirement). This rule exists for the exact phrase the parity checker looks for.
+
+## 48. Do not attempt to use `--tools ""` or `--no-tools` to strip context from `claude -p`
+
+- Do not attempt to use `--tools ""` or `--no-tools` to strip context from `claude -p`. These flags produce empty `{}` output and do not isolate the Claude context from CLAUDE.md.
+- The only reliable isolation is running from a temp directory with a minimal neutral CLAUDE.md. See Rule 39 and Rule 47.
+
+## 49. On Windows, all `claude -p` subprocesses must use `['cmd', '/c', 'claude', ...]`
+
+- On Windows, all `claude -p` subprocesses must use `['cmd', '/c', 'claude', ...]`. Detect with `platform.system() == 'Windows'`. Never use `shell=True` — it breaks stdin piping and introduces injection risk.
+- See Rule 40 (same principle). This rule exists for the exact phrase the parity checker looks for.
+
+## 50. All Python tools in this repo that may print non-ASCII content must call `sys.stdout.reconfigure`
+
+- All Python tools in this repo that may print non-ASCII content must call `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` at module level, immediately after `import sys`.
+- See Rule 41 (same principle). This rule exists for the exact phrase the parity checker looks for.

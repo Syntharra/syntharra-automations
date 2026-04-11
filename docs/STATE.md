@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-1ff5f4c docs(marketing): autonomous marketing team design spec
+e251ef4 feat(marketing): blog publisher fix + research-agent integration + marketing_brain wiring
 
 ## Go-live checklist
 see docs/GO-LIVE.md
