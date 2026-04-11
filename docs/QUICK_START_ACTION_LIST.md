@@ -10,21 +10,22 @@
 **Why first:** 82 pages are live but Google hasn't indexed them. Without this, zero organic traffic.
 **How:** See `docs/google_search_console_setup.md` — full step-by-step.
 
-### 2. Send the 3 cold outreach emails already queued (~5 min)
-**Why:** Last test showed 3 Las Vegas HVAC shops with emails found and sequences generated.
-**How:**
+### 2. Run cold outreach for 2-3 cities (~10 min)
+**Why:** Each city run targets ~20 HVAC owners. 3 cities = ~60 emails = ~2-4 replies statistically.
+**How — now it's ONE command per city:**
 ```bash
-# Preview first (no sends):
-python tools/send_cold_outreach.py --city "Las Vegas" --preview
+source .env.local
 
-# Send for real (opens Brevo):
-python tools/send_cold_outreach.py --city "Las Vegas" --backend brevo
-```
-Then pick 2-3 more cities:
-```bash
-python tools/scrape_hvac_directory.py --city "Phoenix" --state AZ --limit 20
-python tools/find_email_from_website.py leads/phoenix_hvac_leads.json
-python tools/build_cold_outreach.py leads/phoenix_hvac_leads.json
+# See the priority city queue:
+python tools/run_outreach_campaign.py --list-cities
+
+# Run the full pipeline for a city:
+python tools/run_outreach_campaign.py --city "Phoenix" --state AZ
+python tools/run_outreach_campaign.py --city "Nashville" --state TN
+python tools/run_outreach_campaign.py --city "Dallas" --state TX
+
+# Review the sequences (opens the .txt file):
+# Then send:
 python tools/send_cold_outreach.py leads/phoenix_cold_outreach.json --backend brevo
 ```
 
