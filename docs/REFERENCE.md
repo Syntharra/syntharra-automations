@@ -120,7 +120,6 @@ git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --g
 | HVAC AI Receptionist Onboarding (Standard) | `4Hx7aRdzMl5N0uJP` | Standard onboarding: Jotform → Retell → Supabase → Stripe → email |
 | HVAC Call Processor (lean fan-out) | `Kg576YtPM9yEacKn` | Retell webhook → filter → lookup → email/Slack/SMS. Triggers on is_lead OR urgency=emergency |
 | Retell Proxy Webhook | `Y1EptXhOPAmosMbs` | Returns {calls:[...]} from Retell v2 for dashboard use |
-| Nightly GitHub Backup | `44WfbVmJ7Zihcwgs` | Scheduled nightly backup. ⚠️ Currently inactive (as of 2026-04-11) — reactivate in n8n. Last ran 2026-04-09. |
 
 ## core_flow — Fix Status (Premium TESTING)
 | # | Scenario | Status |
