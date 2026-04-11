@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-e251ef4 feat(marketing): blog publisher fix + research-agent integration + marketing_brain wiring
+e34cbaa chore(session): session-end 2026-04-11 homepage-hero-redesign
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -120,66 +120,10 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-
-**Status: Tier 1 SEO content engine plan APPROVED by Dan 2026-04-11 evening. Execution deferred to a fresh session (this session's context was getting heavy and Claude started hallucinating — see session log). No code to be written until fresh context.**
-
-**Authoritative plan:** [docs/superpowers/plans/2026-04-11-tier-1-seo-content-engine.md](superpowers/plans/2026-04-11-tier-1-seo-content-engine.md) — ~1,400 lines, informed by 4 parallel recon agents (website explorer, tools/DB inventory, seo-auditor, competitor-analyzer).
-
-**SOCIAL VIDEO IS PARKED until CRO business verification comes through.** TikTok Business + Meta (FB+IG) both require CRO business ID. YouTube uploads technically possible via personal Google OAuth but deferred. Higgsfield and Blotato subscriptions deferred — $0/mo committed until CRO clears. The social video plan ([docs/superpowers/plans/2026-04-11-autonomous-content-team-implementation.md](superpowers/plans/2026-04-11-autonomous-content-team-implementation.md)) stays on disk for resumption after CRO.
-
-**Tonight's approved Tier 1 scope (execute in the next session in this order):**
-
-1. **Phase 0 — put out P0 fires on live syntharra.com** (via 4 parallel subagents on non-overlapping files):
-   - Homepage Product schema advertises wrong price ($497/$997 — old Standard/Premium, killed 2026-04-09). Fix to single $697 tier
-   - Placeholder phone `+1-000-000-0000` hardcoded in LocalBusiness schema on all 25 city pages — **remove telephone field entirely** (Dan's answer pending; recommendation is remove until Telnyx lands)
-   - "Free 14-day pilot" copy everywhere vs the canonical **200-minute free pilot** — global find/replace on homepage + 25 cities + 19 vs-* + lp pages
-   - Zero cross-linking between city pages — add "24 other cities" footer block
-   - Duplicate content cluster: `/hvac.html` + `/lp/hvac-answering-service.html` + `/best-hvac-answering-service.html` — set canonicals to `/best-hvac-answering-service.html` (same for plumbing + electrical)
-   - 19 vs-* comparison pages have only FAQPage schema — add Product + Review JSON-LD (**aggregateRating claim on homepage "4.9 from 847" needs verification — if placeholder, remove**)
-   - Most fixes are TEMPLATE changes in `tools/generate_city_pages.py` OR `Syntharra/syntharra-website/_template/page-builder.py` — **READ page-builder.py FIRST** before touching any city-page generator (it produced the 25 live pages, not generate_city_pages.py which only has 9 cities defined)
-
-2. **Phase 1 — drain the 40 queued blog_topics into full HTML blog posts:**
-   - `blog_topics` table has **41 rows, 40 queued, 1 published**, columns: `id, slug, title, tag, hero_emoji, hero_gradient, target_keyword, brief, status, created_at, published_at`. Briefs only, not drafts. **Nothing currently reads this table.**
-   - Build `tools/blog_publisher.py` — reads `WHERE status='queued'`, calls `claude -p` with brief + target_keyword + existing blog template pattern (learned by reading 3 real blog posts first), writes HTML file to `Syntharra/syntharra-website/blog/{slug}.html`, commits via local clone push (NOT GitHub MCP — known 403 issue), updates `status='published'`, sets `published_at=now()`, re-runs `tools/generate_sitemap.py`
-   - Gate behind `is_seo_publish_enabled()` default false, plugs into marketing_brain.py Phase 4 EXECUTE
-   - Railway cron: Mon/Wed/Fri 07:00 UTC, `--limit 2`
-   - First 5 posts go through dry-run + Slack review; after that, auto-publish with 48h override window
-
-3. **Phase 2 — wire research_agent.py into brain + add cron:**
-   - `tools/research_agent.py` shipped this session (99 rows in `marketing_intelligence` from 4 Reddit subs), but not yet cron'd
-   - Add Railway cron: `syntharra-research-agent`, daily 06:00 UTC
-   - Extend `marketing_brain.py` Phase 1 REVIEW (line ~1064) to read top-confidence `marketing_intelligence` rows for the current week
-   - Add `marketing_brain_log` writer so phase decisions are audit-logged (table exists, no writer yet)
-
-**Phases 3-6 (next sessions, scoped in plan file):**
-- Phase 3: competitor intel writer (`tools/competitor_watch.py` → `competitor_intelligence` table)
-- Phase 4: lead magnet + nurture (2026 HVAC Missed-Calls Report as asset + blog post, rewrite `newsletter-weekly.html`, Brevo 3-email sequence, email capture → `website_leads` → auto-deliver)
-- Phase 5: content gap closure (13 missing city pages: Chicago, LA, San Diego, San Jose, Seattle, Portland, Kansas City, St. Louis, Minneapolis, Cleveland, Pittsburgh, Sacramento, Detroit + 6 money pages: 24-7-hvac-call-handling, hvac-after-hours-dispatcher, ai-receptionist-for-hvac-contractors, hvac-emergency-dispatch-service, hvac-overflow-answering-service, hvac-answering-service-near-me + About page E-E-A-T upgrade)
-- Phase 6: marketing_brain full integration of new tactics
-
-**6 decisions Dan needs to answer BEFORE next session executes Phase 0:**
-1. Phone on city pages: remove `telephone` field entirely or use a real number? (Recommendation: remove until Telnyx)
-2. `aggregateRating "4.9 from 847"` on homepage — real or placeholder? (Recommendation: remove if placeholder — Google review-schema penalty)
-3. Blog publisher GitHub push path: local clone push vs GitHub MCP? (Recommendation: local clone, GitHub MCP has known 403)
-4. Blog publish approval loop: review every post vs auto-publish after first 5? (Recommendation: first 5 dry-run + Slack review, then auto-publish with 48h override)
-5. **Explicit confirmation: NO ServiceTitan or Housecall Pro integrations exist.** Agent 4 suggested 2 keyword targets + 1 content piece based on these — dropping them. **Confirm yes.**
-6. Lead magnet content: Claude-written 2026 HVAC Missed-Calls Report from public data (with sources cited, estimates flagged) or wait for real Syntharra pilot data?
-
-**Dan blockers (external, not code):**
-- DAN: CRO business ID verification (blocks ALL social: Meta + TikTok Business)
-- DAN [5 MIN — blocks pilot_expired promotion]: Retell dashboard click test per `docs/retell_pilot_expired_test_plan.md`. Set agent_level_dynamic_variables.pilot_expired='true' on TESTING, web call, verify, remove variable, web call again, verify. Reply 'go' and promote.py runs.
-- DAN: VSL filming (~1 hour, Phase 0 spec § 3.2) — blocks start.html Mux embed. Dan deferred this until SEO/content team is running; may never be re-filmed
-- DAN: vault Telnyx `api_key` + `retell_sip_connection_id` — without these pilots can't receive calls (P0)
-- DAN: vault Stripe `secret_key_live` — Day 7 smoke test blocker (P1)
-- DAN: register stripe-webhook URL + vault `webhook_signing_secret`
-- DAN: rotate Mux secret (original was sent in plaintext chat)
-- DAN: Google Search Console DNS verification + sitemap submission (existing setup doc at `docs/google_search_console_setup.md` never executed)
-
-**Carry-forward autonomous work items (from prior sessions, not superseded by Tier 1 plan):**
-- WebFetch each link-building target, resolve contact_url_or_unknown → real contact form URLs (tools/build_linkbuilding_outreach.py output)
-- Spot-check UNVERIFIED pricing claims on the brand comparison pages against competitors' live pricing pages (ties into Phase 0 P0-6 schema work — doing both together is cleaner)
-- Build `syntharra.com/partners?ref=slug` attribution page (currently reuses affiliate.html; needs proper param-aware landing)
-- `tools/deploy_billing_crons.py` idempotency: add service_id vault lookup so re-runs skip existing services cleanly (currently relies on `service_exists()` name match — fine but brittle)
+- Resume Phase 0 Day 3: Brevo upload + cron deployment + onboarding workflow pilot branch patch
+- Telnyx vault entries still needed from Dan (blocks phone provisioning)
+- Stripe live key still needed from Dan (blocks first paying client)
+- Run: python tools/weekly_self_improvement.py --days 7 (full week review now that brain is built)
 
 ## Phase 0 progress (marketing build)
 

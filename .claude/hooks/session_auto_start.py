@@ -53,6 +53,14 @@ try:
             print(result.stdout)
         if result.returncode != 0 and result.stderr:
             print(f"[!] session_start.py stderr: {result.stderr[:300]}")
+        print("")
+        print("  READ BEFORE RESPONDING (in order):")
+        print("  1. docs/STATE.md      — current reality, in-flight, blockers")
+        print("  2. docs/RULES.md      — 56+ hard don'ts (violations = real incidents)")
+        print("  3. docs/PLAYBOOKS.md  — HOW to do things correctly in this system")
+        print("  4. docs/DECISIONS.md  — WHY architectural decisions were made")
+        print("  5. docs/REFERENCE.md  — all IDs (sole source — never recall from memory)")
+        print("  6. docs/FAILURES.md   — past incidents (skim last 10 rows)")
         print("=" * 64 + "\n")
 
 except Exception as e:

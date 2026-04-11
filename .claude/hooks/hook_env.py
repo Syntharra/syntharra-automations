@@ -52,8 +52,11 @@ def call_claude(prompt: str, tools: str = "Read,Write,Edit", timeout: int = 120)
 
     Writes prompt to a temp file and pipes it via stdin to avoid Windows
     32KB command-line length limit when prompts are large.
+
+    On Windows, .cmd files cannot be executed directly via subprocess list —
+    must use ['cmd', '/c', CLAUDE_BIN, ...]. See Rule 40/49.
     """
-    import tempfile, os
+    import platform, tempfile, os
     tmp = None
     try:
         # Write prompt to a temp file, then pipe it into claude via stdin
@@ -63,17 +66,21 @@ def call_claude(prompt: str, tools: str = "Read,Write,Edit", timeout: int = 120)
             f.write(prompt)
             tmp = f.name
 
+        # Rule 40/49: on Windows, .cmd files need cmd /c — never shell=True (breaks stdin piping)
+        claude_args = ["-p", "-", "--allowedTools", tools, "--output-format", "text"]
+        if platform.system() == "Windows":
+            cmd = ["cmd", "/c", CLAUDE_BIN] + claude_args
+        else:
+            cmd = [CLAUDE_BIN] + claude_args
+
         with open(tmp, "r", encoding="utf-8") as stdin_file:
             result = subprocess.run(
-                [
-                    CLAUDE_BIN,
-                    "-p", "-",          # "-" tells claude to read prompt from stdin
-                    "--allowedTools", tools,
-                    "--output-format", "text",
-                ],
+                cmd,
                 stdin=stdin_file,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",   # Rule 41: never rely on Windows cp1252 default
+                errors="replace",
                 timeout=timeout,
                 cwd=str(ROOT),
             )
