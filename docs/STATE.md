@@ -1,11 +1,11 @@
 # State — Syntharra Automations
 
-_Last updated: 2026-04-10_
+_Last updated: 2026-04-11_
 
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-34169b0 feat(phase0): Day 1 COMPLETE â€” migration applied to prod, billing tools patched
+bb4b333 docs(phase0): STATE.md â€” Day 2 complete, dark-launch milestone reached
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,7 +116,9 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-**Phase 0 marketing build — Day 1 execution.** Spec and partial plan committed 2026-04-11. Awaiting Dan's greenlight on Day 1 Task 1 (read-only credentials fetch + tool verification). Resume pointer: `memory/project_phase0_progress.md`. Once greenlit, Tasks 1-7 execute without per-task confirmation; HARD GATE at Task 8 (prod schema migration) requires Dan's explicit go-ahead. Also pending: Telnyx vault keys, Stripe live mode migration (both required before first paying customer regardless of Phase 0 progress).
+- Day 3: deploy pilot_lifecycle.py to Railway + run upload_brevo_templates.py + run stripe_pilot_setup.py + paste IDs + patch n8n Send Welcome Email node to skip pilots
+- Dan unblockers: vault Telnyx api_key + retell_sip_connection_id (TOP PRIORITY — without these pilots can't receive calls), film 60s founder VSL, vault Mux creds, vault Stripe live key
+- Resume pointer: memory/project_phase0_progress.md (updated 2026-04-11 with Day 2 results + Day 3 followups list)
 
 ## Phase 0 progress (marketing build)
 
@@ -159,7 +161,7 @@ The n8n `Send Welcome Email` node is unconditional — when a pilot signs up the
 - **Phase 0 marketing build** — Day 1 + Day 2 LIVE in prod. Plan Days 3-7 still being expanded (Track B). Day 3 cron + Brevo upload + Day 3 followup (`Send Welcome Email` node patch) is the next executable batch. Days 5-7 are blocked on Dan unblockers below.
 - **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client AND before Phase 0 Day 7 smoke test.
 - **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`. **Without these, Phase 0 pilot signups will create Retell agents but provision no phone number — the AI receptionist exists but can't actually receive calls.** Top priority unblocker.
-- **Mux account + creds** — needed for Day 5 VSL upload. Vault as `service_name='Mux'`, key types `data_token` + `playback_signing_key`.
+- **Mux account + creds** — ✅ **VAULTED 2026-04-11** as `service_name='Mux'`, `key_type='token_id'` + `key_type='secret_key'` (Mux API access token pair). Day 5 Task 35 (Mux upload) is unblocked once the VSL is filmed. **Dan should rotate the Mux secret in dashboard ASAP** since the original was sent in chat — pull the new value into the same vault row (`UPDATE syntharra_vault SET key_value=...`). Note: spec/plan reference key types `data_token` and `playback_signing_key` — the actual Mux API auth pair is `token_id` + `secret_key`. Plan will be aligned at Day 5 execution time.
 - **Founder VSL filming** — Dan-only, ~1 hour shoot, script in spec § 3.2. Day 5 blocker.
 
 ## What's blocked
