@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-a5982f3 feat(phase0): Phase 0 expansion â€” Railway crons LIVE + community + press + link building
+e1796a3 feat(marketing): autonomous marketing brain + social posting + A/B learning layer
 
 ## Go-live checklist
 see docs/GO-LIVE.md
