@@ -81,6 +81,12 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group core_flow
 ```
 
+## Jotform Forms
+| Form | ID | Purpose |
+|---|---|---|
+| HVAC Standard paid onboarding | `260795139953066` | Paid flow, warm traffic. Webhook → `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding` → workflow `4Hx7aRdzMl5N0uJP`. |
+| **HVAC Standard pilot onboarding** | `261002359315044` | **NEW 2026-04-11** Phase 0 pilot fork. Cold traffic from `syntharra.com/start` (when live). Same webhook URL as paid form (`/webhook/jotform-hvac-onboarding`); n8n branches internally on the `pilot_mode` hidden field via the "Is Pilot?" IF node. Hidden tracking fields: `stx_asset_id`, `utm_source/medium/campaign/content/term`, `pilot_mode` (default `true`). |
+
 ## n8n Workflows
 - Total: 48 | Active: 33 | Labelled: 38/48
 
