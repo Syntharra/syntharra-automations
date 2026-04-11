@@ -78,6 +78,14 @@ CRON_SERVICES = [
         "needs_stripe": False,
         "needs_slack": True,
     },
+    {
+        "name":     "syntharra-marketing-brain",
+        "command":  "python tools/marketing_brain.py",
+        "schedule": "0 8 * * 1",
+        "desc":     "Monday 08:00 UTC — autonomous weekly marketing cycle: review perf, generate plan, propose to Slack, execute (cold email + Reddit + LinkedIn), track results.",
+        "needs_stripe": False,
+        "needs_slack": True,
+    },
 ]
 
 
