@@ -26,3 +26,4 @@
 | 2026-04-10 | 3-layer agent testing system | 44a971a | Built complete testing system: gen_transcripts.py, test_post_call_analysis.py, test_email_delivery.py, run_full_test_suite.py, 25 scenarios. Results: Layer 1 25/25, Layer 2 90/90, Layer 3 3/3. Updated hvac-standard-SKILL.md to reflect new test suites. |
 | 2026-04-10 | phase-0-day-1 | 34169b0 | Phase 0 Day 1 complete: schema migration applied, billing tools patched, zero regression verified via byte-identical parity |
 | 2026-04-11 | phase-0-day-2 | bb4b333 | Phase 0 Day 2: pilot infra dark-launched in prod (Jotform + n8n Reconcile patch + Track C drafts + Track B plan), zero-cost dark launch verified |
+| 2026-04-11 | phase-0-day-3 | 42a544e | Phase 0 Day 3: Brevo (9 IDs) + Stripe TEST + 3 Edge Functions + Send Welcome pilot-skip + start.html scaffold (NOT pushed) + RULES #42 + Mux vaulted |

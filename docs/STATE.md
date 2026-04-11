@@ -5,7 +5,7 @@ _Last updated: 2026-04-11_
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-bb4b333 docs(phase0): STATE.md â€” Day 2 complete, dark-launch milestone reached
+42a544e feat(phase0): Day 3 dark-launch â€” Brevo upload + Stripe setup + 3 Edge Functions + Send Welcome pilot-skip + RULES #42
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -116,9 +116,10 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-- Day 3: deploy pilot_lifecycle.py to Railway + run upload_brevo_templates.py + run stripe_pilot_setup.py + paste IDs + patch n8n Send Welcome Email node to skip pilots
-- Dan unblockers: vault Telnyx api_key + retell_sip_connection_id (TOP PRIORITY — without these pilots can't receive calls), film 60s founder VSL, vault Mux creds, vault Stripe live key
-- Resume pointer: memory/project_phase0_progress.md (updated 2026-04-11 with Day 2 results + Day 3 followups list)
+- Day 4: draft Retell pilot_expired component into retell-iac/components/ + manifest update + build TESTING (no MASTER promote without Dan)
+- Dan unblockers (top to bottom): Telnyx vault keys (waiting on business number), Stripe secret_key_live, film 60s founder VSL, push syntharra-website start.html when ready, register stripe-webhook URL in Stripe dashboard + vault webhook_signing_secret, rotate Mux secret (security)
+- Followups carried forward: rebrand pilot Brevo templates from dark to light theme, fix _brevo_params_for to fetch owner_name + agent_phone_number from hvac_standard_agent
+- Resume pointer: memory/project_phase0_progress.md (updated 2026-04-11 with Day 2 + Day 3 results + Mux unblock)
 
 ## Phase 0 progress (marketing build)
 
@@ -150,11 +151,22 @@ Pilot signup machine is **live and ready to receive traffic**, but won't get any
 - **New tools committed (`ba0b8f1`):** `tools/build_pilot_jotform.py`, `tools/patch_pilot_jotform_hidden_fields.py`, `tools/patch_onboarding_workflow_add_pilot_branch.py` (idempotent via `// === Phase 0 pilot block === //` marker), `tools/fetch_vault.py` (vault helper).
 - **Backups (gitignored):** `docs/audits/n8n-backups-20260411/4Hx7aRdzMl5N0uJP-pre-pilot-branch.json` (290KB, sha256-verified pre-apply), `-pre-apply-recheck.json`, `-post-pilot-branch.json` for rollback if ever needed.
 
-### Day 3 followup — `Send Welcome Email` node still fires paid welcome for pilots
+### Day 3 — COMPLETE (2026-04-11) — pilot funnel infrastructure end-to-end
 
-The n8n `Send Welcome Email` node is unconditional — when a pilot signs up they currently receive the existing **paid** welcome email ("you're live at $697/mo, here's your billing date") which contradicts the pilot offer. **Will be addressed in Day 3** by patching that node to skip when `pilot_mode='true'` and letting `pilot_lifecycle.py` send `pilot-welcome.html` instead. Risk in the interim: low (no traffic to the pilot form yet — landing page is Day 6).
+Day 3 closed the loop on the dark-launched pilot funnel. Every system in the lead pathway is now wired, tested, and waiting on the Dan-blockers (Telnyx, VSL filming, Stripe live).
 
-**Next:** Day 3 — pilot lifecycle Railway deploy + Brevo template upload + Stripe Setup Intent webhook + the `Send Welcome Email` pilot-skip patch. Plan tasks 19-23 (Track B is writing tasks 20-23 right now).
+- **9 Brevo pilot email templates uploaded** via `tools/upload_brevo_templates.py` (idempotent, find-by-name → existing ID). IDs 1-9, registered in `docs/REFERENCE.md` Brevo Templates section, inlined into `tools/pilot_lifecycle.py` `BREVO_TEMPLATE_IDS`. Sender = `daniel@syntharra.com` (only verified sender on Brevo). ⚠ Followup: rebrand from dark-theme to light-theme to match brand rules; `founders@`/`support@` need verification in Brevo dashboard.
+- **Stripe TEST mode pilot products created** via `tools/stripe_pilot_setup.py` (idempotent via metadata markers). Product `prod_UJb4pQDwyQ7lgW`, price `price_1TKxruECS71NQsk8yspZnj2B` ($697/mo recurring). Inlined into `pilot_lifecycle.py` `STRIPE_HVAC_STANDARD_PRICE_ID`. Replace with live equivalents when Dan vaults the live key.
+- **`Send Welcome Email` n8n node patched** via the second n8n patcher (`tools/patch_onboarding_workflow_pilot_welcome.py`). Pilot block at the top of jsCode reaches back to JotForm Webhook Trigger, on `pilot_mode='true'` sends Brevo template id 7 (pilot-welcome) immediately with pilot params, returns. Paid path 143/143 lines byte-identical. **Day 2 Reconcile pilot block still intact** (verified — no clobber). Workflow `4Hx7aRdzMl5N0uJP` now has TWO independent pilot blocks (Reconcile + Send Welcome Email), both surgical, both with markers for idempotency.
+- **Three Supabase Edge Functions deployed** to project `hgheyqwnrcvwtgngqdnq`. Source committed under `supabase/functions/`:
+  1. `marketing-event-ingest` v2 — public POST endpoint for browser tracker, bot filter + 15-event-type whitelist, INSERTs into `marketing_events`. Smoke test passed (POST 200, row inserted with all fields, deleted). v1 had a schema bug (assumed `props` and `occurred_at` columns that don't exist on the live table); v2 corrected to use `metadata` jsonb + `session_id` NOT NULL fallback.
+  2. `pilot-setup-intent` v1 — POST endpoint that takes `{ agent_id }`, finds the matching pilot, creates/reuses Stripe customer, creates Setup Intent, returns `client_secret`. Reads Stripe key from vault (prefers `secret_key_live`, falls back to `secret_key_test`) — auto-promotes to live when Dan vaults the live key, no redeploy needed.
+  3. `stripe-webhook` v1 — handles `setup_intent.succeeded` → marks `payment_method_added_at` → emits marketing event → sends Brevo template 1 (pilot-card-added). HMAC verification via vault `webhook_signing_secret` (currently absent — verification SKIPPED with warning, acceptable in dark-launch). ⚠ Followup: register webhook URL in Stripe dashboard, vault the signing secret.
+- **Mux credentials VAULTED 2026-04-11** as `service_name='Mux'`, `key_type='token_id'` + `key_type='secret_key'`. Day 5 Task 35 (Mux upload) is unblocked once VSL is filmed. Dan should rotate the secret in Mux dashboard ASAP since the original was sent in chat (leak vector exists in conversation log).
+- **Phase 0 landing page scaffolded in syntharra-website sibling repo** (commit `f9cddc1`, NOT pushed). `start.html` (227 lines, 1 style block, light-theme Syntharra chrome, hero with the r/HVAC quote, VSL placeholder div, 200-min/14-day pilot offer card, 4-question FAQ, final CTA pointing to pilot Jotform `261002359315044?pilot_mode=true`) + `marketing-tracker.js` (234 lines, vanilla, sendBeacon-preferred, fires page_view/cta_click/scroll_depth/vsl_*_pct events to the marketing-event-ingest Edge Function). Pushing requires Mux playback ID swap-in OR explicit dark-launch decision.
+- **`docs/RULES.md` #42 added:** `pause_retell_agent` must NEVER target MASTER. Track B's safety rail captured as a standing rule.
+
+**Next:** Day 4 work — Retell `pilot_expired` flow component in `retell-iac/components/`, manifest update, build TESTING (NO promote), Dan films VSL, Railway-deploy `pilot_lifecycle.py` cron. Plan tasks 24-29.
 
 ## What's in flight
 
