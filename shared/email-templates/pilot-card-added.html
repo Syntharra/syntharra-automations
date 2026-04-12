@@ -1,0 +1,62 @@
+<!--subject: Got it. Your pilot keeps running. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card on file</title>
+</head>
+<body style="margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Helvetica,Arial,sans-serif;color:#4A4A6A">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F7FB;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid #E8E8F0;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+
+<tr><td style="height:3px;background:linear-gradient(90deg,#6C63FF,#8B85FF);font-size:0;line-height:0">&nbsp;</td></tr>
+
+<tr><td style="padding:28px 36px 10px">
+<p style="font-size:28px;font-weight:900;letter-spacing:6px;color:#1A1A2E;margin:0;">SYNTHARRA</p>
+<p style="color:#6C63FF;font-size:10px;letter-spacing:2px;font-weight:600;margin:4px 0 0;text-transform:uppercase">Card on file</p>
+</td></tr>
+
+<tr><td style="padding:14px 36px 6px">
+<h1 style="font-size:26px;font-weight:700;color:#0E0E1A;margin:0;line-height:1.25;letter-spacing:-0.01em">
+Thanks, {{ params.first_name }}. Card is on file.
+</h1>
+</td></tr>
+
+<tr><td style="padding:10px 36px 22px">
+<div style="font-size:15px;color:#4A4A6A;line-height:1.65">
+Your pilot for {{ params.company_name }} keeps running. On day 14 we'll auto-convert you to the $697/mo plan with zero interruption to service. If you decide it's not for you before then, cancel from the dashboard and you won't be billed a cent.
+</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 22px">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#FFFFFF;border:1px solid #E8E8F0;border-radius:12px;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+<tr><td style="padding:20px 24px">
+<div style="font-size:13px;color:#4A4A6A;line-height:1.6">
+<strong style="color:#0E0E1A">Days remaining in pilot:</strong> {{ params.days_remaining }}<br>
+<strong style="color:#0E0E1A">First charge:</strong> day 14 &mdash; $697.00
+</div>
+</td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding:0 36px 22px">
+<div style="font-size:13px;color:#8A8AA8;line-height:1.6">
+<!-- TODO: copy approval — confirm no-CTA is the right call for this transactional receipt. -->
+That's it. No CTA on this one — you're all set. Go do the job, we've got your phone.
+</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 28px;border-top:1px solid #EFEFF6">
+<div style="padding-top:18px;font-size:12px;color:#8A8AA8;line-height:1.6">
+Syntharra &middot; <a href="mailto:founders@syntharra.com" style="color:#6C63FF;text-decoration:none">founders@syntharra.com</a><br>
+<a href="{{ params.unsubscribe_url }}" style="color:#8A8AA8;text-decoration:underline">Unsubscribe</a>
+</div>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

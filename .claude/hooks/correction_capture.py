@@ -29,7 +29,7 @@ SECTION = "## Process / workflow corrections"
 CORRECTION_PATTERNS = [
     r"\bdon'?t\b.{0,40}\b(again|ever|always|that)\b",
     r"\bstop\b.{0,30}\b(doing|using|reading|calling|that|making)\b",
-    r"\bwrong\b.{0,40}\b(file|path|version|approach|place|one)\b",
+    r"\bwrong\b.{0,40}\b(file|path|version|approach|place|one|tool|way|method)\b",
     r"\byou'?re?\s+(reading|using|looking\s+at)\s+the\s+wrong\b",
     r"\bold\s+version\b",
     r"\bcome\s+on\b",
@@ -42,18 +42,41 @@ CORRECTION_PATTERNS = [
     r"\bremember\s+(this|that|next\s+time)\b",
     r"\bfrom\s+now\s+on\b",
     r"\balways\s+(use|check|read|look)\b",
+    # Additional patterns for corrections phrased as observations or directives
+    r"\bthat'?s?\s+the\s+old\b",                          # "that's the old approach/version"
+    r"\buse\s+the\s+right\b",                              # "use the right file/tool"
+    r"\byou\s+(missed|skipped|forgot)\b",                  # "you missed the point"
+    r"\bthat'?s?\s+(not|wrong)\b.{0,30}\b(right|correct|it|the)\b",  # "that's not right"
+    r"\bwrong\s+(approach|tool|way|method|place|file)\b",  # "wrong approach"
+    r"\bcheck\s+\w+\s+first\b",                           # "check REFERENCE.md first"
+    r"\byou('?re|\s+are)\s+supposed\s+to\b",              # "you're supposed to use..."
+    r"\bthat'?s?\s+not\s+how\b",                          # "that's not how it works"
+    r"\bnot\s+that\s+(file|one|tool|approach|way)\b",     # "not that file"
+    r"\b(read|check|look\s+at)\s+\w+\s+first\b",         # "read STATE.md first"
 ]
 
-# Phrases that look like corrections but are actually requests — skip them
+# Phrases that look like corrections but are genuinely questions or meta-requests — skip them.
+# NOTE: "can you / could you / please / would you" are intentionally NOT blocked here —
+# politely-phrased corrections like "could you stop doing that" or "please don't do X again"
+# are real corrections and should be captured.
 FALSE_POSITIVE_GUARDS = [
-    r"^(can you|could you|please|would you)",
-    r"^(what|how|why|when|where|which)\b",
-    r"update\s+this\s+so\s+you\s+learn",  # meta-request like the one that built this hook
+    r"^(what|how|why|when|where|which)\b",   # pure questions
+    r"update\s+this\s+so\s+you\s+learn",     # meta-request like the one that built this hook
 ]
 
 
 def is_correction(text: str) -> bool:
     lower = text.lower().strip()
+    # Check strong correction signals first — these override false-positive guards
+    strong_signals = [
+        r"\bi\s+told\s+you\b",
+        r"\bsame\s+mistake\b",
+        r"\bfrom\s+now\s+on\b",
+        r"\bnever\b.{0,30}\b(do|use|call|read|touch|make)\b",
+    ]
+    if any(re.search(p, lower) for p in strong_signals):
+        return True
+    # For all other patterns, still apply false-positive guards
     if any(re.match(p, lower) for p in FALSE_POSITIVE_GUARDS):
         return False
     return any(re.search(p, lower) for p in CORRECTION_PATTERNS)

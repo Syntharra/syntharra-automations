@@ -189,21 +189,13 @@ if not session_end_ran and repo_root:
         print(f"  [!] session_end.py failed: {err[:200]}")
         print(f'  Manual fix: python tools/session_end.py --topic {topic} --summary "{summary}"')
 
-    # Now run distil_corrections.py to turn today's corrections into rules
-    dist_code, dist_out, dist_err = run(
-        "python tools/distil_corrections.py",
-        cwd=repo_root,
-    )
-    if dist_out:
-        print(dist_out)
-    if dist_err and dist_code != 0:
-        print(f"  [!] distil_corrections: {dist_err[:200]}")
+    # NOTE: distil_corrections.py is NOT called here.
+    # Async claude-p distillation at session end adds failure risk with no reliability gain.
+    # The weekly_self_improvement.py script (Task Scheduler, daily 07:00) handles synthesis.
+    # In-session mistakes go to RULES.md synchronously via Claude writing them directly.
 
 elif session_end_ran:
     print(f"\n[HOOK] session_end.py already run today ({TODAY}) — INDEX.md confirmed.")
-    # Still run distillation to catch any late-session corrections
-    if repo_root:
-        run("python tools/distil_corrections.py", cwd=repo_root)
 
 # ── 4. Warn if FAILURES.md has unfilled [TODO] markers ───────────────────────
 if FAILURES_PATH.exists():

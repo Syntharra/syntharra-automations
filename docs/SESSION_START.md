@@ -2,12 +2,14 @@
 
 > **Single entry point for every Cowork session.** Read this top-to-bottom before doing anything else. ~3 minutes, ~5k tokens.
 
-## 1. Read these 4 files in order (do not skip)
+## 1. Read these 6 files in order (do not skip)
 
 1. **`docs/STATE.md`** — current reality. Auto-maintained by `tools/session_end.py`. Source of truth for what's live, what's in flight, what's blocked.
-2. **`docs/RULES.md`** — hard don'ts. Violations have burned us before.
-3. **`docs/REFERENCE.md`** — every agent/flow/workflow ID. **Sole source.** Never inline IDs anywhere else.
-4. **`docs/FAILURES.md`** — past incidents and fixes. Skim the last 10 rows. If your task touches any system listed there, read the full row.
+2. **`docs/RULES.md`** — hard don'ts. Violations have burned us before. (56+ rules — grow each session)
+3. **`docs/PLAYBOOKS.md`** — HOW to do things correctly in this system. Canonical step-by-step patterns for every common operation. Read before starting any task.
+4. **`docs/DECISIONS.md`** — WHY key architectural decisions were made. Read before making any adjacent decision.
+5. **`docs/REFERENCE.md`** — every agent/flow/workflow ID. **Sole source.** Never inline IDs anywhere else.
+6. **`docs/FAILURES.md`** — past incidents and fixes. Skim the last 10 rows. If your task touches any system listed there, read the full row.
 
 Total: ~200 lines of canonical context. Everything else is on-demand.
 

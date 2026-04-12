@@ -1,0 +1,76 @@
+<!--subject: Your AI is live. Here's how to put it to work in 2 minutes. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Syntharra AI is live</title>
+</head>
+<body style="margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Helvetica,Arial,sans-serif;color:#4A4A6A">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F7FB;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid #E8E8F0;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+
+<!-- Accent bar -->
+<tr><td style="height:3px;background:linear-gradient(90deg,#6C63FF,#8B85FF);font-size:0;line-height:0">&nbsp;</td></tr>
+
+<!-- Header -->
+<tr><td style="padding:28px 36px 10px">
+<p style="font-size:28px;font-weight:900;letter-spacing:6px;color:#1A1A2E;margin:0;">SYNTHARRA</p>
+<p style="color:#6C63FF;font-size:10px;letter-spacing:2px;font-weight:600;margin:4px 0 0;text-transform:uppercase">AI phone receptionist</p>
+</td></tr>
+
+<!-- Headline -->
+<tr><td style="padding:14px 36px 6px">
+<h1 style="font-size:26px;font-weight:700;color:#0E0E1A;margin:0;line-height:1.25;letter-spacing:-0.01em">
+Hi {{ params.first_name }}, your AI is live.
+</h1>
+</td></tr>
+
+<!-- Sub -->
+<tr><td style="padding:10px 36px 22px">
+<div style="font-size:15px;color:#4A4A6A;line-height:1.6">
+Your pilot just started. {{ params.company_name }} has a dedicated phone number and a trained receptionist that answers every call, 24/7. No setup. No app. You've got <strong style="color:#0E0E1A">14 days</strong> and <strong style="color:#0E0E1A">{{ params.minutes_allotted }} minutes</strong> to watch it do the job.
+</div>
+</td></tr>
+
+<!-- Phone number card -->
+<tr><td style="padding:0 36px 20px">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#FFFFFF;border:1px solid #E8E8F0;border-radius:12px;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+<tr><td style="padding:22px 24px">
+<div style="font-size:11px;font-weight:700;color:#6C63FF;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Your pilot number</div>
+<div style="font-size:22px;font-weight:700;color:#0E0E1A;letter-spacing:0.01em">{{ params.pilot_phone_number }}</div>
+<div style="font-size:13px;color:#8A8AA8;margin-top:8px;line-height:1.5">Forward your business line here, or share it directly. Every call is answered, logged, and routed.</div>
+</td></tr>
+</table>
+</td></tr>
+
+<!-- How to test it -->
+<tr><td style="padding:0 36px 24px">
+<div style="font-size:13px;font-weight:700;color:#0E0E1A;margin-bottom:12px;letter-spacing:0.01em">Try it in 2 minutes:</div>
+<div style="font-size:14px;color:#4A4A6A;line-height:1.75">
+1. Call the number above from your cell.<br>
+2. Pretend you're a customer with a no-heat emergency.<br>
+3. Listen to what your AI does — how it handles the call, gathers the details, and pages you.<br>
+4. Check your dashboard for the transcript.
+</div>
+</td></tr>
+
+<!-- CTA -->
+<tr><td style="padding:4px 36px 30px" align="center">
+<a href="{{ params.dashboard_url }}" style="display:inline-block;background:linear-gradient(135deg,#6C63FF 0%,#8B85FF 100%);color:#FFFFFF;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;padding:16px 32px;letter-spacing:0.01em;box-shadow:0 12px 36px -10px rgba(108,99,255,.55)">View your dashboard &rarr;</a>
+</td></tr>
+
+<!-- Footer -->
+<tr><td style="padding:0 36px 28px;border-top:1px solid #EFEFF6">
+<div style="padding-top:18px;font-size:12px;color:#8A8AA8;line-height:1.6">
+Syntharra &middot; <a href="mailto:founders@syntharra.com" style="color:#6C63FF;text-decoration:none">founders@syntharra.com</a><br>
+<a href="{{ params.unsubscribe_url }}" style="color:#8A8AA8;text-decoration:underline">Unsubscribe</a>
+</div>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

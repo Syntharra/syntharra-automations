@@ -25,6 +25,8 @@ components:
     source: components/greeting_node.json
   - name: identify_call_node
     source: components/identify_call_node.json
+  - name: pilot_expired_node
+    source: components/pilot_expired_node.json
   - name: spam_detection
     source: components/spam_detection.json
   - name: spam_robocall_node

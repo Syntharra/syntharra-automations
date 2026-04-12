@@ -81,6 +81,36 @@ See `docs/ONBOARDING_STANDARD.md` for full expanded spec.
 git pull && python3 tools/openai-agent-simulator-premium.py --key <groq_key> --group core_flow
 ```
 
+## Jotform Forms
+| Form | ID | Purpose |
+|---|---|---|
+| HVAC Standard paid onboarding | `260795139953066` | Paid flow, warm traffic. Webhook → `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding` → workflow `4Hx7aRdzMl5N0uJP`. |
+| **HVAC Standard pilot onboarding** | `261002359315044` | **NEW 2026-04-11** Phase 0 pilot fork. Cold traffic from `syntharra.com/start` (when live). Same webhook URL as paid form (`/webhook/jotform-hvac-onboarding`); n8n branches internally on the `pilot_mode` hidden field. Pilot detection lives in the `Reconcile: Check Stripe Payment` node's jsCode (Phase 0 pilot block). Hidden tracking fields: `stx_asset_id`, `utm_source/medium/campaign/content/term`, `pilot_mode` (default `true`). |
+
+## Brevo Templates — Phase 0 pilot lifecycle
+> Uploaded 2026-04-11 via `tools/upload_brevo_templates.py` (idempotent). Sender: `daniel@syntharra.com` (only verified sender on the Syntharra Brevo account). Source HTML in `shared/email-templates/pilot-*.html`.
+
+| Slug | Brevo Template ID | When sent |
+|---|---|---|
+| `pilot-welcome` | `7` | Day 0 — immediately after pilot signup |
+| `pilot-day-3` | `4` | Day 3 — value reinforcement, "what your AI did" |
+| `pilot-day-7` | `5` | Day 7 — usage check-in + Setup Intent CTA |
+| `pilot-day-12` | `3` | Day 12 — 48h warning to add card |
+| `pilot-converted` | `2` | Day 14 — sent on convert_pilot_to_paid success |
+| `pilot-card-added` | `1` | Sent when Setup Intent succeeds (auto-convert primed) |
+| `pilot-expired` | `6` | Day 14 — sent on expire_pilot (no card) |
+| `pilot-winback-16` | `8` | Day 16 (expired pilots only) |
+| `pilot-winback-30` | `9` | Day 30 (expired pilots only) |
+
+## Stripe — Phase 0 pilot products
+> ⚠️ **TEST MODE.** Created 2026-04-11 via `tools/stripe_pilot_setup.py`. Idempotent via `metadata.syntharra_product='hvac_standard'` and `metadata.syntharra_price='hvac_standard_monthly'` markers. Replace with live equivalents when Stripe live key lands.
+
+| Object | Test ID | Purpose |
+|---|---|---|
+| Product (HVAC Standard) | `prod_UJb4pQDwyQ7lgW` | Single Phase 0 product, $697/mo |
+| Price (recurring monthly) | `price_1TKxruECS71NQsk8yspZnj2B` | Used by `convert_pilot_to_paid` in `tools/pilot_lifecycle.py` |
+| Setup Intent template | (handled at request time, see `pilot_lifecycle.py` `convert_pilot_to_paid`) | `usage='off_session'`, `payment_method_types=['card']`, `metadata.source='syntharra_pilot'` |
+
 ## n8n Workflows
 - Total: 48 | Active: 33 | Labelled: 38/48
 

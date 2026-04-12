@@ -1,11 +1,11 @@
 # State — Syntharra Automations
 
-_Last updated: 2026-04-10_
+_Last updated: 2026-04-12_
 
 > **Auto-maintained header** — the `_Last updated_`, `## Last commit`, and `## Go-live checklist` lines are refreshed by `tools/session_end.py`. Do not hand-edit those. Everything else below is hand-curated; update it when reality changes.
 
 ## Last commit
-34169b0 feat(phase0): Day 1 COMPLETE â€” migration applied to prod, billing tools patched
+388da67 fix(reference): remove nightly backup entry â€” workflow deleted from n8n
 
 ## Go-live checklist
 see docs/GO-LIVE.md
@@ -35,6 +35,10 @@ Repo stripped to lean core. retell-iac is Standard-only.
 - **Jotform `260795139953066`** — HVAC Standard onboarding. Field `slackIncoming` (qid 76) added to Section 5 (optional).
 - **Slack (Syntharra workspace)** — clean 7-channel structure: `#all-syntharra`, `#billing`, `#calls`, `#daily-digest`, `#leads`, `#onboarding`, `#ops-alerts`. 15 clutter channels archived 2026-04-09. Bot token in vault (`service_name='Slack'`, `key_type='bot_token'`).
 - **Supabase schema** — `hvac_standard_agent`, `client_agents`, `stripe_payment_data`, `client_subscriptions`, `billing_cycles`, `overage_charges`, `website_leads`, `monthly_billing_snapshot`, `syntharra_vault`, `client_dashboard_info` (view — narrow read subset for dashboard, 2026-04-09). RLS hardened. All 15 `hvac_call_log*` tables and `call_processor_dlq` dropped 2026-04-09 (backup preserved in `backup_hvac_call_log_prepart_20260409`).
+- **Content team schema (2026-04-12 migration applied)** — 4 additive tables, all RLS service-role-only: `marketing_intelligence` (99 rows as of 2026-04-11 evening, Reddit unauth scrape), `competitor_intelligence` (0 rows, writer not built yet), `content_queue` (0 rows, publisher not built yet), `marketing_brain_log` (0 rows, writer not built yet). Migration: [supabase/migrations/20260412_content_team_schema.sql](../supabase/migrations/20260412_content_team_schema.sql). Commit `a6e9676`.
+- **Content preview mode helper** — [tools/content_preview_mode.py](../tools/content_preview_mode.py). Shared gate imported by all content team agents. Two env flags default false: `MARKETING_TEAM_ENABLED` (gates actual posting — stays false until VSL+Stripe+Telnyx+CRO are ready) and `COLD_EMAIL_ENABLED` (gates cold email phase in marketing_brain.py per 2026-04-11 decision to pause cold outbound and focus on SEO/content). Commit `6a8cd08`.
+- **Cold email paused behind flag** — [tools/marketing_brain.py](../tools/marketing_brain.py) Phase 4 EXECUTE cold email loop wrapped in `if is_cold_email_enabled():` else skip. Existing code untouched, dormant. Flip `COLD_EMAIL_ENABLED=true` in Railway env to resume. Commit `d21b70a`.
+- **Research Agent v1** — [tools/research_agent.py](../tools/research_agent.py). Unauthenticated Reddit JSON scraping across 4 HVAC subs (HVAC, hvacadvice, Contractor, smallbusiness). YouTube search path gracefully skipped until `YouTube/api_key` is vaulted. Google Trends deferred (stdlib-only convention rules out pytrends). 99 rows inserted into `marketing_intelligence` on 2026-04-11 smoke test. **Not yet on a Railway cron** — scheduled as Phase 2 work in next session. Commit `6ce6725`.
 - **Client dashboard** — `dashboard.html` in syntharra-website. Full redesign shipped 2026-04-09 (a11y, dark mode, sentiment stat, CSV export, virtualisation, demo mode `?demo=1`, lead copy, triage flag, sparkline). Reads company info from `client_dashboard_info` view; reads calls via `POST /webhook/retell-calls` → Retell `list-calls`. URL param `?a=AGENT_ID`.
 - **Retell proxy webhook** — n8n `Y1EptXhOPAmosMbs`. Returns `{ calls: [...] }` from Retell v2. E2E tested 2026-04-08.
 - **OAuth server** — Railway-deployed.
@@ -116,7 +120,7 @@ Full pricing overhaul shipped. 3 tiers: Starter ($397/mo, 350 min, $0.25/min), P
 **WhatsApp support approach decided:** Single "You're Live" email with conditional WhatsApp section (already wired). When Dan provides a dedicated Telnyx number verified on WhatsApp Business: (1) store in `syntharra_vault` as `service_name='WhatsApp', key_type='support_number'`, (2) update the n8n onboarding node that calls the "You're Live" template to fetch the number from vault and pass it as `whatsapp_number` for Professional/Business tiers only.
 
 ## Next session — pick up here
-**Phase 0 marketing build — Day 1 execution.** Spec and partial plan committed 2026-04-11. Awaiting Dan's greenlight on Day 1 Task 1 (read-only credentials fetch + tool verification). Resume pointer: `memory/project_phase0_progress.md`. Once greenlit, Tasks 1-7 execute without per-task confirmation; HARD GATE at Task 8 (prod schema migration) requires Dan's explicit go-ahead. Also pending: Telnyx vault keys, Stripe live mode migration (both required before first paying customer regardless of Phase 0 progress).
+ops.syntharra.com now green on n8n workflows
 
 ## Phase 0 progress (marketing build)
 
@@ -137,13 +141,127 @@ Schema migration `20260411_phase0_pilot_schema` applied to prod:
 - Pre-migration backups: `docs/audits/supabase-backups-20260411/` + `docs/audits/n8n-backups-20260411/`
 - Scan report: `docs/audits/2026-04-11-phase0-schema-scan.md`
 
-**Next:** Day 2 — pilot Jotform fork + n8n onboarding branch (`Is Pilot?` IF node). Plan tasks 13-18.
+### Day 2 — COMPLETE (2026-04-11) — pilot infrastructure dark-launched
+
+Pilot signup machine is **live and ready to receive traffic**, but won't get any until Days 5-7 unblock the landing page + VSL. Per-pilot cost in dark-launched state: **~$0** (Telnyx graceful skip + cron not yet deployed + Brevo templates not yet uploaded).
+
+- **Jotform pilot fork `261002359315044`** created from paid form `260795139953066`. Title "Start your free 14-day Syntharra pilot". 7 hidden tracking fields (`stx_asset_id`, `utm_source/medium/campaign/content/term`, `pilot_mode=true`). Webhook inherited correctly — same `https://n8n.syntharra.com/webhook/jotform-hvac-onboarding` URL as paid form. Registered in `docs/REFERENCE.md` Jotform Forms section.
+- **n8n workflow `4Hx7aRdzMl5N0uJP` patched** in-place (deviation from plan: surgical Reconcile Code-node modification, NOT the proposed IF+Set node insertion — see commit `ba0b8f1` for the reasoning). The `Reconcile: Check Stripe Payment` jsCode now has a Phase 0 pilot block at the top that reaches back to the JotForm Webhook Trigger to read `pilot_mode`, and on `pilot_mode='true'` writes a `client_subscriptions` row with `status='pilot' + pilot_started_at + pilot_ends_at + pilot_minutes_allotted=200 + first/last_touch_asset_id + first/last_touch_utm` and returns early (skipping the 60s Stripe wait). Paid path is byte-identical below the pilot block (verified post-patch: 84/84 lines match, only 1 of 32 nodes differs).
+- **Synthetic pilot row test** (no real Retell/Telnyx/Brevo cost): inserted via SQL with the same shape the pilot block writes, confirmed (a) billing-cron defensive filter excludes pilots (0 rows), (b) pilot lifecycle query includes pilots (1 row), (c) `status='pilot'` passes the CHECK constraint, (d) timestamps consistent. Synthetic row deleted. `client_subscriptions` is back to 1 row (Dan's test agent).
+- **Track C drafts committed (`e52ade2`):** `tools/pilot_lifecycle.py` (611 lines, full state machine, **14/14 unit tests passing**), `tools/test_pilot_lifecycle.py`, `tools/stripe_pilot_setup.py` (test mode, idempotent), `tools/test_e2e_pilot.py` (programmatic webhook submitter for Day 7 smoke test), `tools/upload_brevo_templates.py`, 9 Brevo email HTML templates in `shared/email-templates/pilot-*.html` (Syntharra dark theme, 600px Gmail-compat layout). All Python files syntax-clean. `pilot_lifecycle.py` SELECT was patched to drop 3 columns that don't exist on `client_subscriptions` (they live on `hvac_standard_agent`) and to use `payment_method_added_at IS NOT NULL` instead of the imaginary `stripe_setup_intent_succeeded` column.
+- **New tools committed (`ba0b8f1`):** `tools/build_pilot_jotform.py`, `tools/patch_pilot_jotform_hidden_fields.py`, `tools/patch_onboarding_workflow_add_pilot_branch.py` (idempotent via `// === Phase 0 pilot block === //` marker), `tools/fetch_vault.py` (vault helper).
+- **Backups (gitignored):** `docs/audits/n8n-backups-20260411/4Hx7aRdzMl5N0uJP-pre-pilot-branch.json` (290KB, sha256-verified pre-apply), `-pre-apply-recheck.json`, `-post-pilot-branch.json` for rollback if ever needed.
+
+### Day 3 — COMPLETE (2026-04-11) — pilot funnel infrastructure end-to-end
+
+Day 3 closed the loop on the dark-launched pilot funnel. Every system in the lead pathway is now wired, tested, and waiting on the Dan-blockers (Telnyx, VSL filming, Stripe live).
+
+- **9 Brevo pilot email templates uploaded** via `tools/upload_brevo_templates.py` (idempotent, find-by-name → existing ID). IDs 1-9, registered in `docs/REFERENCE.md` Brevo Templates section, inlined into `tools/pilot_lifecycle.py` `BREVO_TEMPLATE_IDS`. Sender = `daniel@syntharra.com` (only verified sender on Brevo). ⚠ Followup: rebrand from dark-theme to light-theme to match brand rules; `founders@`/`support@` need verification in Brevo dashboard.
+- **Stripe TEST mode pilot products created** via `tools/stripe_pilot_setup.py` (idempotent via metadata markers). Product `prod_UJb4pQDwyQ7lgW`, price `price_1TKxruECS71NQsk8yspZnj2B` ($697/mo recurring). Inlined into `pilot_lifecycle.py` `STRIPE_HVAC_STANDARD_PRICE_ID`. Replace with live equivalents when Dan vaults the live key.
+- **`Send Welcome Email` n8n node patched** via the second n8n patcher (`tools/patch_onboarding_workflow_pilot_welcome.py`). Pilot block at the top of jsCode reaches back to JotForm Webhook Trigger, on `pilot_mode='true'` sends Brevo template id 7 (pilot-welcome) immediately with pilot params, returns. Paid path 143/143 lines byte-identical. **Day 2 Reconcile pilot block still intact** (verified — no clobber). Workflow `4Hx7aRdzMl5N0uJP` now has TWO independent pilot blocks (Reconcile + Send Welcome Email), both surgical, both with markers for idempotency.
+- **Three Supabase Edge Functions deployed** to project `hgheyqwnrcvwtgngqdnq`. Source committed under `supabase/functions/`:
+  1. `marketing-event-ingest` v2 — public POST endpoint for browser tracker, bot filter + 15-event-type whitelist, INSERTs into `marketing_events`. Smoke test passed (POST 200, row inserted with all fields, deleted). v1 had a schema bug (assumed `props` and `occurred_at` columns that don't exist on the live table); v2 corrected to use `metadata` jsonb + `session_id` NOT NULL fallback.
+  2. `pilot-setup-intent` v1 — POST endpoint that takes `{ agent_id }`, finds the matching pilot, creates/reuses Stripe customer, creates Setup Intent, returns `client_secret`. Reads Stripe key from vault (prefers `secret_key_live`, falls back to `secret_key_test`) — auto-promotes to live when Dan vaults the live key, no redeploy needed.
+  3. `stripe-webhook` v1 — handles `setup_intent.succeeded` → marks `payment_method_added_at` → emits marketing event → sends Brevo template 1 (pilot-card-added). HMAC verification via vault `webhook_signing_secret` (currently absent — verification SKIPPED with warning, acceptable in dark-launch). ⚠ Followup: register webhook URL in Stripe dashboard, vault the signing secret.
+- **Mux credentials VAULTED 2026-04-11** as `service_name='Mux'`, `key_type='token_id'` + `key_type='secret_key'`. Day 5 Task 35 (Mux upload) is unblocked once VSL is filmed. Dan should rotate the secret in Mux dashboard ASAP since the original was sent in chat (leak vector exists in conversation log).
+- **Phase 0 landing page scaffolded in syntharra-website sibling repo** (commit `f9cddc1`, NOT pushed). `start.html` (227 lines, 1 style block, light-theme Syntharra chrome, hero with the r/HVAC quote, VSL placeholder div, 200-min/14-day pilot offer card, 4-question FAQ, final CTA pointing to pilot Jotform `261002359315044?pilot_mode=true`) + `marketing-tracker.js` (234 lines, vanilla, sendBeacon-preferred, fires page_view/cta_click/scroll_depth/vsl_*_pct events to the marketing-event-ingest Edge Function). Pushing requires Mux playback ID swap-in OR explicit dark-launch decision.
+- **`docs/RULES.md` #42 added:** `pause_retell_agent` must NEVER target MASTER. Track B's safety rail captured as a standing rule.
+
+### Post-Day-4 expansion batch 4 — 2026-04-11 — Absurd-growth expansion (Dan: "do everything")
+
+Dan's direction: "grow grow grow at an absurd rate — do everything except Stripe live, Telnyx, VSL film." Full-delegation session. 5 parallel subagents + sequential work by me.
+
+**PROD-IMPACT WORK:**
+- **9 Brevo pilot templates RE-UPLOADED** via `upload_brevo_templates.py --update`. Light-theme rebrand LIVE on Brevo. All template IDs 1-9 preserved. Brevo PUT shape worked first-try.
+- **4 Railway cron services DEPLOYED for the first time** (previously existed as Python tools but never pushed): `syntharra-usage-alert` / `syntharra-monthly-billing` / `syntharra-weekly-report` / `syntharra-pilot-lifecycle`. All service IDs vaulted. Billing / reporting / pilot state machine now running automatically.
+- **`deploy_billing_crons.py` bug-fix trilogy** — 3 bugs blocked live deploy: URL-encoding (literal space in "Retell AI"), cp1252 em-dash crash, and `ServiceCreateInput.branch` schema drift (Railway moved it from `ServiceSourceInput` to top-level; verified via GraphQL introspection). Plus Cloudflare 1010 bypass via User-Agent header. All fixed.
+- **Hunter.io key VAULTED** (`service_name='Hunter.io', key_type='api_key'`). `find_email_from_website.py` auto-uses as fallback when homepage scrape misses — verified end-to-end.
+
+**SEO EXPANSION (`syntharra-website` commit `9b7366a`):**
+- **25 new landing pages** bringing total from 9 → **34 live pages** on syntharra.com.
+- **10 more brand comparison pages:** `vs-answerforce`, `vs-nexa`, `vs-specialty-answering`, `vs-davinci-virtual`, `vs-voicenation`, `vs-gabbyville`, `vs-unicom`, `vs-no-more-phone-tag`, `vs-posh`, `vs-map-communications`. 5 math box + 5 2am test split. 10 fresh cities (San Diego / Kansas City / Nashville / Minneapolis / Indianapolis / St. Louis / Columbus / Louisville / Salt Lake City / Portland).
+- **15 city-targeted landing pages** (`hvac-answering-service-{city}.html`) with per-city seasonal pain angles (monsoons, freeze events, Gulf humidity, altitude/wildfire, etc.). LocalBusiness + FAQPage JSON-LD per page. Cities: Phoenix / Dallas / Houston / Atlanta / Miami / Tampa / Las Vegas / Denver / Charlotte / Orlando / San Antonio / Jacksonville / Austin / Oklahoma City / Tucson.
+
+**AUTOMATIONS CONTENT + TOOLS (commit `a5982f3`):**
+- **`docs/community_post_drafts.md`** expanded 174 → 845 lines. 20 new drafts: Reddit (8) / FB groups (5) / LinkedIn (5) / HVAC-Talk (2). First-person founder voice.
+- **`tools/generate_press_release.py`** (NEW, 406 lines) — AP-style launch/feature/milestone releases + 11-publication TRADE_PUBLICATIONS constant.
+- **`tools/build_linkbuilding_outreach.py`** (NEW, 772 lines) — 30 link-building targets, 2-touch sequences, tier/category filtering.
+- **`tools/build_affiliate_outreach.py`** — fixed 4 broken YouTube URLs + creator-name data bug; HVAC_YOUTUBERS now **7 verified** (was 8 with 4 broken). All 7 hooks rewritten with real video references.
+- **9 live SEO pages verified rendering correctly** via raw curl (all HTTP 200, head metadata present).
+
+**Client production impact: zero.** MASTER Retell agent unchanged. Still awaiting Dan's 5-min click test before promotion.
+
+### Post-Day-4 expansion batch 3 — 2026-04-11 — 4 more SEO pages + marketing digest + cost tracker + pilot cron + Retell TESTING ready
+
+Third coordinator batch. 3 parallel subagents + sequential work by me. Dan delegated "everything except Stripe live, Telnyx, VSL film" so I went as wide as I could.
+
+- **4 more SEO comparison pages LIVE at `syntharra-website` commit `73f3531`:** `vs-patlive.html`, `vs-answer24.html`, `vs-moneypenny.html`, `vs-answerconnect.html`. All match the `vs-smith-ai.html` chrome (light theme, OG + Twitter meta, schema.org FAQPage, UTM tracking). Fresh testimonial cities (Houston/Chicago/Miami/Seattle). **9 HVAC answering service comparison pages now live total** (Ruby, Smith.AI, ASC, Abby Connect, best-hvac listicle, PATLive, Answer24, Moneypenny, AnswerConnect).
+
+- **`tools/marketing_digest.py` (NEW, 718 lines)** — weekly funnel rollup. Reads `marketing_events` + `client_subscriptions` + `leads/.send_state.json` for the window, computes traffic → pilot → paid conversion funnel, outputs text / JSON / Slack blocks. Live dry-run against prod returned 0 events / 0 pilots / 3 cold-outreach sends cleanly. Stdlib-only, read-only, graceful skip on missing data. Has `--post-to-slack` flag wired for future daily digest cron.
+
+- **`docs/marketing_costs.md` (NEW)** — transparent cost ledger per Dan's 2026-04-11 direction. Current marketing-team-attributable cost **$0/mo** (all tools on free tiers). Phased unlock strategy: **Stage 0** (now, $0) → **Stage 1** (triggered at 2 clients signed via marketing team, ~$130-$235/mo for Hunter.io paid + Mailgun Foundation) → **Stage 2** (triggered at 10+ clients with no Dan input, uncapped paid ads). Target CAC ranges + channel hypotheses documented. Decision log captures the Hunter.io-free-tier-approved + Yelp-Fusion-deferred + paid-ads-deferred decisions.
+
+- **`tools/deploy_billing_crons.py` extended with `syntharra-pilot-lifecycle` entry** (+7 lines). Schedule `0 0 * * *` (daily 00:00 UTC). Extends the proven pattern — 4 cron entries now (usage_alert, monthly_minutes, weekly_report, pilot_lifecycle). `docs/railway_pilot_lifecycle_deploy.md` has full deploy walkthrough + pre-deploy checklist + rollback plan. Ready to run when Dan wants.
+
+- **Hunter.io API key VAULTED** as `service_name='Hunter.io', key_type='api_key'` (40 chars, Dan-provided free-tier key). `find_email_from_website.py` now auto-uses as fallback when homepage scrape misses — verified end-to-end with `.env.local` sourced showing `[enrich] Hunter.io fallback enabled`. Free tier (25 searches/mo) approved; paid upgrade gated on Stage 1 trigger per cost doc.
+
+- **Retell TESTING agent updated and published.** `retell-iac/scripts/build_agent.py` regenerated the built flow (20 nodes, includes `node-pilot-expired` with 3 greeting edges). Direct PATCH to `conversation_flow_bc8bb3565dbf` → flow version 3. TESTING agent `agent_41e9758d8dc956843110e29a25` published. **MASTER unchanged** (still 19 nodes, still on production flow version) per `retell-iac/CLAUDE.md` explicit-approval rule. `docs/retell_pilot_expired_test_plan.md` gives Dan the 5-minute dashboard click test (set `agent_level_dynamic_variables.pilot_expired='true'`, start web call, verify, then remove variable and verify normal flow). **Dan must green-light before `promote.py` runs.**
+
+- **Client production impact: zero.** All changes either went to TESTING-only (Retell), were docs-only, or were new standalone files. Existing client clones still have the 19-node flow and the pre-Phase-0 onboarding state machine.
+
+### Post-Day-4 expansion batch 2 — 2026-04-11 — OG meta + Hunter.io fallback + affiliate outreach generator
+
+Second parallel-coordinated batch after batch 1 shipped. 3 subagents on disjoint files. All 3 ship-ready, all pushed.
+
+- **Open Graph + Twitter Card meta tags added to all 5 comparison pages** (`vs-ruby-receptionists`, `vs-smith-ai`, `vs-answering-service-care`, `vs-abby-connect`, `best-hvac-answering-service`) — pushed to syntharra-website at commit `b600d74`. Reuses the `syntharra-icon.png` already used by `index.html`. `og:type=article`, `og:title`/`og:description`/`og:url` mirror each page's existing `<title>` / meta description / canonical exactly. Improves link previews on Reddit, FB, LinkedIn, Slack when the pages are shared organically or from the cold-outreach sender.
+
+- **`tools/find_email_from_website.py` gains Hunter.io free-tier fallback** — only fires when homepage scraping returns no email (burns quota only when needed). Signature extended to 3-tuple with `source` field. Zero external Python callers grep-verified before shape change. CSV output gains optional `email_source` column. 6 inline unit tests passing (quota-exceeded, happy-path, network error, empty domain, empty key, domain extractor). **Dan action:** sign up for Hunter.io free tier (25 searches/mo), then `INSERT INTO public.syntharra_vault (service_name='Hunter.io', key_type='api_key', key_value='<key>')`. Without the vault row the module still works in homepage-only mode (RULES.md #36 graceful skip).
+
+- **`tools/build_affiliate_outreach.py` (NEW, 418 lines)** — generates 3-touch affiliate outreach sequences for 8 real HVAC YouTubers (HVAC School / AC Service Tech / Word of Advice TV / Quality HVAC / HVAC Shop Talk / HVAC Guide for Homeowners / HVAC Tactical / Stephen Rardon Heating and Air). Deterministic hashlib-seeded subject-line variants. 30% first-year revenue offer (~$2,500/signup math, inline-documented). Writes `leads/affiliate_outreach_{YYYYMMDD}.json` + `.txt` (gitignored). 24 emails total (8 × 3). **Personalization hooks marked `# UNVERIFIED` inline — Dan must sanity-check each creator's recent content before send.** Tracking URL: `syntharra.com/affiliate?ref={slug}&stx_asset_id=aff-{slug}-2026-04` — **`syntharra.com/affiliate` landing page needs to be built before sending**. Pushed to automations at commit `c0b1b5c`.
+
+### Post-Day-4 expansion batch 1 — 2026-04-11 — 4 more SEO comparison pages LIVE + Brevo light-theme rebrand
+
+Done in parallel via 4 subagents while Dan unblockers pend. All 4 new pages pushed live to `Syntharra/syntharra-website` at commit `80b9806` (follow-on to Day 4's single `vs-ruby-receptionists.html`).
+
+- **`syntharra.com/vs-smith-ai.html`** (348 lines) — per-call billing punishes HVAC junk-call volume angle; math-box showing ~$1,340/mo Smith.AI vs $697 Syntharra on typical HVAC shop; Dallas TX pilot testimonial.
+- **`syntharra.com/vs-answering-service-care.html`** (328 lines) — 50-year-old live-operator service, hidden-fee callout box (patch-through + holiday surcharge + setup fees + per-minute overage); Atlanta GA pilot testimonial.
+- **`syntharra.com/vs-abby-connect.html`** (347 lines) — dedicated-team-model-is-wrong-variable-for-HVAC angle; your dedicated team is asleep at 3 a.m. anyway; Denver CO pilot testimonial.
+- **`syntharra.com/best-hvac-answering-service.html`** (495 lines) — ranked listicle of 6 options (Syntharra #1, Smith.AI #2, Abby Connect #3, Ruby Receptionists #4, ASC #5, local #6). Honest methodology section, all 4 brand pages cross-linked, FAQ calls out the obvious "this is our own page" bias.
+- **9 Brevo pilot email templates rebranded dark→light** in `shared/email-templates/pilot-*.html`. Zero dark hex values remaining, zero `<img>` tags (RULES.md #21 compliant), all merge tags + copy + subjects byte-preserved. Uploader `tools/upload_brevo_templates.py` gained `--update` flag + `PUT /v3/smtp/templates/{id}` path for re-uploading existing templates. **Dan needs to run `python tools/upload_brevo_templates.py --update` to re-upload the rebranded templates to Brevo** (one-template smoke test recommended first — Brevo PUT endpoint shape unverified, will 4xx loud if wrong).
+- All 4 pages match the canonical `vs-ruby-receptionists.html` chrome (light theme, Inter, `#6C63FF` accent, self-contained style block, schema.org FAQPage, marketing-tracker.js, UTM tracking). Code-reviewed via parallel Explore subagent — both initial pages reported SHIP-READY with only a minor `col-other` class naming inconsistency (no functional impact).
+
+### Day 4 — COMPLETE (2026-04-11) — Retell pilot_expired drafted + cold outreach engine + 1st SEO comparison page LIVE
+
+Day 4 went hard. Drafted the Retell pilot_expired flow node, shipped a complete $0 cold outreach toolchain with end-to-end smoke test, wrote a comprehensive cold outreach playbook, drafted 5 community posts for Reddit/FB, and pushed the first SEO comparison page (`vs-ruby-receptionists.html`) live to syntharra.com. **The lead-generation machine is now operational.**
+
+- **Retell `pilot_expired` flow component drafted** (NOT promoted to MASTER — Dan's gate). New `retell-iac/components/pilot_expired_node.json` with the apologetic pilot-ended message + visit-to-reactivate CTA. Added to `retell-iac/manifests/hvac-standard.yaml`. Flow template patched: new `node-pilot-expired` (now 20 nodes total), single edge to `node-end-call`, two new conditional edges PREPENDED to `node-greeting` (equation-type primary + prompt-type fallback). Build verified with `retell-iac/scripts/build_agent.py` — 20 nodes, body inlined, greeting edges in correct order. ⚠ Dan must build TESTING + verify the pilot_expired branch fires before running `promote.py` (equation syntax is speculative — fallback prompt-type edge exists as belt-and-suspenders).
+- **Cold outreach engine ($0 stack)** — 4 new tools, all stdlib, all idempotent, end-to-end smoke-tested on Las Vegas leads:
+  - `tools/scrape_hvac_directory.py` — scrapes US HVAC contractors by city via OpenStreetMap Overpass (multi-mirror retry) with Nominatim fallback and Yelp Fusion as optional. Hardcoded city center bboxes for 30 priority US cities. Smoke test: Las Vegas → 6 OSM businesses in 3 seconds.
+  - `tools/find_email_from_website.py` — visits each business website + common contact paths, scrapes emails, filters junk. Smoke test: 3/6 emails found (50% hit rate, industry-normal for SMB).
+  - `tools/build_cold_outreach.py` — generates personalized 3-touch sequence per lead. Subject line variants, NOT_A_NAME filter for first-name extraction, CAN-SPAM compliant footer.
+  - `tools/send_cold_outreach.py` — configurable backend (print/brevo/mailgun) with hard safety rails. Defaults to print mode. Real send REQUIRES `--i-know-this-is-real`. Tracks state in `leads/.send_state.json` (gitignored).
+- **`docs/cold_outreach_strategy.md`** — comprehensive playbook: target persona, 20 priority US cities ranked by HVAC after-hours emergency density, full toolchain command flow, sequence design, expected metrics, CAN-SPAM compliance, Brevo TOS warning, Mailgun/Smartlead scale-up path, 5 SEO comparison pages prioritized, paid ads + affiliate deferred to Phase 1, combined month-1/3/6 projections. **Realistic month-1: 6-17 paying customers from cold email + SEO + community alone (assuming Telnyx + Stripe live land within first week).**
+- **`docs/community_post_drafts.md`** — 5 ready-to-post drafts for r/HVAC, r/HVACTech, r/smallbusiness, FB "HVAC Owners & Operators". Founder-direct voice, no marketing speak, link goes in follow-up comment after upvotes (Reddit anti-spam compliance). Posting checklist + what-works principles included. Designed for Dan to copy-paste manually.
+- **`vs-ruby-receptionists.html` LIVE on syntharra.com** (309 lines, 1 style block, light-theme chrome). Comparison table, 2 a.m. test scenario, honest "what Ruby is better at" section, 5-question FAQ, schema.org FAQPage markup. CTA → `/start` with `utm_source=vs-ruby` for attribution.
+- **`leads/` and `build/` added to .gitignore** — real business data and regenerable build artifacts never committed.
+
+**Next session — Day 5+ work** (when Dan unblockers land OR independent improvements):
+- Build comparison pages 2-5 (Smith.AI, Answering Service Care, Abby Connect, Best of Best HVAC answering services)
+- Rebrand 9 Brevo pilot templates from dark theme to light theme + re-upload
+- Add Hunter.io free integration to `find_email_from_website.py` for higher email enrichment hit rate
+- Wire inbox monitoring webhook so cold sender state file auto-updates on STOP replies
+- Affiliate outreach script generator (target HVAC YouTubers: Bryan Orr / HVAC School, AC Service Tech, Word of Advice TV)
+- Day 5 VSL pipeline (when filming + Mux upload happen)
+- Day 6 Railway deploy of `pilot_lifecycle.py` cron
+- Day 7 pre-live checklist + first cold-traffic smoke test (when Telnyx + Stripe live land)
 
 ## What's in flight
 
-- **Phase 0 marketing build** — spec complete, plan partial, execution awaiting greenlight. See Phase 0 progress section above.
-- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client AND before Phase 0 smoke-test traffic (day 7).
-- **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`.
+- **Phase 0 marketing build** — Day 1 + Day 2 LIVE in prod. Plan Days 3-7 still being expanded (Track B). Day 3 cron + Brevo upload + Day 3 followup (`Send Welcome Email` node patch) is the next executable batch. Days 5-7 are blocked on Dan unblockers below.
+- **Stripe live mode** — test-mode only. Dan to provide live secret key. P1 blocker before first paying client AND before Phase 0 Day 7 smoke test.
+- **Telnyx phone chain** — built, blocked on Dan vaulting `service_name='Telnyx'` `key_type='api_key'` + `key_type='retell_sip_connection_id'`. **Without these, Phase 0 pilot signups will create Retell agents but provision no phone number — the AI receptionist exists but can't actually receive calls.** Top priority unblocker.
+- **Mux account + creds** — ✅ **VAULTED 2026-04-11** as `service_name='Mux'`, `key_type='token_id'` + `key_type='secret_key'` (Mux API access token pair). Day 5 Task 35 (Mux upload) is unblocked once the VSL is filmed. **Dan should rotate the Mux secret in dashboard ASAP** since the original was sent in chat — pull the new value into the same vault row (`UPDATE syntharra_vault SET key_value=...`). Note: spec/plan reference key types `data_token` and `playback_signing_key` — the actual Mux API auth pair is `token_id` + `secret_key`. Plan will be aligned at Day 5 execution time.
+- **Founder VSL filming** — Dan-only, ~1 hour shoot, script in spec § 3.2. Day 5 blocker.
 
 ## What's blocked
 

@@ -1,0 +1,66 @@
+<!--subject: Your pilot ended. Want to keep your number live? -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your pilot ended</title>
+</head>
+<body style="margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Helvetica,Arial,sans-serif;color:#4A4A6A">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F7FB;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid #E8E8F0;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+
+<tr><td style="height:3px;background:linear-gradient(90deg,#8A8AA8,#4A4A6A);font-size:0;line-height:0">&nbsp;</td></tr>
+
+<tr><td style="padding:28px 36px 10px">
+<p style="font-size:28px;font-weight:900;letter-spacing:6px;color:#1A1A2E;margin:0;">SYNTHARRA</p>
+<p style="color:#8A8AA8;font-size:10px;letter-spacing:2px;font-weight:600;margin:4px 0 0;text-transform:uppercase">Pilot ended</p>
+</td></tr>
+
+<tr><td style="padding:14px 36px 6px">
+<h1 style="font-size:26px;font-weight:700;color:#0E0E1A;margin:0;line-height:1.25;letter-spacing:-0.01em">
+{{ params.first_name }}, your pilot ended.
+</h1>
+</td></tr>
+
+<tr><td style="padding:10px 36px 22px">
+<div style="font-size:15px;color:#4A4A6A;line-height:1.65">
+Your 14 days are up and we didn't get a card on file — so {{ params.company_name }}'s AI line is paused. Don't worry: we haven't deleted anything. Your call data, your transcripts, your agent settings — all still here. If you want to flip it back on, one click and you're live again.
+</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 22px">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#FFFFFF;border:1px solid #E8E8F0;border-radius:12px;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+<tr><td style="padding:20px 24px">
+<div style="font-size:11px;font-weight:700;color:#8A8AA8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">What's happening right now</div>
+<div style="font-size:14px;color:#4A4A6A;line-height:1.75">
+&bull; Your AI is paused — callers hear a short "temporarily unavailable" message<br>
+&bull; Your pilot number is still yours for 30 more days<br>
+&bull; All your data stays untouched<br>
+&bull; Reactivating = add a card, done in 30 seconds
+</div>
+</td></tr>
+</table>
+</td></tr>
+
+<tr><td style="padding:6px 36px 18px" align="center">
+<a href="{{ params.add_card_url }}" style="display:inline-block;background:linear-gradient(135deg,#6C63FF 0%,#8B85FF 100%);color:#FFFFFF;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;padding:16px 32px;letter-spacing:0.01em;box-shadow:0 12px 36px -10px rgba(108,99,255,.55)">Reactivate &rarr;</a>
+</td></tr>
+
+<tr><td style="padding:0 36px 26px" align="center">
+<div style="font-size:12px;color:#8A8AA8">$697/mo &middot; about $161/week &middot; cancel anytime</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 28px;border-top:1px solid #EFEFF6">
+<div style="padding-top:18px;font-size:12px;color:#8A8AA8;line-height:1.6">
+Syntharra &middot; <a href="mailto:founders@syntharra.com" style="color:#6C63FF;text-decoration:none">founders@syntharra.com</a><br>
+<a href="{{ params.unsubscribe_url }}" style="color:#8A8AA8;text-decoration:underline">Unsubscribe</a>
+</div>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

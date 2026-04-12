@@ -26,6 +26,13 @@ Env vars are pulled from syntharra_vault so no secrets are stored in this file.
 from __future__ import annotations
 import argparse, json, os, sys, time, urllib.error, urllib.parse, urllib.request
 
+# RULES.md #41 — Windows stdout defaults to cp1252; em-dashes in the cron desc
+# text would crash without this reconfigure on Python 3.14.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # ── Constants ────────────────────────────────────────────────────────────────
 
 RAILWAY_GQL      = "https://backboard.railway.com/graphql/v2"
@@ -56,6 +63,29 @@ CRON_SERVICES = [
         "desc":     "Sunday 18:00 UTC — weekly call stats email to all NY-tz clients",
         "needs_stripe": False,
     },
+    {
+        "name":     "syntharra-pilot-lifecycle",
+        "command":  "python tools/pilot_lifecycle.py",
+        "schedule": "0 0 * * *",
+        "desc":     "Daily 00:00 UTC — Phase 0 pilot state machine: day-3/7/12 engagement emails, day-14 convert-or-expire, winback 16/30. Graceful no-op while there are no live pilots.",
+        "needs_stripe": True,
+    },
+    {
+        "name":     "syntharra-marketing-digest",
+        "command":  "python tools/marketing_digest.py --since 1d --post-to-slack",
+        "schedule": "0 9 * * *",
+        "desc":     "Daily 09:00 UTC — funnel rollup (page views + pilot signups + conversions) posted to Slack #daily-digest.",
+        "needs_stripe": False,
+        "needs_slack": True,
+    },
+    {
+        "name":     "syntharra-marketing-brain",
+        "command":  "python tools/marketing_brain.py",
+        "schedule": "0 8 * * 1",
+        "desc":     "Monday 08:00 UTC — autonomous weekly marketing cycle: review perf, generate plan, propose to Slack, execute (cold email + Reddit + LinkedIn), track results.",
+        "needs_stripe": False,
+        "needs_slack": True,
+    },
 ]
 
 
@@ -77,9 +107,17 @@ def railway_gql(token: str, query: str, variables: dict = None):
     body = {"query": query}
     if variables:
         body["variables"] = variables
+    # Railway's edge sits behind Cloudflare. Cloudflare error 1010 fires when
+    # the request is missing a plausible User-Agent — default urllib UA looks
+    # like a bot. Setting a real-looking UA fixes it.
     status, resp = http_json(
         "POST", RAILWAY_GQL,
-        {"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "Syntharra-Deployer/1.0 (python-urllib)",
+            "Accept": "application/json",
+        },
         body,
     )
     if status != 200:
@@ -91,8 +129,20 @@ def railway_gql(token: str, query: str, variables: dict = None):
 
 
 def sb_get(path: str, sb_key: str) -> list:
+    # Python 3.14 strictly rejects URLs with control chars / literal spaces.
+    # Service names like "Retell AI" must be URL-encoded (%20) inside query params.
+    # We split on the first '?' and quote the query portion.
+    if "?" in path:
+        base, _, query = path.partition("?")
+        # Safe chars: everything that PostgREST filter syntax uses.
+        # We keep = & , . ( ) * ! $ : + - unencoded so query operators still work,
+        # and only force-encode the spaces inside service_name values.
+        encoded_query = urllib.parse.quote(query, safe="=&,.()*!$:+-")
+        url = f"{SUPABASE_URL}{base}?{encoded_query}"
+    else:
+        url = SUPABASE_URL + path
     status, data = http_json(
-        "GET", SUPABASE_URL + path,
+        "GET", url,
         {"apikey": sb_key, "Authorization": f"Bearer {sb_key}"},
     )
     if status != 200:
@@ -111,16 +161,19 @@ def fetch_env_vars(sb_key: str) -> dict:
         "&or=(and(service_name.eq.Supabase,key_type.eq.service_role_key)"
         ",and(service_name.eq.Retell AI,key_type.eq.api_key)"
         ",and(service_name.eq.Brevo,key_type.eq.api_key)"
-        ",and(service_name.eq.Stripe,key_type.eq.secret_key_test))",
+        ",and(service_name.eq.Stripe,key_type.eq.secret_key_test)"
+        ",and(service_name.eq.Slack,key_type.eq.bot_token))",
         sb_key,
     )
     lookup = {(r["service_name"], r["key_type"]): r["key_value"] for r in rows}
+    slack_token = lookup.get(("Slack", "bot_token"), "")
     return {
         "SUPABASE_URL":          SUPABASE_URL,
         "SUPABASE_SERVICE_KEY":  lookup[("Supabase", "service_role_key")],
         "RETELL_API_KEY":        lookup[("Retell AI", "api_key")],
         "BREVO_API_KEY":         lookup[("Brevo", "api_key")],
         "STRIPE_SECRET_KEY":     lookup[("Stripe", "secret_key_test")],
+        "SLACK_BOT_TOKEN":       slack_token,
     }
 
 
@@ -161,7 +214,12 @@ def service_exists(token: str, name: str) -> bool:
 
 
 def create_service(token: str, env_id: str, svc: dict) -> str:
-    """Create a Railway service and return its ID."""
+    """Create a Railway service and return its ID.
+
+    Railway's ServiceCreateInput schema: `branch` is a top-level field, and
+    ServiceSourceInput only has `repo` + `image` (no nested `branch`). Verified
+    via GraphQL introspection 2026-04-11.
+    """
     data = railway_gql(token, """
         mutation($input: ServiceCreateInput!) {
           serviceCreate(input: $input) { id name }
@@ -170,9 +228,10 @@ def create_service(token: str, env_id: str, svc: dict) -> str:
         "input": {
             "name":          svc["name"],
             "projectId":     RAILWAY_PROJECT,
+            "environmentId": env_id,
+            "branch":        GITHUB_BRANCH,
             "source": {
-                "repo":   GITHUB_REPO,
-                "branch": GITHUB_BRANCH,
+                "repo": GITHUB_REPO,
             },
         }
     })
@@ -196,10 +255,14 @@ def set_cron_schedule(token: str, service_id: str, env_id: str, svc: dict):
     })
 
 
-def set_env_vars(token: str, service_id: str, env_id: str, env_vars: dict, needs_stripe: bool):
+def set_env_vars(token: str, service_id: str, env_id: str, env_vars: dict, needs_stripe: bool, needs_slack: bool = False):
     """Upsert env vars on the service."""
     for name, value in env_vars.items():
         if name == "STRIPE_SECRET_KEY" and not needs_stripe:
+            continue
+        if name == "SLACK_BOT_TOKEN" and not needs_slack:
+            continue
+        if not value:  # skip empty/missing optional tokens
             continue
         railway_gql(token, """
             mutation($input: VariableUpsertInput!) {
@@ -286,7 +349,7 @@ def main():
             set_cron_schedule(railway_token, service_id, env_id, svc)
 
             print(f"  Setting env vars...")
-            set_env_vars(railway_token, service_id, env_id, env_vars, svc["needs_stripe"])
+            set_env_vars(railway_token, service_id, env_id, env_vars, svc["needs_stripe"], svc.get("needs_slack", False))
             print(f"  Done.")
 
         time.sleep(0.5)  # brief pause between mutations

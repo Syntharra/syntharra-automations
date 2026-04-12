@@ -1,0 +1,60 @@
+<!--subject: 48 hours left. Add a card to keep it live. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>48 hours left</title>
+</head>
+<body style="margin:0;padding:0;background:#F7F7FB;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Helvetica,Arial,sans-serif;color:#4A4A6A">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F7F7FB;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid #E8E8F0;box-shadow:0 8px 32px -8px rgba(14,14,26,.06)">
+
+<tr><td style="height:3px;background:linear-gradient(90deg,#F59E0B,#EF4444);font-size:0;line-height:0">&nbsp;</td></tr>
+
+<tr><td style="padding:28px 36px 10px">
+<p style="font-size:28px;font-weight:900;letter-spacing:6px;color:#1A1A2E;margin:0;">SYNTHARRA</p>
+<p style="color:#F59E0B;font-size:10px;letter-spacing:2px;font-weight:600;margin:4px 0 0;text-transform:uppercase">48 hours left</p>
+</td></tr>
+
+<tr><td style="padding:14px 36px 6px">
+<h1 style="font-size:26px;font-weight:700;color:#0E0E1A;margin:0;line-height:1.25;letter-spacing:-0.01em">
+{{ params.first_name }}, your pilot ends in 2 days.
+</h1>
+</td></tr>
+
+<tr><td style="padding:10px 36px 22px">
+<div style="font-size:15px;color:#4A4A6A;line-height:1.65">
+On day 14, one of two things happens to {{ params.company_name }}'s line:<br><br>
+<strong style="color:#0E0E1A">Option A</strong> &mdash; card on file: your AI stays live, you get billed $697/mo, nothing changes for your customers.<br><br>
+<strong style="color:#0E0E1A">Option B</strong> &mdash; no card: the line quietly pauses. Callers hear a short "we'll get back to you" message. You keep all the data.
+</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 22px">
+<div style="font-size:14px;color:#4A4A6A;line-height:1.75">
+If Option A sounds like the right move, add a card now. Takes 30 seconds. No charge until day 14 — if you change your mind before then, cancel and you won't be billed a cent.
+</div>
+</td></tr>
+
+<tr><td style="padding:6px 36px 18px" align="center">
+<a href="{{ params.add_card_url }}" style="display:inline-block;background:linear-gradient(135deg,#6C63FF 0%,#8B85FF 100%);color:#FFFFFF;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;padding:16px 32px;letter-spacing:0.01em;box-shadow:0 12px 36px -10px rgba(108,99,255,.55)">Keep it live &rarr;</a>
+</td></tr>
+
+<tr><td style="padding:0 36px 26px" align="center">
+<div style="font-size:12px;color:#8A8AA8">$697/mo &middot; about $161/week &middot; cancel anytime</div>
+</td></tr>
+
+<tr><td style="padding:0 36px 28px;border-top:1px solid #EFEFF6">
+<div style="padding-top:18px;font-size:12px;color:#8A8AA8;line-height:1.6">
+Syntharra &middot; <a href="mailto:founders@syntharra.com" style="color:#6C63FF;text-decoration:none">founders@syntharra.com</a><br>
+<a href="{{ params.unsubscribe_url }}" style="color:#8A8AA8;text-decoration:underline">Unsubscribe</a>
+</div>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

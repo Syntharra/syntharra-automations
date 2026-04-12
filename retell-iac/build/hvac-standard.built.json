@@ -23,6 +23,29 @@
       },
       "edges": [
         {
+          "destination_node_id": "node-pilot-expired",
+          "id": "edge-greeting-to-pilot-expired-equation",
+          "transition_condition": {
+            "equations": [
+              {
+                "left": "{{pilot_expired}}",
+                "operator": "==",
+                "right": "true"
+              }
+            ],
+            "operator": "&&",
+            "type": "equation"
+          }
+        },
+        {
+          "destination_node_id": "node-pilot-expired",
+          "id": "edge-greeting-to-pilot-expired-prompt-fallback",
+          "transition_condition": {
+            "prompt": "The pilot_expired dynamic variable is set to true. This caller's free trial has ended.",
+            "type": "prompt"
+          }
+        },
+        {
           "destination_node_id": "node-identify-call",
           "id": "edge-greeting-to-identify",
           "transition_condition": {
@@ -744,6 +767,29 @@
           "type": "enum"
         }
       ]
+    },
+    {
+      "display_position": {
+        "x": 558,
+        "y": 1080
+      },
+      "edges": [
+        {
+          "destination_node_id": "node-end-call",
+          "id": "edge-pilot-expired-to-end",
+          "transition_condition": {
+            "prompt": "Always \u2014 after delivering the apology message",
+            "type": "prompt"
+          }
+        }
+      ],
+      "id": "node-pilot-expired",
+      "instruction": {
+        "text": "Politely inform the caller that the free 14-day Syntharra pilot for this number has ended, and route them to reactivate. Use these exact words:\n\n\"I'm sorry, but the free 14-day trial for this number has ended. The business owner can reactivate the AI receptionist by visiting syntharra dot com slash add hyphen card. Thank you for calling, and have a great day.\"\n\nDo not collect any information. Do not engage in conversation. Do not transfer the call. After delivering the message, end the call gracefully.",
+        "type": "prompt"
+      },
+      "name": "Pilot Expired",
+      "type": "conversation"
     }
   ],
   "start_node_id": "node-greeting",
