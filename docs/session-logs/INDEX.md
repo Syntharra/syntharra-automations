@@ -41,3 +41,6 @@
 | 2026-04-11 | agentic-learning-loop-hooks | 371384a | Improved correction_capture.py with 9 new patterns and fixed false-positive guard; wired post_bash_failure.py directly to memory anti-patterns |
 | 2026-04-11 | city-pages-usa-expansion | 371384a | Expanded HVAC SEO city pages from 25 to 145 — 120 new cities via 6-agent parallel swarm covering all major US regions |
 | 2026-04-11 | git-cleanup | ed214b3 | Committed 31 accumulated files: ops project, HVAC/SEO tools, docs, .gitignore cleanup |
+| 2026-04-11 | seo-audit-city-hub | ed214b3 | Full SEO audit of syntharra.com + 42 page fixes: JSON-LD schema homepage, og:image across 33 pages, city page titles trimmed, city hub index page created, sitemap updated |
+| 2026-04-11 | ops-monitor-n8n-fix | 388da67 | Fixed ops monitor: N8N_BASE_URL was pointing at n8n Cloud (syntharra.app.n8n.cloud) instead of Railway self-hosted (n8n.syntharra.com). Also updated N8N_API_KEY to full-access vault JWT (old Railway key only returned 20/57 workflows). Both fixed via Railway GraphQL API — variableUpsert + serviceInstanceRedeploy. |
+| 2026-04-12 | remove-nightly-backup-entry-workflow | 388da67 | fix(reference): remove nightly backup entry â€” workflow deleted from n8n |

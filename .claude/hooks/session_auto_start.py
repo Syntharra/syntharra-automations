@@ -16,7 +16,7 @@ import re
 from datetime import datetime, timezone, timedelta
 
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 MARKER = ROOT / ".claude" / f".session-started-{TODAY}"
 
 
