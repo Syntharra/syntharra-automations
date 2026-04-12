@@ -27,7 +27,7 @@ except Exception:
     pass
 
 # ── Credentials ───────────────────────────────────────────────────────────────
-TOKEN = os.environ.get("GITHUB_TOKEN", "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")
+TOKEN = os.environ.get("GITHUB_TOKEN", "")
 REPO  = "Syntharra/syntharra-website"
 API   = f"https://api.github.com/repos/{REPO}/contents"
 HEADERS = {
