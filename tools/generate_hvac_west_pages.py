@@ -9,7 +9,8 @@ import base64
 import time
 import requests
 
-TOKEN = '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'
+import os
+TOKEN = os.environ.get('GITHUB_TOKEN', '')
 REPO  = 'Syntharra/syntharra-website'
 API   = f'https://api.github.com/repos/{REPO}/contents'
 HEADERS = {
