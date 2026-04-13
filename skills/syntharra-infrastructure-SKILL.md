@@ -657,3 +657,81 @@ Deactivating a workflow masks the problem — it doesn't fix the root cause (wro
 Always fix the corrupted workflow's source, never just disable the other one.
 
 ---
+
+## GOTCHA: n8n formTrigger — responseMode + respondToWebhook (2026-04-09)
+
+**Symptom:** `https://n8n.syntharra.com/form/client-update` returned `{"code":0,"message":"Unused Respond to Webhook node found in the workflow"}` — form would not load.
+
+**Root cause:** `formTrigger.responseMode` was `"lastNode"` — this mode auto-responds from the final node's output, making any explicit `respondToWebhook` node "unused." Additionally, having a `respondToWebhook` node on EACH branch of an IF node is rejected regardless of responseMode.
+
+**Fix:**
+- Set `responseMode: "responseNode"` (not `"lastNode"`) on the formTrigger node
+- Use exactly ONE `respondToWebhook` node at the end of a SINGLE linear execution path
+- If conditional logic is needed, resolve it in a Code or IF node BEFORE the single respond node — never put a respond node on each branch
+
+**Rule:** RULES.md §52
+
+---
+
+## GOTCHA: n8n public API DELETE is a permanent hard delete (2026-04-09)
+
+**Symptom:** `DELETE /api/v1/workflows/{id}` on n8n public API permanently deleted `Premium Dispatcher — Google Calendar` with no recovery path.
+
+**Root cause:** Assumed DELETE would soft-archive like the UI "Archive" button. The public API hard-deletes. The UI archive uses the internal `/rest/` endpoint which returns 401 for API-key auth.
+
+**Fix (archive procedure — no DELETE):**
+1. Backup full workflow JSON: `GET /api/v1/workflows/{id}` → save to `docs/audits/n8n-backups-YYYYMMDD/`
+2. Deactivate: `POST /api/v1/workflows/{id}/deactivate`
+3. Rename: `PUT /api/v1/workflows/{id}` with name prefixed `[ARCHIVED-YYYY-MM-DD]`
+4. Ask Dan to click "Archive" in the n8n UI (the `isArchived` flag is not exposed on the public API)
+
+**Never call `DELETE /api/v1/workflows/{id}`** — treat it as equivalent to DROP TABLE.
+
+**Rule:** CLAUDE.md iron rules; RULES.md §58
+
+---
+
+## GOTCHA: Supabase PATCH on empty table is a silent 200 no-op (2026-04-10)
+
+**Symptom:** Reconcile node at end of onboarding pipeline reported `stripe_reconciliation: 'skipped'` silently. `client_subscriptions` table had zero rows written after any Jotform submission.
+
+**Root cause:** The reconcile Code node used `PATCH /rest/v1/client_subscriptions?agent_id=eq.{id}`. Supabase PATCH on 0 matched rows returns HTTP 200 with no error — a completely silent no-op.
+
+**Fix:** When a node is the CREATOR of a row (not an updater), use `POST` (INSERT), not `PATCH`. Verify target table row count before writing pipeline logic.
+
+**Pattern:**
+```javascript
+// WRONG — PATCH on empty table silently does nothing
+await fetch(`${SUPABASE_URL}/rest/v1/client_subscriptions?agent_id=eq.${agentId}`, { method: 'PATCH', ... });
+
+// RIGHT — POST to INSERT the first row
+await fetch(`${SUPABASE_URL}/rest/v1/client_subscriptions`, { method: 'POST', ... });
+```
+
+**Rule:** RULES.md §35
+
+---
+
+## GOTCHA: Check NOT NULL + CHECK constraints before any Supabase INSERT (2026-04-10)
+
+**Symptom:** INSERT to `client_subscriptions` failed with `violates check constraint "client_subscriptions_plan_type_check"`. Natural guess `'hvac_standard'` is rejected — only `'standard'` or `'premium'` are valid.
+
+**Root cause:** Hidden CHECK constraint on `plan_type` column not visible from column name alone.
+
+**Fix:** Before any INSERT to a new Supabase table, run:
+```sql
+-- Check nullable and defaults
+SELECT column_name, is_nullable, column_default
+FROM information_schema.columns WHERE table_name = 'your_table';
+
+-- Check CHECK constraints
+SELECT pg_get_constraintdef(oid)
+FROM pg_constraint
+WHERE conrelid = 'your_table'::regclass AND contype = 'c';
+```
+
+**Known constraints on `client_subscriptions`:** `plan_type` NOT NULL, CHECK IN `('standard', 'premium')`.
+
+**Rule:** RULES.md §38
+
+---

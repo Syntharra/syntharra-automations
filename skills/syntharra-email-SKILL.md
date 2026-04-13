@@ -291,6 +291,44 @@ Only update this skill when something **fundamental** changes — not during rou
 
 ---
 
+## GOTCHAs
+
+### Email Variable Path Must Be Traced End-to-End (2026-04-08)
+**Symptom:** "Your AI Receptionist is Live" email showed blank AI Phone Number and blank Live Transfer Number fields for all clients.
+
+**Root cause (2 separate bugs same session):**
+1. `ai_phone_number` was not passed through the Set node to the email node — variable extraction split rule was incorrectly keyed.
+2. `transfer_phone_number` used the wrong key name at one intermediate node — `transfer_phone` vs `transfer_phone_number`.
+
+Both were silent failures: the email sent successfully but fields rendered blank.
+
+**Fix:** Corrected variable mapping and key names in both Standard and Premium call processor workflows.
+
+**Prevention:** When adding or changing any email template variable, trace the FULL path:
+```
+webhook payload key → Set node key → Code node key → email HTML template {{ variable }}
+```
+Every hop can silently drop or rename a field. After any change, send a test run and inspect the rendered email — do not approve based on node output alone.
+
+**Rules:** RULES.md §23, §24
+
+---
+
+### Always Verify All Email Send Nodes Fire After Any Call Processor Change (2026-04-08)
+**Symptom:** Premium clients received Google OAuth and HubSpot OAuth emails but never received the "Your AI Receptionist is Live" activation email — the most important email in the onboarding sequence.
+
+**Root cause:** A guard condition on the "Send Welcome Email" node was blocking execution for all Premium clients. The condition was introduced during an earlier call processor refactor and never caught because other nodes (OAuth emails, HubSpot update) still worked.
+
+**Fix:** Removed the incorrect guard condition. The send node now fires for all Premium clients.
+
+**Prevention:** After ANY change to a call processor workflow (node add, branch add, guard condition add), trigger a full test run and verify EACH email send node fires in sequence:
+1. Check n8n execution log — confirm all email nodes appear in the execution path
+2. Check that each email was actually received (not just that the node "executed" — guard conditions can cause 0 sends with a 200 exit)
+
+**Rule:** RULES.md §25
+
+---
+
 ## Architecture Decisions
 
 | Decision | Chose | Why | Revisit if |

@@ -365,3 +365,17 @@ _Source: Dan instruction 2026-04-11 — prompt engineering review: capture every
 - **Why:** After the 2026-04-09 re-registration, the n8n onboarding clone node still hardcoded the deleted MASTER ID. Every new signup would have silently failed at the clone step with no error surfaced to the client.
 
 ⚠️ AUTO-WRITTEN 2026-04-11 — verify before relying on this rule
+
+## 58. Never call `DELETE /api/v1/workflows/{id}` on the n8n public API
+
+- `DELETE /api/v1/workflows/{id}` on the n8n public API is a **permanent hard delete** — there is no soft-delete, no recycle bin, no recovery. It is not equivalent to the UI "Archive" button.
+- The UI "Archive" uses the internal `/rest/` endpoint which returns 401 for API-key auth — there is no public API archive operation.
+- **Archive procedure (no DELETE):**
+  1. Backup: `GET /api/v1/workflows/{id}` → save JSON to `docs/audits/n8n-backups-YYYYMMDD/`
+  2. Deactivate: `POST /api/v1/workflows/{id}/deactivate`
+  3. Rename: `PUT /api/v1/workflows/{id}` with name prefixed `[ARCHIVED-YYYY-MM-DD]`
+  4. Ask Dan to click the UI "Archive" button (the `isArchived` flag is not exposed on the public API)
+- **Why:** On 2026-04-09, `Premium Dispatcher — Google Calendar` was hard-deleted via `DELETE`. The workflow was restored only because a backup had been saved seconds earlier. Without the backup it would have been permanently lost.
+- This rule also appears in `CLAUDE.md` iron rules. Keep both in sync.
+
+_Source: FAILURES.md 2026-04-09 "n8n public API"; weekly-analysis 2026-04-13_

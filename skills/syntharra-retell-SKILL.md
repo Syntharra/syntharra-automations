@@ -59,6 +59,44 @@ These 3 are the only agents hardcoded here because they're system-level, not cli
 
 ## GOTCHAs
 
+### Phantom Components Block Auto Layout (2026-04-08)
+**Symptom:** Retell canvas "Auto Layout" button threw an error on the Standard MASTER flow.
+
+**Root cause:** The flow's `components[]` array contained a blank inline component with literal Retell placeholder text ("Describe what the AI should say or do") — never filled in, never referenced by any node. Retell requires all components to be in a complete state before Auto Layout can run.
+
+**Fix:** `PATCH /update-conversation-flow/{flow_id}` with `{"components": []}` to clear the array. Safe because all real components are inlined at build time via retell-iac — no shared state is lost.
+
+**Prevention:** After any flow edit session, check `components[]` for entries with placeholder text or zero node references and delete them before leaving the flow.
+
+**Rule:** RULES.md §33
+
+---
+
+### prompt_compiler Must Validate Edges and Finetune References (2026-04-09)
+**Symptom:** `update_client_agent.py` PATCH rejected by Retell with "Please remove or update finetune examples before deleting the associated node or edge."
+
+**Root cause (3 bugs found simultaneously):**
+1. A finetune example pointed to `node-fallback-leadcapture` instead of `node-call-style-detector` (node renamed, finetune not updated)
+2. `node-call-style-detector` generated with `edges: []` instead of the required edge ID
+3. `node-validate-phone` generated with `edges: []` instead of the required edge ID
+
+**Fix:** Applied correct edge IDs and finetune `node_id` references in `prompt_compiler.py`.
+
+**Prevention:** Any script that builds Retell flow JSON must assert before calling PATCH:
+```python
+terminal_ids = {'node-ending', 'node-end-call'}
+for node in nodes:
+    if node['id'] not in terminal_ids:
+        assert len(node.get('edges', [])) > 0, f"Non-terminal node {node['id']} has empty edges"
+finetune_node_ids = {ex['node_id'] for ex in finetune_examples}
+node_ids = {n['id'] for n in nodes}
+assert finetune_node_ids.issubset(node_ids), f"Finetune refs missing from node list: {finetune_node_ids - node_ids}"
+```
+
+**Rule:** RULES.md §55
+
+---
+
 ### Supabase 409 Conflict on hvac_call_log
 When the call processor receives a duplicate `call_id`, Supabase 409 fails on the unique constraint.
 This happens when Retell retries the webhook or the same call data arrives twice.
